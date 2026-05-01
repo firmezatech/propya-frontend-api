@@ -1,0 +1,78 @@
+/* styles/Home.module.css */
+.container {
+    min-height: 100vh;
+    padding: 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .main {
+    padding: 5rem 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 2rem;
+  }
+  
+  .activeButton {
+    background-color: #4a4af4;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+  }
+  
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1200px;
+  }
+  
+  .card {
+    padding: 1.5rem;
+    border-radius: 10px;
+    background-color: #f0f0f0;
+  }
+  
+  .amount {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .tokensSold {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 5px;
+    margin: 1rem 0;
+  }
+  
+  .footer {
+    width: 100%;
+    height: 100px;
+    border-top: 1px solid #eaeaea;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .socialIcons {
+    display: flex;
+    gap: 1rem;
+  }
+  
+
+
+  
