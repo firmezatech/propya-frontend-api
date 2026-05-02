@@ -43,7 +43,10 @@
     "linkLogin": "Faça login",
     "alreadyHaveAccount": "Já tem uma conta? ",
     "notAccountYet": "Ainda não tem uma conta?",
-    "about": "Ir para a página sobre"
+    "about": "Ir para a página sobre",
+    "phoneCountry": "Código do país",
+    "showPassword": "Ver",
+    "hidePassword": "Ocultar"
   },
   "Calculator": {
     "calculator": "Calculadora",
@@ -216,8 +219,8 @@
     "selectPdfFile": "Selecione o arquivo PDF do boleto para upload",
     "selectFileButton": "Selecionar Arquivo PDF",
     "uploadButton": "Enviar Boleto",
-      "uploading": "Enviando...",
-      "uploadSuccess": "Upload Concluído!",
+    "uploading": "Enviando...",
+    "uploadSuccess": "Upload Concluído!",
     "uploadSuccessMessage": "O boleto foi disponibilizado para download e enviado por email",
     "ipfsUrl": "URL do IPFS:",
     "backToList": "Voltar para Lista de Boletos",
@@ -271,7 +274,6 @@
       "line2": "atuais"
     },
     "remainingTokensInfoLegacy": "Seu total de tokens após a transação.",
-
     "currentPercent": {
       "line1": "Coparticipação",
       "line2": "atual"
@@ -340,7 +342,7 @@
     "condominiumInfo": "Valor que todos os moradores pagam para manter o prédio funcionando. Essa taxa é definida pelo próprio condomínio, não pela Firmeza, e não tem relação com o valor do aluguel.",
     "propertyTax": "Impostos",
     "propertyTaxInfo": "Valor de impostos pagos a Prefeitura e/ou Bombeiros e não tem relação com o valor do aluguel.",
-    "penaltyInfo" : "Valor da multa por atraso de Pagamento",
+    "penaltyInfo": "Valor da multa por atraso de Pagamento",
     "interestInfo": "Valor do juros de mora por atraso de Pagamento",
     "scheduledTokenPurchase": "Compra programada de tokens",
     "scheduledTokenPurchaseInfo": "Você escolheu investir {amount} todo mês. Você pode ajustar a qualquer momento.",
@@ -380,7 +382,7 @@
     "graphicSummary": "Sua Coparticipação no Imóvel",
     "graphicSummaryLegacy": "Minha Jornada como Cliente Legado",
     "graphicSummaryInfo": "Veja como sua participação no imóvel gera aluguel mensal e como ela muda ao longo do tempo, conforme os tokens são recomprados pela pessoa inquilina.",
-    "totalToReceive": "Total previsto a receber de",    
+    "totalToReceive": "Total previsto a receber de",
     "dueDate": "Pagamento até ",
     "dueDateLegacy": "Pagamento previsto",
     "dueDateLegacyInfo": "É a data estimada para você receber o valor mensal. Se houver atraso no pagamento por parte da pessoa inquilina, a data pode ser ajustada automaticamente até a regularização.",
@@ -388,8 +390,8 @@
     "rentValueLegacy": "Participação no Aluguel",
     "rentValueInfo": "Você recebe, todo mês, a parte do aluguel correspondente à sua fração no imóvel.",
     "rentValueInfoLegacy": "Todo mês, 10% do valor do aluguel deste imóvel é destinado aos Clientes Legado. Você recebe a parte proporcional ao número de tokens que possui nesse imóvel.",
-    "rePurchased":"Recompra Automática de Tokens",
-    "rePurchasedInfo":"Parte da sua participação no imóvel é recomprada a cada mês pela pessoa inquilina, até a aquisição total.",
+    "rePurchased": "Recompra Automática de Tokens",
+    "rePurchasedInfo": "Parte da sua participação no imóvel é recomprada a cada mês pela pessoa inquilina, até a aquisição total.",
     "rePurchasedLegacy": "Compra de token da pessoa inquilina",
     "rePurchasedExtra": "Recompra Extra de Tokens",
     "rePurchasedExtraInfo": "Além da recompra automática mensal, a pessoa inquilina pode adquirir tokens extras quando quiser e antecipar o sonho da casa própria.",
@@ -420,7 +422,7 @@
     "tokensAcquired": "Tokens Comprados",
     "tokensCurrent": "Tokens Atuais"
   },
-    "DashboardInvestorOLD": {
+  "DashboardInvestorOLD": {
     "yourMoneyYielded": "Seu dinheiro rendeu",
     "transactionHistory": "Histórico de Transações",
     "tokensSold": "Tokens Vendidos",
@@ -478,20 +480,62 @@
     "processed": "Processado",
     "noInvoicesFound": "Nenhum boleto encontrado.",
     "tableHeaders": {
-      "boleto": { "line1": "Boleto", "line2": "" },
-      "dueDate": { "line1": "Vencimento", "line2": "" },
-      "total": { "line1": "Total", "line2": "" },
-      "rent": { "line1": "Aluguel", "line2": "" },
-      "rentValueFee": { "line1": "Taxa de", "line2": "Aluguel" },
-      "condoFee": { "line1": "Taxa de", "line2": "Condomínio" },
-      "propertyTax": { "line1": "Impostos", "line2": "" },
-      "maintenance": { "line1": "Manutenção", "line2": "" },
-      "tokenPurchase": { "line1": "Compra", "line2": "de Token" },
-      "adminFee": { "line1": "Taxa de", "line2": "Admin" },
-      "penalty": { "line1": "Multa", "line2": "" },
-      "interest": { "line1": "Mora", "line2": "" },
-      "paymentDate": { "line1": "Data", "line2": "Pagamento" },
-      "status": { "line1": "Status", "line2": "" }
+      "boleto": {
+        "line1": "Boleto",
+        "line2": ""
+      },
+      "dueDate": {
+        "line1": "Vencimento",
+        "line2": ""
+      },
+      "total": {
+        "line1": "Total",
+        "line2": ""
+      },
+      "rent": {
+        "line1": "Aluguel",
+        "line2": ""
+      },
+      "rentValueFee": {
+        "line1": "Taxa de",
+        "line2": "Aluguel"
+      },
+      "condoFee": {
+        "line1": "Taxa de",
+        "line2": "Condomínio"
+      },
+      "propertyTax": {
+        "line1": "Impostos",
+        "line2": ""
+      },
+      "maintenance": {
+        "line1": "Manutenção",
+        "line2": ""
+      },
+      "tokenPurchase": {
+        "line1": "Compra",
+        "line2": "de Token"
+      },
+      "adminFee": {
+        "line1": "Taxa de",
+        "line2": "Admin"
+      },
+      "penalty": {
+        "line1": "Multa",
+        "line2": ""
+      },
+      "interest": {
+        "line1": "Mora",
+        "line2": ""
+      },
+      "paymentDate": {
+        "line1": "Data",
+        "line2": "Pagamento"
+      },
+      "status": {
+        "line1": "Status",
+        "line2": ""
+      }
     }
   },
   "MaintenanceItem": {
@@ -763,7 +807,7 @@
       "boleto": "Fat",
       "propertyId": "#",
       "dueDate": "Data de Vencimento",
-      "total": "Total", 
+      "total": "Total",
       "rentValue": "Aluguel",
       "rentValueFee": "Adm Aluguel",
       "condoFee": "Condomínio",
