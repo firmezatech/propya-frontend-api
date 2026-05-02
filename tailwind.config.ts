@@ -22,6 +22,12 @@ export default {
         "fmz-border-mid": "var(--fmz-border-mid)",
         "fmz-input": "var(--fmz-input)",
         "fmz-blue": "var(--fmz-blue)",
+        "fmz-error": "var(--fmz-error)",
+        "fmz-error-bg": "var(--fmz-error-bg)",
+        "fmz-error-border": "var(--fmz-error-border)",
+        "fmz-warning": "var(--fmz-warning)",
+        "fmz-warning-bg": "var(--fmz-warning-bg)",
+        "fmz-warning-border": "var(--fmz-warning-border)",
       },
       fontFamily: {
         sans: ['var(--font-dm-sans)', 'sans-serif'],

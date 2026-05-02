@@ -1,13 +1,15 @@
 'use client';
 
 import { useMemo, useRef, useState, useEffect, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '../../../i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { login, createUser, type LoginType, type UserType } from '../../../services/login-fmz-api';
 import { setFirmezaAccessToken } from '../../../services/auth/auth-storage';
 import { FmzBrandMark } from '../../../components/layout';
 import { FmzButton, FmzTextInput } from '../../../components/design-system';
+import { FmzFieldErrorMessage, FmzFormAlert } from '../../api-errors/components';
+import { FMZ_API_ERROR_CODES, type FmzFieldErrorMap, type FmzNormalizedApiError } from '../../api-errors/domain';
 import { getFmzAuthAccessConfig } from '../config/fmz-auth-access-config';
 import { buildFmzLoginSchema, buildFmzRegistrationSchema } from '../domain/fmz-auth-access-validation';
 import { FmzBirthdateInput } from './FmzBirthdateInput';
@@ -23,19 +25,60 @@ const getFormStringValue = (formData: Record<string, FormDataEntryValue>, fieldN
   String(formData[fieldName] ?? '')
 );
 
+const zodPathToField: Record<string, keyof FmzFieldErrorMap> = Object.freeze({
+  email: 'email',
+  password: 'password',
+  confirmPassword: 'confirmPassword',
+  phone: 'phone',
+  phoneCountry: 'phone',
+  birthdate: 'birthdate',
+  name: 'name',
+});
+
+const buildValidationErrorState = (validationError: z.ZodError): {
+  alertError: FmzNormalizedApiError;
+  fieldErrors: FmzFieldErrorMap;
+} => {
+  const fieldErrors: FmzFieldErrorMap = {};
+
+  validationError.errors.forEach((issue) => {
+    const fieldName = zodPathToField[String(issue.path[0] ?? '')];
+    if (!fieldName || fieldErrors[fieldName]) return;
+    fieldErrors[fieldName] = issue.message;
+  });
+
+  return {
+    fieldErrors,
+    alertError: {
+      code: FMZ_API_ERROR_CODES.VALIDATION_ERROR,
+      title: 'Revise os dados informados',
+      description: 'Alguns dados parecem incorretos. Corrija os campos destacados e tente novamente.',
+      severity: 'error',
+      fieldErrors,
+    },
+  };
+};
+
 export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const t = useTranslations('HomePage');
   const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [apiError, setApiError] = useState<FmzNormalizedApiError | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FmzFieldErrorMap>({});
   const [isRegistering, setIsRegistering] = useState(false);
   const authAccessConfig = useMemo(() => getFmzAuthAccessConfig(), []);
 
   useEffect(() => {
     setMessage('');
-    setError('');
+    setApiError(null);
+    setFieldErrors({});
   }, [isRegistering]);
+
+  const applyApiError = (error: FmzNormalizedApiError) => {
+    setApiError(error);
+    setFieldErrors(error.fieldErrors);
+  };
 
   const handleLogin = async (formData: Record<string, FormDataEntryValue>) => {
     buildFmzLoginSchema().parse(formData);
@@ -48,7 +91,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
     const response = await login(loginData);
 
     if (!response.success) {
-      setError(response.message);
+      applyApiError(response.error);
       return;
     }
 
@@ -78,7 +121,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
     const response = await createUser(registerData);
 
     if (!response.success) {
-      setError(response.message);
+      applyApiError(response.error);
       return;
     }
 
@@ -90,7 +133,8 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setMessage('');
-    setError('');
+    setApiError(null);
+    setFieldErrors({});
 
     const formData = Object.fromEntries(new FormData(event.currentTarget).entries());
 
@@ -103,11 +147,19 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
       await handleLogin(formData);
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
-        setError(validationError.errors.map((issue) => issue.message).join(' '));
+        const validationState = buildValidationErrorState(validationError);
+        setFieldErrors(validationState.fieldErrors);
+        setApiError(validationState.alertError);
         return;
       }
 
-      setError('Não foi possível processar sua solicitação. Tente novamente.');
+      setApiError({
+        code: FMZ_API_ERROR_CODES.UNKNOWN_ERROR,
+        title: 'Não foi possível concluir a solicitação',
+        description: 'Tente novamente em instantes. Se o problema continuar, entre em contato com o suporte.',
+        severity: 'error',
+        fieldErrors: {},
+      });
     }
   };
 
@@ -136,6 +188,8 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
       </div>
 
       <form ref={formRef} onSubmit={handleFormSubmit} className="rounded-2xl border-[1.5px] border-fmz-border-light bg-white px-6 py-8 sm:px-10 sm:py-9">
+        <FmzFormAlert error={apiError} />
+
         <div className="space-y-5">
           {isRegistering ? (
             <>
@@ -145,6 +199,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
                 placeholder={t('enterEmail')}
                 ariaLabel="Digite seu e-mail"
                 autocompleteDomains={authAccessConfig.emailAutocompleteDomains}
+                errorMessage={fieldErrors.email}
               />
               <div className="space-y-2">
                 <label className="block text-left text-xs font-medium uppercase tracking-[0.06em] text-fmz-text-muted">{t('name')}</label>
@@ -154,17 +209,22 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
                   name="name"
                   required
                   aria-label="Digite seu nome"
+                  hasError={Boolean(fieldErrors.name)}
+                  aria-invalid={Boolean(fieldErrors.name)}
                 />
+                <FmzFieldErrorMessage message={fieldErrors.name} />
               </div>
               <FmzPhoneInput
                 label={t('phone')}
                 countryLabel={t('phoneCountry')}
                 phoneAriaLabel="Digite seu telefone(WhatsApp)"
+                errorMessage={fieldErrors.phone}
               />
               <FmzBirthdateInput
                 label={t('birthdate')}
                 placeholder={t('enterBirthdate')}
                 ariaLabel="Digite sua data de nascimento"
+                errorMessage={fieldErrors.birthdate}
               />
               <FmzPasswordInput
                 label={t('password')}
@@ -174,6 +234,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
                 showLabel={t('showPassword')}
                 hideLabel={t('hidePassword')}
                 ariaLabel="Digite sua senha"
+                errorMessage={fieldErrors.password}
               />
               <FmzPasswordInput
                 label={t('confirmPassword')}
@@ -183,6 +244,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
                 showLabel={t('showPassword')}
                 hideLabel={t('hidePassword')}
                 ariaLabel="Confirme a senha"
+                errorMessage={fieldErrors.confirmPassword}
               />
             </>
           ) : (
@@ -193,6 +255,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
                 placeholder={t('enterEmail')}
                 ariaLabel="Digite seu e-mail"
                 autocompleteDomains={authAccessConfig.emailAutocompleteDomains}
+                errorMessage={fieldErrors.email}
               />
               <FmzPasswordInput
                 label={t('password')}
@@ -202,7 +265,13 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
                 showLabel={t('showPassword')}
                 hideLabel={t('hidePassword')}
                 ariaLabel="Digite sua senha"
+                errorMessage={fieldErrors.password}
               />
+              <div className="-mt-2 text-right">
+                <FmzButton variant="link" type="button" onClick={() => router.push('/request-password-reset')} className="text-[13px] text-fmz-text-hint hover:text-fmz-blue">
+                  Esqueci minha senha
+                </FmzButton>
+              </div>
             </>
           )}
         </div>
@@ -219,8 +288,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
         </FmzButton>
       </div>
 
-      {message && <p className="mt-4 text-center text-sm text-green-600">{message}</p>}
-      {error && <p className="mt-4 text-center text-sm text-red-600">{error}</p>}
+      {message && <p className="mt-4 text-center text-sm text-green-700">{message}</p>}
     </section>
   );
 }

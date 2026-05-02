@@ -1,6 +1,6 @@
-import axios from 'axios';
 import { firmezaApiClient } from './firmeza-api-client';
 import { setFirmezaAccessToken } from './auth/auth-storage';
+import { normalizeFmzApiError, type FmzNormalizedApiError } from '../features/api-errors/domain';
 
 export type LoginType = {
   email?: string;
@@ -8,7 +8,7 @@ export type LoginType = {
 };
 
 export type UserType = {
-  _id?: string,
+  _id?: string;
   name?: string;
   email?: string;
   phone?: string;
@@ -22,19 +22,53 @@ export type UserType = {
   profile?: number;
 };
 
+export type RequestPasswordResetType = {
+  email: string;
+};
+
+export type ResetPasswordType = {
+  token: string;
+  password: string;
+  confirmPassword: string;
+};
+
+type FmzApiSuccess<T> = T & {
+  success: true;
+  message: string;
+};
+
+type FmzApiFailure = {
+  success: false;
+  error: FmzNormalizedApiError;
+};
+
+export type FmzApiResult<T> = FmzApiSuccess<T> | FmzApiFailure;
+
+export type LoginResponse = FmzApiResult<{
+  accessToken?: string;
+  wallet?: string;
+  name?: string;
+  profile?: number;
+}>;
+
+export type CreateUserResponse = FmzApiResult<{}>;
+
+export type PasswordResetResponse = FmzApiResult<{}>;
+
 export type ListUserResponse = {
   success: boolean;
   message: string;
-  users?: UserType[];  
+  users?: UserType[];
+  error?: FmzNormalizedApiError;
 };
 
-export async function login(user: LoginType): Promise<any> {
+const getSuccessMessage = (data: Record<string, unknown>, fallback: string): string => (
+  String(data.message || data.msg || fallback)
+);
 
-  if (!user.email || !user.password)
-    throw new Error("All fields are required.");
-
+export async function login(user: LoginType): Promise<LoginResponse> {
   try {
-    const response = await firmezaApiClient.post(`/login`, {
+    const response = await firmezaApiClient.post('/login', {
       email: user.email,
       password: user.password,
     });
@@ -47,33 +81,20 @@ export async function login(user: LoginType): Promise<any> {
 
     return {
       success: true,
-      message: response.data.msg,
+      message: getSuccessMessage(response.data, 'Login realizado com sucesso.'),
       accessToken,
       wallet: response.data.wallet,
       name: response.data.name,
-      profile: response.data.profile
-    }; 
-    
-  } catch (err) {
-    if (axios.isAxiosError(err) && err.response) {
-      return { success: false, message: err.response.data.msg }; 
-    }
-
-    return {
-      success: false,
-      message: err instanceof Error ? err.message : "An unknown error occurred.",
+      profile: response.data.profile,
     };
+  } catch (error) {
+    return { success: false, error: normalizeFmzApiError(error) };
   }
 }
 
-export async function createUser(user: UserType): Promise<any> {
-  if (!user.name || !user.email || !user.phone || !user.birthdate ||
-     !user.password || !user.confirmPassword) {
-    throw new Error("All fields are required.");
-  }
-
+export async function createUser(user: UserType): Promise<CreateUserResponse> {
   try {
-    const response = await firmezaApiClient.post(`/createUser`, {
+    const response = await firmezaApiClient.post('/createUser', {
       name: user.name,
       email: user.email,
       phone: user.phone,
@@ -81,72 +102,80 @@ export async function createUser(user: UserType): Promise<any> {
       password: user.password,
       confirmPassword: user.confirmPassword,
     });
-    return { success: true, message: response.data.msg }; 
-  } catch (err) {
-    if (axios.isAxiosError(err) && err.response) {
-      return { success: false, message: err.response.data.msg }; 
-    }
 
     return {
-      success: false,
-      message: err instanceof Error ? err.message : "An unknown error occurred.",
+      success: true,
+      message: getSuccessMessage(response.data, 'Usuário criado com sucesso.'),
     };
+  } catch (error) {
+    return { success: false, error: normalizeFmzApiError(error) };
+  }
+}
+
+export async function requestPasswordReset(payload: RequestPasswordResetType): Promise<PasswordResetResponse> {
+  try {
+    const response = await firmezaApiClient.post('/requestPasswordReset', {
+      email: payload.email,
+    });
+
+    return {
+      success: true,
+      message: getSuccessMessage(response.data, 'Enviamos as instruções para redefinir sua senha.'),
+    };
+  } catch (error) {
+    return { success: false, error: normalizeFmzApiError(error) };
+  }
+}
+
+export async function resetPassword(payload: ResetPasswordType): Promise<PasswordResetResponse> {
+  try {
+    const response = await firmezaApiClient.post('/resetPassword', {
+      token: payload.token,
+      password: payload.password,
+      confirmPassword: payload.confirmPassword,
+    });
+
+    return {
+      success: true,
+      message: getSuccessMessage(response.data, 'Senha redefinida com sucesso.'),
+    };
+  } catch (error) {
+    return { success: false, error: normalizeFmzApiError(error) };
   }
 }
 
 export async function listUser(): Promise<ListUserResponse> {
   try {
-    const response = await firmezaApiClient.get(`/listUsers`);
+    const response = await firmezaApiClient.get('/listUsers');
 
     return {
       success: true,
-      message: "",
-      users: response.data.users, 
+      message: '',
+      users: response.data.users,
     };
-  } catch (err) {
-    if (axios.isAxiosError(err) && err.response) {
-      return {
-        success: false,
-        message: err.response.data.msg || "An error occurred while fetching the user list.",
-      };
-    } else {
-      return {
-        success: false,
-        message: "An unknown error occurred while fetching the user list.",
-      };
-    }
+  } catch (error) {
+    return {
+      success: false,
+      message: 'Não foi possível carregar a lista de usuários.',
+      error: normalizeFmzApiError(error),
+    };
   }
 }
 
-
 export async function getUserByWallet(wallet: string): Promise<UserType | null> {
-  if (!wallet) {
-    throw new Error("Wallet is required.");
-  }
+  if (!wallet) return null;
 
   try {
-    const response = await firmezaApiClient.post(`/getUserByWallet`, {
-      wallet: wallet
-    });
-
-    if (response.data && response.data.user) {
-      return response.data.user as UserType;
-    } else {
-      return null;
-    }
-  } catch (err) {
-    console.error("Error fetching user by wallet:", err);
+    const response = await firmezaApiClient.post('/getUserByWallet', { wallet });
+    return response.data?.user ?? null;
+  } catch {
     return null;
   }
 }
 
-export async function updateUser(user: UserType): Promise<any> {
-  if (!user.name || !user.email || !user.phone || !user.birthdate) {
-    throw new Error("All required fields must be provided.");
-  }
-
+export async function updateUser(user: UserType): Promise<FmzApiResult<{ data?: unknown }>> {
   try {
-    const response = await firmezaApiClient.put(`/updateUser`, {
+    const response = await firmezaApiClient.put('/updateUser', {
       _id: user._id,
       name: user.name,
       email: user.email,
@@ -156,12 +185,13 @@ export async function updateUser(user: UserType): Promise<any> {
       newPassword: user.newPassword,
       confirmPassword: user.confirmPassword,
     });
-    return { success: true, message: response.data.msg, data: response.data };
-  } catch (err) {
-    if (axios.isAxiosError(err) && err.response) {
-      return { success: false, message: err.response.data.msg };
-    } else {
-      return { success: false, message: "An unknown error occurred." };
-    }
+
+    return {
+      success: true,
+      message: getSuccessMessage(response.data, 'Usuário atualizado com sucesso.'),
+      data: response.data,
+    };
+  } catch (error) {
+    return { success: false, error: normalizeFmzApiError(error) };
   }
 }

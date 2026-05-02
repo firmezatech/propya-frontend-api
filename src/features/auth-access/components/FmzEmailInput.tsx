@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { FmzButton, FmzTextInput } from '../../../components/design-system';
+import { FmzFieldErrorMessage } from '../../api-errors/components';
 
 type FmzEmailInputProps = {
   label: string;
@@ -9,6 +10,7 @@ type FmzEmailInputProps = {
   placeholder: string;
   ariaLabel: string;
   autocompleteDomains: string[];
+  errorMessage?: string;
 };
 
 const MAX_EMAIL_AUTOCOMPLETE_OPTIONS = 4;
@@ -34,6 +36,7 @@ export function FmzEmailInput({
   placeholder,
   ariaLabel,
   autocompleteDomains,
+  errorMessage,
 }: FmzEmailInputProps) {
   const [email, setEmail] = useState('');
   const [isAutocompleteOpen, setIsAutocompleteOpen] = useState(false);
@@ -69,7 +72,10 @@ export function FmzEmailInput({
         aria-label={ariaLabel}
         aria-autocomplete="list"
         aria-expanded={shouldShowAutocomplete}
+        aria-invalid={Boolean(errorMessage)}
+        hasError={Boolean(errorMessage)}
       />
+      <FmzFieldErrorMessage message={errorMessage} />
       {shouldShowAutocomplete && (
         <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-[10px] border border-fmz-border-light bg-white py-1 text-left text-sm shadow-lg">
           {emailAutocompleteOptions.map((emailOption) => (

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { FmzButton, FmzTextInput } from '../../../components/design-system';
+import { FmzFieldErrorMessage } from '../../api-errors/components';
 
 type FmzPasswordInputProps = {
   label: string;
@@ -12,6 +13,7 @@ type FmzPasswordInputProps = {
   showLabel: string;
   hideLabel: string;
   ariaLabel: string;
+  errorMessage?: string;
 };
 
 export function FmzPasswordInput({
@@ -22,6 +24,7 @@ export function FmzPasswordInput({
   showLabel,
   hideLabel,
   ariaLabel,
+  errorMessage,
 }: FmzPasswordInputProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const toggleLabel = isPasswordVisible ? hideLabel : showLabel;
@@ -39,6 +42,8 @@ export function FmzPasswordInput({
           autoComplete={autoComplete}
           required
           aria-label={ariaLabel}
+          aria-invalid={Boolean(errorMessage)}
+          hasError={Boolean(errorMessage)}
         />
         <FmzButton
           variant="icon"
@@ -51,6 +56,7 @@ export function FmzPasswordInput({
           <PasswordVisibilityIcon aria-hidden="true" className="h-5 w-5" strokeWidth={2} />
         </FmzButton>
       </div>
+      <FmzFieldErrorMessage message={errorMessage} />
     </div>
   );
 }

@@ -3,14 +3,16 @@
 import { useState } from 'react';
 import { formatBirthdateInput } from '../../../services/phone-country-format';
 import { FmzTextInput } from '../../../components/design-system';
+import { FmzFieldErrorMessage } from '../../api-errors/components';
 
 type FmzBirthdateInputProps = {
   label: string;
   placeholder: string;
   ariaLabel: string;
+  errorMessage?: string;
 };
 
-export function FmzBirthdateInput({ label, placeholder, ariaLabel }: FmzBirthdateInputProps) {
+export function FmzBirthdateInput({ label, placeholder, ariaLabel, errorMessage }: FmzBirthdateInputProps) {
   const [birthdate, setBirthdate] = useState('');
 
   return (
@@ -26,7 +28,10 @@ export function FmzBirthdateInput({ label, placeholder, ariaLabel }: FmzBirthdat
         name="birthdate"
         required
         aria-label={ariaLabel}
+        aria-invalid={Boolean(errorMessage)}
+        hasError={Boolean(errorMessage)}
       />
+      <FmzFieldErrorMessage message={errorMessage} />
     </div>
   );
 }

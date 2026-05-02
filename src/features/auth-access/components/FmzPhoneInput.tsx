@@ -10,14 +10,16 @@ import {
   type FmzPhoneCountryCode,
 } from '../../../services/phone-country-format';
 import { FmzSelect, FmzTextInput } from '../../../components/design-system';
+import { FmzFieldErrorMessage } from '../../api-errors/components';
 
 type FmzPhoneInputProps = {
   label: string;
   countryLabel: string;
   phoneAriaLabel: string;
+  errorMessage?: string;
 };
 
-export function FmzPhoneInput({ label, countryLabel, phoneAriaLabel }: FmzPhoneInputProps) {
+export function FmzPhoneInput({ label, countryLabel, phoneAriaLabel, errorMessage }: FmzPhoneInputProps) {
   const [phone, setPhone] = useState('');
   const [phoneCountry, setPhoneCountry] = useState<FmzPhoneCountryCode>(getDefaultFmzPhoneCountry());
   const enabledPhoneCountries = useMemo(() => getEnabledFmzPhoneCountries(), []);
@@ -44,6 +46,7 @@ export function FmzPhoneInput({ label, countryLabel, phoneAriaLabel }: FmzPhoneI
           onChange={handlePhoneCountryChange}
           className="w-32 shrink-0"
           aria-label={countryLabel}
+          hasError={Boolean(errorMessage)}
         >
           {enabledPhoneCountries.map((country) => (
             <option key={country.code} value={country.code}>
@@ -60,9 +63,12 @@ export function FmzPhoneInput({ label, countryLabel, phoneAriaLabel }: FmzPhoneI
           name="phoneNational"
           required
           aria-label={phoneAriaLabel}
+          aria-invalid={Boolean(errorMessage)}
+          hasError={Boolean(errorMessage)}
         />
       </div>
       <input type="hidden" name="phone" value={internationalPhoneNumber} />
+      <FmzFieldErrorMessage message={errorMessage} />
     </div>
   );
 }

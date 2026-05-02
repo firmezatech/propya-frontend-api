@@ -19,6 +19,12 @@
   --fmz-border-mid: #D0D4DE;
   --fmz-input: #F7F8FA;
   --fmz-blue: #2563EB;
+  --fmz-error: #D94F3D;
+  --fmz-error-bg: #FEF5F4;
+  --fmz-error-border: #F5C4BF;
+  --fmz-warning: #C97B10;
+  --fmz-warning-bg: #FFFBF0;
+  --fmz-warning-border: #F5E0A0;
 }
 
 *, *::before, *::after {
@@ -1115,4 +1121,14 @@ margin-top: 20px;
 .button-circle-blue:hover {
   background-color: #1d4ed8;
   border-color: #1d4ed8;
+}
+
+@keyframes fmzSlideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fmzFadeIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
 }
