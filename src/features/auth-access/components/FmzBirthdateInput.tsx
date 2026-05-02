@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { formatBirthdateInput } from '../../../services/phone-country-format';
+import { FmzTextInput } from '../../../components/design-system';
 
 type FmzBirthdateInputProps = {
   label: string;
@@ -13,15 +14,14 @@ export function FmzBirthdateInput({ label, placeholder, ariaLabel }: FmzBirthdat
   const [birthdate, setBirthdate] = useState('');
 
   return (
-    <div>
-      <label className="block text-left text-gray-700 font-medium">{label}</label>
-      <input
+    <div className="space-y-2">
+      <label className="block text-left text-xs font-medium uppercase tracking-[0.06em] text-fmz-text-muted">{label}</label>
+      <FmzTextInput
         value={birthdate}
         onChange={(event) => setBirthdate(formatBirthdateInput(event.target.value))}
         type="text"
         inputMode="numeric"
         maxLength={10}
-        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         placeholder={placeholder}
         name="birthdate"
         required

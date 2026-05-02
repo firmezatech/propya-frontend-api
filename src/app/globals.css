@@ -5,20 +5,35 @@
 .nextjs-static-indicator-toast-text {
   display: none !important;
 }
+
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
+  --foreground: #0D1321;
+  --fmz-gold: #F5C842;
+  --fmz-gold-dark: #C8A020;
+  --fmz-navy: #0D1321;
+  --fmz-text-primary: #0D1321;
+  --fmz-text-muted: #5A6478;
+  --fmz-text-hint: #9AA3B0;
+  --fmz-border-light: #E8EAF0;
+  --fmz-border-mid: #D0D4DE;
+  --fmz-input: #F7F8FA;
+  --fmz-blue: #2563EB;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --primary: #3b82f6;
-    --primary-hover: #2563eb;
-  }
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--fmz-text-primary);
+  font-family: var(--font-dm-sans), sans-serif;
 }
 
 /* body {
@@ -26,9 +41,6 @@
   background: var(--background);
 } */
 
-body {
-  font-family: var(--font-inter), sans-serif;
-}
 
 @layer components {
   .container {
@@ -36,120 +48,19 @@ body {
   }
 
   .btn-primary {
-    @apply bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors;
+    @apply bg-fmz-navy text-white px-6 py-3 rounded-[10px] hover:bg-[#162030] transition-colors;
   }
 
   .btn-outline {
-    @apply border border-blue-600 text-blue-600 dark:text-blue-400 px-6 py-3 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors;
+    @apply border border-fmz-border-mid text-fmz-navy px-6 py-3 rounded-[10px] hover:bg-fmz-input transition-colors;
   }
 }
 
-/* Estilo padrão para botões */
-
-button {
-  padding: 6px 12px;
-  background-color:  blue;
-  color: white;
-  border-radius: 8px; /* Borda arredondada */
-  border: none;
-  cursor: pointer;
-  font-size: 6px;
-  transition: background-color 0.3s ease;
-}
-
-.button-exit{
-  background-color: transparent;
-  border-radius: 20px; /* Bordas arredondadas */
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.button-line{
-  padding: 6px 30px;
-  background-color: transparent;
-  border: 2px solid black;
-  color: #1914ab; /* Cinza escuro */
-  border-radius: 7px; /* Bordas arredondadas */
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.button-line-transparent{
-  padding: 6px 2px;
-  background-color: transparent;
-  border: transparent ;
-  color: #5e5e5e; /* Cinza escuro */
-  border-radius: 7px; /* Bordas arredondadas */
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-
-.button-line-gray{
-  padding: 20px 20px;
-  background-color: transparent;
-  border: 1px solid #5e5e5e ;
-  color: #5e5e5e; /* Cinza escuro */
-  border-radius: 7px; /* Bordas arredondadas */
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.button-circle-gray {
-  padding: 6px 6px;
-  background-color: transparent;
-  border: 1px solid #5e5e5e;
-  color: #5e5e5e; /* Cinza escuro */
-  border-radius: 9999px; /* Bordas totalmente arredondadas */
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.button-circle-gray-space {
-  padding: 6px 12px;
-  background-color: transparent;
-  border: 1px solid #5e5e5e;
-  color: #5e5e5e; /* Cinza escuro */
-  border-radius: 9999px; /* Bordas totalmente arredondadas */
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.3s ease;
-}
-
-.button-line:hover {
-  color: black;
-  border-color: #4a4a4a;
-}
-
-
-/* Hover para botões */
-button:hover {
-  background-color: none; /* Cor mais clara ao passar o mouse */
-}
-
-/* Remover outline ao focar */
-button:focus {
-  outline: none;
-}
-
-/* Estilo específico para o botão de logout */
-.logout-button {
-  background-color: #7d0b0b; /* Cor para o botão de logout */
-}
-
-/* Hover para o botão de logout */
-.logout-button:hover {
-  background-color: #5a0606; /* Cor mais clara ao passar o mouse */
-}
-
-
-
-
+/*
+  Global button resets were removed intentionally.
+  Use src/components/design-system/FmzButton for primary, link and icon actions.
+  This prevents auth links and password icons from inheriting a blue button style.
+*/
 
 
 

@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { login, createUser, type LoginType, type UserType } from '../../../services/login-fmz-api';
 import { setFirmezaAccessToken } from '../../../services/auth/auth-storage';
+import { FmzBrandMark } from '../../../components/layout';
+import { FmzButton, FmzTextInput } from '../../../components/design-system';
 import { getFmzAuthAccessConfig } from '../config/fmz-auth-access-config';
 import { buildFmzLoginSchema, buildFmzRegistrationSchema } from '../domain/fmz-auth-access-validation';
 import { FmzBirthdateInput } from './FmzBirthdateInput';
@@ -109,108 +111,116 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
     }
   };
 
+  const formTitle = isRegistering ? t('registerWelcome') : t('loginWelcome');
+  const formSubtitle = isRegistering ? t('alreadyHaveAccount') : t('notAccountYet');
+  const formToggleLabel = isRegistering ? t('goToLogin') : t('registerFree');
+  const submitLabel = isRegistering ? t('register') : t('loginPlatform');
+
   return (
-    <div className={className}>
-      <h2 className="text-2xl font-bold text-gray-900 text-center mb-4">{t('login')}</h2>
-      <form ref={formRef} onSubmit={handleFormSubmit} className="space-y-4">
-        {isRegistering ? (
-          <>
-            <FmzEmailInput
-              label={t('email')}
-              name="email"
-              placeholder={t('enterEmail')}
-              ariaLabel="Digite seu e-mail"
-              autocompleteDomains={authAccessConfig.emailAutocompleteDomains}
-            />
-            <div>
-              <label className="block text-left text-gray-700 font-medium">{t('name')}</label>
-              <input
-                type="text"
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder={t('enterName')}
-                name="name"
-                required
-                aria-label="Digite seu nome"
+    <section className={className} aria-labelledby="fmz-auth-access-title">
+      <div className="mb-10 text-center">
+        <FmzBrandMark size="form" className="mb-7" />
+        <h1 id="fmz-auth-access-title" className="mb-2 font-syne text-[26px] font-extrabold tracking-[-0.025em] text-fmz-navy">
+          {formTitle}
+        </h1>
+        <p className="text-sm text-fmz-text-muted">
+          {formSubtitle}{' '}
+          <FmzButton
+            type="button"
+            variant="link"
+            onClick={() => setIsRegistering((currentValue) => !currentValue)}
+          >
+            {formToggleLabel}
+          </FmzButton>
+        </p>
+      </div>
+
+      <form ref={formRef} onSubmit={handleFormSubmit} className="rounded-2xl border-[1.5px] border-fmz-border-light bg-white px-6 py-8 sm:px-10 sm:py-9">
+        <div className="space-y-5">
+          {isRegistering ? (
+            <>
+              <FmzEmailInput
+                label={t('email')}
+                name="email"
+                placeholder={t('enterEmail')}
+                ariaLabel="Digite seu e-mail"
+                autocompleteDomains={authAccessConfig.emailAutocompleteDomains}
               />
-            </div>
-            <FmzPhoneInput
-              label={t('phone')}
-              countryLabel={t('phoneCountry')}
-              phoneAriaLabel="Digite seu telefone(WhatsApp)"
-            />
-            <FmzBirthdateInput
-              label={t('birthdate')}
-              placeholder={t('enterBirthdate')}
-              ariaLabel="Digite sua data de nascimento"
-            />
-            <FmzPasswordInput
-              label={t('password')}
-              name="password"
-              placeholder={t('enterPassword')}
-              autoComplete="new-password"
-              showLabel={t('showPassword')}
-              hideLabel={t('hidePassword')}
-              ariaLabel="Digite sua senha"
-            />
-            <FmzPasswordInput
-              label={t('confirmPassword')}
-              name="confirmPassword"
-              placeholder={t('confirmPasswordPlaceholder')}
-              autoComplete="new-password"
-              showLabel={t('showPassword')}
-              hideLabel={t('hidePassword')}
-              ariaLabel="Confirme a senha"
-            />
-            <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
-              {t('register')}
-            </button>
-            <p className="text-gray-600 text-sm text-center mt-4">
-              {t('alreadyHaveAccount')}{' '}
-              <button
-                type="button"
-                onClick={() => setIsRegistering(false)}
-                className="font-medium text-blue-600 underline-offset-4 transition hover:text-blue-800 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                {t('linkLogin')}
-              </button>
-            </p>
-          </>
-        ) : (
-          <>
-            <FmzEmailInput
-              label={t('email')}
-              name="email"
-              placeholder={t('enterEmail')}
-              ariaLabel="Digite seu e-mail"
-              autocompleteDomains={authAccessConfig.emailAutocompleteDomains}
-            />
-            <FmzPasswordInput
-              label={t('password')}
-              name="password"
-              placeholder={t('enterPassword')}
-              autoComplete="current-password"
-              showLabel={t('showPassword')}
-              hideLabel={t('hidePassword')}
-              ariaLabel="Digite sua senha"
-            />
-            <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
-              {t('login')}
-            </button>
-            <p className="text-gray-600 text-sm text-center mt-4">
-              {t('notAccountYet')}{' '}
-              <button
-                type="button"
-                onClick={() => setIsRegistering(true)}
-                className="font-medium text-blue-600 underline-offset-4 transition hover:text-blue-800 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                {t('register')}
-              </button>
-            </p>
-          </>
-        )}
+              <div className="space-y-2">
+                <label className="block text-left text-xs font-medium uppercase tracking-[0.06em] text-fmz-text-muted">{t('name')}</label>
+                <FmzTextInput
+                  type="text"
+                  placeholder={t('enterName')}
+                  name="name"
+                  required
+                  aria-label="Digite seu nome"
+                />
+              </div>
+              <FmzPhoneInput
+                label={t('phone')}
+                countryLabel={t('phoneCountry')}
+                phoneAriaLabel="Digite seu telefone(WhatsApp)"
+              />
+              <FmzBirthdateInput
+                label={t('birthdate')}
+                placeholder={t('enterBirthdate')}
+                ariaLabel="Digite sua data de nascimento"
+              />
+              <FmzPasswordInput
+                label={t('password')}
+                name="password"
+                placeholder={t('enterPassword')}
+                autoComplete="new-password"
+                showLabel={t('showPassword')}
+                hideLabel={t('hidePassword')}
+                ariaLabel="Digite sua senha"
+              />
+              <FmzPasswordInput
+                label={t('confirmPassword')}
+                name="confirmPassword"
+                placeholder={t('confirmPasswordPlaceholder')}
+                autoComplete="new-password"
+                showLabel={t('showPassword')}
+                hideLabel={t('hidePassword')}
+                ariaLabel="Confirme a senha"
+              />
+            </>
+          ) : (
+            <>
+              <FmzEmailInput
+                label={t('email')}
+                name="email"
+                placeholder={t('enterEmail')}
+                ariaLabel="Digite seu e-mail"
+                autocompleteDomains={authAccessConfig.emailAutocompleteDomains}
+              />
+              <FmzPasswordInput
+                label={t('password')}
+                name="password"
+                placeholder={t('enterPassword')}
+                autoComplete="current-password"
+                showLabel={t('showPassword')}
+                hideLabel={t('hidePassword')}
+                ariaLabel="Digite sua senha"
+              />
+            </>
+          )}
+        </div>
+
+        <FmzButton type="submit" variant="primary" className="mt-6">
+          {submitLabel}
+        </FmzButton>
       </form>
-      {message && <p className="text-green-500 text-center mt-4">{message}</p>}
-      {error && <p className="text-red-500 text-center mt-4">{error}</p>}
-    </div>
+
+      <div className="mt-7 text-center text-sm text-fmz-text-muted">
+        {formSubtitle}{' '}
+        <FmzButton type="button" variant="link" className="font-syne font-bold text-fmz-navy" onClick={() => setIsRegistering((currentValue) => !currentValue)}>
+          {isRegistering ? t('goToLogin') : t('goToRegister')}
+        </FmzButton>
+      </div>
+
+      {message && <p className="mt-4 text-center text-sm text-green-600">{message}</p>}
+      {error && <p className="mt-4 text-center text-sm text-red-600">{error}</p>}
+    </section>
   );
 }

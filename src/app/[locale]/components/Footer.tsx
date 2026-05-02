@@ -1,9 +1,7 @@
-import React from 'react';
-import FooterItem from './FooterItem';
+'use client';
+
+import { FmzPublicFooter } from '../../../components/layout';
+
 export default function Footer() {
-
-  return (
-    <FooterItem/>
-
-  );
+  return <FmzPublicFooter />;
 }

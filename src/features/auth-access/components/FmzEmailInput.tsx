@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { FmzButton, FmzTextInput } from '../../../components/design-system';
 
 type FmzEmailInputProps = {
   label: string;
@@ -20,8 +21,6 @@ const getEmailAutocompleteOptions = (email: string, domains: string[]): string[]
 
   const localPart = normalizedEmail.slice(0, atIndex);
   const domainPart = normalizedEmail.slice(atIndex + 1);
-
-  if (!localPart) return [];
 
   return domains
     .filter((domain) => domain.startsWith(domainPart))
@@ -55,15 +54,14 @@ export function FmzEmailInput({
   };
 
   return (
-    <div className="relative">
-      <label className="block text-left text-gray-700 font-medium">{label}</label>
-      <input
+    <div className="relative space-y-2">
+      <label className="block text-left text-xs font-medium uppercase tracking-[0.06em] text-fmz-text-muted">{label}</label>
+      <FmzTextInput
         value={email}
         onChange={(event) => handleEmailChange(event.target.value)}
         onFocus={() => setIsAutocompleteOpen(email.includes('@'))}
         onBlur={() => setIsAutocompleteOpen(false)}
         type="email"
-        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         placeholder={placeholder}
         name={name}
         autoComplete="email"
@@ -73,17 +71,18 @@ export function FmzEmailInput({
         aria-expanded={shouldShowAutocomplete}
       />
       {shouldShowAutocomplete && (
-        <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 text-left text-sm shadow-lg">
+        <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-[10px] border border-fmz-border-light bg-white py-1 text-left text-sm shadow-lg">
           {emailAutocompleteOptions.map((emailOption) => (
             <li key={emailOption}>
-              <button
+              <FmzButton
+                variant="link"
                 type="button"
-                className="w-full px-4 py-2 text-left text-gray-700 transition hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                className="block w-full px-4 py-2 text-left font-normal text-fmz-text-muted no-underline hover:bg-fmz-input hover:text-fmz-text-primary hover:no-underline focus:bg-fmz-input"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => handleEmailSuggestionSelect(emailOption)}
               >
                 {emailOption}
-              </button>
+              </FmzButton>
             </li>
           ))}
         </ul>

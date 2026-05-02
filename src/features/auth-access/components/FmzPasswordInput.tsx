@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { FmzButton, FmzTextInput } from '../../../components/design-system';
 
 type FmzPasswordInputProps = {
   label: string;
@@ -27,27 +28,28 @@ export function FmzPasswordInput({
   const PasswordVisibilityIcon = isPasswordVisible ? EyeOff : Eye;
 
   return (
-    <div>
-      <label className="block text-left text-gray-700 font-medium">{label}</label>
+    <div className="space-y-2">
+      <label className="block text-left text-xs font-medium uppercase tracking-[0.06em] text-fmz-text-muted">{label}</label>
       <div className="relative">
-        <input
+        <FmzTextInput
           type={isPasswordVisible ? 'text' : 'password'}
-          className="w-full px-4 py-2 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="pr-14"
           placeholder={placeholder}
           name={name}
           autoComplete={autoComplete}
           required
           aria-label={ariaLabel}
         />
-        <button
+        <FmzButton
+          variant="icon"
           type="button"
           onClick={() => setIsPasswordVisible((currentValue) => !currentValue)}
-          className="absolute inset-y-0 right-3 flex items-center justify-center text-gray-500 transition hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="absolute right-2 top-1/2 -translate-y-1/2"
           aria-label={toggleLabel}
           title={toggleLabel}
         >
           <PasswordVisibilityIcon aria-hidden="true" className="h-5 w-5" strokeWidth={2} />
-        </button>
+        </FmzButton>
       </div>
     </div>
   );

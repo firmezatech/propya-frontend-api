@@ -46,7 +46,13 @@
     "about": "Go to the about page",
     "phoneCountry": "Country code",
     "showPassword": "Show",
-    "hidePassword": "Hide"
+    "hidePassword": "Hide",
+    "loginWelcome": "Welcome back",
+    "registerWelcome": "Create your account",
+    "registerFree": "Sign up for free",
+    "goToRegister": "Sign up →",
+    "goToLogin": "Log in →",
+    "loginPlatform": "Enter platform"
   },
   "Calculator": {
     "calculator": "Calculator",

@@ -9,6 +9,7 @@ import {
   getFmzPhoneCountry,
   type FmzPhoneCountryCode,
 } from '../../../services/phone-country-format';
+import { FmzSelect, FmzTextInput } from '../../../components/design-system';
 
 type FmzPhoneInputProps = {
   label: string;
@@ -34,14 +35,14 @@ export function FmzPhoneInput({ label, countryLabel, phoneAriaLabel }: FmzPhoneI
   };
 
   return (
-    <div>
-      <label className="block text-left text-gray-700 font-medium">{label}</label>
+    <div className="space-y-2">
+      <label className="block text-left text-xs font-medium uppercase tracking-[0.06em] text-fmz-text-muted">{label}</label>
       <div className="flex gap-2">
-        <select
+        <FmzSelect
           name="phoneCountry"
           value={phoneCountry}
           onChange={handlePhoneCountryChange}
-          className="w-36 px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-32 shrink-0"
           aria-label={countryLabel}
         >
           {enabledPhoneCountries.map((country) => (
@@ -49,13 +50,12 @@ export function FmzPhoneInput({ label, countryLabel, phoneAriaLabel }: FmzPhoneI
               {country.dialCode} {country.code}
             </option>
           ))}
-        </select>
-        <input
+        </FmzSelect>
+        <FmzTextInput
           value={phone}
           onChange={handlePhoneChange}
           type="tel"
           inputMode="tel"
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder={selectedPhoneCountry.placeholder}
           name="phoneNational"
           required

@@ -46,7 +46,13 @@
     "about": "Ir para a página sobre",
     "phoneCountry": "Código do país",
     "showPassword": "Ver",
-    "hidePassword": "Ocultar"
+    "hidePassword": "Ocultar",
+    "loginWelcome": "Bem-vindo de volta",
+    "registerWelcome": "Crie sua conta",
+    "registerFree": "Cadastre-se grátis",
+    "goToRegister": "Cadastre-se →",
+    "goToLogin": "Entrar →",
+    "loginPlatform": "Entrar na plataforma"
   },
   "Calculator": {
     "calculator": "Calculadora",
