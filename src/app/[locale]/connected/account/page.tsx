@@ -62,7 +62,7 @@ export default function MyAccountPage() {
                     setCurrentProfile(profile);
                 }
             } else {
-                setError(response.message || t('saveError'));
+                setError(response.error?.description || t('saveError'));
             }
         } catch (error) {
             setError(t('saveError'));

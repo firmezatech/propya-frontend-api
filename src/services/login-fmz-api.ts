@@ -173,7 +173,13 @@ export async function getUserByWallet(wallet: string): Promise<UserType | null> 
   }
 }
 
-export async function updateUser(user: UserType): Promise<FmzApiResult<{ data?: unknown }>> {
+export type UpdateUserResponse = FmzApiResult<{
+  data?: {
+    user?: UserType;
+  };
+}>;
+
+export async function updateUser(user: UserType): Promise<UpdateUserResponse> {
   try {
     const response = await firmezaApiClient.put('/updateUser', {
       _id: user._id,
@@ -189,7 +195,7 @@ export async function updateUser(user: UserType): Promise<FmzApiResult<{ data?: 
     return {
       success: true,
       message: getSuccessMessage(response.data, 'Usuário atualizado com sucesso.'),
-      data: response.data,
+      data: response.data as { user?: UserType },
     };
   } catch (error) {
     return { success: false, error: normalizeFmzApiError(error) };
