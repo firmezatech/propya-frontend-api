@@ -4,7 +4,7 @@ import { useMemo, useRef, useState, useEffect, type FormEvent } from 'react';
 import { useRouter } from '../../../i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
-import { login, createUser, type LoginType, type UserType } from '../../../services/login-fmz-api';
+import { login, createUser, type CreateUserPayload, type LoginType } from '../../../services/login-fmz-api';
 import { setFirmezaAccessToken } from '../../../services/auth/auth-storage';
 import { FmzBrandMark } from '../../../components/layout';
 import { FmzButton, FmzTextInput } from '../../../components/design-system';
@@ -109,10 +109,11 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
   const handleRegistration = async (formData: Record<string, FormDataEntryValue>) => {
     buildFmzRegistrationSchema(authAccessConfig.minimumRegistrationAge).parse(formData);
 
-    const registerData: UserType = {
+    const registerData: CreateUserPayload = {
       name: getFormStringValue(formData, 'name'),
       email: getFormStringValue(formData, 'email'),
       phone: getFormStringValue(formData, 'phone'),
+      phoneCountry: getFormStringValue(formData, 'phoneCountry'),
       birthdate: getFormStringValue(formData, 'birthdate'),
       password: getFormStringValue(formData, 'password'),
       confirmPassword: getFormStringValue(formData, 'confirmPassword'),

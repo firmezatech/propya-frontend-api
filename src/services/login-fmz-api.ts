@@ -12,6 +12,7 @@ export type UserType = {
   name?: string;
   email?: string;
   phone?: string;
+  phoneCountry?: string;
   birthdate?: string;
   password?: string;
   currentPassword?: string;
@@ -50,6 +51,16 @@ export type LoginResponse = FmzApiResult<{
   name?: string;
   profile?: number;
 }>;
+
+export type CreateUserPayload = {
+  name: string;
+  email: string;
+  phone: string;
+  phoneCountry: string;
+  birthdate: string;
+  password: string;
+  confirmPassword: string;
+};
 
 export type CreateUserResponse = FmzApiResult<{}>;
 
@@ -92,12 +103,13 @@ export async function login(user: LoginType): Promise<LoginResponse> {
   }
 }
 
-export async function createUser(user: UserType): Promise<CreateUserResponse> {
+export async function createUser(user: CreateUserPayload): Promise<CreateUserResponse> {
   try {
     const response = await firmezaApiClient.post('/createUser', {
       name: user.name,
       email: user.email,
       phone: user.phone,
+      phoneCountry: user.phoneCountry,
       birthdate: user.birthdate,
       password: user.password,
       confirmPassword: user.confirmPassword,
@@ -186,6 +198,7 @@ export async function updateUser(user: UserType): Promise<UpdateUserResponse> {
       name: user.name,
       email: user.email,
       phone: user.phone,
+      phoneCountry: user.phoneCountry,
       birthdate: user.birthdate,
       currentPassword: user.currentPassword,
       newPassword: user.newPassword,
