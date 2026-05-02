@@ -65,9 +65,9 @@ export default function Home() {
             if (response.accessToken) {
               setFirmezaAccessToken(response.accessToken);
             }
-            localStorage.setItem("name", response.name);
-            localStorage.setItem("wallet", response.wallet);
-            localStorage.setItem("profile", response.profile.toString());
+            localStorage.setItem("name", response.name || "");
+            localStorage.setItem("wallet", response.wallet || "");
+            localStorage.setItem("profile", String(response.profile || ""));
             form.current.reset();
             router.replace("/connected/dashboard");
           }

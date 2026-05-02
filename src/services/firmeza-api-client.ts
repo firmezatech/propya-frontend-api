@@ -1,19 +1,38 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
 import { clearFirmezaSession, getFirmezaAccessToken } from "./auth/auth-storage";
 
-const FIRMEZA_API_BASE_URL = process.env.NEXT_PUBLIC_FIRMEZA_API_URL || process.env.NEXT_API_URL_FIRMEZA;
+const DEFAULT_FMZ_API_TIMEOUT_MS = 30000;
 
-if (!FIRMEZA_API_BASE_URL) {
-  throw new Error("NEXT_PUBLIC_FIRMEZA_API_URL environment variable is required.");
+function getFirmezaApiBaseUrl(): string | undefined {
+  const configuredUrl = process.env.NEXT_PUBLIC_FIRMEZA_API_URL || process.env.NEXT_API_URL_FIRMEZA;
+  return configuredUrl?.replace(/\/$/, "");
+}
+
+function getFirmezaApiBaseUrlOrThrow(): string {
+  const baseUrl = getFirmezaApiBaseUrl();
+
+  if (!baseUrl) {
+    throw new Error("NEXT_PUBLIC_FIRMEZA_API_URL environment variable is required.");
+  }
+
+  return baseUrl;
+}
+
+function getFirmezaApiTimeoutMs(): number {
+  const timeout = Number(process.env.NEXT_PUBLIC_FMZ_API_TIMEOUT_MS || DEFAULT_FMZ_API_TIMEOUT_MS);
+  return Number.isFinite(timeout) && timeout > 0 ? timeout : DEFAULT_FMZ_API_TIMEOUT_MS;
 }
 
 function createFirmezaApiClient(): AxiosInstance {
   const client = axios.create({
-    baseURL: FIRMEZA_API_BASE_URL,
-    timeout: Number(process.env.NEXT_PUBLIC_FMZ_API_TIMEOUT_MS || 30000),
+    baseURL: getFirmezaApiBaseUrl(),
+    timeout: getFirmezaApiTimeoutMs(),
   });
 
   client.interceptors.request.use((config) => {
+    const baseUrl = getFirmezaApiBaseUrlOrThrow();
+    config.baseURL = baseUrl;
+
     const accessToken = getFirmezaAccessToken();
 
     if (accessToken) {
@@ -41,6 +60,7 @@ export const firmezaApiClient = createFirmezaApiClient();
 export const isFirmezaApiError = axios.isAxiosError;
 
 export async function authenticatedFirmezaFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const baseUrl = getFirmezaApiBaseUrlOrThrow();
   const accessToken = getFirmezaAccessToken();
   const headers = new Headers(init.headers);
 
@@ -52,7 +72,7 @@ export async function authenticatedFirmezaFetch(path: string, init: RequestInit 
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
-  const response = await fetch(`${FIRMEZA_API_BASE_URL}${path}`, {
+  const response = await fetch(`${baseUrl}${path}`, {
     ...init,
     headers,
   });

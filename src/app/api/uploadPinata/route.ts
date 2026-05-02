@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Get JWT from environment variable
-    const JWT = process.env.NEXT_PUBLIC_PINATA_JWT;
+    const JWT = process.env.PINATA_JWT || process.env.NEXT_PUBLIC_PINATA_JWT;
     
     if (!JWT) {
       return NextResponse.json(

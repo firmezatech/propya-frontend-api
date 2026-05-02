@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { hasFirmezaSession } from "../../../../services/auth/auth-storage";
 
 interface AuthenticatedRouteProps {
@@ -10,16 +10,17 @@ interface AuthenticatedRouteProps {
 
 export default function AuthenticatedRoute({ children }: AuthenticatedRouteProps) {
   const router = useRouter();
+  const params = useParams<{ locale?: string }>();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     if (!hasFirmezaSession()) {
-      router.replace("/");
+      router.replace(params?.locale ? `/${params.locale}` : "/");
       return;
     }
 
     setIsAuthenticated(true);
-  }, [router]);
+  }, [params?.locale, router]);
 
   if (!isAuthenticated) {
     return null;

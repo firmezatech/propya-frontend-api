@@ -57,9 +57,12 @@ export async function login(user: LoginType): Promise<any> {
   } catch (err) {
     if (axios.isAxiosError(err) && err.response) {
       return { success: false, message: err.response.data.msg }; 
-    } else {
-      return { success: false, message: "An unknown error occurred." };
     }
+
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : "An unknown error occurred.",
+    };
   }
 }
 
@@ -82,9 +85,12 @@ export async function createUser(user: UserType): Promise<any> {
   } catch (err) {
     if (axios.isAxiosError(err) && err.response) {
       return { success: false, message: err.response.data.msg }; 
-    } else {
-      return { success: false, message: "An unknown error occurred." };
     }
+
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : "An unknown error occurred.",
+    };
   }
 }
 
