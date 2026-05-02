@@ -22,6 +22,8 @@ type BackendErrorDetail = {
   message?: string;
 };
 
+type BackendErrorDetails = BackendErrorDetail[] | Record<string, unknown> | string | null | undefined;
+
 type BackendErrorResponse = {
   success?: boolean;
   msg?: string;
@@ -29,7 +31,7 @@ type BackendErrorResponse = {
   error?: {
     code?: string;
     message?: string;
-    details?: BackendErrorDetail[] | Record<string, unknown> | string | null;
+    details?: BackendErrorDetails;
   };
 };
 
@@ -80,7 +82,7 @@ const getSafeCode = (statusCode: number | undefined, errorResponse?: BackendErro
   return FMZ_API_ERROR_CODES.UNKNOWN_ERROR;
 };
 
-const buildFieldErrors = (message: FmzApiErrorMessage, details: BackendErrorResponse['error'] extends { details?: infer D } ? D : never): FmzFieldErrorMap => {
+const buildFieldErrors = (message: FmzApiErrorMessage, details: BackendErrorDetails): FmzFieldErrorMap => {
   const fieldErrors: FmzFieldErrorMap = {};
 
   if (message.field) {
