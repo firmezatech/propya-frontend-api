@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// This disables the default body parser
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {

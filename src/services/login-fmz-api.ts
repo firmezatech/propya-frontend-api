@@ -3,8 +3,8 @@ import { setFirmezaAccessToken } from './auth/auth-storage';
 import { normalizeFmzApiError, type FmzNormalizedApiError } from '../features/api-errors/domain';
 
 export type LoginType = {
-  email?: string;
-  password?: string;
+  email: string;
+  password: string;
 };
 
 export type UserType = {
