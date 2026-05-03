@@ -25,6 +25,11 @@
   --fmz-warning: #C97B10;
   --fmz-warning-bg: #FFFBF0;
   --fmz-warning-border: #F5E0A0;
+  --fmz-page: #F7F8FA;
+  --fmz-card: #FFFFFF;
+  --fmz-success: #1A8C5B;
+  --fmz-success-bg: #F0FAF5;
+  --fmz-success-border: #A8DFC4;
 }
 
 *, *::before, *::after {

@@ -1,297 +1,358 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { Eye, EyeOff, Info, ArrowLeft } from 'lucide-react';
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, Check, ShieldCheck, UserRound } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useProfile } from '../../../context/ProfileContext';
 
-import { getUserByWallet, UserType, updateUser } from "../../../../services/login-fmz-api";
+import { FmzButton, FmzCard, FmzCardHeader, FmzPasswordVisibilityButton, FmzTextInput } from '../../../../components/design-system';
+import { FmzConnectedPageShell } from '../../../../components/layout';
+import { FmzFormAlert } from '../../../../features/api-errors/components';
+import { FMZ_API_ERROR_CODES } from '../../../../features/api-errors/domain';
+import type { FmzNormalizedApiError } from '../../../../features/api-errors/domain';
+import { formatBirthdateInput } from '../../../../services/phone-country-format';
+import { getUserByWallet, updateUser, type UserType } from '../../../../services/login-fmz-api';
 
-import {
-    getPropertyDetail, PropertyData,
-} from "../../../../services/web3-api";
+type PasswordVisibilityState = {
+  current: boolean;
+  next: boolean;
+  confirmation: boolean;
+};
+
+type PasswordStrength = {
+  score: number;
+  label: string;
+  className: string;
+};
+
+type AccountFieldErrors = Partial<Record<'currentPassword' | 'confirmPassword', string>>;
+
+const emptyPasswordVisibility: PasswordVisibilityState = {
+  current: false,
+  next: false,
+  confirmation: false,
+};
+
+const buildLocalAccountError = (description: string): FmzNormalizedApiError => ({
+  code: FMZ_API_ERROR_CODES.UNKNOWN_ERROR,
+  title: 'Não foi possível salvar',
+  description,
+  severity: 'error',
+  fieldErrors: {},
+});
+
+const getPasswordStrength = (password: string): PasswordStrength => {
+  if (!password) return { score: 0, label: '—', className: 'bg-fmz-border-light' };
+
+  const rules = [
+    password.length >= 8,
+    /[A-Z]/.test(password),
+    /[0-9]/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+  ];
+  const score = rules.filter(Boolean).length;
+
+  if (score <= 1) return { score, label: 'Fraca', className: 'bg-fmz-error' };
+  if (score <= 2) return { score, label: 'Média', className: 'bg-[#C97B10]' };
+  return { score, label: 'Forte', className: 'bg-fmz-success' };
+};
+
+const sanitizeUserForForm = (user: UserType): UserType => ({
+  ...user,
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+});
 
 export default function MyAccountPage() {
-    const t = useTranslations('MyAccount');
-    const common = useTranslations('Common');
+  const t = useTranslations('MyAccount');
+  const common = useTranslations('Common');
+  const router = useRouter();
 
-    const router = useRouter();
-    const { profile, setCurrentProfile } = useProfile();
-    const [wallet, setWallet] = useState<string | null>(null);
-    const [message, setMessage] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [propertyId, setPropertyId] = useState<number>(1);
-    const [propertyDetail, setPropertyDetail] = useState<PropertyData | null>(null);
+  const [wallet, setWallet] = useState<string | null>(null);
+  const [userData, setUserData] = useState<UserType | null>(null);
+  const [apiError, setApiError] = useState<FmzNormalizedApiError | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<AccountFieldErrors>({});
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [passwordVisibility, setPasswordVisibility] = useState<PasswordVisibilityState>(emptyPasswordVisibility);
 
-    const [userData, setUserData] = useState<UserType | null>(null);
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const passwordStrength = useMemo(() => getPasswordStrength(userData?.newPassword ?? ''), [userData?.newPassword]);
 
-    const toggleCurrentPasswordVisibility = () => {
-        setShowCurrentPassword(!showCurrentPassword);
+  const updateUserField = useCallback((field: keyof UserType, value: string) => {
+    setUserData((currentUser) => (currentUser ? { ...currentUser, [field]: value } : currentUser));
+    setApiError(null);
+    setSuccessMessage(null);
+    setFieldErrors((currentErrors) => ({ ...currentErrors, [field]: undefined }));
+  }, []);
+
+  const togglePasswordVisibility = useCallback((field: keyof PasswordVisibilityState) => {
+    setPasswordVisibility((currentState) => ({ ...currentState, [field]: !currentState[field] }));
+  }, []);
+
+  const resetPasswordFields = useCallback(() => {
+    setUserData((currentUser) => (currentUser
+      ? { ...currentUser, currentPassword: '', newPassword: '', confirmPassword: '' }
+      : currentUser));
+    setFieldErrors({});
+    setApiError(null);
+    setSuccessMessage(null);
+    setPasswordVisibility(emptyPasswordVisibility);
+  }, []);
+
+  const validateAccountForm = useCallback((): boolean => {
+    const nextFieldErrors: AccountFieldErrors = {};
+
+    if (!userData?.currentPassword?.trim()) {
+      nextFieldErrors.currentPassword = t('errorCurrentPasswordRequired');
+    }
+
+    if ((userData?.newPassword || userData?.confirmPassword) && userData?.newPassword !== userData?.confirmPassword) {
+      nextFieldErrors.confirmPassword = 'As senhas não coincidem.';
+    }
+
+    setFieldErrors(nextFieldErrors);
+    return Object.keys(nextFieldErrors).length === 0;
+  }, [t, userData?.confirmPassword, userData?.currentPassword, userData?.newPassword]);
+
+  const handleSaveChanges = useCallback(async () => {
+    setApiError(null);
+    setSuccessMessage(null);
+
+    if (!userData || !validateAccountForm()) return;
+
+    setIsSaving(true);
+    const response = await updateUser(userData);
+    setIsSaving(false);
+
+    if (!response.success) {
+      setApiError(response.error);
+      return;
+    }
+
+    setUserData(response.data?.user ? sanitizeUserForForm(response.data.user) : sanitizeUserForForm(userData));
+    setSuccessMessage(response.message || t('saveSuccess'));
+    setFieldErrors({});
+    setPasswordVisibility(emptyPasswordVisibility);
+  }, [t, userData, validateAccountForm]);
+
+  useEffect(() => {
+    const storedWallet = localStorage.getItem('wallet');
+    setWallet(storedWallet);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchUserData = async () => {
+      if (!wallet) return;
+
+      const response = await getUserByWallet(wallet);
+      if (!isMounted) return;
+
+      if (!response) {
+        setApiError(buildLocalAccountError(common('errorLoadingData')));
+        setUserData(null);
+        return;
+      }
+
+      setUserData(sanitizeUserForForm(response));
+      setApiError(null);
     };
 
-    const toggleNewPasswordVisibility = () => {
-        setShowNewPassword(!showNewPassword);
+    fetchUserData();
+
+    return () => {
+      isMounted = false;
     };
+  }, [common, wallet]);
 
-    const toggleConfirmPasswordVisibility = () => {
-        setShowConfirmPassword(!showConfirmPassword);
-    };
+  return (
+    <FmzConnectedPageShell width="default">
+      <button
+        type="button"
+        onClick={() => router.back()}
+        className="mb-7 inline-flex items-center gap-1.5 border-0 bg-transparent p-0 text-[13px] text-fmz-text-hint transition hover:text-fmz-text-primary"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Voltar
+      </button>
 
-    const handleSaveChanges = async () => {
-        setError(null);
-        if (!userData) return;
+      <div className="mb-8 flex items-end justify-between gap-4">
+        <div>
+          <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-fmz-text-hint">Configurações</p>
+          <h1 className="font-syne text-3xl font-extrabold tracking-[-0.025em] text-fmz-navy">{t('title')}</h1>
+        </div>
+        <div className="mb-1 inline-flex items-center gap-1.5 rounded-full border border-fmz-success-border bg-fmz-success-bg px-3 py-1.5 text-xs font-medium text-fmz-success">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-fmz-success" />
+          Conta ativa
+        </div>
+      </div>
 
-        if (!userData.currentPassword || userData.currentPassword.trim() === '') {
-            setError(t('errorCurrentPasswordRequired') || '');
-            return;
-        }
+      <FmzFormAlert error={apiError} />
 
-        try {
-            const response = await updateUser(userData);
-            if (response.success) {
-                setMessage(t('saveSuccess'));
-                // Update userData and profile context with returned user data
-                if (response.data && response.data.user) {
-                    setUserData(response.data.user);
-                    setCurrentProfile(profile);
-                } else {
-                    setCurrentProfile(profile);
-                }
-            } else {
-                setError(response.error?.description || t('saveError'));
-            }
-        } catch (error) {
-            setError(t('saveError'));
-        }
-    };
+      {userData ? (
+        <>
+          <FmzCard>
+            <FmzCardHeader
+              icon={<UserRound className="h-[18px] w-[18px]" aria-hidden="true" />}
+              title="Dados Pessoais"
+              subtitle="Informações visíveis no seu perfil"
+            />
 
-    const handleBackNavigation = () => {
-        router.back();
-    };
+            <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">
+                  {t('labelName')} <span className="text-fmz-gold-dark">*</span>
+                </span>
+                <FmzTextInput
+                  value={userData.name ?? ''}
+                  onChange={(event) => updateUserField('name', event.target.value)}
+                />
+              </label>
 
-    useEffect(() => {
-        setError(null);
-        setMessage(null);
-        const storedWallet = localStorage.getItem("wallet");
-        if (storedWallet && !wallet) {
-            setWallet(storedWallet);
-        }
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">
+                  {t('labelPhone')} <span className="text-fmz-gold-dark">*</span>
+                </span>
+                <FmzTextInput
+                  type="tel"
+                  value={userData.phone ?? ''}
+                  onChange={(event) => updateUserField('phone', event.target.value)}
+                />
+              </label>
 
-        const fetchData = async () => {
-            try {
-                if (!wallet) return;
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">
+                  {t('labelBirthdate')} <span className="text-fmz-gold-dark">*</span>
+                </span>
+                <FmzTextInput
+                  value={userData.birthdate ?? ''}
+                  onChange={(event) => updateUserField('birthdate', formatBirthdateInput(event.target.value))}
+                />
+              </label>
 
-                const response = await getUserByWallet(wallet);
-
-                if (!response) {
-                    setMessage(common('dataNotAvailable'));
-                    setUserData(null);
-                } else {
-                    setUserData(response);
-                }
-
-                const propertyDetails = await getPropertyDetail(propertyId);
-                setPropertyDetail(propertyDetails);
-
-            } catch (err) {
-                setError(common('errorLoadingData'));
-            }
-        };
-
-        if (wallet) {
-            fetchData();
-        }
-    }, [wallet]);
-
-    return (
-        <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center w-full gap-3 mb-4">
-                <button onClick={handleBackNavigation} className="text-gray-400 button-line-transparent border border-white text-sm py-1">
-                    <ArrowLeft size={28} />
-                </button>
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">
+                  {t('labelEmail')} <span className="text-fmz-gold-dark">*</span>
+                </span>
+                <FmzTextInput type="email" value={userData.email ?? ''} disabled />
+                <span className="mt-1.5 block text-[11.5px] text-fmz-text-hint">O e-mail não pode ser alterado.</span>
+              </label>
             </div>
-            <h2 className="text-4xl mb-6">{t('title')}</h2>
-            {userData ? (
+          </FmzCard>
 
-                <div className="max-w-6xl">
-                    {message ? (
-                        <div className="mb-6 rounded-md p-4 text-sm bg-blue-50 text-blue-700 border-l-4 border-blue-500">
-                            {message}
-                        </div>
-                    ) : ""}
+          <FmzCard>
+            <FmzCardHeader
+              icon={<ShieldCheck className="h-[18px] w-[18px]" aria-hidden="true" />}
+              title="Segurança"
+              subtitle="Atualize sua senha quando quiser"
+            />
 
-                    {error ? (
-                        <div className="mb-6 rounded-md p-4 text-sm bg-red-50 text-blue-700 border-l-4 border-red-500">
-                            {error}
-                        </div>
-                    ) : ""}
+            <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+              <label className="block md:col-span-2">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">
+                  {t('labelCurrentPassword')} <span className="text-fmz-gold-dark">*</span>
+                </span>
+                <span className="relative block">
+                  <FmzTextInput
+                    type={passwordVisibility.current ? 'text' : 'password'}
+                    value={userData.currentPassword ?? ''}
+                    hasError={Boolean(fieldErrors.currentPassword)}
+                    autoComplete="current-password"
+                    className="pr-11"
+                    placeholder="Digite sua senha atual"
+                    onChange={(event) => updateUserField('currentPassword', event.target.value)}
+                  />
+                  <FmzPasswordVisibilityButton
+                    isVisible={passwordVisibility.current}
+                    onClick={() => togglePasswordVisibility('current')}
+                  />
+                </span>
+                {fieldErrors.currentPassword ? <span className="mt-1.5 block text-xs text-fmz-error">{fieldErrors.currentPassword}</span> : null}
+              </label>
 
-                    <div className="flex flex-col md:flex-row gap-6 mt-6">
-                        {/* Left column - Form fields */}
-                        <div className="md:w-3/4 p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <input
-                                    type="hidden"
-                                    value={userData._id || ''}
-                                    onChange={(e) => setUserData({ ...userData, _id: e.target.value })}
-                                />
-                                {/* Full Name */}
-                                <div className="flex flex-col">
-                                    <label className="text-gray-700 font-normal mb-2">{t('labelName')} *</label>
-                                    <input
-                                        type="text"
-                                        className="px-4 py-3 w-full bg-gray-50 border border-gray-200 rounded-md text-sm"
-                                        value={userData.name || ''}
-                                        onChange={(e) => setUserData({ ...userData, name: e.target.value })}
-                                    />
-                                </div>
-
-                                {/* Contact (WhatsApp) */}
-                                <div className="flex flex-col">
-                                    <label className="text-gray-700 font-normal mb-2">{t('labelPhone')} *</label>
-                                    <input
-                                        type="text"
-                                        className="px-4 py-3 w-full bg-gray-50 border border-gray-200 rounded-md text-sm"
-                                        value={userData.phone || ''}
-                                        onChange={(e) => setUserData({ ...userData, phone: e.target.value })}
-                                    />
-                                </div>
-
-                                {/* Birth Date */}
-                                <div className="flex flex-col">
-                                    <label className="text-gray-700 font-normal mb-2">{t('labelBirthdate')} *</label>
-                                    <input
-                                        type="text"
-                                        className="px-4 py-3 w-full bg-gray-50 border border-gray-200 rounded-md text-sm"
-                                        value={userData.birthdate || ''}
-                                        onChange={(e) => setUserData({ ...userData, birthdate: e.target.value })}
-                                    />
-                                </div>
-
-                                {/* Email */}
-                                <div className="flex flex-col">
-                                    <label className="text-gray-700 font-normal mb-2">{t('labelEmail')} *</label>
-                                    <input
-                                        type="email"
-                                        className="px-4 py-3 w-full bg-gray-50 border border-gray-200 rounded-md text-sm"
-                                        value={userData.email || ''}
-                                        onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="flex flex-col">
-                                    <label className="text-gray-700 font-normal mb-2">{t('labelCurrentPassword')} * </label>
-                                    <input type="password" name="fakePassword" autoComplete="new-password" className="hidden" />
-
-                                    <div className="relative w-full">
-                                        <input
-                                            type={showCurrentPassword ? "text" : "password"}
-                                            autoComplete="current-xx-Password"
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md text-sm"
-                                            value={userData.currentPassword || ''}
-                                            onChange={(e) => setUserData({ ...userData, currentPassword: e.target.value })}
-                                        />
-                                        <button
-                                            type="button"
-                                            className="button-line-transparent absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
-                                            onClick={toggleCurrentPasswordVisibility}
-                                        >
-                                            {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                        </button>
-                                    </div>
-                                </div>
-                                <br />
-                                {/* Password */}
-                                <div className="flex flex-col">
-                                    <label className="text-gray-700 font-normal mb-2">{t('labelNewPassword')}</label>
-                                    <div className="relative w-full">
-                                        <input
-                                            type={showNewPassword ? "text" : "password"}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md text-sm"
-                                            value={userData.newPassword || ''}
-                                            autoComplete="off"
-                                            onChange={(e) => setUserData({ ...userData, newPassword: e.target.value })}
-                                        />
-                                        <button
-                                            type="button"
-                                            className="button-line-transparent absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
-                                            onClick={toggleNewPasswordVisibility}
-                                        >
-                                            {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col">
-                                    <label className="text-gray-700 font-normal mb-2">{t('labelConfirmPassword')}</label>
-                                    <div className="relative w-full">
-                                        <input
-                                            type={showConfirmPassword ? "text" : "password"}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md text-sm"
-                                            value={userData.confirmPassword || ''}
-                                            autoComplete="off"
-                                            onChange={(e) => setUserData({ ...userData, confirmPassword: e.target.value })}
-                                        />
-                                        <button
-                                            type="button"
-                                            className="button-line-transparent absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
-                                            onClick={toggleConfirmPasswordVisibility}
-                                        >
-                                            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mt-8">
-                                <button
-                                    onClick={handleSaveChanges}
-                                    className="bg-blue-600 text-base text-white font-bold px-16 py-4 rounded-full"
-                                >
-                                    {t('saveChanges')}
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Right column - Blockchain Information */}
-                             {/* <div className="md:w-3/4 p-8 h-fit">
-                                <div className="flex flex-col mb-6">
-                                    <div className="flex items-center mb-3">
-                                        <label className="text-gray-700 font-medium">{t('blockchainIdLabel')}</label>
-                                        <div className="relative group ml-2">
-                                            <Info size={16} className="text-gray-500" />
-                                            <div className="absolute z-10 hidden group-hover:block bg-white text-black text-xs rounded py-1 px-2 bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-normal shadow-md w-64">
-                                                {t('blockchainIdTooltip')}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="bg-blue-50 p-8 rounded-md text-blue-700 break-words text-sm">
-                                        {userData.wallet || ''}
-                                    </div>
-                                </div>
-
-                                {propertyDetail && (
-                                    <div>
-                                        <p className="text-gray-700 text-base">
-                                            {t('transactionHistory')}
-                                            <a href={propertyDetail.blockExplorerUrl} target="_blank" className="text-blue-600 hover:underline ml-1">{t('transactionHistoryLink')}</a>
-                                            {t('transactionHistoryContinuation')}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>  */}
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">{t('labelNewPassword')}</span>
+                <span className="relative block">
+                  <FmzTextInput
+                    type={passwordVisibility.next ? 'text' : 'password'}
+                    value={userData.newPassword ?? ''}
+                    autoComplete="new-password"
+                    className="pr-11"
+                    placeholder="Mínimo 8 caracteres"
+                    onChange={(event) => updateUserField('newPassword', event.target.value)}
+                  />
+                  <FmzPasswordVisibilityButton
+                    isVisible={passwordVisibility.next}
+                    onClick={() => togglePasswordVisibility('next')}
+                  />
+                </span>
+                {userData.newPassword ? (
+                  <div className="mt-2">
+                    <div className="mb-1 flex gap-1">
+                      {[0, 1, 2, 3].map((index) => (
+                        <span
+                          key={index}
+                          className={`h-[3px] flex-1 rounded-sm ${index < passwordStrength.score ? passwordStrength.className : 'bg-fmz-border-light'}`}
+                        />
+                      ))}
                     </div>
-                </div>
-            ) : (
-                <div className="mb-6 rounded-md p-4 text-sm bg-blue-50 text-blue-700 border-l-4 border-blue-500">
-                    {message}
-                </div>
-            )
-            }
-        </div >
-    );
+                    <span className="text-[11.5px] text-fmz-text-hint">{passwordStrength.label}</span>
+                  </div>
+                ) : null}
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">{t('labelConfirmPassword')}</span>
+                <span className="relative block">
+                  <FmzTextInput
+                    type={passwordVisibility.confirmation ? 'text' : 'password'}
+                    value={userData.confirmPassword ?? ''}
+                    hasError={Boolean(fieldErrors.confirmPassword)}
+                    autoComplete="new-password"
+                    className="pr-11"
+                    placeholder="Repita a nova senha"
+                    onChange={(event) => updateUserField('confirmPassword', event.target.value)}
+                  />
+                  <FmzPasswordVisibilityButton
+                    isVisible={passwordVisibility.confirmation}
+                    onClick={() => togglePasswordVisibility('confirmation')}
+                  />
+                </span>
+                {fieldErrors.confirmPassword ? <span className="mt-1.5 block text-xs text-fmz-error">{fieldErrors.confirmPassword}</span> : null}
+              </label>
+            </div>
+
+            <div className="mt-7 flex items-center justify-between border-t border-fmz-border-light pt-6">
+              <button
+                type="button"
+                onClick={resetPasswordFields}
+                className="border-0 bg-transparent p-0 text-sm font-medium text-fmz-text-hint transition hover:text-fmz-text-primary"
+              >
+                Descartar alterações
+              </button>
+              <FmzButton type="button" className="w-auto px-8" disabled={isSaving} onClick={handleSaveChanges}>
+                <Check className="h-[15px] w-[15px]" aria-hidden="true" />
+                {isSaving ? 'Salvando...' : t('saveChanges')}
+              </FmzButton>
+            </div>
+          </FmzCard>
+        </>
+      ) : (
+        <FmzCard>
+          <p className="text-sm text-fmz-text-muted">{common('dataNotAvailable')}</p>
+        </FmzCard>
+      )}
+
+      {successMessage ? (
+        <div className="fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2.5 whitespace-nowrap rounded-xl bg-fmz-navy px-5 py-3.5 text-sm font-medium text-white shadow-lg">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-fmz-gold text-fmz-navy">
+            <Check className="h-3 w-3" aria-hidden="true" />
+          </span>
+          {successMessage}
+        </div>
+      ) : null}
+    </FmzConnectedPageShell>
+  );
 }
