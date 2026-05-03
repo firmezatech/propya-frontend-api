@@ -15,7 +15,8 @@ export function FmzConnectedEmptyHome() {
   return (
     <div className="fmz-connected-empty-home">
       <section className="fmz-empty-hero" aria-labelledby="fmz-empty-home-title">
-        <div className="fmz-empty-orb" aria-hidden="true">
+        <div className="fmz-empty-hero-shell">
+          <div className="fmz-empty-orb" aria-hidden="true">
           <div className="fmz-empty-orb-ring-primary" />
           <div className="fmz-empty-orb-ring-secondary" />
           <div className="fmz-empty-orb-center">
@@ -23,13 +24,14 @@ export function FmzConnectedEmptyHome() {
           </div>
           <div className="fmz-empty-orb-dot" />
           <div className="fmz-empty-orb-dot fmz-empty-orb-dot-secondary" />
-        </div>
+          </div>
 
-        <p className="fmz-empty-eyebrow">{fmzConnectedEmptyHomeConfig.eyebrow}</p>
-        <h1 id="fmz-empty-home-title" className="fmz-empty-title">{fmzConnectedEmptyHomeConfig.title}</h1>
-        <p className="fmz-empty-description">{fmzConnectedEmptyHomeConfig.description}</p>
+            <p className="fmz-empty-eyebrow">{fmzConnectedEmptyHomeConfig.eyebrow}</p>
+          <h1 id="fmz-empty-home-title" className="fmz-empty-title">{fmzConnectedEmptyHomeConfig.title}</h1>
+          <p className="fmz-empty-description">{fmzConnectedEmptyHomeConfig.description}</p>
 
-        <div className="fmz-empty-steps" aria-label="Próximos passos">
+
+          <div className="fmz-empty-steps" aria-label="Próximos passos">
           {fmzConnectedEmptyHomeConfig.steps.map((step) => (
             <article key={step.id} className="fmz-empty-step-card">
               <span className="fmz-empty-step-bar" aria-hidden="true" />
@@ -38,12 +40,13 @@ export function FmzConnectedEmptyHome() {
               <p className="fmz-empty-step-description">{step.description}</p>
             </article>
           ))}
-        </div>
+          </div>
 
-        <button type="button" onClick={() => router.push(buildLocalizedPath(params?.locale, fmzConnectedEmptyHomeConfig.ctaPath))} className="fmz-empty-cta">
+          <button type="button" onClick={() => router.push(buildLocalizedPath(params?.locale, fmzConnectedEmptyHomeConfig.ctaPath))} className="fmz-empty-cta">
           <Plus className="fmz-empty-cta-icon" aria-hidden="true" />
           {fmzConnectedEmptyHomeConfig.ctaLabel}
-        </button>
+          </button>
+        </div>
       </section>
 
       <FmzInstagramFeedSection />

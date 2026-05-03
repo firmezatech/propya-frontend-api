@@ -1159,28 +1159,42 @@ margin-top: 20px;
   }
 }
 
-/* FirmezaToken connected empty home - source-aligned with firmeza_ig_slider_final.html */
+/* FirmezaToken connected empty home - responsive hero structure aligned with firmeza_ig_slider_final.html */
 .fmz-connected-empty-home {
   display: flex;
   flex: 1;
   flex-direction: column;
   background: #fff;
+  min-width: 0;
 }
 
 .fmz-empty-hero {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 48px 20px 36px;
+  justify-content: center;
+  width: 100%;
+  min-height: clamp(430px, 52vh, 620px);
+  padding: clamp(36px, 5vw, 72px) clamp(16px, 4vw, 40px) clamp(32px, 4vw, 56px);
   text-align: center;
   background: #fff;
 }
 
+.fmz-empty-hero-shell {
+  display: flex;
+  width: min(100%, 920px);
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
 .fmz-empty-orb {
   position: relative;
-  width: 120px;
-  height: 120px;
-  margin-bottom: 24px;
+  width: clamp(120px, 13vw, 180px);
+  height: clamp(120px, 13vw, 180px);
+  margin-bottom: clamp(24px, 3vw, 40px);
+  flex: 0 0 auto;
 }
 
 .fmz-empty-orb-ring-primary {
@@ -1193,7 +1207,7 @@ margin-top: 20px;
 
 .fmz-empty-orb-ring-secondary {
   position: absolute;
-  inset: 14px;
+  inset: clamp(14px, 1.55vw, 20px);
   border-radius: 50%;
   border: 1.5px solid #eaecf2;
   animation: fmz-empty-reference-spin 13s linear infinite reverse;
@@ -1201,7 +1215,7 @@ margin-top: 20px;
 
 .fmz-empty-orb-center {
   position: absolute;
-  inset: 32px;
+  inset: clamp(32px, 3.55vw, 48px);
   border-radius: 50%;
   background: #fff;
   border: 1.5px solid var(--fmz-border-light);
@@ -1212,8 +1226,8 @@ margin-top: 20px;
 }
 
 .fmz-empty-orb-icon {
-  width: 28px;
-  height: 28px;
+  width: clamp(28px, 3vw, 40px);
+  height: clamp(28px, 3vw, 40px);
   color: var(--fmz-navy);
 }
 
@@ -1221,19 +1235,19 @@ margin-top: 20px;
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 7px;
-  height: 7px;
+  width: clamp(7px, 0.75vw, 10px);
+  height: clamp(7px, 0.75vw, 10px);
   border-radius: 50%;
   background: var(--fmz-gold);
-  margin: -3.5px;
+  margin: calc(clamp(7px, 0.75vw, 10px) / -2);
   transform-origin: 0 0;
   animation: fmz-empty-reference-orbit 4s linear infinite;
 }
 
 .fmz-empty-orb-dot-secondary {
-  width: 5px;
-  height: 5px;
-  margin: -2.5px;
+  width: clamp(5px, 0.55vw, 7px);
+  height: clamp(5px, 0.55vw, 7px);
+  margin: calc(clamp(5px, 0.55vw, 7px) / -2);
   background: var(--fmz-navy);
   opacity: 0.2;
   animation: fmz-empty-reference-orbit 6s linear infinite reverse;
@@ -1245,51 +1259,53 @@ margin-top: 20px;
 }
 
 @keyframes fmz-empty-reference-orbit {
-  from { transform: rotate(0) translateX(53px); }
-  to { transform: rotate(360deg) translateX(53px); }
+  from { transform: rotate(0) translateX(calc((clamp(120px, 13vw, 180px) / 2) - 7px)); }
+  to { transform: rotate(360deg) translateX(calc((clamp(120px, 13vw, 180px) / 2) - 7px)); }
 }
 
 .fmz-empty-eyebrow {
-  font-size: 10px;
+  font-size: clamp(10px, 0.9vw, 12px);
   font-weight: 600;
   letter-spacing: 0.11em;
   text-transform: uppercase;
   color: var(--fmz-gold-dark);
-  margin-bottom: 7px;
+  margin-bottom: clamp(7px, 1vw, 12px);
 }
 
 .fmz-empty-title {
   font-family: var(--font-syne), sans-serif;
   font-weight: 800;
-  font-size: 20px;
+  font-size: clamp(22px, 3.1vw, 34px);
   color: var(--fmz-navy);
-  margin-bottom: 7px;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+  margin-bottom: clamp(8px, 1.2vw, 14px);
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  max-width: 720px;
 }
 
 .fmz-empty-description {
-  font-size: 13px;
+  font-size: clamp(13px, 1.35vw, 16px);
   color: var(--fmz-text-muted);
-  max-width: 320px;
+  max-width: min(100%, 480px);
   line-height: 1.65;
-  margin-bottom: 26px;
+  margin-bottom: clamp(28px, 3.2vw, 42px);
 }
 
 .fmz-empty-steps {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 26px;
-  flex-wrap: wrap;
+  display: grid;
+  width: min(100%, 560px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(8px, 1.3vw, 14px);
+  margin-bottom: clamp(28px, 3.2vw, 42px);
   justify-content: center;
 }
 
 .fmz-empty-step-card {
+  min-width: 0;
   background: var(--fmz-page);
   border: 1.5px solid var(--fmz-border-light);
-  border-radius: 12px;
-  padding: 13px 15px;
-  width: 136px;
+  border-radius: clamp(12px, 1.4vw, 16px);
+  padding: clamp(14px, 1.8vw, 20px);
   position: relative;
   overflow: hidden;
   text-align: left;
@@ -1313,23 +1329,23 @@ margin-top: 20px;
 .fmz-empty-step-number {
   font-family: var(--font-syne), sans-serif;
   font-weight: 800;
-  font-size: 17px;
+  font-size: clamp(17px, 1.9vw, 23px);
   color: var(--fmz-gold);
-  margin-bottom: 4px;
+  margin-bottom: clamp(4px, 0.7vw, 8px);
   line-height: 1;
 }
 
 .fmz-empty-step-title {
-  font-size: 11px;
+  font-size: clamp(11px, 1.1vw, 14px);
   font-weight: 500;
   color: var(--fmz-navy);
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .fmz-empty-step-description {
-  font-size: 10px;
+  font-size: clamp(10px, 0.95vw, 12px);
   color: var(--fmz-text-hint);
-  margin-top: 2px;
+  margin-top: 3px;
   line-height: 1.4;
 }
 
@@ -1338,10 +1354,10 @@ margin-top: 20px;
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 11px 24px;
+  padding: clamp(11px, 1.35vw, 14px) clamp(24px, 3vw, 32px);
   font-family: var(--font-syne), sans-serif;
   font-weight: 700;
-  font-size: 12.5px;
+  font-size: clamp(12.5px, 1.05vw, 14px);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   cursor: pointer;
@@ -1362,11 +1378,28 @@ margin-top: 20px;
   height: 12px;
 }
 
-@media (max-width: 900px) {
-  .fmz-empty-hero { padding: 36px 16px 28px; }
+@media (max-width: 700px) {
+  .fmz-empty-hero {
+    min-height: auto;
+    padding-top: 36px;
+  }
+
+  .fmz-empty-steps {
+    width: min(100%, 390px);
+    grid-template-columns: 1fr;
+  }
+
+  .fmz-empty-step-card {
+    text-align: center;
+  }
 }
 
-@media (max-width: 600px) {
-  .fmz-empty-steps { gap: 6px; }
-  .fmz-empty-step-card { width: 120px; }
+@media (max-width: 420px) {
+  .fmz-empty-hero {
+    padding-inline: 14px;
+  }
+
+  .fmz-empty-steps {
+    width: 100%;
+  }
 }
