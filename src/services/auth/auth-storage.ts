@@ -1,6 +1,6 @@
 const FMZ_AUTH_TOKEN_KEY = process.env.NEXT_PUBLIC_FMZ_AUTH_TOKEN_STORAGE_KEY || "fmz_access_token";
 const LEGACY_AUTH_TOKEN_KEY = "accessToken";
-const FMZ_USER_STORAGE_KEYS = ["name", "wallet", "profile"];
+const FMZ_USER_STORAGE_KEYS = ["name", "email", "wallet", "profile"];
 
 const isBrowser = () => typeof window !== "undefined";
 

@@ -19,6 +19,7 @@ import {
   InvoiceData
 } from "../../../../services/web3-api";
 import DashboardLegado from "../DashboardLegado";
+import { FmzConnectedEmptyHome } from "../components/home/FmzConnectedEmptyHome";
 
 // Loading skeleton component
 const LoadingSkeleton = () => (
@@ -287,7 +288,7 @@ export default function DashboardPage() {
     console.log("🔍 Profile do investorDetail:", investorDetail?.profile);
 
     if(investorDetail?.profile === undefined){
-      return <InfoMessage message={t("noInvestment")} />;
+      return <FmzConnectedEmptyHome />;
     }
 
     // Render appropriate dashboard based on effective profile

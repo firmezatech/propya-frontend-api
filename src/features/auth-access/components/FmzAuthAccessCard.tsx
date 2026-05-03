@@ -100,6 +100,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
     }
 
     localStorage.setItem('name', response.name || '');
+    localStorage.setItem('email', loginData.email);
     localStorage.setItem('wallet', response.wallet || '');
     localStorage.setItem('profile', String(response.profile || ''));
     formRef.current?.reset();

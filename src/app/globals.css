@@ -1137,3 +1137,17 @@ margin-top: 20px;
   from { opacity: 0; transform: translateY(-3px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+@keyframes fmz-empty-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fmz-empty-orbit {
+  from { transform: rotate(0deg) translateX(82px); }
+  to { transform: rotate(360deg) translateX(82px); }
+}
+
+.fmz-empty-spin { animation: fmz-empty-spin 18s linear infinite; }
+.fmz-empty-spin-reverse { animation: fmz-empty-spin 12s linear infinite reverse; }
+.fmz-empty-orbit { margin: -5px; transform-origin: 0 0; animation: fmz-empty-orbit 4s linear infinite; }
+.fmz-empty-orbit-reverse { margin: -3.5px; transform-origin: 0 0; animation: fmz-empty-orbit 6s linear infinite reverse; animation-delay: -2s; }
