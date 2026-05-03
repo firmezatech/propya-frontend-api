@@ -28,6 +28,13 @@ export const fmzPublicLayoutConfig = {
   connectedUserNameStorageKey: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_USER_NAME_STORAGE_KEY', 'name'),
   connectedUserEmailStorageKey: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_USER_EMAIL_STORAGE_KEY', 'email'),
   connectedUserWalletStorageKey: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_USER_WALLET_STORAGE_KEY', 'wallet'),
+  instagramHandle: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_HANDLE', '@firmezatoken_propya'),
+  instagramProfileName: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_PROFILE_NAME', 'FirmezaToken · Imóveis com blockchain'),
+  instagramProfileUrl: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_PROFILE_URL', 'https://www.instagram.com/firmezatoken_propya/'),
+  instagramPostsApiPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_POSTS_API_PATH', '/api/instagram/posts'),
+  instagramFallbackPostCountLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_FALLBACK_POST_COUNT_LABEL', 'Conectar'),
+  instagramFallbackFollowerCountLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_FALLBACK_FOLLOWER_COUNT_LABEL', 'Instagram'),
+  instagramFallbackFollowingCountLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_FALLBACK_FOLLOWING_COUNT_LABEL', 'Real'),
   logoPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_LOGO_PATH', '/logo.png'),
   footerTagline: getPublicEnvValue(
     'NEXT_PUBLIC_FMZ_FOOTER_TAGLINE',

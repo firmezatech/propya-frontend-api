@@ -1151,3 +1151,10 @@ margin-top: 20px;
 .fmz-empty-spin-reverse { animation: fmz-empty-spin 12s linear infinite reverse; }
 .fmz-empty-orbit { margin: -5px; transform-origin: 0 0; animation: fmz-empty-orbit 4s linear infinite; }
 .fmz-empty-orbit-reverse { margin: -3.5px; transform-origin: 0 0; animation: fmz-empty-orbit 6s linear infinite reverse; animation-delay: -2s; }
+
+@media (max-width: 639px) {
+  @keyframes fmz-empty-orbit {
+    from { transform: rotate(0deg) translateX(53px); }
+    to { transform: rotate(360deg) translateX(53px); }
+  }
+}
