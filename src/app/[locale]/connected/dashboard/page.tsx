@@ -19,7 +19,7 @@ import {
   InvoiceData
 } from "../../../../services/web3-api";
 import DashboardLegado from "../DashboardLegado";
-import { FmzConnectedEmptyHome } from "../components/home/FmzConnectedEmptyHome";
+import { FmzConnectedEmptyHome } from "../../../../features/connected-home/components/FmzConnectedEmptyHome";
 
 // Loading skeleton component
 const LoadingSkeleton = () => (
@@ -80,6 +80,7 @@ export default function DashboardPage() {
   const [propertyDetail, setPropertyDetail] = useState<PropertyData | null>(null);
   const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
   const [profile, setProfile] = useState<number>(99);
+  const [shouldShowEmptyHome, setShouldShowEmptyHome] = useState<boolean>(false);
 
   // Initialize wallet and profile from localStorage
   useEffect(() => {
@@ -107,6 +108,7 @@ export default function DashboardPage() {
     if (!wallet) {
       console.log("⚠️ Usuário não está logado");
       setError(comm("pleaseLogin"));
+      setShouldShowEmptyHome(false);
       setIsLoading(false);
       return;
     }
@@ -125,6 +127,7 @@ export default function DashboardPage() {
 
     setIsLoading(true);
     setError(null);
+    setShouldShowEmptyHome(false);
 
     try {
       console.log("🔍 Iniciando carregamento dos dados para propertyId:", propertyId);
@@ -145,6 +148,7 @@ export default function DashboardPage() {
       } catch (investorError) {
         console.warn("⚠️ Usuário não é investidor:", investorError);
         setInvestorDetail(null);
+        setShouldShowEmptyHome(true);
         // Se não é investidor, assume que é locatário
         // setProfile(2);
         // localStorage.setItem("profile", "2");
@@ -164,9 +168,19 @@ export default function DashboardPage() {
         console.error("❌ Erro ao carregar propriedade:", propertyError);
         const errorMessage = propertyError instanceof Error ? propertyError.message : String(propertyError);
         if (errorMessage.includes('No metadata available') || errorMessage.includes('Sem metadados')) {
-          throw new Error(t("propertyNotConfigured"));
+          setShouldShowEmptyHome(true);
+          setPropertyDetail(null);
+          setRentDetail(null);
+          setInvoiceData(null);
+          setError(null);
+          return;
         } else {
-          throw new Error(t("propertyNotFound"));
+          setShouldShowEmptyHome(true);
+          setPropertyDetail(null);
+          setRentDetail(null);
+          setInvoiceData(null);
+          setError(null);
+          return;
         }
       }
 
@@ -194,7 +208,8 @@ export default function DashboardPage() {
         console.error("❌ Erro ao carregar detalhes do aluguel:", rentDetails.reason);
         const errorMessage = rentDetails.reason instanceof Error ? rentDetails.reason.message : String(rentDetails.reason);
         if (errorMessage.includes('No metadata available') || errorMessage.includes('Sem metadados')) {
-          setError(t("noMetadataAvailable"));
+          setShouldShowEmptyHome(true);
+          setError(null);
         } else {
           setError(t("errorLoadingRentDetails"));
         }
@@ -239,7 +254,10 @@ export default function DashboardPage() {
 
     } catch (err) {
       console.error("❌ Erro ao carregar dados:", err);
-      setError(err instanceof Error ? err.message : t("errorLoadingProperty"));
+      const errorMessage = err instanceof Error ? err.message : t("errorLoadingProperty");
+      const shouldFallbackToEmptyHome = errorMessage.includes(t("propertyNotConfigured")) || errorMessage.includes(t("propertyNotFound")) || errorMessage.includes('metadata') || errorMessage.includes('metadados');
+      setShouldShowEmptyHome(shouldFallbackToEmptyHome);
+      setError(shouldFallbackToEmptyHome ? null : errorMessage);
       setInvestorDetail(null);
       setRentDetail(null);
       setPropertyDetail(null);
@@ -270,14 +288,19 @@ export default function DashboardPage() {
       return <DashboardAdmin profile={profile} />;
     }
 
+    if (shouldShowEmptyHome && profile !== 0) {
+      console.log("🏠 Renderizando home vazia animada");
+      return <FmzConnectedEmptyHome />;
+    }
+
     if (error && profile !== 0) {
       console.log("❌ Exibindo mensagem de erro:", error);
       return <ErrorMessage message={error} />;
     }
 
     if (!propertyDetail && profile !== 0) {
-      console.log("❌ Propriedade não encontrada");
-      return <ErrorMessage message={t("propertyNotFound")} />;
+      console.log("🏠 Sem dados de propriedade, renderizando home vazia animada");
+      return <FmzConnectedEmptyHome />;
     }
 
     // Determine profile: prioritize localStorage profile, then investorDetail profile
@@ -342,14 +365,11 @@ export default function DashboardPage() {
     // Default case - show error message
     console.log("❌ Perfil inválido:", effectiveProfile);
     return <ErrorMessage message={t("invalidProfile")} />;
-  }, [isLoading, profile, error, propertyDetail, investorDetail, rentDetail, invoiceData, t]);
+  }, [isLoading, profile, shouldShowEmptyHome, error, propertyDetail, investorDetail, rentDetail, invoiceData, t]);
 
   return (
-    <div className="container w-full">
-      <main className="mt-4 mb-6">
-        
-        {renderContent}
-      </main>
-    </div>
+    <main className="w-full">
+      {renderContent}
+    </main>
   );
 }

@@ -1158,3 +1158,215 @@ margin-top: 20px;
     to { transform: rotate(360deg) translateX(53px); }
   }
 }
+
+/* FirmezaToken connected empty home - source-aligned with firmeza_ig_slider_final.html */
+.fmz-connected-empty-home {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  background: #fff;
+}
+
+.fmz-empty-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 20px 36px;
+  text-align: center;
+  background: #fff;
+}
+
+.fmz-empty-orb {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 24px;
+}
+
+.fmz-empty-orb-ring-primary {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px dashed var(--fmz-border-light);
+  animation: fmz-empty-reference-spin 20s linear infinite;
+}
+
+.fmz-empty-orb-ring-secondary {
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  border: 1.5px solid #eaecf2;
+  animation: fmz-empty-reference-spin 13s linear infinite reverse;
+}
+
+.fmz-empty-orb-center {
+  position: absolute;
+  inset: 32px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid var(--fmz-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 14px rgba(13, 19, 33, 0.07);
+}
+
+.fmz-empty-orb-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--fmz-navy);
+}
+
+.fmz-empty-orb-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fmz-gold);
+  margin: -3.5px;
+  transform-origin: 0 0;
+  animation: fmz-empty-reference-orbit 4s linear infinite;
+}
+
+.fmz-empty-orb-dot-secondary {
+  width: 5px;
+  height: 5px;
+  margin: -2.5px;
+  background: var(--fmz-navy);
+  opacity: 0.2;
+  animation: fmz-empty-reference-orbit 6s linear infinite reverse;
+  animation-delay: -2s;
+}
+
+@keyframes fmz-empty-reference-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fmz-empty-reference-orbit {
+  from { transform: rotate(0) translateX(53px); }
+  to { transform: rotate(360deg) translateX(53px); }
+}
+
+.fmz-empty-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--fmz-gold-dark);
+  margin-bottom: 7px;
+}
+
+.fmz-empty-title {
+  font-family: var(--font-syne), sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--fmz-navy);
+  margin-bottom: 7px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.fmz-empty-description {
+  font-size: 13px;
+  color: var(--fmz-text-muted);
+  max-width: 320px;
+  line-height: 1.65;
+  margin-bottom: 26px;
+}
+
+.fmz-empty-steps {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 26px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.fmz-empty-step-card {
+  background: var(--fmz-page);
+  border: 1.5px solid var(--fmz-border-light);
+  border-radius: 12px;
+  padding: 13px 15px;
+  width: 136px;
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.fmz-empty-step-card:hover {
+  border-color: var(--fmz-gold);
+  transform: translateY(-2px);
+}
+
+.fmz-empty-step-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--fmz-gold), transparent);
+}
+
+.fmz-empty-step-number {
+  font-family: var(--font-syne), sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  color: var(--fmz-gold);
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.fmz-empty-step-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fmz-navy);
+  line-height: 1.4;
+}
+
+.fmz-empty-step-description {
+  font-size: 10px;
+  color: var(--fmz-text-hint);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.fmz-empty-cta {
+  background: var(--fmz-navy);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 11px 24px;
+  font-family: var(--font-syne), sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.fmz-empty-cta:hover {
+  background: #162030;
+  transform: translateY(-1px);
+  box-shadow: 0 7px 20px rgba(13, 19, 33, 0.14);
+}
+
+.fmz-empty-cta-icon {
+  width: 12px;
+  height: 12px;
+}
+
+@media (max-width: 900px) {
+  .fmz-empty-hero { padding: 36px 16px 28px; }
+}
+
+@media (max-width: 600px) {
+  .fmz-empty-steps { gap: 6px; }
+  .fmz-empty-step-card { width: 120px; }
+}
