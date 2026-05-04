@@ -1,4 +1,4 @@
-import { Home, LogOut, UserRound } from 'lucide-react';
+import { Home, LogOut, ShieldCheck, UserRound } from 'lucide-react';
 import { fmzPublicLayoutConfig } from '../../../config/fmz-public-layout-config';
 import type { FmzConnectedDropdownItem, FmzConnectedDropdownItemId } from './fmz-connected-dropdown.types';
 
@@ -16,6 +16,14 @@ export const fmzConnectedDropdownItems: readonly FmzConnectedDropdownItem[] = [
     label: fmzPublicLayoutConfig.connectedAccountLabel,
     href: fmzPublicLayoutConfig.connectedAccountPath,
     icon: UserRound,
+    variant: 'default',
+    section: 'main',
+  },
+  {
+    id: 'roles',
+    label: fmzPublicLayoutConfig.connectedAdminRolesLabel,
+    href: fmzPublicLayoutConfig.connectedAdminRolesPath,
+    icon: ShieldCheck,
     variant: 'default',
     section: 'main',
   },
