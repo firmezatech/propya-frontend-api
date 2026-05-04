@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
 import { FmzBrandMark } from './FmzBrandMark';
-import { FmzConnectedDropdown, fmzConnectedDropdownItems } from './connected-dropdown';
+import { FmzConnectedUserIdentity } from './FmzConnectedUserIdentity';
 
 const buildFmzLocalizedHref = (locale: string | undefined, href: string): string => `${locale ? `/${locale}` : ''}${href}`;
 
@@ -23,12 +23,7 @@ export function FmzConnectedHeader() {
           <FmzBrandMark size="header" />
         </Link>
 
-        <FmzConnectedDropdown
-          items={fmzConnectedDropdownItems}
-          localizeHref={localizeHref}
-          defaultUserName={fmzPublicLayoutConfig.defaultConnectedUserName}
-          defaultUserEmail={fmzPublicLayoutConfig.defaultConnectedUserEmail}
-        />
+        <FmzConnectedUserIdentity />
       </div>
     </header>
   );

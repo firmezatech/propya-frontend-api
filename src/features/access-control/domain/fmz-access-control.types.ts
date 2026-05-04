@@ -3,3 +3,5 @@ export type FmzAccessControlPermission = { id: string; key: string; label: strin
 export type FmzAccessControlRole = { id: string; name: string; description: string; color: string; permissionKeys: string[]; isProtected: boolean };
 export type FmzAccessControlCatalog = { pages: FmzAccessControlPage[]; permissions: FmzAccessControlPermission[] };
 export type FmzRolePayload = { name: string; description?: string; color?: string; permissionKeys: string[] };
+
+export type FmzAccessControlPrincipal = { id: string; name: string; email: string; permissionKeys: string[]; roleKeys: string[]; isAdmin: boolean };
