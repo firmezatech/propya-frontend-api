@@ -3,12 +3,12 @@
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
-import { fmzAdminNavigationConfig, fmzAdminNavigationPaths } from '../../config/fmz-admin-navigation-config';
+import { fmzAdminNavigationConfig, fmzAdminNavigationPaths, fmzAdminPageIconByKey, type FmzAdminNavigationItem } from '../../config/fmz-admin-navigation-config';
 import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
-import { getAccessControlCatalog, getCurrentAccessControlPrincipal } from '../../features/access-control/services';
+import { getCurrentAccessControlPrincipal } from '../../features/access-control/services';
 import { clearFirmezaSession, FMZ_AUTH_SESSION_CHANGED_EVENT } from '../../services/auth/auth-storage';
 import { buildFmzConnectedUserInitials, buildFmzConnectedUserSummary } from './connected-user/fmz-connected-user-storage';
-import type { FmzAccessControlCatalog } from '../../features/access-control/domain';
+import type { FmzAccessControlPage, FmzAccessControlPrincipal } from '../../features/access-control/domain';
 import type { FmzConnectedUserSummary } from './connected-user/fmz-connected-user.types';
 import { FmzAdminSidebar } from './FmzAdminSidebar';
 
@@ -29,13 +29,44 @@ const buildDefaultUserSummary = (): FmzConnectedUserSummary => ({
   initials: 'FT',
 });
 
+const normalizeKey = (value: string): string => value.trim().toLowerCase();
+
+const isAdminPage = (page: FmzAccessControlPage): boolean => normalizeKey(page.key).startsWith('admin.');
+
+const buildAdminNavigationItemFromPage = (page: FmzAccessControlPage): FmzAdminNavigationItem => {
+  const pageKey = normalizeKey(page.key);
+  const Icon = fmzAdminPageIconByKey[pageKey] ?? fmzAdminPageIconByKey['admin.dashboard'];
+
+  return {
+    id: pageKey,
+    pageKey,
+    label: page.label || page.name || pageKey,
+    href: page.path,
+    requiredPermissionKey: normalizeKey(page.requiredPermission ?? ''),
+    icon: Icon,
+  };
+};
+
+const buildAdminNavigationItems = (principal: FmzAccessControlPrincipal | null): FmzAdminNavigationItem[] => {
+  if (!principal) return [];
+
+  const uniquePagesByKey = new Map<string, FmzAccessControlPage>();
+  principal.accessiblePages
+    .filter(isAdminPage)
+    .sort((left, right) => left.order - right.order)
+    .forEach((page) => {
+      if (!uniquePagesByKey.has(page.key)) uniquePagesByKey.set(page.key, page);
+    });
+
+  return Array.from(uniquePagesByKey.values()).map(buildAdminNavigationItemFromPage);
+};
+
 export function FmzAdminLayout({ children }: FmzAdminLayoutProps) {
   const params = useParams<{ locale?: string }>();
   const pathname = usePathname();
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<FmzConnectedUserSummary>(buildDefaultUserSummary);
-  const [effectivePermissionKeys, setEffectivePermissionKeys] = useState<Set<string>>(new Set());
-  const [catalog, setCatalog] = useState<FmzAccessControlCatalog>({ pages: [], permissions: [] });
+  const [currentPrincipal, setCurrentPrincipal] = useState<FmzAccessControlPrincipal | null>(null);
 
   const syncUserSummary = useCallback(() => setCurrentUser(buildFmzConnectedUserSummary()), []);
 
@@ -55,10 +86,9 @@ export function FmzAdminLayout({ children }: FmzAdminLayoutProps) {
     let isMounted = true;
     async function loadCurrentAccess() {
       try {
-        const [principal, nextCatalog] = await Promise.all([getCurrentAccessControlPrincipal(), getAccessControlCatalog()]);
+        const principal = await getCurrentAccessControlPrincipal();
         if (!isMounted) return;
-        setCatalog(nextCatalog);
-        setEffectivePermissionKeys(new Set(principal.permissionKeys));
+        setCurrentPrincipal(principal);
         if (principal.name || principal.email) {
           setCurrentUser((previous) => {
             const nextName = principal.name || previous.name;
@@ -70,7 +100,7 @@ export function FmzAdminLayout({ children }: FmzAdminLayoutProps) {
           });
         }
       } catch {
-        if (isMounted) setEffectivePermissionKeys(new Set());
+        if (isMounted) setCurrentPrincipal(null);
       }
     }
     void loadCurrentAccess();
@@ -82,25 +112,11 @@ export function FmzAdminLayout({ children }: FmzAdminLayoutProps) {
     router.push(buildFmzLocalizedHref(params?.locale, fmzPublicLayoutConfig.connectedLogoutPath));
   }, [params?.locale, router]);
 
-  const navigationItems = useMemo(() => {
-    const pageByKey = new Map(catalog.pages.map((page) => [page.key, page]));
-    const permissionByKey = new Map(catalog.permissions.map((permission) => [permission.key, permission]));
-
-    return fmzAdminNavigationConfig.items.flatMap((item) => {
-      const permission = permissionByKey.get(item.requiredPermissionKey);
-      if (!permission) return [];
-
-      const linkedPages = permission.pageKeys.map((pageKey) => pageByKey.get(pageKey)).filter(Boolean);
-      const navigationPage = linkedPages.find((page) => page?.path === item.href) ?? linkedPages[0];
-      if (!navigationPage) return [];
-
-      return [{
-        ...item,
-        label: navigationPage.label || navigationPage.name || item.label,
-        href: navigationPage.path || item.href,
-      }];
-    });
-  }, [catalog.pages, catalog.permissions]);
+  const navigationItems = useMemo(() => buildAdminNavigationItems(currentPrincipal), [currentPrincipal]);
+  const effectivePermissionKeys = useMemo(
+    () => new Set((currentPrincipal?.permissionKeys ?? []).map((permissionKey) => normalizeKey(permissionKey))),
+    [currentPrincipal?.permissionKeys],
+  );
 
   return (
     <div className="flex flex-1 flex-col lg:flex-row">

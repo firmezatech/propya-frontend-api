@@ -8,10 +8,10 @@ import { useProfile } from '../../context/ProfileContext';
 import Link from "next/link";
 
 interface Report {
-  profile: number | null;
+  profile?: number | null;
 }
 
-const DashboardAdmin: React.FC<Report> = ({ profile }) => {
+const DashboardAdmin: React.FC<Report> = ({ profile = null }) => {
   const t = useTranslations('DashboardAdmin');
   const { setCurrentProfile } = useProfile();
   const router = useRouter();

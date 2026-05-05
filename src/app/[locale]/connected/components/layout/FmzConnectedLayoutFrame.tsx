@@ -1,13 +1,17 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { fmzPublicLayoutConfig } from '../../../../../config/fmz-public-layout-config';
 import HeaderConn from '../HeaderConn';
 import FooterConn from '../FooterConn';
 import AuthenticatedRoute from '../AuthenticatedRoute';
-import { FmzAdminLayout, isFmzAdminConnectedPath } from '../../../../../components/layout/FmzAdminLayout';
+import { FmzAdminLayout } from '../../../../../components/layout/FmzAdminLayout';
+import { getCurrentAccessControlPrincipal } from '../../../../../features/access-control/services';
+import type { FmzAccessControlPrincipal } from '../../../../../features/access-control/domain';
+import { FMZ_AUTH_SESSION_CHANGED_EVENT } from '../../../../../services/auth/auth-storage';
+import { hasAdminAccessiblePage } from '../../../../../features/access-control/domain';
 
 interface FmzConnectedLayoutFrameProps {
   children: ReactNode;
@@ -18,28 +22,36 @@ const isConnectedLogoutPath = (pathname: string | null): boolean => {
   return pathname.endsWith(fmzPublicLayoutConfig.connectedLogoutPath);
 };
 
-const readIsAdminProfile = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  const storedProfile = localStorage.getItem(fmzPublicLayoutConfig.connectedUserProfileStorageKey)?.trim().toLowerCase();
-  return storedProfile === '0' || storedProfile === 'admin' || storedProfile === 'administrator';
-};
-
 export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayoutFrameProps) {
   const pathname = usePathname();
-  const [isAdminProfile, setIsAdminProfile] = useState(false);
+  const [currentPrincipal, setCurrentPrincipal] = useState<FmzAccessControlPrincipal | null>(null);
   const isLogoutPage = isConnectedLogoutPath(pathname);
-  const isAdminPage = isAdminProfile || isFmzAdminConnectedPath(pathname);
+
+  const loadCurrentPrincipal = useCallback(async () => {
+    try {
+      const principal = await getCurrentAccessControlPrincipal();
+      setCurrentPrincipal(principal);
+    } catch {
+      setCurrentPrincipal(null);
+    }
+  }, []);
 
   useEffect(() => {
-    const syncAdminProfile = () => setIsAdminProfile(readIsAdminProfile());
-    syncAdminProfile();
-    window.addEventListener('storage', syncAdminProfile);
-    window.addEventListener('walletChanged', syncAdminProfile);
+    void loadCurrentPrincipal();
+    window.addEventListener('storage', loadCurrentPrincipal);
+    window.addEventListener('walletChanged', loadCurrentPrincipal);
+    window.addEventListener(FMZ_AUTH_SESSION_CHANGED_EVENT, loadCurrentPrincipal);
     return () => {
-      window.removeEventListener('storage', syncAdminProfile);
-      window.removeEventListener('walletChanged', syncAdminProfile);
+      window.removeEventListener('storage', loadCurrentPrincipal);
+      window.removeEventListener('walletChanged', loadCurrentPrincipal);
+      window.removeEventListener(FMZ_AUTH_SESSION_CHANGED_EVENT, loadCurrentPrincipal);
     };
-  }, []);
+  }, [loadCurrentPrincipal]);
+
+  const shouldRenderAdminLayout = useMemo(() => {
+    if (isLogoutPage) return false;
+    return hasAdminAccessiblePage(currentPrincipal);
+  }, [currentPrincipal, isLogoutPage]);
 
   if (isLogoutPage) {
     return <div className="flex min-h-screen flex-col bg-[#F7F8FA] text-fmz-text-primary">{children}</div>;
@@ -49,7 +61,7 @@ export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayout
     <div className="flex min-h-screen flex-col bg-[#F7F8FA] text-fmz-text-primary">
       <AuthenticatedRoute>
         <HeaderConn />
-        {isAdminPage ? (
+        {shouldRenderAdminLayout ? (
           <FmzAdminLayout>{children}</FmzAdminLayout>
         ) : (
           <div className="flex flex-1 flex-col">{children}</div>

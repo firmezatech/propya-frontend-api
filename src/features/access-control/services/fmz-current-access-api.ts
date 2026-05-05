@@ -1,25 +1,82 @@
 import { fmzAdminNavigationConfig } from '../../../config/fmz-admin-navigation-config';
 import { firmezaApiClient } from '../../../services/firmeza-api-client';
-import type { FmzAccessControlPrincipal } from '../domain';
+import type { FmzAccessControlPage, FmzAccessControlPrincipal } from '../domain';
 
 const recordOf = (value: unknown): Record<string, unknown> => (value && typeof value === 'object' ? value as Record<string, unknown> : {});
 const str = (value: unknown, fallback = ''): string => (typeof value === 'string' && value.trim() ? value.trim() : fallback);
-const stringArray = (value: unknown): string[] => Array.isArray(value) ? value.map((item) => {
-  if (typeof item === 'string' || typeof item === 'number') return String(item);
-  const record = recordOf(item);
-  return str(record.key, str(record.id, str(record.name)));
-}).filter(Boolean) : [];
+const numberValue = (value: unknown, fallback = 0): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() && Number.isFinite(Number(value))) return Number(value);
+  return fallback;
+};
+
+const normalizeKey = (value: string): string => value.trim().toLowerCase();
+
+const pushNormalized = (target: Set<string>, value: unknown): void => {
+  if (typeof value === 'string' || typeof value === 'number') {
+    const normalized = normalizeKey(String(value));
+    if (normalized) target.add(normalized);
+    return;
+  }
+
+  const record = recordOf(value);
+  const key = str(record.role_key, str(record.roleKey, str(record.key, str(record.name, str(record.id)))));
+  const normalized = normalizeKey(key);
+  if (normalized) target.add(normalized);
+};
+
+const stringArray = (...values: unknown[]): string[] => {
+  const nextValues = new Set<string>();
+
+  values.forEach((value) => {
+    if (Array.isArray(value)) {
+      value.forEach((item) => pushNormalized(nextValues, item));
+      return;
+    }
+    pushNormalized(nextValues, value);
+  });
+
+  return Array.from(nextValues);
+};
+
+const normalizeAccessPage = (page: unknown): FmzAccessControlPage => {
+  const record = recordOf(page);
+  const key = normalizeKey(str(record.key, str(record.page_key, str(record.pageKey, str(record.id, str(record.path))))));
+  const label = str(record.label, str(record.name, key));
+  const path = str(record.path, '#');
+
+  return {
+    id: str(record.id, key),
+    key,
+    name: str(record.name, label),
+    label,
+    path,
+    order: numberValue(record.order, numberValue(record.order_index, numberValue(record.orderIndex, 0))),
+    requiredPermission: normalizeKey(str(record.requiredPermission, str(record.required_permission_key, str(record.requiredPermissionKey)))),
+  };
+};
+
+const pageArray = (value: unknown): FmzAccessControlPage[] => {
+  if (!Array.isArray(value)) return [];
+  return value.map(normalizeAccessPage).filter((page) => Boolean(page.key));
+};
 
 const normalizeCurrentAccessPrincipal = (payload: unknown): FmzAccessControlPrincipal => {
   const record = recordOf(payload);
   const user = recordOf(record.user ?? record.principal ?? record.data ?? record);
+  const accessiblePages = pageArray(user.accessiblePages ?? user.pages ?? record.accessiblePages ?? record.pages);
+  const roleKeys = stringArray(user.roleKeys, user.roles, user.role, user.primaryRoleKey, user.primary_role_key, record.roleKeys, record.roles, record.role);
+  const permissionKeys = stringArray(user.permissionKeys, user.permissions, record.permissionKeys, record.permissions);
+  const hasAdminPage = accessiblePages.some((page) => page.key.startsWith('admin.'));
+
   return {
     id: str(user.id, str(user.userId, str(user.email))),
-    name: str(user.name, str(user.fullName, '')),
+    name: str(user.name, str(user.fullName, str(user.full_name, ''))),
     email: str(user.email, ''),
-    permissionKeys: stringArray(user.permissionKeys ?? user.permissions ?? record.permissionKeys ?? record.permissions),
-    roleKeys: stringArray(user.roleKeys ?? user.roles ?? record.roleKeys ?? record.roles),
-    isAdmin: Boolean(user.isAdmin ?? record.isAdmin),
+    permissionKeys,
+    roleKeys,
+    accessiblePages,
+    isAdmin: Boolean(user.isAdmin ?? user.is_admin ?? record.isAdmin ?? record.is_admin) || roleKeys.includes('admin') || hasAdminPage,
   };
 };
 

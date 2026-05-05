@@ -1,0 +1,58 @@
+export type FmzDashboardKind = 'admin' | 'renter' | 'investor' | 'legacyInvestor';
+
+export type FmzDashboardAccessRule = {
+  kind: FmzDashboardKind;
+  roleKeys: string[];
+  permissionKeys: string[];
+  pageKeys: string[];
+};
+
+const csv = (value: string): string[] =>
+  value
+    .split(',')
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+
+const getPublicEnvCsv = (key: string, fallback: string): string[] => {
+  const value = process.env[key];
+  return csv(value && value.trim().length > 0 ? value : fallback);
+};
+
+/**
+ * Dashboard routing is intentionally aligned with admin_panel schema/view fields:
+ * - admin_panel.roles.role_key is exposed by backend as role / roles / roleKeys
+ * - admin_panel.permissions.permission_key is exposed as permissionKeys
+ * - admin_panel.pages.page_key is exposed inside accessiblePages[].key
+ *
+ * Page and permission keys are the strongest source of truth because the backend
+ * already resolves role -> permissions -> pages. Role keys are kept only as a
+ * fallback for dashboards that still do not have a dedicated page in the catalog.
+ */
+export const fmzDashboardAccessConfig = {
+  rules: [
+    {
+      kind: 'admin',
+      roleKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_ADMIN_ROLE_KEYS', 'admin'),
+      permissionKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_ADMIN_DASHBOARD_PERMISSIONS', 'admin.dashboard.view'),
+      pageKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_ADMIN_DASHBOARD_PAGE_KEYS', 'admin.dashboard'),
+    },
+    {
+      kind: 'legacyInvestor',
+      roleKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_LEGACY_INVESTOR_ROLE_KEYS', 'legacy_investor,investor_legacy,legado'),
+      permissionKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_LEGACY_INVESTOR_DASHBOARD_PERMISSIONS', 'legacy.dashboard.view,investor.legacy.dashboard.view'),
+      pageKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_LEGACY_INVESTOR_DASHBOARD_PAGE_KEYS', 'legacy.dashboard,investor.legacy.dashboard'),
+    },
+    {
+      kind: 'investor',
+      roleKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_INVESTOR_ROLE_KEYS', 'investor,investidor,owner,proprietario'),
+      permissionKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_INVESTOR_DASHBOARD_PERMISSIONS', 'investor.dashboard.view,investments.view'),
+      pageKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_INVESTOR_DASHBOARD_PAGE_KEYS', 'investor.dashboard'),
+    },
+    {
+      kind: 'renter',
+      roleKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_RENTER_ROLE_KEYS', 'tenant,renter,inquilino,locatario'),
+      permissionKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_RENTER_DASHBOARD_PERMISSIONS', 'tenant.dashboard.view'),
+      pageKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_RENTER_DASHBOARD_PAGE_KEYS', 'tenant.dashboard'),
+    },
+  ] satisfies FmzDashboardAccessRule[],
+} as const;

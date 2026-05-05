@@ -32,7 +32,7 @@ export function FmzAdminSidebar({
   navigationItems,
   onLogout,
 }: FmzAdminSidebarProps) {
-  const visibleItems = navigationItems.filter((item) => effectivePermissionKeys.has(item.requiredPermissionKey));
+  const visibleItems = navigationItems.filter((item) => !item.requiredPermissionKey || effectivePermissionKeys.has(item.requiredPermissionKey.toLowerCase()));
 
   return (
     <aside className="sticky top-[72px] z-30 flex shrink-0 border-b border-fmz-border-light bg-white lg:h-[calc(100vh-72px)] lg:w-[248px] lg:flex-col lg:border-b-0 lg:border-r">
