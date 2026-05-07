@@ -122,7 +122,11 @@ export default function DashboardPage() {
 
     try {
       const nextInvoiceData = await getInvoiceOrRentDetail(propertyId);
-      invoiceData = "invoiceId" in nextInvoiceData ? nextInvoiceData : null;
+      if (!nextInvoiceData) {
+          invoiceData = null;
+      } else if ("invoiceId" in nextInvoiceData) {
+          invoiceData = nextInvoiceData;
+      }
     } catch (invoiceError) {
       if (!isMetadataNotAvailableError(invoiceError)) {
         throw invoiceError;
