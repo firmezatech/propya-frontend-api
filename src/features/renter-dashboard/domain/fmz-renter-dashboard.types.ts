@@ -5,6 +5,14 @@ export type FmzDashboardMoneyLine = {
   tone?: 'default' | 'success' | 'warning';
 };
 
+export type FmzRenterDashboardMilestone = {
+  percentage: number;
+  label: string;
+  caption: string;
+  visualPosition: number;
+  status: 'done' | 'next' | 'future';
+};
+
 export type FmzRenterDashboardViewModel = {
   renterName: string;
   referenceMonthLabel: string;
@@ -19,6 +27,9 @@ export type FmzRenterDashboardViewModel = {
   nextMilestoneRemainingLabel: string;
   nextMilestoneProgressPercentage: number;
   nextMilestoneRentReductionLabel: string;
+  nextMilestoneGapLabel: string;
+  ownershipVisualPosition: number;
+  journeyMilestones: FmzRenterDashboardMilestone[];
   currentRentLabel: string;
   originalRentLabel: string;
   rentPaidPercentage: number;

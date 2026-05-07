@@ -5,6 +5,16 @@ const DEFAULT_RENTER_NAME = 'Diana';
 const DEFAULT_REFERENCE_MONTH = 'Dezembro 2025';
 const DEFAULT_NEXT_MILESTONE_PERCENTAGE = 10;
 
+const JOURNEY_MILESTONES = [
+  { percentage: 0, visualPosition: 0, caption: 'início' },
+  { percentage: 5, visualPosition: 22, caption: 'alcançado' },
+  { percentage: 10, visualPosition: 44, caption: 'próxima meta' },
+  { percentage: 25, visualPosition: 58, caption: '1/4 do imóvel' },
+  { percentage: 50, visualPosition: 72, caption: 'meio caminho' },
+  { percentage: 75, visualPosition: 86, caption: 'reta final' },
+  { percentage: 100, visualPosition: 100, caption: 'casa própria' },
+] as const;
+
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
   currency: 'BRL',
@@ -37,6 +47,40 @@ function formatCurrency(value: number): string {
 
 function formatPercentage(value: number): string {
   return `${numberFormatter.format(normalizePercentage(value))}%`;
+}
+
+function formatPercentagePoints(value: number): string {
+  return `${numberFormatter.format(Math.max(value, 0))} p.p.`;
+}
+
+function getJourneyVisualPosition(percentage: number): number {
+  const value = normalizePercentage(percentage);
+
+  for (let index = 0; index < JOURNEY_MILESTONES.length - 1; index += 1) {
+    const currentMilestone = JOURNEY_MILESTONES[index];
+    const nextMilestone = JOURNEY_MILESTONES[index + 1];
+
+    if (value >= currentMilestone.percentage && value <= nextMilestone.percentage) {
+      const ratio = (value - currentMilestone.percentage) / (nextMilestone.percentage - currentMilestone.percentage);
+      return currentMilestone.visualPosition + ratio * (nextMilestone.visualPosition - currentMilestone.visualPosition);
+    }
+  }
+
+  return 100;
+}
+
+function buildJourneyMilestones(ownershipPercentage: number, nextMilestonePercentage: number) {
+  return JOURNEY_MILESTONES.map((milestone) => ({
+    percentage: milestone.percentage,
+    label: `${numberFormatter.format(milestone.percentage)}%`,
+    caption: milestone.caption,
+    visualPosition: milestone.visualPosition,
+    status: milestone.percentage < ownershipPercentage
+      ? 'done' as const
+      : milestone.percentage === nextMilestonePercentage
+        ? 'next' as const
+        : 'future' as const,
+  }));
 }
 
 function getOriginalRentNumber(rentDetail: RentDetailData): number {
@@ -109,6 +153,7 @@ export function buildRenterDashboardViewModel(params: {
   const nextMilestoneTotal = propertyDetail.propertyValue * (nextMilestonePercentage / 100);
   const nextMilestoneRemaining = Math.max(nextMilestoneTotal - acquiredTokens, 0);
   const nextMilestoneProgressPercentage = nextMilestoneTotal > 0 ? normalizePercentage((acquiredTokens / nextMilestoneTotal) * 100) : 0;
+  const nextMilestoneGap = Math.max(nextMilestonePercentage - ownershipPercentage, 0);
   const rentPaidPercentage = originalRentNumber > 0 ? normalizePercentage((currentRentNumber / originalRentNumber) * 100) : 0;
   const estimatedNextReduction = originalRentNumber * Math.max(nextMilestonePercentage - ownershipPercentage, 0) / 100;
 
@@ -126,6 +171,9 @@ export function buildRenterDashboardViewModel(params: {
     nextMilestoneRemainingLabel: formatCurrency(nextMilestoneRemaining),
     nextMilestoneProgressPercentage,
     nextMilestoneRentReductionLabel: formatCurrency(estimatedNextReduction),
+    nextMilestoneGapLabel: formatPercentagePoints(nextMilestoneGap),
+    ownershipVisualPosition: getJourneyVisualPosition(ownershipPercentage),
+    journeyMilestones: buildJourneyMilestones(ownershipPercentage, nextMilestonePercentage),
     currentRentLabel: invoiceData?.currentRentAsOwnerValue || rentDetail.currentRentAsOwnerValue,
     originalRentLabel: rentDetail.currentRentValue || rentDetail.initialRentValue,
     rentPaidPercentage,

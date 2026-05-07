@@ -68,7 +68,8 @@ export function FmzRenterDashboard({
   const filledArc = (viewModel.ownershipPercentage / 100) * HALF_CIRCLE;
   const gaugePoint = getGaugePoint(hasAnimated ? viewModel.ownershipPercentage : 0);
   const nextMilestonePoint = getGaugePoint(viewModel.nextMilestonePercentage);
-  const timelineStyle = buildLeftStyle(hasAnimated ? viewModel.ownershipPercentage : 0);
+  const timelineVisualPosition = hasAnimated ? viewModel.ownershipVisualPosition : 0;
+  const timelineStyle = buildLeftStyle(timelineVisualPosition);
 
   const handlePayInvoice = () => {
     if (onPayInvoice) {
@@ -166,26 +167,52 @@ export function FmzRenterDashboard({
         <div className={styles.sectionHead}>
           <div>
             <h3 className={styles.cardTitle}>Sua jornada até a casa própria</h3>
-            <p className={styles.cardSub}>A casa acompanha exatamente o avanço da sua participação no imóvel.</p>
+            <p className={styles.cardSub}>A casa acompanha sua participação atual e mostra os próximos marcos de forma clara.</p>
+            <div className={styles.timelineScaleNote}>✨ Primeiros 10% em destaque para a meta parecer acompanhável</div>
           </div>
         </div>
         <div className={styles.timelineWrap}>
           <div className={styles.timelineLabel} style={timelineStyle}>{viewModel.ownershipPercentageLabel} — você</div>
           <div className={styles.timelineTrack}>
-            <div className={styles.timelineFill} style={{ width: hasAnimated ? `${viewModel.ownershipPercentage}%` : '0%' }} />
+            <div className={styles.timelineFill} style={{ width: hasAnimated ? `${viewModel.ownershipVisualPosition}%` : '0%' }} />
             <div className={styles.timelineHouse} style={timelineStyle}>🏡</div>
           </div>
           <div className={styles.timelinePoints}>
-            {[0, 5, viewModel.nextMilestonePercentage, 25, 50, 100].map((point) => {
-              const isDone = point < viewModel.ownershipPercentage;
-              const isNext = point === viewModel.nextMilestonePercentage;
+            {viewModel.journeyMilestones.map((milestone) => {
+              const isDone = milestone.status === 'done';
+              const isNext = milestone.status === 'next';
+              const isFinal = milestone.percentage === 100;
+
               return (
-                <div key={point} className={`${styles.timelinePoint} ${isDone ? styles.timelinePointDone : ''} ${isNext ? styles.timelinePointNext : ''}`}>
-                  <div className={`${styles.timelineDot} ${isDone ? styles.timelineDotDone : ''} ${isNext ? styles.timelineDotNext : ''}`} />
-                  <div className={styles.timelinePointLabel}>{point}%{isNext ? ' 🎯' : point === 100 ? ' 🏠' : ''}</div>
+                <div
+                  key={milestone.percentage}
+                  className={`${styles.timelinePoint} ${isDone ? styles.timelinePointDone : ''} ${isNext ? styles.timelinePointNext : ''}`}
+                  style={buildLeftStyle(milestone.visualPosition)}
+                >
+                  <div className={`${styles.timelineDot} ${isDone ? styles.timelineDotDone : ''} ${isNext ? styles.timelineDotNext : ''} ${!isDone && !isNext ? styles.timelineDotFuture : ''}`} />
+                  <div className={styles.timelinePointLabel}>{milestone.label}{isNext ? ' 🎯' : isFinal ? ' 🏠' : ''}</div>
+                  <div className={styles.timelinePointCaption}>{milestone.caption}</div>
                 </div>
               );
             })}
+          </div>
+          <div className={styles.timelineSummary}>
+            <div className={styles.timelineSummaryItem}>
+              <div className={`${styles.timelineSummaryValue} ${styles.timelineSummaryValueSuccess}`}>{viewModel.ownershipPercentageLabel}</div>
+              <div className={styles.timelineSummaryLabel}>participação atual</div>
+            </div>
+            <div className={styles.timelineSummaryItem}>
+              <div className={`${styles.timelineSummaryValue} ${styles.timelineSummaryValueWarning}`}>{viewModel.nextMilestoneGapLabel}</div>
+              <div className={styles.timelineSummaryLabel}>faltam para {viewModel.nextMilestoneLabel}</div>
+            </div>
+            <div className={styles.timelineSummaryItem}>
+              <div className={styles.timelineSummaryValue}>{viewModel.nextMilestoneRemainingLabel}</div>
+              <div className={styles.timelineSummaryLabel}>para o próximo marco</div>
+            </div>
+            <div className={styles.timelineSummaryItem}>
+              <div className={styles.timelineSummaryValue}>100%</div>
+              <div className={styles.timelineSummaryLabel}>objetivo final</div>
+            </div>
           </div>
         </div>
       </section>

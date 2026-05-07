@@ -1,6 +1,0 @@
-{
-  "wake.compiler.solc.remappings": [],
-  "wake.compiler.solc.enabled": false,
-  "wake.compiler.solc.autoDetect": false,
-  "// Configurações do Wake": "Compilador desabilitado - projeto Node.js/frontend detectado"
-}
