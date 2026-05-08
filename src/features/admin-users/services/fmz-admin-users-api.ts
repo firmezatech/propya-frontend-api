@@ -31,7 +31,7 @@ const statusOf = (value: unknown): 'active' | 'inactive' => {
 
 export const normalizeAdminUser = (user: unknown): FmzAdminUser => {
   const record = recordOf(user);
-  const id = str(record.id, str(record._id, str(record.userId, str(record.user_id, str(record.email))));
+  const id = str(record.id, str(record._id, str(record.userId, str(record.user_id, str(record.email)))));
   const firstName = str(record.firstName, str(record.first_name));
   const lastName = str(record.lastName, str(record.last_name));
   const name = str(record.name, str(record.fullName, str(record.full_name, [firstName, lastName].filter(Boolean).join(' '))));
