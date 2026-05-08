@@ -12,6 +12,7 @@ import { getCurrentAccessControlPrincipal } from '../../../../../features/access
 import type { FmzAccessControlPrincipal } from '../../../../../features/access-control/domain';
 import { FMZ_AUTH_SESSION_CHANGED_EVENT } from '../../../../../services/auth/auth-storage';
 import { hasAdminAccessiblePage } from '../../../../../features/access-control/domain';
+import { FmzRouteAccessGuard } from '../../../../../features/access-control/components/FmzRouteAccessGuard';
 
 interface FmzConnectedLayoutFrameProps {
   children: ReactNode;
@@ -25,14 +26,18 @@ const isConnectedLogoutPath = (pathname: string | null): boolean => {
 export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayoutFrameProps) {
   const pathname = usePathname();
   const [currentPrincipal, setCurrentPrincipal] = useState<FmzAccessControlPrincipal | null>(null);
+  const [isAccessLoading, setIsAccessLoading] = useState(true);
   const isLogoutPage = isConnectedLogoutPath(pathname);
 
   const loadCurrentPrincipal = useCallback(async () => {
+    setIsAccessLoading(true);
     try {
       const principal = await getCurrentAccessControlPrincipal();
       setCurrentPrincipal(principal);
     } catch {
       setCurrentPrincipal(null);
+    } finally {
+      setIsAccessLoading(false);
     }
   }, []);
 
@@ -61,11 +66,13 @@ export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayout
     <div className="flex min-h-screen flex-col bg-[#F7F8FA] text-fmz-text-primary">
       <AuthenticatedRoute>
         <HeaderConn />
-        {shouldRenderAdminLayout ? (
-          <FmzAdminLayout>{children}</FmzAdminLayout>
-        ) : (
-          <div className="flex flex-1 flex-col">{children}</div>
-        )}
+        <FmzRouteAccessGuard principal={currentPrincipal} isLoading={isAccessLoading}>
+          {shouldRenderAdminLayout ? (
+            <FmzAdminLayout>{children}</FmzAdminLayout>
+          ) : (
+            <div className="flex flex-1 flex-col">{children}</div>
+          )}
+        </FmzRouteAccessGuard>
         <FooterConn />
       </AuthenticatedRoute>
     </div>

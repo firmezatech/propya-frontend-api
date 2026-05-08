@@ -5,7 +5,6 @@ import { useRouter } from '../../../i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { login, createUser, type CreateUserPayload, type LoginType } from '../../../services/login-fmz-api';
-import { setFirmezaAccessToken } from '../../../services/auth/auth-storage';
 import { FmzBrandMark } from '../../../components/layout';
 import { FmzButton, FmzTextInput } from '../../../components/design-system';
 import { FmzFieldErrorMessage, FmzFormAlert } from '../../api-errors/components';
@@ -95,14 +94,6 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
       return;
     }
 
-    if (response.accessToken) {
-      setFirmezaAccessToken(response.accessToken);
-    }
-
-    localStorage.setItem('name', response.name || '');
-    localStorage.setItem('email', loginData.email);
-    localStorage.setItem('wallet', response.wallet || '');
-    localStorage.setItem('profile', String(response.profile || ''));
     formRef.current?.reset();
     router.replace('/connected/dashboard');
   };

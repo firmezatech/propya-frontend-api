@@ -33,7 +33,7 @@ export const fmzAdminPageIconByKey: Record<string, LucideIcon> = {
 };
 
 export const fmzAdminNavigationConfig = {
-  currentUserAccessPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CURRENT_ACCESS_PATH', '/admin/access-control/me'),
+  currentUserAccessPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CURRENT_ACCESS_PATH', '/me/access'),
   sectionLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_SIDEBAR_SECTION_LABEL', 'Principal'),
   // Fallback only while current access is loading. The actual sidebar must be
   // rendered from backend accessiblePages, whose fields come from admin_panel.pages.

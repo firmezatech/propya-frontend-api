@@ -1,6 +1,7 @@
 import { firmezaApiClient } from './firmeza-api-client';
-import { setFirmezaAccessToken } from './auth/auth-storage';
+import { setFirmezaAuthenticatedUserSession } from './auth/auth-storage';
 import { normalizeFmzApiError, type FmzNormalizedApiError } from '../features/api-errors/domain';
+import type { FmzAccessControlPage } from '../features/access-control/domain';
 
 export type LoginType = {
   email: string;
@@ -21,6 +22,12 @@ export type UserType = {
   wallet?: string;
   createdAt?: string;
   profile?: number;
+  roles?: string[];
+  roleKeys?: string[];
+  permissions?: string[];
+  permissionKeys?: string[];
+  accessiblePages?: FmzAccessControlPage[];
+  isAdmin?: boolean;
 };
 
 export type RequestPasswordResetType = {
@@ -50,6 +57,12 @@ export type LoginResponse = FmzApiResult<{
   wallet?: string;
   name?: string;
   profile?: number;
+  roles?: string[];
+  roleKeys?: string[];
+  permissions?: string[];
+  permissionKeys?: string[];
+  accessiblePages?: FmzAccessControlPage[];
+  isAdmin?: boolean;
 }>;
 
 export type CreateUserPayload = {
@@ -73,6 +86,89 @@ export type ListUserResponse = {
   error?: FmzNormalizedApiError;
 };
 
+
+const recordOf = (value: unknown): Record<string, unknown> => (value && typeof value === 'object' ? value as Record<string, unknown> : {});
+const normalizeKey = (value: unknown): string => String(value ?? '').trim().toLowerCase();
+const normalizeStringArray = (...values: unknown[]): string[] => {
+  const normalizedValues = new Set<string>();
+
+  values.forEach((value) => {
+    if (!Array.isArray(value)) return;
+    value.forEach((item) => {
+      if (typeof item === 'string' || typeof item === 'number') {
+        const nextValue = normalizeKey(item);
+        if (nextValue) normalizedValues.add(nextValue);
+        return;
+      }
+      const record = recordOf(item);
+      const nextValue = normalizeKey(record.key ?? record.role_key ?? record.roleKey ?? record.permission_key ?? record.permissionKey ?? record.name ?? record.id);
+      if (nextValue) normalizedValues.add(nextValue);
+    });
+  });
+
+  return Array.from(normalizedValues);
+};
+
+const normalizeAccessiblePage = (page: unknown): FmzAccessControlPage | null => {
+  const record = recordOf(page);
+  const key = normalizeKey(record.key ?? record.page_key ?? record.pageKey ?? record.id ?? record.path);
+  const path = String(record.path ?? '').trim();
+
+  if (!key || !path) return null;
+
+  return {
+    id: String(record.id ?? key),
+    key,
+    name: String(record.name ?? record.label ?? key),
+    label: String(record.label ?? record.name ?? key),
+    path,
+    order: Number(record.order ?? record.order_index ?? record.orderIndex ?? 0) || 0,
+    requiredPermission: normalizeKey(record.requiredPermission ?? record.required_permission_key ?? record.requiredPermissionKey),
+  };
+};
+
+const normalizeAccessiblePages = (...values: unknown[]): FmzAccessControlPage[] => {
+  const pagesByKey = new Map<string, FmzAccessControlPage>();
+
+  values.forEach((value) => {
+    if (!Array.isArray(value)) return;
+    value.forEach((item) => {
+      const page = normalizeAccessiblePage(item);
+      if (page && !pagesByKey.has(page.key)) pagesByKey.set(page.key, page);
+    });
+  });
+
+  return Array.from(pagesByKey.values()).sort((left, right) => left.order - right.order);
+};
+
+const normalizeLoginPayload = (payload: unknown, fallbackEmail: string) => {
+  const record = recordOf(payload);
+  const user = recordOf(record.user ?? record.data ?? record.principal ?? record);
+  const accessToken = String(record.accessToken ?? record.token ?? user.accessToken ?? user.token ?? '');
+  const wallet = String(user.wallet ?? user.walletAddress ?? user.wallet_address ?? record.wallet ?? '');
+  const name = String(user.name ?? user.fullName ?? user.full_name ?? record.name ?? '');
+  const email = String(user.email ?? record.email ?? fallbackEmail);
+  const profile = Number(user.profile ?? record.profile);
+  const roleKeys = normalizeStringArray(user.roleKeys, user.roles, user.role, record.roleKeys, record.roles, record.role);
+  const permissionKeys = normalizeStringArray(user.permissionKeys, user.permissions, record.permissionKeys, record.permissions);
+  const accessiblePages = normalizeAccessiblePages(user.accessiblePages, user.pages, record.accessiblePages, record.pages);
+  const isAdmin = Boolean(user.isAdmin ?? user.is_admin ?? record.isAdmin ?? record.is_admin) || roleKeys.includes('admin') || accessiblePages.some((page) => page.key.startsWith('admin.'));
+
+  return {
+    accessToken: accessToken || undefined,
+    wallet,
+    name,
+    email,
+    profile: Number.isFinite(profile) ? profile : undefined,
+    roles: roleKeys,
+    roleKeys,
+    permissions: permissionKeys,
+    permissionKeys,
+    accessiblePages,
+    isAdmin,
+  };
+};
+
 const getSuccessMessage = (data: Record<string, unknown>, fallback: string): string => (
   String(data.message || data.msg || fallback)
 );
@@ -84,19 +180,14 @@ export async function login(user: LoginType): Promise<LoginResponse> {
       password: user.password,
     });
 
-    const accessToken = response.data.accessToken || response.data.token;
+    const normalizedPayload = normalizeLoginPayload(response.data, user.email);
 
-    if (accessToken) {
-      setFirmezaAccessToken(accessToken);
-    }
+    setFirmezaAuthenticatedUserSession(normalizedPayload);
 
     return {
       success: true,
       message: getSuccessMessage(response.data, 'Login realizado com sucesso.'),
-      accessToken,
-      wallet: response.data.wallet,
-      name: response.data.name,
-      profile: response.data.profile,
+      ...normalizedPayload,
     };
   } catch (error) {
     return { success: false, error: normalizeFmzApiError(error) };
