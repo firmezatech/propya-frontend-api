@@ -22,7 +22,11 @@ export default function ConnectedLogoutPage() {
   useEffect(() => {
     setUserName(readUserName());
     clearFirmezaSession();
-  }, []);
+    const redirectTimer = window.setTimeout(() => {
+      router.replace(loginPath);
+    }, 500);
+    return () => window.clearTimeout(redirectTimer);
+  }, [loginPath, router]);
 
   return (
     <main className="flex min-h-[calc(100vh-132px)] flex-1 flex-col items-center justify-center px-10 py-16 text-center">

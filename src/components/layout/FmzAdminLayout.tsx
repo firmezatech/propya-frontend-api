@@ -109,7 +109,7 @@ export function FmzAdminLayout({ children }: FmzAdminLayoutProps) {
 
   const handleLogout = useCallback(() => {
     clearFirmezaSession();
-    router.push(buildFmzLocalizedHref(params?.locale, fmzPublicLayoutConfig.connectedLogoutPath));
+    router.replace(buildFmzLocalizedHref(params?.locale, fmzPublicLayoutConfig.homePath));
   }, [params?.locale, router]);
 
   const navigationItems = useMemo(() => buildAdminNavigationItems(currentPrincipal), [currentPrincipal]);
