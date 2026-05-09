@@ -10,3 +10,4 @@ export * from './FmzConnectedUserIdentity';
 export * from './FmzAdminSidebar';
 export * from './FmzAdminLayout';
 export * from './FmzFullPageLoading';
+export * from './FmzAdminContentShell';

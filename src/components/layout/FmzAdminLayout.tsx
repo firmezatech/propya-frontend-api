@@ -12,6 +12,7 @@ import { buildFmzConnectedUserInitials, buildFmzConnectedUserSummary } from './c
 import type { FmzAccessControlPage, FmzAccessControlPrincipal } from '../../features/access-control/domain';
 import type { FmzConnectedUserSummary } from './connected-user/fmz-connected-user.types';
 import { FmzAdminSidebar } from './FmzAdminSidebar';
+import { FmzAdminContentShell } from './FmzAdminContentShell';
 
 export type FmzAdminLayoutProps = {
   children: ReactNode;
@@ -145,7 +146,9 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
         navigationItems={navigationItems}
         onLogout={handleLogout}
       />
-      <div className="min-w-0 flex-1 overflow-x-hidden bg-[#F7F8FA]">{children}</div>
+      <div className="flex min-w-0 flex-1 overflow-x-hidden bg-[#F7F8FA]">
+        <FmzAdminContentShell>{children}</FmzAdminContentShell>
+      </div>
     </div>
   );
 }

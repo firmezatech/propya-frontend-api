@@ -1403,3 +1403,19 @@ margin-top: 20px;
     width: 100%;
   }
 }
+
+/* Administrative pages use FmzAdminContentShell for consistent responsive width.
+   This neutralizes legacy page-level containers so old admin screens can inherit
+   the same spacing without duplicating layout rules. */
+.fmz-admin-content-shell > .container,
+.fmz-admin-content-shell > main.container,
+.fmz-admin-content-shell > section.container {
+  width: 100%;
+  max-width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.fmz-admin-content-shell > .container > main:first-child {
+  margin-top: 0;
+}
