@@ -4,7 +4,7 @@ import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
 
 export function FmzPublicFooter() {
   return (
-    <footer className="border-t border-fmz-border-light bg-white">
+    <footer className="shrink-0 border-t border-fmz-border-light bg-white">
       <div className="mx-auto flex min-h-[60px] w-full max-w-7xl flex-col items-center justify-between gap-3 px-6 py-4 md:flex-row md:px-14 md:py-0">
         <span className="text-center text-[13px] text-fmz-text-hint md:text-left">
           {fmzPublicLayoutConfig.footerTagline}

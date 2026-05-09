@@ -9,7 +9,7 @@ export function FmzPublicHeader() {
   const t = useTranslations('Header');
 
   return (
-    <header className="h-[72px] border-b border-fmz-border-light bg-white">
+    <header className="h-[72px] shrink-0 border-b border-fmz-border-light bg-white">
       <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between px-6 md:px-14">
         <Link href={fmzPublicLayoutConfig.homePath} aria-label={fmzPublicLayoutConfig.appName} className="no-underline">
           <FmzBrandMark size="header" />

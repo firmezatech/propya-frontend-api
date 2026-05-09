@@ -59,11 +59,11 @@ export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayout
   }, [currentPrincipal, isLogoutPage]);
 
   if (isLogoutPage) {
-    return <div className="flex min-h-screen flex-col bg-[#F7F8FA] text-fmz-text-primary">{children}</div>;
+    return <div className="flex min-h-screen min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">{children}</div>;
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7F8FA] text-fmz-text-primary">
+    <div className="flex min-h-screen min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">
       <AuthenticatedRoute>
         <HeaderConn />
         <FmzRouteAccessGuard principal={currentPrincipal} isLoading={isAccessLoading}>
