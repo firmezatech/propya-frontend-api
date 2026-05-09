@@ -50,7 +50,7 @@ export const fmzDashboardAccessConfig = {
     },
     {
       kind: 'renter',
-      roleKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_RENTER_ROLE_KEYS', 'tenant,renter,inquilino,locatario'),
+      roleKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_RENTER_ROLE_KEYS', 'tenant'),
       permissionKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_RENTER_DASHBOARD_PERMISSIONS', 'tenant.dashboard.view'),
       pageKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_RENTER_DASHBOARD_PAGE_KEYS', 'tenant.dashboard'),
     },
