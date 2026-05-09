@@ -2,26 +2,85 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { FileText, Home, LogOut, ReceiptText, Settings, UserRound, Wrench } from 'lucide-react';
 import { useMemo } from 'react';
 import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
+import type { FmzAccessControlPage, FmzAccessControlPrincipal } from '../../features/access-control/domain';
+import { normalizeFmzPath } from '../../features/access-control/domain';
 import { fmzCn } from '../../lib/fmz-classnames';
 import { FmzBrandMark } from './FmzBrandMark';
+import { FmzConnectedDropdown } from './connected-dropdown';
+import type { FmzConnectedDropdownItem } from './connected-dropdown';
 import { FmzConnectedUserIdentity } from './FmzConnectedUserIdentity';
 
 export type FmzConnectedHeaderProps = {
   adminOffset?: boolean;
+  principal?: FmzAccessControlPrincipal | null;
 };
 
 const ADMIN_SIDEBAR_WIDTH_CLASS = 'lg:grid-cols-[clamp(280px,18vw,320px)_minmax(0,1fr)]';
 
 const buildFmzLocalizedHref = (locale: string | undefined, href: string): string => `${locale ? `/${locale}` : ''}${href}`;
 
-export function FmzConnectedHeader({ adminOffset = false }: FmzConnectedHeaderProps) {
+const isVisibleConnectedPage = (page: FmzAccessControlPage): boolean => {
+  const path = normalizeFmzPath(page.path);
+  return Boolean(page.key && path && path !== '#' && path !== '/' && !path.includes('['));
+};
+
+const resolveConnectedPageIcon = (page: FmzAccessControlPage): FmzConnectedDropdownItem['icon'] => {
+  const key = page.key.toLowerCase();
+  const path = page.path.toLowerCase();
+
+  if (key.includes('dashboard') || path.includes('dashboard')) return Home;
+  if (key.includes('account') || key.includes('profile') || path.includes('account')) return UserRound;
+  if (key.includes('invoice') || key.includes('fatura') || path.includes('invoice')) return ReceiptText;
+  if (key.includes('maintenance') || key.includes('manutenc') || path.includes('maintenance')) return Wrench;
+  if (key.includes('setting') || key.includes('config')) return Settings;
+
+  return FileText;
+};
+
+const buildConnectedDropdownItems = (principal: FmzAccessControlPrincipal | null | undefined): FmzConnectedDropdownItem[] => {
+  const pagesByKey = new Map<string, FmzAccessControlPage>();
+
+  (principal?.accessiblePages ?? [])
+    .filter(isVisibleConnectedPage)
+    .sort((left, right) => left.order - right.order)
+    .forEach((page) => {
+      const key = page.key.trim().toLowerCase();
+      if (!pagesByKey.has(key)) pagesByKey.set(key, page);
+    });
+
+  const pageItems: FmzConnectedDropdownItem[] = Array.from(pagesByKey.values()).map((page) => ({
+    id: page.key,
+    label: page.label || page.name || page.key,
+    href: normalizeFmzPath(page.path),
+    icon: resolveConnectedPageIcon(page),
+    variant: 'default',
+    section: 'main',
+  }));
+
+  return [
+    ...pageItems,
+    {
+      id: 'logout',
+      label: fmzPublicLayoutConfig.connectedLogoutLabel,
+      href: fmzPublicLayoutConfig.connectedLogoutPath,
+      icon: LogOut,
+      variant: 'danger',
+      section: 'session',
+    },
+  ];
+};
+
+export function FmzConnectedHeader({ adminOffset = false, principal = null }: FmzConnectedHeaderProps) {
   const params = useParams<{ locale?: string }>();
 
   const localizeHref = useMemo(() => {
     return (href: string) => buildFmzLocalizedHref(params?.locale, href);
   }, [params?.locale]);
+
+  const connectedDropdownItems = useMemo(() => buildConnectedDropdownItems(principal), [principal]);
 
   if (adminOffset) {
     return (
@@ -50,7 +109,13 @@ export function FmzConnectedHeader({ adminOffset = false }: FmzConnectedHeaderPr
           <FmzBrandMark size="header" />
         </Link>
 
-        <FmzConnectedUserIdentity />
+        <FmzConnectedDropdown
+          items={connectedDropdownItems}
+          localizeHref={localizeHref}
+          defaultUserName={fmzPublicLayoutConfig.defaultConnectedUserName}
+          defaultUserEmail={fmzPublicLayoutConfig.defaultConnectedUserEmail}
+          locale={params?.locale}
+        />
       </div>
     </header>
   );

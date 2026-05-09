@@ -137,10 +137,10 @@ export default function DashboardPage() {
     setShouldShowEmptyHome(!hasRenterDashboardData(propertyDetail, rentDetail));
   }, [loadPropertyAndRent, propertyId]);
 
-  const loadInvestorDashboard = useCallback(async (kind: Extract<FmzDashboardKind, "investor" | "legacyInvestor">) => {
-    if (!wallet) throw new Error(comm("pleaseLogin"));
+  const loadInvestorDashboard = useCallback(async (kind: Extract<FmzDashboardKind, "investor" | "legacyInvestor">, investorWallet: string | null) => {
+    if (!investorWallet) throw new Error(comm("pleaseLogin"));
     const [investorDetail, propertyAndRent] = await Promise.all([
-      getInvestorDetail(propertyId, wallet),
+      getInvestorDetail(propertyId, investorWallet),
       loadPropertyAndRent(),
     ]);
 
@@ -153,17 +153,10 @@ export default function DashboardPage() {
       invoiceData: null,
     });
     setShouldShowEmptyHome(false);
-  }, [comm, loadPropertyAndRent, propertyId, t, wallet]);
+  }, [comm, loadPropertyAndRent, propertyId, t]);
 
   const fetchData = useCallback(async () => {
     const nextWallet = wallet ?? getWalletFromStorage();
-
-    if (!nextWallet) {
-      setError(comm("pleaseLogin"));
-      setShouldShowEmptyHome(false);
-      setIsLoading(false);
-      return;
-    }
 
     setWallet(nextWallet);
     setIsLoading(true);
@@ -191,7 +184,7 @@ export default function DashboardPage() {
         return;
       }
 
-      await loadInvestorDashboard(kind);
+      await loadInvestorDashboard(kind, nextWallet);
     } catch (err) {
       if (isMetadataNotAvailableError(err)) {
         resetData();

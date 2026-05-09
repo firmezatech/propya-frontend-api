@@ -92,18 +92,33 @@ const normalizeKey = (value: unknown): string => String(value ?? '').trim().toLo
 const normalizeStringArray = (...values: unknown[]): string[] => {
   const normalizedValues = new Set<string>();
 
-  values.forEach((value) => {
-    if (!Array.isArray(value)) return;
-    value.forEach((item) => {
-      if (typeof item === 'string' || typeof item === 'number') {
-        const nextValue = normalizeKey(item);
-        if (nextValue) normalizedValues.add(nextValue);
-        return;
-      }
-      const record = recordOf(item);
-      const nextValue = normalizeKey(record.key ?? record.role_key ?? record.roleKey ?? record.permission_key ?? record.permissionKey ?? record.name ?? record.id);
+  const pushNormalized = (item: unknown) => {
+    if (typeof item === 'string' || typeof item === 'number') {
+      const nextValue = normalizeKey(item);
       if (nextValue) normalizedValues.add(nextValue);
-    });
+      return;
+    }
+
+    const record = recordOf(item);
+    const nextValue = normalizeKey(
+      record.key
+      ?? record.role_key
+      ?? record.roleKey
+      ?? record.permission_key
+      ?? record.permissionKey
+      ?? record.name
+      ?? record.id,
+    );
+    if (nextValue) normalizedValues.add(nextValue);
+  };
+
+  values.forEach((value) => {
+    if (Array.isArray(value)) {
+      value.forEach(pushNormalized);
+      return;
+    }
+
+    pushNormalized(value);
   });
 
   return Array.from(normalizedValues);

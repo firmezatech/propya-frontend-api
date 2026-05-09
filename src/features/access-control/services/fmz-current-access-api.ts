@@ -1,5 +1,6 @@
 import { fmzAdminNavigationConfig } from '../../../config/fmz-admin-navigation-config';
 import { firmezaApiClient } from '../../../services/firmeza-api-client';
+import { getFirmezaCurrentAccessSnapshot } from '../../../services/auth/auth-storage';
 import type { FmzAccessControlPage, FmzAccessControlPrincipal } from '../domain';
 
 const recordOf = (value: unknown): Record<string, unknown> => (value && typeof value === 'object' ? value as Record<string, unknown> : {});
@@ -80,7 +81,32 @@ const normalizeCurrentAccessPrincipal = (payload: unknown): FmzAccessControlPrin
   };
 };
 
+const getStorageValue = (key: string): string => {
+  if (typeof window === 'undefined') return '';
+  return window.localStorage.getItem(key) ?? '';
+};
+
+const buildCurrentAccessPrincipalFromSnapshot = (): FmzAccessControlPrincipal | null => {
+  const snapshot = getFirmezaCurrentAccessSnapshot();
+  if (!snapshot) return null;
+
+  const principal = normalizeCurrentAccessPrincipal({
+    ...snapshot,
+    name: getStorageValue(process.env.NEXT_PUBLIC_FMZ_CONNECTED_USER_NAME_STORAGE_KEY || 'name'),
+    email: getStorageValue(process.env.NEXT_PUBLIC_FMZ_CONNECTED_USER_EMAIL_STORAGE_KEY || 'email'),
+  });
+
+  const hasMeaningfulAccess = principal.roleKeys.length > 0 || principal.permissionKeys.length > 0 || principal.accessiblePages.length > 0;
+  return hasMeaningfulAccess ? principal : null;
+};
+
 export async function getCurrentAccessControlPrincipal(): Promise<FmzAccessControlPrincipal> {
-  const { data } = await firmezaApiClient.get(fmzAdminNavigationConfig.currentUserAccessPath);
-  return normalizeCurrentAccessPrincipal(data);
+  try {
+    const { data } = await firmezaApiClient.get(fmzAdminNavigationConfig.currentUserAccessPath);
+    return normalizeCurrentAccessPrincipal(data);
+  } catch (error) {
+    const snapshotPrincipal = buildCurrentAccessPrincipalFromSnapshot();
+    if (snapshotPrincipal) return snapshotPrincipal;
+    throw error;
+  }
 }
