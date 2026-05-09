@@ -360,7 +360,7 @@ export function FmzAdminPropertiesManagement() {
 
   return (
     <section className="min-h-[calc(100vh-124px)] bg-[#F7F8FA] px-4 py-6 text-[#0D1321] sm:px-6 lg:px-10">
-      <div className="mx-auto w-full max-w-[1120px]">
+      <div className="w-full max-w-[1120px]">
         {error ? <div className="mb-5"><FmzFormAlert error={error} /></div> : null}
 
         {view === 'list' ? (

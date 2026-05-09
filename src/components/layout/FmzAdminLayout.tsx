@@ -136,7 +136,7 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
   );
 
   return (
-    <div className="flex flex-1 flex-col lg:flex-row">
+    <div className="flex flex-1 flex-col overflow-x-hidden lg:flex-row">
       <FmzAdminSidebar
         locale={params?.locale}
         pathname={pathname}
@@ -145,7 +145,7 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
         navigationItems={navigationItems}
         onLogout={handleLogout}
       />
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 flex-1 overflow-x-hidden">{children}</div>
     </div>
   );
 }

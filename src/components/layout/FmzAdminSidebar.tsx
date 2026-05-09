@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { LogOut } from 'lucide-react';
 import type { FmzAdminNavigationItem } from '../../config/fmz-admin-navigation-config';
-import { fmzAdminNavigationConfig } from '../../config/fmz-admin-navigation-config';
 import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
 import { fmzCn } from '../../lib/fmz-classnames';
 import type { FmzConnectedUserSummary } from './connected-user/fmz-connected-user.types';
@@ -35,13 +34,8 @@ export function FmzAdminSidebar({
   const visibleItems = navigationItems.filter((item) => !item.requiredPermissionKey || effectivePermissionKeys.has(item.requiredPermissionKey.toLowerCase()));
 
   return (
-    <aside className="sticky top-[72px] z-30 flex shrink-0 border-b border-fmz-border-light bg-white lg:h-[calc(100vh-72px)] lg:w-[248px] lg:flex-col lg:border-b-0 lg:border-r">
-      <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto px-4 py-3 lg:flex-col lg:overflow-y-auto lg:px-3 lg:py-5">
-        <div className="hidden px-3 pb-2 lg:block">
-          <p className="text-[10px] font-bold uppercase tracking-[.1em] text-fmz-text-hint">{fmzAdminNavigationConfig.sectionLabel}</p>
-          <p className="mt-1 max-w-[190px] truncate text-[11px] text-fmz-text-hint" title={currentUser.email}>{currentUser.email}</p>
-        </div>
-
+    <aside className="sticky top-[72px] z-30 flex shrink-0 border-b border-fmz-border-light bg-white lg:h-[calc(100vh-72px)] lg:w-[clamp(260px,18vw,340px)] lg:flex-col lg:border-b-0 lg:border-r">
+      <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto px-4 py-3 lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:px-3 lg:py-5">
         {visibleItems.length ? visibleItems.map((item) => (
           <FmzAdminSidebarLink key={item.id} item={item} locale={locale} pathname={pathname} />
         )) : (
@@ -70,7 +64,7 @@ function FmzAdminSidebarLink({ item, locale, pathname }: { item: FmzAdminNavigat
     <Link
       href={buildFmzLocalizedHref(locale, item.href)}
       className={fmzCn(
-        'flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] no-underline transition lg:w-full',
+        'flex min-w-0 items-center gap-2 rounded-lg px-3 py-2 text-[13px] no-underline transition lg:w-full',
         isActive && 'bg-[#F0F1F5] font-medium text-fmz-navy',
         !isActive && 'text-fmz-text-muted hover:bg-fmz-page hover:text-fmz-text-primary',
       )}
@@ -84,7 +78,7 @@ function FmzAdminSidebarLink({ item, locale, pathname }: { item: FmzAdminNavigat
       >
         <Icon className="h-3.5 w-3.5" aria-hidden="true" />
       </span>
-      <span className="whitespace-nowrap">{item.label}</span>
+      <span className="min-w-0 leading-4 lg:whitespace-normal">{item.label}</span>
     </Link>
   );
 }

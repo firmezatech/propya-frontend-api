@@ -299,7 +299,7 @@ export function FmzAdminUsersManagement() {
 
   return (
     <section className="min-h-[calc(100vh-124px)] bg-[#F7F8FA] px-4 py-6 text-[#0D1321] sm:px-6 lg:px-10">
-      <div className="mx-auto w-full max-w-[1120px]">
+      <div className="w-full max-w-[1120px]">
         <FmzFormAlert error={error} />
         {loading ? <Loading /> : view === 'list' ? (
           <UserList users={filteredUsers} roles={roleByKey} query={query} onQuery={setQuery} onCreate={openCreate} onEdit={(user) => void openEdit(user)} />

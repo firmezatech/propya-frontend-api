@@ -73,7 +73,7 @@ export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayout
           />
         ) : (
           <>
-            <HeaderConn />
+            <HeaderConn adminOffset={shouldRenderAdminLayout} />
             <FmzRouteAccessGuard principal={currentPrincipal} isLoading={false}>
               {shouldRenderAdminLayout ? (
                 <FmzAdminLayout initialPrincipal={currentPrincipal}>{children}</FmzAdminLayout>
