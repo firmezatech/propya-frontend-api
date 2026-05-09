@@ -14,6 +14,7 @@ import { FmzAdminSidebar } from './FmzAdminSidebar';
 
 export type FmzAdminLayoutProps = {
   children: ReactNode;
+  initialPrincipal?: FmzAccessControlPrincipal | null;
 };
 
 const buildFmzLocalizedHref = (locale: string | undefined, href: string): string => `${locale ? `/${locale}` : ''}${href}`;
@@ -61,14 +62,30 @@ const buildAdminNavigationItems = (principal: FmzAccessControlPrincipal | null):
   return Array.from(uniquePagesByKey.values()).map(buildAdminNavigationItemFromPage);
 };
 
-export function FmzAdminLayout({ children }: FmzAdminLayoutProps) {
+export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLayoutProps) {
   const params = useParams<{ locale?: string }>();
   const pathname = usePathname();
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<FmzConnectedUserSummary>(buildDefaultUserSummary);
-  const [currentPrincipal, setCurrentPrincipal] = useState<FmzAccessControlPrincipal | null>(null);
+  const [currentPrincipal, setCurrentPrincipal] = useState<FmzAccessControlPrincipal | null>(initialPrincipal);
 
   const syncUserSummary = useCallback(() => setCurrentUser(buildFmzConnectedUserSummary()), []);
+
+
+  useEffect(() => {
+    if (!initialPrincipal) return;
+    setCurrentPrincipal(initialPrincipal);
+    if (initialPrincipal.name || initialPrincipal.email) {
+      setCurrentUser((previous) => {
+        const nextName = initialPrincipal.name || previous.name;
+        return {
+          name: nextName,
+          email: initialPrincipal.email || previous.email,
+          initials: buildFmzConnectedUserInitials(nextName),
+        };
+      });
+    }
+  }, [initialPrincipal]);
 
   useEffect(() => {
     syncUserSummary();
@@ -83,6 +100,8 @@ export function FmzAdminLayout({ children }: FmzAdminLayoutProps) {
   }, [syncUserSummary]);
 
   useEffect(() => {
+    if (initialPrincipal) return undefined;
+
     let isMounted = true;
     async function loadCurrentAccess() {
       try {
@@ -105,7 +124,7 @@ export function FmzAdminLayout({ children }: FmzAdminLayoutProps) {
     }
     void loadCurrentAccess();
     return () => { isMounted = false; };
-  }, []);
+  }, [initialPrincipal]);
 
   const handleLogout = useCallback(() => {
     clearFirmezaSession();

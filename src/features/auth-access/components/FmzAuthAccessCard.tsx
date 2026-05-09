@@ -5,7 +5,7 @@ import { useRouter } from '../../../i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { login, createUser, type CreateUserPayload, type LoginType } from '../../../services/login-fmz-api';
-import { FmzBrandMark } from '../../../components/layout';
+import { FmzBrandMark, FmzFullPageLoading } from '../../../components/layout';
 import { FmzButton, FmzTextInput } from '../../../components/design-system';
 import { FmzFieldErrorMessage, FmzFormAlert } from '../../api-errors/components';
 import { FMZ_API_ERROR_CODES, type FmzFieldErrorMap, type FmzNormalizedApiError } from '../../api-errors/domain';
@@ -66,6 +66,8 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
   const [apiError, setApiError] = useState<FmzNormalizedApiError | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FmzFieldErrorMap>({});
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirectingAfterLogin, setIsRedirectingAfterLogin] = useState(false);
   const authAccessConfig = useMemo(() => getFmzAuthAccessConfig(), []);
 
   useEffect(() => {
@@ -95,6 +97,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
     }
 
     formRef.current?.reset();
+    setIsRedirectingAfterLogin(true);
     router.replace('/connected/dashboard');
   };
 
@@ -125,9 +128,12 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
 
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isSubmitting || isRedirectingAfterLogin) return;
+
     setMessage('');
     setApiError(null);
     setFieldErrors({});
+    setIsSubmitting(true);
 
     const formData = Object.fromEntries(new FormData(event.currentTarget).entries());
 
@@ -153,6 +159,8 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
         severity: 'error',
         fieldErrors: {},
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -160,6 +168,16 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
   const formSubtitle = isRegistering ? t('alreadyHaveAccount') : t('notAccountYet');
   const formToggleLabel = isRegistering ? t('goToLogin') : t('registerFree');
   const submitLabel = isRegistering ? t('register') : t('loginPlatform');
+
+  if (isRedirectingAfterLogin) {
+    return (
+      <FmzFullPageLoading
+        label="Entrando na plataforma..."
+        description="Estamos carregando sua sessão, permissões e menu lateral."
+        className="min-h-[520px] bg-transparent px-0"
+      />
+    );
+  }
 
   return (
     <section className={className} aria-labelledby="fmz-auth-access-title">
@@ -173,6 +191,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
           <FmzButton
             type="button"
             variant="link"
+            disabled={isSubmitting}
             onClick={() => setIsRegistering((currentValue) => !currentValue)}
           >
             {formToggleLabel}
@@ -180,7 +199,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
         </p>
       </div>
 
-      <form ref={formRef} onSubmit={handleFormSubmit} className="rounded-2xl border-[1.5px] border-fmz-border-light bg-white px-6 py-8 sm:px-10 sm:py-9">
+      <form ref={formRef} onSubmit={handleFormSubmit} aria-busy={isSubmitting} className="rounded-2xl border-[1.5px] border-fmz-border-light bg-white px-6 py-8 sm:px-10 sm:py-9">
         <FmzFormAlert error={apiError} />
 
         <div className="space-y-5">
@@ -269,14 +288,15 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
           )}
         </div>
 
-        <FmzButton type="submit" variant="primary" className="mt-6">
-          {submitLabel}
+        <FmzButton type="submit" variant="primary" className="mt-6 gap-2" disabled={isSubmitting}>
+          {isSubmitting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/35 border-t-white" aria-hidden="true" /> : null}
+          {isSubmitting ? (isRegistering ? 'Criando cadastro...' : 'Validando acesso...') : submitLabel}
         </FmzButton>
       </form>
 
       <div className="mt-7 text-center text-sm text-fmz-text-muted">
         {formSubtitle}{' '}
-        <FmzButton type="button" variant="link" className="font-syne font-bold text-fmz-navy" onClick={() => setIsRegistering((currentValue) => !currentValue)}>
+        <FmzButton type="button" variant="link" className="font-syne font-bold text-fmz-navy" disabled={isSubmitting} onClick={() => setIsRegistering((currentValue) => !currentValue)}>
           {isRegistering ? t('goToLogin') : t('goToRegister')}
         </FmzButton>
       </div>

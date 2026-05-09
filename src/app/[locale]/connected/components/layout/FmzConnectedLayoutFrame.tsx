@@ -8,6 +8,7 @@ import HeaderConn from '../HeaderConn';
 import FooterConn from '../FooterConn';
 import AuthenticatedRoute from '../AuthenticatedRoute';
 import { FmzAdminLayout } from '../../../../../components/layout/FmzAdminLayout';
+import { FmzFullPageLoading } from '../../../../../components/layout/FmzFullPageLoading';
 import { getCurrentAccessControlPrincipal } from '../../../../../features/access-control/services';
 import type { FmzAccessControlPrincipal } from '../../../../../features/access-control/domain';
 import { FMZ_AUTH_SESSION_CHANGED_EVENT } from '../../../../../services/auth/auth-storage';
@@ -65,15 +66,24 @@ export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayout
   return (
     <div className="flex min-h-screen min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">
       <AuthenticatedRoute>
-        <HeaderConn />
-        <FmzRouteAccessGuard principal={currentPrincipal} isLoading={isAccessLoading}>
-          {shouldRenderAdminLayout ? (
-            <FmzAdminLayout>{children}</FmzAdminLayout>
-          ) : (
-            <div className="flex flex-1 flex-col">{children}</div>
-          )}
-        </FmzRouteAccessGuard>
-        <FooterConn />
+        {isAccessLoading ? (
+          <FmzFullPageLoading
+            label="Preparando sua área logada..."
+            description="Estamos carregando permissões, páginas liberadas e menu lateral antes de exibir o dashboard."
+          />
+        ) : (
+          <>
+            <HeaderConn />
+            <FmzRouteAccessGuard principal={currentPrincipal} isLoading={false}>
+              {shouldRenderAdminLayout ? (
+                <FmzAdminLayout initialPrincipal={currentPrincipal}>{children}</FmzAdminLayout>
+              ) : (
+                <div className="flex flex-1 flex-col">{children}</div>
+              )}
+            </FmzRouteAccessGuard>
+            <FooterConn />
+          </>
+        )}
       </AuthenticatedRoute>
     </div>
   );

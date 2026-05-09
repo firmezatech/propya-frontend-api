@@ -359,10 +359,11 @@ export function FmzAdminPropertiesManagement() {
   ] as const;
 
   return (
-    <main className="min-h-full flex-1 bg-[#F7F8FA] px-4 py-5 text-[#0D1321] md:px-9 md:py-8">
-      {error ? <div className="mb-5"><FmzFormAlert error={error} /></div> : null}
+    <section className="min-h-[calc(100vh-124px)] bg-[#F7F8FA] px-4 py-6 text-[#0D1321] sm:px-6 lg:px-10">
+      <div className="mx-auto w-full max-w-[1120px]">
+        {error ? <div className="mb-5"><FmzFormAlert error={error} /></div> : null}
 
-      {view === 'list' ? (
+        {view === 'list' ? (
         <section>
           <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -406,8 +407,8 @@ export function FmzAdminPropertiesManagement() {
           ) : filteredProperties.length ? (
             <div className="flex flex-col gap-2.5">
               {filteredProperties.map((property) => (
-                <button key={property.id || property.name} type="button" onClick={() => void openProperty(property)} className="group flex w-full items-center gap-4 rounded-xl border-[1.5px] border-[#E8EAF0] bg-white p-4 text-left transition hover:-translate-y-0.5 hover:border-transparent hover:shadow-[0_6px_22px_rgba(13,19,33,0.09)] md:px-5">
-                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[10px] bg-[#F0F1F5] text-xl">{typeIconByKey.get(property.propertyType) ?? '🏢'}</div>
+                <button key={property.id || property.name} type="button" onClick={() => void openProperty(property)} className="group flex w-full flex-col gap-3 rounded-xl border-[1.5px] border-[#E8EAF0] bg-white p-4 text-left transition hover:-translate-y-0.5 hover:border-transparent hover:shadow-[0_6px_22px_rgba(13,19,33,0.09)] sm:flex-row sm:items-center md:px-5">
+                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center self-start rounded-[10px] bg-[#F0F1F5] text-xl sm:self-auto">{typeIconByKey.get(property.propertyType) ?? '🏢'}</div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-['Syne'] text-[14.5px] font-bold text-[#0D1321]">{property.name}</div>
                     <div className="mt-0.5 truncate text-xs text-[#5A6478]">{propertyAddress(property)}</div>
@@ -421,7 +422,7 @@ export function FmzAdminPropertiesManagement() {
                     <div className="font-['Syne'] text-sm font-bold text-[#0D1321]">{formatMoney(property.appraisedValue)}</div>
                     <div className="flex items-center gap-1.5 text-xs text-[#5A6478]"><span className={fmzCn('h-[7px] w-[7px] rounded-full', statusClasses[property.status].dot)} />{statusLabelByKey.get(property.status)}</div>
                   </div>
-                  <ChevronRight size={18} className="flex-shrink-0 text-[#9AA3B0] transition group-hover:translate-x-0.5 group-hover:text-[#0D1321]" />
+                  <ChevronRight size={18} className="hidden flex-shrink-0 text-[#9AA3B0] transition group-hover:translate-x-0.5 group-hover:text-[#0D1321] sm:block" />
                 </button>
               ))}
             </div>
@@ -568,13 +569,15 @@ export function FmzAdminPropertiesManagement() {
         </section>
       )}
 
+      </div>
+
       {toast ? (
-        <div className="fixed bottom-6 left-1/2 z-[400] flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-[10px] bg-[#0D1321] px-[18px] py-[11px] text-[13px] font-medium text-white shadow-lg">
+        <div className="fixed bottom-6 left-1/2 z-[400] flex max-w-[calc(100vw-32px)] -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-[10px] bg-[#0D1321] px-[18px] py-[11px] text-[13px] font-medium text-white shadow-lg">
           <span className={fmzCn('flex h-4 w-4 items-center justify-center rounded-full', toast.ok ? 'bg-[#F5C842]' : 'bg-[#D94F3D]')}><Check size={10} className="text-[#0D1321]" /></span>
           {toast.message}
         </div>
       ) : null}
-    </main>
+    </section>
   );
 }
 
