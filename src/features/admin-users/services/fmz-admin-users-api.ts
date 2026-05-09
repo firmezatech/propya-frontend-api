@@ -27,6 +27,21 @@ const num = (value: unknown, fallback = 0): number => {
   if (typeof value === 'string' && value.trim() && Number.isFinite(Number(value))) return Number(value);
   return fallback;
 };
+
+const normalizeBirthdateForApi = (value: string | null | undefined): string => {
+  const rawValue = String(value ?? '').trim();
+  if (!rawValue) return '';
+
+  const isoMatch = rawValue.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
+
+  const brMatch = rawValue.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (brMatch) return rawValue;
+
+  const digits = rawValue.replace(/\D/g, '').slice(0, 8);
+  if (digits.length !== 8) return rawValue;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+};
 const bool = (value: unknown, fallback = false): boolean => {
   if (typeof value === 'boolean') return value;
   if (typeof value === 'string') return ['true', '1', 'yes', 'active'].includes(normalized(value));
@@ -349,7 +364,7 @@ const stripReadOnlyPayload = (draft: FmzAdminUserDraft) => ({
   state: draft.state ?? '',
   postalCode: draft.postalCode ?? '',
   country: draft.country ?? 'BR',
-  birthdate: draft.birthdate ?? '',
+  birthdate: normalizeBirthdateForApi(draft.birthdate),
 });
 
 export async function getAdminUsers(): Promise<FmzAdminUser[]> {

@@ -20,6 +20,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
+import { formatBirthdateInput } from '../../../services/phone-country-format';
 import { FmzFormAlert } from '../../api-errors/components';
 import { normalizeFmzApiError, type FmzNormalizedApiError } from '../../api-errors/domain';
 import type { FmzAccessControlRole } from '../../access-control/domain';
@@ -98,6 +99,31 @@ const roleLabel = (role: FmzAccessControlRole): string => {
 };
 const roleDescription = (role: FmzAccessControlRole): string => role.description || `${role.permissionKeys.length} permissões vinculadas`;
 const isValidEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+
+const normalizeBirthdateForForm = (value: string | null | undefined): string => {
+  const rawValue = String(value ?? '').trim();
+  if (!rawValue) return '';
+
+  const isoMatch = rawValue.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
+
+  const brMatch = rawValue.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (brMatch) return rawValue;
+
+  return formatBirthdateInput(rawValue);
+};
+
+const isValidBrazilianBirthdate = (value: string): boolean => {
+  const match = value.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return false;
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+};
 const initials = (name: string): string => name.split(' ').filter(Boolean).slice(0, 2).map((word) => word[0]).join('').toUpperCase() || 'FT';
 const avatarColor = (seed: string): readonly [string, string] => {
   const palette = [
@@ -141,7 +167,7 @@ const formFromUser = (user: FmzAdminUser): UserFormState => ({
   state: user.state ?? '',
   postalCode: user.postalCode ?? '',
   country: user.country ?? 'BR',
-  birthdate: user.birthdate ?? '',
+  birthdate: normalizeBirthdateForForm(user.birthdate),
 });
 const draftFromForm = (form: UserFormState): FmzAdminUserDraft => ({
   id: form.id,
@@ -247,6 +273,7 @@ export function FmzAdminUsersManagement() {
     if (!form.name.trim()) { notify('Informe o nome completo.', false); return false; }
     if (!isValidEmail(form.email)) { notify('Informe um e-mail válido.', false); return false; }
     if (!isEditing && form.password.trim().length < 8) { notify('A senha precisa ter pelo menos 8 caracteres.', false); return false; }
+    if (form.birthdate.trim() && !isValidBrazilianBirthdate(form.birthdate)) { notify('Informe uma data de nascimento válida no formato DD/MM/AAAA.', false); return false; }
     return true;
   };
 
@@ -409,7 +436,7 @@ function Steps({ step }: { step: Step }) {
 }
 
 function BasicStep({ form, isEditing, onField, onNext }: { form: UserFormState; isEditing: boolean; onField: <K extends keyof UserFormState>(field: K, value: UserFormState[K]) => void; onNext: () => void }) {
-  return <div><div className="rounded-2xl border border-[#E8EAF0] bg-white p-5 shadow-sm sm:p-7"><h2 className="font-syne text-base font-bold">Quem é esse usuário?</h2><p className="mt-1 text-[13px] leading-6 text-[#5A6478]">Preencha os dados editáveis. Wallets, contratos e percentuais são somente leitura.</p><div className="mt-6 grid gap-x-5 sm:grid-cols-2"><Field className="sm:col-span-2" label="Nome completo *" value={form.name} placeholder="Ex: Mirella Souza" onChange={(value) => onField('name', value)} /><Field label="E-mail *" type="email" value={form.email} placeholder="email@exemplo.com" onChange={(value) => onField('email', value)} /><Field label="Telefone / WhatsApp" value={form.phone} placeholder="+55 11 9 0000-0000" onChange={(value) => onField('phone', value)} /><Field label={isEditing ? 'Nova senha (deixe em branco para manter)' : 'Senha *'} type="password" value={form.password} placeholder="Mínimo 8 caracteres" onChange={(value) => onField('password', value)} /><Field label="Nascimento" type="date" value={form.birthdate} onChange={(value) => onField('birthdate', value)} /><div className="mb-5"><span className="mb-2 block text-[11px] font-semibold uppercase tracking-[.07em] text-[#5A6478]">Status da conta</span><div className="flex gap-2"><button type="button" onClick={() => onField('status', 'active')} className={fmzCn('flex-1 rounded-lg border px-3 py-2.5 text-[13px] font-medium transition', form.status === 'active' ? 'border-[#1A8C5B] bg-[#F0FAF5] text-[#1A8C5B]' : 'border-[#E8EAF0] bg-white text-[#5A6478] hover:border-[#0D1321]')}>✓ Ativo</button><button type="button" onClick={() => onField('status', 'inactive')} className={fmzCn('flex-1 rounded-lg border px-3 py-2.5 text-[13px] font-medium transition', form.status === 'inactive' ? 'border-[#9AA3B0] bg-[#F0F1F5] text-[#5A6478]' : 'border-[#E8EAF0] bg-white text-[#5A6478] hover:border-[#0D1321]')}>○ Inativo</button></div></div></div><div className="mt-2 rounded-2xl border border-[#E8EAF0] bg-[#F7F8FA] p-4"><div className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.08em] text-[#5A6478]"><MapPin className="h-3.5 w-3.5" />Endereço</div><div className="grid gap-x-5 sm:grid-cols-2"><Field className="sm:col-span-2" label="Endereço completo" value={form.address} placeholder="Rua, número, complemento" onChange={(value) => onField('address', value)} /><Field label="Logradouro" value={form.addressLine1} placeholder="Rua X, 123" onChange={(value) => onField('addressLine1', value)} /><Field label="Complemento" value={form.addressLine2} placeholder="Apto 12" onChange={(value) => onField('addressLine2', value)} /><Field label="Bairro" value={form.district} placeholder="Centro" onChange={(value) => onField('district', value)} /><Field label="Cidade" value={form.city} placeholder="São Paulo" onChange={(value) => onField('city', value)} /><Field label="Estado" value={form.state} placeholder="SP" onChange={(value) => onField('state', value)} /><Field label="CEP" value={form.postalCode} placeholder="01000-000" onChange={(value) => onField('postalCode', value)} /><Field label="País" value={form.country} placeholder="BR" onChange={(value) => onField('country', value)} /></div></div></div><div className="mt-6 flex justify-end"><button onClick={onNext} className="inline-flex w-full items-center justify-center gap-2 rounded-[9px] bg-[#0D1321] px-7 py-3 font-syne text-[13px] font-bold uppercase tracking-[.04em] text-white transition hover:-translate-y-0.5 sm:w-auto">Próximo: definir acessos<ChevronRight className="h-3.5 w-3.5" /></button></div></div>;
+  return <div><div className="rounded-2xl border border-[#E8EAF0] bg-white p-5 shadow-sm sm:p-7"><h2 className="font-syne text-base font-bold">Quem é esse usuário?</h2><p className="mt-1 text-[13px] leading-6 text-[#5A6478]">Preencha os dados editáveis. Wallets, contratos e percentuais são somente leitura.</p><div className="mt-6 grid gap-x-5 sm:grid-cols-2"><Field className="sm:col-span-2" label="Nome completo *" value={form.name} placeholder="Ex: Mirella Souza" onChange={(value) => onField('name', value)} /><Field label="E-mail *" type="email" value={form.email} placeholder="email@exemplo.com" onChange={(value) => onField('email', value)} /><Field label="Telefone / WhatsApp" value={form.phone} placeholder="+55 11 9 0000-0000" onChange={(value) => onField('phone', value)} /><Field label={isEditing ? 'Nova senha (deixe em branco para manter)' : 'Senha *'} type="password" value={form.password} placeholder="Mínimo 8 caracteres" onChange={(value) => onField('password', value)} /><Field label="Nascimento" value={form.birthdate} placeholder="DD/MM/AAAA" onChange={(value) => onField('birthdate', formatBirthdateInput(value))} /><div className="mb-5"><span className="mb-2 block text-[11px] font-semibold uppercase tracking-[.07em] text-[#5A6478]">Status da conta</span><div className="flex gap-2"><button type="button" onClick={() => onField('status', 'active')} className={fmzCn('flex-1 rounded-lg border px-3 py-2.5 text-[13px] font-medium transition', form.status === 'active' ? 'border-[#1A8C5B] bg-[#F0FAF5] text-[#1A8C5B]' : 'border-[#E8EAF0] bg-white text-[#5A6478] hover:border-[#0D1321]')}>✓ Ativo</button><button type="button" onClick={() => onField('status', 'inactive')} className={fmzCn('flex-1 rounded-lg border px-3 py-2.5 text-[13px] font-medium transition', form.status === 'inactive' ? 'border-[#9AA3B0] bg-[#F0F1F5] text-[#5A6478]' : 'border-[#E8EAF0] bg-white text-[#5A6478] hover:border-[#0D1321]')}>○ Inativo</button></div></div></div><div className="mt-2 rounded-2xl border border-[#E8EAF0] bg-[#F7F8FA] p-4"><div className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.08em] text-[#5A6478]"><MapPin className="h-3.5 w-3.5" />Endereço</div><div className="grid gap-x-5 sm:grid-cols-2"><Field className="sm:col-span-2" label="Endereço completo" value={form.address} placeholder="Rua, número, complemento" onChange={(value) => onField('address', value)} /><Field label="Logradouro" value={form.addressLine1} placeholder="Rua X, 123" onChange={(value) => onField('addressLine1', value)} /><Field label="Complemento" value={form.addressLine2} placeholder="Apto 12" onChange={(value) => onField('addressLine2', value)} /><Field label="Bairro" value={form.district} placeholder="Centro" onChange={(value) => onField('district', value)} /><Field label="Cidade" value={form.city} placeholder="São Paulo" onChange={(value) => onField('city', value)} /><Field label="Estado" value={form.state} placeholder="SP" onChange={(value) => onField('state', value)} /><Field label="CEP" value={form.postalCode} placeholder="01000-000" onChange={(value) => onField('postalCode', value)} /><Field label="País" value={form.country} placeholder="BR" onChange={(value) => onField('country', value)} /></div></div></div><div className="mt-6 flex justify-end"><button onClick={onNext} className="inline-flex w-full items-center justify-center gap-2 rounded-[9px] bg-[#0D1321] px-7 py-3 font-syne text-[13px] font-bold uppercase tracking-[.04em] text-white transition hover:-translate-y-0.5 sm:w-auto">Próximo: definir acessos<ChevronRight className="h-3.5 w-3.5" /></button></div></div>;
 }
 
 function Field({ label, value, onChange, placeholder, type = 'text', className }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string; className?: string }) {
