@@ -113,8 +113,8 @@ export function FmzAdminRolesAccessControl() {
   };
 
   return (
-    <section className="min-h-[calc(100vh-124px)] bg-[#F7F8FA] px-4 py-6 text-[#0D1321] sm:px-6 lg:px-10">
-      <div className="w-full max-w-[1120px]">
+    <section className="min-h-[calc(100vh-124px)] w-full text-[#0D1321]">
+      <div className="w-full">
         <div className="min-w-0">
           <FmzFormAlert error={error} />
           {loading ? <Loading /> : view === 'list' ? (
