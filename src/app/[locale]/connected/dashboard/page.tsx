@@ -15,7 +15,6 @@ import {
   type RentDetailData,
   getInvestorDetail,
   type InvestorData,
-  getInvoiceOrRentDetail,
   type InvoiceData,
 } from "../../../../services/web3-api";
 import { FmzConnectedEmptyHome } from "../../../../features/connected-home/components/FmzConnectedEmptyHome";
@@ -23,6 +22,7 @@ import { hasRenterDashboardData } from "../../../../features/renter-dashboard/co
 import { getCurrentAccessControlPrincipal } from "../../../../features/access-control/services";
 import type { FmzAccessControlPrincipal } from "../../../../features/access-control/domain";
 import { resolveDashboardKindFromAccess, type FmzDashboardKind } from "../../../../features/access-control/domain";
+import { getTenantDashboardData } from "../../../../features/renter-dashboard/services/fmz-tenant-dashboard-api";
 
 const DEFAULT_PROPERTY_ID = 1;
 const LEGACY_INVESTOR_PROFILE_CODE = 4;
@@ -58,6 +58,8 @@ type DashboardDataState = {
   rentDetail: RentDetailData | null;
   propertyDetail: PropertyData | null;
   invoiceData: InvoiceData | null;
+  renterName: string | null;
+  referenceMonthLabel: string | null;
 };
 
 const emptyDashboardData: DashboardDataState = {
@@ -65,6 +67,8 @@ const emptyDashboardData: DashboardDataState = {
   rentDetail: null,
   propertyDetail: null,
   invoiceData: null,
+  renterName: null,
+  referenceMonthLabel: null,
 };
 
 const isMetadataNotAvailableError = (error: unknown): boolean => {
@@ -83,6 +87,7 @@ export default function DashboardPage() {
   const { setPropertyId: setContextPropertyId } = useProfile();
   const [propertyId] = useState<number>(DEFAULT_PROPERTY_ID);
   const [wallet, setWallet] = useState<string | null>(null);
+  const [tenantDashboardPropertyId, setTenantDashboardPropertyId] = useState<string | null>(null);
   const [currentPrincipal, setCurrentPrincipal] = useState<FmzAccessControlPrincipal | null>(null);
   const [dashboardKind, setDashboardKind] = useState<FmzDashboardKind | null>(null);
   const [data, setData] = useState<DashboardDataState>(emptyDashboardData);
@@ -92,6 +97,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setWallet(getWalletFromStorage());
+
+    if (typeof window !== "undefined") {
+      const nextPropertyId = new URLSearchParams(window.location.search).get("propertyId");
+      setTenantDashboardPropertyId(nextPropertyId);
+    }
   }, []);
 
   useEffect(() => {
@@ -117,25 +127,18 @@ export default function DashboardPage() {
   }, [propertyId, t]);
 
   const loadRenterDashboard = useCallback(async () => {
-    const { propertyDetail, rentDetail } = await loadPropertyAndRent();
-    let invoiceData: InvoiceData | null = null;
+    const tenantDashboardData = await getTenantDashboardData(tenantDashboardPropertyId);
 
-    try {
-      const nextInvoiceData = await getInvoiceOrRentDetail(propertyId);
-      if (!nextInvoiceData) {
-          invoiceData = null;
-      } else if ("invoiceId" in nextInvoiceData) {
-          invoiceData = nextInvoiceData;
-      }
-    } catch (invoiceError) {
-      if (!isMetadataNotAvailableError(invoiceError)) {
-        throw invoiceError;
-      }
-    }
-
-    setData({ investorDetail: null, propertyDetail, rentDetail, invoiceData });
-    setShouldShowEmptyHome(!hasRenterDashboardData(propertyDetail, rentDetail));
-  }, [loadPropertyAndRent, propertyId]);
+    setData({
+      investorDetail: null,
+      propertyDetail: tenantDashboardData.propertyDetail,
+      rentDetail: tenantDashboardData.rentDetail,
+      invoiceData: tenantDashboardData.invoiceData,
+      renterName: tenantDashboardData.renterName,
+      referenceMonthLabel: tenantDashboardData.referenceMonthLabel,
+    });
+    setShouldShowEmptyHome(!hasRenterDashboardData(tenantDashboardData.propertyDetail, tenantDashboardData.rentDetail));
+  }, [tenantDashboardPropertyId]);
 
   const loadInvestorDashboard = useCallback(async (kind: Extract<FmzDashboardKind, "investor" | "legacyInvestor">, investorWallet: string | null) => {
     if (!investorWallet) throw new Error(comm("pleaseLogin"));
@@ -151,6 +154,8 @@ export default function DashboardPage() {
       propertyDetail: propertyAndRent.propertyDetail,
       rentDetail: propertyAndRent.rentDetail,
       invoiceData: null,
+      renterName: null,
+      referenceMonthLabel: null,
     });
     setShouldShowEmptyHome(false);
   }, [comm, loadPropertyAndRent, propertyId, t]);
@@ -230,6 +235,8 @@ export default function DashboardPage() {
           rentDetail={data.rentDetail}
           propertyDetail={data.propertyDetail}
           invoiceData={data.invoiceData}
+          renterName={data.renterName}
+          referenceMonthLabel={data.referenceMonthLabel}
         />
       );
     }

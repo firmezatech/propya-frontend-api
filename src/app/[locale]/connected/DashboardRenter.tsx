@@ -7,9 +7,11 @@ type DashboardRenterProps = {
   rentDetail: RentDetailData | null;
   propertyDetail: PropertyData | null;
   invoiceData: InvoiceData | null;
+  renterName?: string | null;
+  referenceMonthLabel?: string | null;
 };
 
-export default function DashboardRenter({ rentDetail, propertyDetail, invoiceData }: DashboardRenterProps) {
+export default function DashboardRenter({ rentDetail, propertyDetail, invoiceData, renterName, referenceMonthLabel }: DashboardRenterProps) {
   if (!propertyDetail || !rentDetail) {
     return null;
   }
@@ -19,6 +21,8 @@ export default function DashboardRenter({ rentDetail, propertyDetail, invoiceDat
       propertyDetail={propertyDetail}
       rentDetail={rentDetail}
       invoiceData={invoiceData}
+      renterName={renterName}
+      referenceMonthLabel={referenceMonthLabel}
     />
   );
 }
