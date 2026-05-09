@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { fmzCn } from '../../../lib/fmz-classnames';
 import { buildFmzConnectedUserInitials, buildFmzConnectedUserSummary } from './fmz-connected-dropdown-storage';
+import { performFirmezaLogout } from '../../../services/auth/fmz-logout';
 import type { FmzConnectedDropdownItem, FmzConnectedDropdownUserSummary } from './fmz-connected-dropdown.types';
 
 type FmzConnectedDropdownProps = {
@@ -12,6 +13,7 @@ type FmzConnectedDropdownProps = {
   localizeHref: (href: string) => string;
   defaultUserName: string;
   defaultUserEmail: string;
+  locale?: string;
 };
 
 const isFmzConnectedDropdownItemActive = (pathname: string | null, href: string): boolean => {
@@ -19,7 +21,7 @@ const isFmzConnectedDropdownItemActive = (pathname: string | null, href: string)
   return pathname.endsWith(href) || pathname.includes(`${href}/`);
 };
 
-export function FmzConnectedDropdown({ items, localizeHref, defaultUserName, defaultUserEmail }: FmzConnectedDropdownProps) {
+export function FmzConnectedDropdown({ items, localizeHref, defaultUserName, defaultUserEmail, locale }: FmzConnectedDropdownProps) {
   const router = useRouter();
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -50,9 +52,13 @@ export function FmzConnectedDropdown({ items, localizeHref, defaultUserName, def
     return () => document.removeEventListener('mousedown', closeOnOutsideClick);
   }, []);
 
-  const handleItemClick = (href: string) => {
+  const handleItemClick = (item: FmzConnectedDropdownItem) => {
     setIsDropdownOpen(false);
-    router.push(localizeHref(href));
+    if (item.id === 'logout') {
+      performFirmezaLogout({ router, locale });
+      return;
+    }
+    router.push(localizeHref(item.href));
   };
 
   return (
@@ -96,7 +102,7 @@ export function FmzConnectedDropdown({ items, localizeHref, defaultUserName, def
               <button
                 type="button"
                 role="menuitem"
-                onClick={() => handleItemClick(item.href)}
+                onClick={() => handleItemClick(item)}
                 className={fmzCn(
                   'flex w-full items-center gap-2.5 rounded-lg border-0 bg-transparent px-3 py-2.5 text-left font-sans text-sm text-fmz-text-muted transition hover:bg-fmz-page hover:text-fmz-text-primary',
                   isActive && !isDanger && 'bg-[#F0F1F5] font-medium text-fmz-navy',

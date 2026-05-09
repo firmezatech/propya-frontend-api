@@ -14,6 +14,13 @@ const FMZ_USER_STORAGE_KEYS = [
   readPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_USER_WALLET_STORAGE_KEY', 'wallet'),
   readPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_USER_PROFILE_STORAGE_KEY', 'profile'),
   FMZ_CURRENT_ACCESS_STORAGE_KEY,
+  'token',
+  'authToken',
+  'user',
+  'userId',
+  'role',
+  'roles',
+  'permissions',
 ] as const;
 
 export type FmzAuthenticatedUserSession = {

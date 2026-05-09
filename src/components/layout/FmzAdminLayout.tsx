@@ -6,7 +6,8 @@ import { useParams, usePathname, useRouter } from 'next/navigation';
 import { fmzAdminNavigationConfig, fmzAdminNavigationPaths, fmzAdminPageIconByKey, type FmzAdminNavigationItem } from '../../config/fmz-admin-navigation-config';
 import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
 import { getCurrentAccessControlPrincipal } from '../../features/access-control/services';
-import { clearFirmezaSession, FMZ_AUTH_SESSION_CHANGED_EVENT } from '../../services/auth/auth-storage';
+import { FMZ_AUTH_SESSION_CHANGED_EVENT } from '../../services/auth/auth-storage';
+import { performFirmezaLogout } from '../../services/auth/fmz-logout';
 import { buildFmzConnectedUserInitials, buildFmzConnectedUserSummary } from './connected-user/fmz-connected-user-storage';
 import type { FmzAccessControlPage, FmzAccessControlPrincipal } from '../../features/access-control/domain';
 import type { FmzConnectedUserSummary } from './connected-user/fmz-connected-user.types';
@@ -16,8 +17,6 @@ export type FmzAdminLayoutProps = {
   children: ReactNode;
   initialPrincipal?: FmzAccessControlPrincipal | null;
 };
-
-const buildFmzLocalizedHref = (locale: string | undefined, href: string): string => `${locale ? `/${locale}` : ''}${href}`;
 
 export const isFmzAdminConnectedPath = (pathname: string | null): boolean => {
   if (!pathname) return false;
@@ -127,8 +126,7 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
   }, [initialPrincipal]);
 
   const handleLogout = useCallback(() => {
-    clearFirmezaSession();
-    router.replace(buildFmzLocalizedHref(params?.locale, fmzPublicLayoutConfig.homePath));
+    performFirmezaLogout({ router, locale: params?.locale });
   }, [params?.locale, router]);
 
   const navigationItems = useMemo(() => buildAdminNavigationItems(currentPrincipal), [currentPrincipal]);

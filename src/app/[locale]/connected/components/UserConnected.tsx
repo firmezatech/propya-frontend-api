@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter, usePathname } from 'next/navigation';
+import { useParams, useRouter, usePathname } from 'next/navigation';
 import Link from "next/link";
 import LanguageDropdown from "app/[locale]/components/ui/LanguageDropdown";
 import { useTranslations } from 'next-intl';
 import { useProfile } from '../../../context/ProfileContext';
-import { clearFirmezaSession } from '../../../../services/auth/auth-storage';
+import { performFirmezaLogout } from '../../../../services/auth/fmz-logout';
 
 // Define menu items to avoid repetition
 export default function UserConnected() {
@@ -65,6 +65,7 @@ export default function UserConnected() {
   const [name, setName] = useState<string | null>(null);
   const [error, setError] = useState('');
   const router = useRouter();
+  const params = useParams<{ locale?: string }>();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -104,9 +105,8 @@ export default function UserConnected() {
   const handleLogout = () => {
     setWallet(null);
     setName(null);
-    clearFirmezaSession();
-    router.push('/');
     setShowDropdown(false);
+    performFirmezaLogout({ router, locale: params?.locale });
   };
 
   const handleNavigation = (path: string) => {
