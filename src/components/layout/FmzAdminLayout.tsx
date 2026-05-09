@@ -145,7 +145,7 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
         navigationItems={navigationItems}
         onLogout={handleLogout}
       />
-      <div className="min-w-0 flex-1 overflow-x-hidden">{children}</div>
+      <div className="min-w-0 flex-1 overflow-x-hidden bg-[#F7F8FA]">{children}</div>
     </div>
   );
 }

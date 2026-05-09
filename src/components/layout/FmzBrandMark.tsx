@@ -11,14 +11,14 @@ type FmzBrandMarkProps = {
 const brandSizeClassNames = {
   header: {
     wrapper: 'gap-3',
-    icon: 'h-[38px] w-[38px] rounded-[10px]',
-    image: 24,
+    icon: 'h-9 w-9 rounded-[9px]',
+    image: 36,
     text: 'text-[17px]',
   },
   form: {
     wrapper: 'gap-3',
     icon: 'h-11 w-11 rounded-xl',
-    image: 28,
+    image: 44,
     text: 'text-xl',
   },
 } as const;
@@ -28,14 +28,14 @@ export function FmzBrandMark({ size = 'header', showText = true, className = '' 
 
   return (
     <span className={fmzCn('inline-flex items-center no-underline', sizeClassNames.wrapper, className)}>
-      <span className={fmzCn('inline-flex items-center justify-center overflow-hidden bg-fmz-gold', sizeClassNames.icon)}>
+      <span className={fmzCn('inline-flex items-center justify-center overflow-hidden bg-transparent', sizeClassNames.icon)}>
         <Image
           priority={size === 'header'}
           src={fmzPublicLayoutConfig.logoPath}
           alt="Firmeza Token"
           width={sizeClassNames.image}
           height={sizeClassNames.image}
-          className="rounded-[7px]"
+          className="h-full w-full rounded-[inherit] object-cover"
         />
       </span>
       {showText && (

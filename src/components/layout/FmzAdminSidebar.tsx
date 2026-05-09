@@ -34,8 +34,8 @@ export function FmzAdminSidebar({
   const visibleItems = navigationItems.filter((item) => !item.requiredPermissionKey || effectivePermissionKeys.has(item.requiredPermissionKey.toLowerCase()));
 
   return (
-    <aside className="sticky top-[72px] z-30 flex shrink-0 border-b border-fmz-border-light bg-white lg:h-[calc(100vh-72px)] lg:w-[clamp(260px,18vw,340px)] lg:flex-col lg:border-b-0 lg:border-r">
-      <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto px-4 py-3 lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:px-3 lg:py-5">
+    <aside className="sticky top-[72px] z-30 flex shrink-0 border-b border-fmz-border-light bg-white lg:h-[calc(100vh-72px)] lg:w-[clamp(280px,18vw,320px)] lg:flex-col lg:border-b-0 lg:border-r">
+      <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto px-4 py-3 lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:px-5 lg:py-5">
         {visibleItems.length ? visibleItems.map((item) => (
           <FmzAdminSidebarLink key={item.id} item={item} locale={locale} pathname={pathname} />
         )) : (
@@ -45,7 +45,7 @@ export function FmzAdminSidebar({
         )}
       </div>
 
-      <div className="hidden border-t border-fmz-border-light p-3 lg:block">
+      <div className="hidden border-t border-fmz-border-light p-5 lg:block">
         <FmzAdminSidebarLogoutButton onLogout={onLogout} />
       </div>
 
@@ -64,7 +64,7 @@ function FmzAdminSidebarLink({ item, locale, pathname }: { item: FmzAdminNavigat
     <Link
       href={buildFmzLocalizedHref(locale, item.href)}
       className={fmzCn(
-        'flex min-w-0 items-center gap-2 rounded-lg px-3 py-2 text-[13px] no-underline transition lg:w-full',
+        'flex min-w-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] no-underline transition lg:w-full',
         isActive && 'bg-[#F0F1F5] font-medium text-fmz-navy',
         !isActive && 'text-fmz-text-muted hover:bg-fmz-page hover:text-fmz-text-primary',
       )}
