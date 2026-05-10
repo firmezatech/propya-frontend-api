@@ -11,7 +11,8 @@ import { FmzFormAlert } from '../../../../features/api-errors/components';
 import { FMZ_API_ERROR_CODES } from '../../../../features/api-errors/domain';
 import type { FmzNormalizedApiError } from '../../../../features/api-errors/domain';
 import { formatBirthdateInput } from '../../../../services/phone-country-format';
-import { getUserByWallet, updateUser, type UserType } from '../../../../services/login-fmz-api';
+import { updateUser, type UserType } from '../../../../services/login-fmz-api';
+import { getCurrentAccountUser } from '../../../../features/account/services/fmz-current-account-api';
 
 type PasswordVisibilityState = {
   current: boolean;
@@ -69,8 +70,8 @@ export default function MyAccountPage() {
   const common = useTranslations('Common');
   const router = useRouter();
 
-  const [wallet, setWallet] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserType | null>(null);
+  const [isLoadingUserData, setIsLoadingUserData] = useState(true);
   const [apiError, setApiError] = useState<FmzNormalizedApiError | null>(null);
   const [fieldErrors, setFieldErrors] = useState<AccountFieldErrors>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -137,35 +138,31 @@ export default function MyAccountPage() {
   }, [t, userData, validateAccountForm]);
 
   useEffect(() => {
-    const storedWallet = localStorage.getItem('wallet');
-    setWallet(storedWallet);
-  }, []);
-
-  useEffect(() => {
     let isMounted = true;
 
     const fetchUserData = async () => {
-      if (!wallet) return;
-
-      const response = await getUserByWallet(wallet);
+      setIsLoadingUserData(true);
+      const response = await getCurrentAccountUser();
       if (!isMounted) return;
 
       if (!response) {
         setApiError(buildLocalAccountError(common('errorLoadingData')));
         setUserData(null);
+        setIsLoadingUserData(false);
         return;
       }
 
       setUserData(sanitizeUserForForm(response));
       setApiError(null);
+      setIsLoadingUserData(false);
     };
 
-    fetchUserData();
+    void fetchUserData();
 
     return () => {
       isMounted = false;
     };
-  }, [common, wallet]);
+  }, [common]);
 
   return (
     <FmzConnectedPageShell width="default">
@@ -191,7 +188,14 @@ export default function MyAccountPage() {
 
       <FmzFormAlert error={apiError} />
 
-      {userData ? (
+      {isLoadingUserData ? (
+        <FmzCard>
+          <div className="flex min-h-[160px] items-center justify-center gap-3 text-sm text-fmz-text-muted">
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-fmz-border-light border-t-fmz-navy" />
+            Carregando dados da inquilina...
+          </div>
+        </FmzCard>
+      ) : userData ? (
         <>
           <FmzCard>
             <FmzCardHeader
@@ -341,7 +345,7 @@ export default function MyAccountPage() {
         </>
       ) : (
         <FmzCard>
-          <p className="text-sm text-fmz-text-muted">{common('dataNotAvailable')}</p>
+          <p className="text-sm text-fmz-text-muted">Não encontramos dados suficientes da inquilina para carregar esta página.</p>
         </FmzCard>
       )}
 

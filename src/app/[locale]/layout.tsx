@@ -5,6 +5,7 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { notFound } from 'next/navigation';
 import { routing } from '../../i18n/routing';
 import { setRequestLocale } from 'next-intl/server';
+import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
 
 import { ProfileProvider } from "../context/ProfileContext";
 import { LanguageProvider } from "../context/LanguageContext";
@@ -24,8 +25,13 @@ const syne = Syne({
 });
 
 export const metadata: Metadata = {
-  title: "Firmeza Token",
+  title: fmzPublicLayoutConfig.appName,
   description: "Sem barreiras. Sem dívidas de longo prazo.",
+  icons: {
+    icon: fmzPublicLayoutConfig.logoPath,
+    shortcut: fmzPublicLayoutConfig.logoPath,
+    apple: fmzPublicLayoutConfig.logoPath,
+  },
 };
 
 export default async function RootLayout({
