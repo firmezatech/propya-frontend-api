@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { FileText, Home, LogOut, ReceiptText, Settings, UserRound, Wrench } from 'lucide-react';
+import { FileText, Home, LogOut, ReceiptText, Settings, UserRound, WalletCards, Wrench } from 'lucide-react';
 import { useMemo } from 'react';
 import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
 import type { FmzAccessControlPage, FmzAccessControlPrincipal } from '../../features/access-control/domain';
@@ -33,7 +33,8 @@ const resolveConnectedPageIcon = (page: FmzAccessControlPage): FmzConnectedDropd
 
   if (key.includes('dashboard') || path.includes('dashboard')) return Home;
   if (key.includes('account') || key.includes('profile') || path.includes('account')) return UserRound;
-  if (key.includes('invoice') || key.includes('fatura') || path.includes('invoice')) return ReceiptText;
+  if (key.includes('invoice') || key.includes('boleto') || key.includes('payment') || key.includes('fatura') || path.includes('invoice') || path.includes('issueinvoice') || path.includes('paymenthistory')) return ReceiptText;
+  if (key.includes('wallet') || key.includes('token') || path.includes('wallet') || path.includes('mytokens')) return WalletCards;
   if (key.includes('maintenance') || key.includes('manutenc') || path.includes('maintenance')) return Wrench;
   if (key.includes('setting') || key.includes('config')) return Settings;
 
