@@ -3,7 +3,7 @@ import { getCurrentAccessControlPrincipal } from '../../access-control/services'
 import { getTenantDashboardData } from '../../renter-dashboard/services/fmz-tenant-dashboard-api';
 import { getUserByWallet, type UserType } from '../../../services/login-fmz-api';
 
-type StoredAccountSnapshot = Pick<UserType, 'name' | 'email' | 'wallet' | 'profile'>;
+type StoredAccountSnapshot = Pick<UserType, 'name' | 'email' | 'wallet'> & { profile?: number };
 
 const isBrowser = (): boolean => typeof window !== 'undefined';
 
@@ -12,11 +12,16 @@ const getStoredValue = (key: string): string => {
   return window.localStorage.getItem(key)?.trim() ?? '';
 };
 
+const getStoredNumber = (key: string): number | undefined => {
+  const numericValue = Number(getStoredValue(key));
+  return Number.isFinite(numericValue) ? numericValue : undefined;
+};
+
 const getStoredAccountSnapshot = (): StoredAccountSnapshot => ({
   name: getStoredValue(fmzPublicLayoutConfig.connectedUserNameStorageKey),
   email: getStoredValue(fmzPublicLayoutConfig.connectedUserEmailStorageKey),
   wallet: getStoredValue(fmzPublicLayoutConfig.connectedUserWalletStorageKey),
-  profile: getStoredValue(fmzPublicLayoutConfig.connectedUserProfileStorageKey),
+  profile: getStoredNumber(fmzPublicLayoutConfig.connectedUserProfileStorageKey),
 });
 
 const firstNonEmpty = (...values: Array<string | null | undefined>): string | undefined => (
