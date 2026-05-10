@@ -33,6 +33,24 @@ export type FmzTenantProfile = {
   name?: string | null;
   email?: string | null;
   initials?: string | null;
+  phone?: string | null;
+  phoneCountry?: string | null;
+  birthdate?: string | null;
+  birthDate?: string | null;
+  address?: string | null;
+  fullAddress?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  addressNumber?: string | null;
+  district?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  zipcode?: string | null;
+  country?: string | null;
+  wallet?: string | null;
+  walletAddress?: string | null;
 };
 
 export type FmzTenantProperty = {
@@ -57,6 +75,9 @@ export type FmzTenantContract = {
   baseMonthlyRent?: number | null;
   originalBaseRent?: number | null;
   currency?: string | null;
+  contractFileUrl?: string | null;
+  documentUrl?: string | null;
+  signedDocumentUrl?: string | null;
 };
 
 export type FmzTenantOwnership = {

@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Copy, Download, House, ReceiptText, WalletCards } from 'lucide-react';
+import { ArrowLeft, Copy, Download, FileText, House, ReceiptText, WalletCards } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FmzConnectedPageShell } from '../../../components/layout';
 import { getCurrentTenantDashboard, getCurrentTenantPaymentHistory, getCurrentTenantWallets } from '../services';
 import type { FmzTenantDashboard, FmzTenantPaymentHistoryItem, FmzTenantWallet } from '../domain';
 
-type FmzTenantPortalPageKind = 'invoice' | 'paymentHistory' | 'wallet' | 'tokens';
+type FmzTenantPortalPageKind = 'invoice' | 'paymentHistory' | 'wallet' | 'tokens' | 'contract';
 
 type FmzTenantPortalPageProps = {
   kind: FmzTenantPortalPageKind;
@@ -18,6 +18,9 @@ const percentFormatter = new Intl.NumberFormat('pt-BR', { minimumFractionDigits:
 
 const formatMoney = (value?: number | null): string => moneyFormatter.format(Number(value ?? 0));
 const formatPercent = (value?: number | null): string => `${percentFormatter.format(Number(value ?? 0))}%`;
+const tokenFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 8 });
+const formatTokenAmount = (value?: number | null): string => tokenFormatter.format(Number(value ?? 0));
+
 const formatDate = (value?: string | null): string => {
   if (!value) return 'Não informado';
   const date = new Date(value);
@@ -141,6 +144,100 @@ function TenantInvoiceView({ dashboard }: { dashboard: FmzTenantDashboard | null
   );
 }
 
+
+function ContractInfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-fmz-border-light bg-fmz-page p-4">
+      <dt className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">{label}</dt>
+      <dd className="mt-1 break-words text-sm font-semibold text-fmz-navy">{value}</dd>
+    </div>
+  );
+}
+
+const optionalString = (value: unknown): string | null => (typeof value === 'string' && value.trim() ? value.trim() : null);
+
+function resolveContractDocumentUrl(dashboard: FmzTenantDashboard | null): string | null {
+  const contract = dashboard?.contract;
+  const contractRecord = (contract && typeof contract === 'object' ? contract : {}) as Record<string, unknown>;
+
+  return optionalString(contract?.contractFileUrl)
+    ?? optionalString(contract?.signedDocumentUrl)
+    ?? optionalString(contract?.documentUrl)
+    ?? optionalString(contractRecord.contract_file_url)
+    ?? optionalString(contractRecord.signed_document_url)
+    ?? optionalString(contractRecord.document_url)
+    ?? optionalString(contractRecord.file_url);
+}
+
+function TenantContractView({ dashboard }: { dashboard: FmzTenantDashboard | null }) {
+  const contract = dashboard?.contract;
+  const property = dashboard?.property;
+  const tenant = dashboard?.tenant;
+  const contractDocumentUrl = resolveContractDocumentUrl(dashboard);
+
+  if (!dashboard || !contract) {
+    return <EmptyState title="Contrato não encontrado" description="A rota GET /tenant/dashboard não retornou contrato ativo para esta inquilina." />;
+  }
+
+  return (
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <section className="rounded-2xl border border-fmz-border-light bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">Contrato da inquilina</p>
+            <h2 className="mt-2 font-syne text-3xl font-extrabold text-fmz-navy">
+              {contract.contractNumber ?? 'Contrato ativo'}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-fmz-text-muted">
+              Dados carregados pela rota <strong>GET /tenant/dashboard</strong>, usando o contrato vinculado ao usuário autenticado.
+            </p>
+          </div>
+          <span className="rounded-full border border-fmz-success-border bg-fmz-success-bg px-3 py-1.5 text-xs font-bold text-fmz-success">
+            {statusLabel(contract.status)}
+          </span>
+        </div>
+
+        <dl className="mt-8 grid gap-4 md:grid-cols-2">
+          <ContractInfoRow label="Inquilina" value={tenant?.name ?? 'Não informado'} />
+          <ContractInfoRow label="Imóvel" value={property?.name ?? property?.code ?? 'Não informado'} />
+          <ContractInfoRow label="Endereço" value={[property?.addressLine1, property?.district, property?.city, property?.state].filter(Boolean).join(', ') || 'Não informado'} />
+          <ContractInfoRow label="Número do contrato" value={contract.contractNumber ?? contract.id ?? 'Não informado'} />
+          <ContractInfoRow label="Início" value={formatDate(contract.startDate)} />
+          <ContractInfoRow label="Fim" value={formatDate(contract.endDate)} />
+          <ContractInfoRow label="Dia de vencimento" value={contract.paymentDay ? `Dia ${contract.paymentDay}` : 'Não informado'} />
+          <ContractInfoRow label="Aluguel base" value={formatMoney(contract.baseMonthlyRent)} />
+          <ContractInfoRow label="Aluguel original" value={formatMoney(contract.originalBaseRent)} />
+          <ContractInfoRow label="Moeda" value={contract.currency ?? 'BRL'} />
+        </dl>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          {contractDocumentUrl ? (
+            <a href={contractDocumentUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-fmz-navy px-5 py-3 text-sm font-bold uppercase tracking-[0.03em] text-white no-underline transition hover:bg-[#162030]">
+              <Download className="h-4 w-4" /> Visualizar contrato
+            </a>
+          ) : (
+            <button type="button" disabled className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl bg-fmz-border-light px-5 py-3 text-sm font-bold uppercase tracking-[0.03em] text-fmz-text-hint">
+              <Download className="h-4 w-4" /> Documento indisponível
+            </button>
+          )}
+        </div>
+      </section>
+
+      <aside className="rounded-2xl border border-fmz-border-light bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between gap-4">
+          <h3 className="font-syne text-xl font-bold text-fmz-navy">Resumo</h3>
+          <FileText className="h-6 w-6 text-fmz-navy" />
+        </div>
+        <div className="mt-5 grid gap-3">
+          <MetricCard label="Status" value={statusLabel(contract.status)} icon={FileText} />
+          <MetricCard label="Vencimento" value={contract.paymentDay ? `Dia ${contract.paymentDay}` : '—'} icon={ReceiptText} />
+          <MetricCard label="Aluguel base" value={formatMoney(contract.baseMonthlyRent)} icon={House} />
+        </div>
+      </aside>
+    </div>
+  );
+}
+
 function TenantPaymentHistoryView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
   if (history.length === 0) {
     return <EmptyState title="Histórico vazio" description="A rota GET /tenant/dashboard ainda não retornou cobranças vinculadas a esta inquilina." />;
@@ -188,6 +285,8 @@ function TenantPaymentHistoryView({ history }: { history: FmzTenantPaymentHistor
 
 function TenantWalletView({ dashboard, wallets }: { dashboard: FmzTenantDashboard | null; wallets: FmzTenantWallet[] }) {
   const ownership = dashboard?.ownership;
+  const tokenBalance = ownership?.tokenBalance ?? 0;
+  const pendingTokenBalance = ownership?.pendingTokenBalance ?? 0;
 
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -200,15 +299,31 @@ function TenantWalletView({ dashboard, wallets }: { dashboard: FmzTenantDashboar
           <WalletCards className="h-7 w-7 text-fmz-navy" />
         </div>
 
+        <div className="mb-5 grid gap-4 md:grid-cols-3">
+          <MetricCard label="Tokens disponíveis" value={formatTokenAmount(tokenBalance)} icon={WalletCards} />
+          <MetricCard label="Tokens pendentes" value={formatTokenAmount(pendingTokenBalance)} icon={ReceiptText} />
+          <MetricCard label="Participação atual" value={formatPercent(ownership?.currentPercentage)} icon={House} />
+        </div>
+
         {wallets.length === 0 ? (
           <EmptyState title="Carteira não encontrada" description="A rota GET /listWallets não retornou uma wallet vinculada ao usuário autenticado." />
         ) : (
           <div className="space-y-4">
             {wallets.map((wallet) => (
               <article key={wallet.id ?? wallet.walletAddress ?? wallet.publicKey} className="rounded-2xl border border-fmz-border-light bg-fmz-page p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">Endereço</p>
-                <p className="mt-2 break-all font-mono text-sm text-fmz-navy">{wallet.walletAddress ?? wallet.publicKey ?? 'Não informado'}</p>
-                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">ID da wallet</p>
+                    <p className="mt-2 break-all font-mono text-sm font-semibold text-fmz-navy">{wallet.id ?? 'Não informado'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">Endereço</p>
+                    <p className="mt-2 break-all font-mono text-sm text-fmz-navy">{wallet.walletAddress ?? wallet.publicKey ?? 'Não informado'}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 md:grid-cols-4">
+                  <div><span className="text-xs text-fmz-text-hint">Tokens</span><strong className="block text-sm text-fmz-navy">{formatTokenAmount(tokenBalance)}</strong></div>
                   <div><span className="text-xs text-fmz-text-hint">Rede</span><strong className="block text-sm text-fmz-navy">{wallet.chainId ?? '—'}</strong></div>
                   <div><span className="text-xs text-fmz-text-hint">Tipo</span><strong className="block text-sm text-fmz-navy">{wallet.walletType ?? '—'}</strong></div>
                   <div><span className="text-xs text-fmz-text-hint">Status</span><strong className="block text-sm text-fmz-navy">{wallet.status ?? wallet.verificationStatus ?? '—'}</strong></div>
@@ -222,8 +337,9 @@ function TenantWalletView({ dashboard, wallets }: { dashboard: FmzTenantDashboar
       <aside className="rounded-2xl border border-fmz-border-light bg-white p-6 shadow-sm">
         <h3 className="font-syne text-xl font-bold text-fmz-navy">Resumo de tokens</h3>
         <div className="mt-5 grid gap-3">
+          <MetricCard label="Saldo de tokens" value={formatTokenAmount(tokenBalance)} icon={WalletCards} />
+          <MetricCard label="Tokens pendentes" value={formatTokenAmount(pendingTokenBalance)} icon={ReceiptText} />
           <MetricCard label="Participação atual" value={formatPercent(ownership?.currentPercentage)} icon={House} />
-          <MetricCard label="Saldo de tokens" value={String(ownership?.tokenBalance ?? 0)} icon={WalletCards} />
           <MetricCard label="Valor já adquirido" value={formatMoney(ownership?.currentOwnedValue)} icon={ReceiptText} />
         </div>
       </aside>
@@ -279,6 +395,7 @@ export function FmzTenantPortalPage({ kind }: FmzTenantPortalPageProps) {
     paymentHistory: 'Histórico de pagamentos',
     wallet: 'Minha carteira',
     tokens: 'Meus tokens',
+    contract: 'Meu contrato',
   };
 
   return (
@@ -303,6 +420,8 @@ export function FmzTenantPortalPage({ kind }: FmzTenantPortalPageProps) {
         <TenantInvoiceView dashboard={dashboard} />
       ) : kind === 'paymentHistory' ? (
         <TenantPaymentHistoryView history={history} />
+      ) : kind === 'contract' ? (
+        <TenantContractView dashboard={dashboard} />
       ) : (
         <TenantWalletView dashboard={dashboard} wallets={wallets} />
       )}

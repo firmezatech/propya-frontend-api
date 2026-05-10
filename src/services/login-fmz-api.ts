@@ -15,6 +15,14 @@ export type UserType = {
   phone?: string;
   phoneCountry?: string;
   birthdate?: string;
+  address?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  district?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
   password?: string;
   currentPassword?: string;
   newPassword?: string;
@@ -306,9 +314,19 @@ export async function updateUser(user: UserType): Promise<UpdateUserResponse> {
       phone: user.phone,
       phoneCountry: user.phoneCountry,
       birthdate: user.birthdate,
-      currentPassword: user.currentPassword,
-      newPassword: user.newPassword,
-      confirmPassword: user.confirmPassword,
+      address: user.address,
+      addressLine1: user.addressLine1,
+      addressLine2: user.addressLine2,
+      district: user.district,
+      city: user.city,
+      state: user.state,
+      postalCode: user.postalCode,
+      country: user.country,
+      ...(user.currentPassword?.trim() || user.newPassword?.trim() || user.confirmPassword?.trim() ? {
+        currentPassword: user.currentPassword,
+        newPassword: user.newPassword,
+        confirmPassword: user.confirmPassword,
+      } : {}),
     });
 
     return {

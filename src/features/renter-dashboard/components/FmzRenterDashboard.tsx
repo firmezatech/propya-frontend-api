@@ -243,7 +243,10 @@ export function FmzRenterDashboard({
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" /><path d="M2 7h12" stroke="currentColor" strokeWidth="1.3" /><path d="M5 10h2M9 10h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
             Pagar boleto
           </button>
-          <Link href="/connected/paymentHistory" className={styles.secondaryLink}>Ver histórico de pagamentos →</Link>
+          <div className={styles.billLinks}>
+            <Link href="/connected/myContract" className={styles.secondaryLink}>Ver meu contrato →</Link>
+            <Link href="/connected/paymentHistory" className={styles.secondaryLink}>Ver histórico de pagamentos →</Link>
+          </div>
         </div>
 
         <div className={styles.insightStack}>

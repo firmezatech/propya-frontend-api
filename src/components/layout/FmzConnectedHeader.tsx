@@ -33,6 +33,7 @@ const resolveConnectedPageIcon = (page: FmzAccessControlPage): FmzConnectedDropd
 
   if (key.includes('dashboard') || path.includes('dashboard')) return Home;
   if (key.includes('account') || key.includes('profile') || path.includes('account')) return UserRound;
+  if (key.includes('contract') || path.includes('contract') || path.includes('mycontract')) return FileText;
   if (key.includes('invoice') || key.includes('boleto') || key.includes('payment') || key.includes('fatura') || path.includes('invoice') || path.includes('issueinvoice') || path.includes('paymenthistory')) return ReceiptText;
   if (key.includes('wallet') || key.includes('token') || path.includes('wallet') || path.includes('mytokens')) return WalletCards;
   if (key.includes('maintenance') || key.includes('manutenc') || path.includes('maintenance')) return Wrench;

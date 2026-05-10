@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Check, ShieldCheck, UserRound } from 'lucide-react';
+import { ArrowLeft, Check, MapPin, ShieldCheck, UserRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
@@ -58,8 +58,31 @@ const getPasswordStrength = (password: string): PasswordStrength => {
   return { score, label: 'Forte', className: 'bg-fmz-success' };
 };
 
+
+const normalizeBirthdateForForm = (value: string | null | undefined): string => {
+  const rawValue = String(value ?? '').trim();
+  if (!rawValue) return '';
+
+  const isoMatch = rawValue.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
+
+  const brMatch = rawValue.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (brMatch) return rawValue;
+
+  return formatBirthdateInput(rawValue);
+};
+
+const formatCepInput = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 5) return digits;
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+};
+
 const sanitizeUserForForm = (user: UserType): UserType => ({
   ...user,
+  birthdate: normalizeBirthdateForForm(user.birthdate),
+  postalCode: user.postalCode ? formatCepInput(user.postalCode) : '',
+  country: user.country || 'BR',
   currentPassword: '',
   newPassword: '',
   confirmPassword: '',
@@ -104,11 +127,13 @@ export default function MyAccountPage() {
   const validateAccountForm = useCallback((): boolean => {
     const nextFieldErrors: AccountFieldErrors = {};
 
-    if (!userData?.currentPassword?.trim()) {
+    const isChangingPassword = Boolean(userData?.newPassword?.trim() || userData?.confirmPassword?.trim());
+
+    if (isChangingPassword && !userData?.currentPassword?.trim()) {
       nextFieldErrors.currentPassword = t('errorCurrentPasswordRequired');
     }
 
-    if ((userData?.newPassword || userData?.confirmPassword) && userData?.newPassword !== userData?.confirmPassword) {
+    if (isChangingPassword && userData?.newPassword !== userData?.confirmPassword) {
       nextFieldErrors.confirmPassword = 'As senhas não coincidem.';
     }
 
@@ -232,6 +257,8 @@ export default function MyAccountPage() {
                 </span>
                 <FmzTextInput
                   value={userData.birthdate ?? ''}
+                  placeholder="DD/MM/AAAA"
+                  maxLength={10}
                   onChange={(event) => updateUserField('birthdate', formatBirthdateInput(event.target.value))}
                 />
               </label>
@@ -242,6 +269,90 @@ export default function MyAccountPage() {
                 </span>
                 <FmzTextInput type="email" value={userData.email ?? ''} disabled />
                 <span className="mt-1.5 block text-[11.5px] text-fmz-text-hint">O e-mail não pode ser alterado.</span>
+              </label>
+            </div>
+          </FmzCard>
+
+          <FmzCard>
+            <FmzCardHeader
+              icon={<MapPin className="h-[18px] w-[18px]" aria-hidden="true" />}
+              title="Endereço"
+              subtitle="Endereço residencial usado para cadastro e comunicação da inquilina"
+            />
+
+            <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+              <label className="block md:col-span-2">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">Endereço completo</span>
+                <FmzTextInput
+                  value={userData.address ?? ''}
+                  placeholder="Rua, número, complemento"
+                  onChange={(event) => updateUserField('address', event.target.value)}
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">Logradouro</span>
+                <FmzTextInput
+                  value={userData.addressLine1 ?? ''}
+                  placeholder="Ex: Rua Firmeza"
+                  onChange={(event) => updateUserField('addressLine1', event.target.value)}
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">Complemento</span>
+                <FmzTextInput
+                  value={userData.addressLine2 ?? ''}
+                  placeholder="Apto, bloco, casa"
+                  onChange={(event) => updateUserField('addressLine2', event.target.value)}
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">Bairro</span>
+                <FmzTextInput
+                  value={userData.district ?? ''}
+                  placeholder="Centro"
+                  onChange={(event) => updateUserField('district', event.target.value)}
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">Cidade</span>
+                <FmzTextInput
+                  value={userData.city ?? ''}
+                  placeholder="São Paulo"
+                  onChange={(event) => updateUserField('city', event.target.value)}
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">Estado</span>
+                <FmzTextInput
+                  value={userData.state ?? ''}
+                  placeholder="SP"
+                  maxLength={2}
+                  onChange={(event) => updateUserField('state', event.target.value.toUpperCase())}
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">CEP</span>
+                <FmzTextInput
+                  value={userData.postalCode ?? ''}
+                  placeholder="00000-000"
+                  maxLength={9}
+                  onChange={(event) => updateUserField('postalCode', formatCepInput(event.target.value))}
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.07em] text-fmz-text-muted">País</span>
+                <FmzTextInput
+                  value={userData.country ?? 'BR'}
+                  placeholder="BR"
+                  onChange={(event) => updateUserField('country', event.target.value.toUpperCase())}
+                />
               </label>
             </div>
           </FmzCard>
@@ -265,7 +376,7 @@ export default function MyAccountPage() {
                     hasError={Boolean(fieldErrors.currentPassword)}
                     autoComplete="current-password"
                     className="pr-11"
-                    placeholder="Digite sua senha atual"
+                    placeholder="Obrigatória apenas para alterar a senha"
                     onChange={(event) => updateUserField('currentPassword', event.target.value)}
                   />
                   <FmzPasswordVisibilityButton
