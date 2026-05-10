@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import DashboardRenter from "../DashboardRenter";
@@ -23,6 +23,8 @@ import { getCurrentAccessControlPrincipal } from "../../../../features/access-co
 import type { FmzAccessControlPrincipal } from "../../../../features/access-control/domain";
 import { resolveDashboardKindFromAccess, type FmzDashboardKind } from "../../../../features/access-control/domain";
 import { getTenantDashboardData } from "../../../../features/renter-dashboard/services/fmz-tenant-dashboard-api";
+import { getFirmezaAccessToken } from "../../../../services/auth/auth-storage";
+import { isFirmezaApiError } from "../../../../services/firmeza-api-client";
 
 const DEFAULT_PROPERTY_ID = 1;
 const LEGACY_INVESTOR_PROFILE_CODE = 4;
@@ -88,7 +90,9 @@ export default function DashboardPage() {
   const [propertyId] = useState<number>(DEFAULT_PROPERTY_ID);
   const [wallet, setWallet] = useState<string | null>(null);
   const [tenantDashboardPropertyId, setTenantDashboardPropertyId] = useState<string | null>(null);
-  const [currentPrincipal, setCurrentPrincipal] = useState<FmzAccessControlPrincipal | null>(null);
+  const currentPrincipalRef = useRef<FmzAccessControlPrincipal | null>(null);
+  const activeFetchKeyRef = useRef<string | null>(null);
+  const fetchSequenceRef = useRef(0);
   const [dashboardKind, setDashboardKind] = useState<FmzDashboardKind | null>(null);
   const [data, setData] = useState<DashboardDataState>(emptyDashboardData);
   const [error, setError] = useState<string | null>(null);
@@ -113,8 +117,13 @@ export default function DashboardPage() {
   }, []);
 
   const loadAccess = useCallback(async () => {
+    if (currentPrincipalRef.current) {
+      setDashboardKind(resolveDashboardKindFromAccess(currentPrincipalRef.current));
+      return currentPrincipalRef.current;
+    }
+
     const principal = await getCurrentAccessControlPrincipal();
-    setCurrentPrincipal(principal);
+    currentPrincipalRef.current = principal;
     setDashboardKind(resolveDashboardKindFromAccess(principal));
     return principal;
   }, []);
@@ -162,6 +171,24 @@ export default function DashboardPage() {
 
   const fetchData = useCallback(async () => {
     const nextWallet = wallet ?? getWalletFromStorage();
+    const accessToken = getFirmezaAccessToken();
+    const fetchKey = `${nextWallet ?? 'no-wallet'}:${tenantDashboardPropertyId ?? 'default-property'}`;
+
+    if (!accessToken) {
+      resetData();
+      setIsLoading(false);
+      setShouldShowEmptyHome(false);
+      setError(comm("pleaseLogin"));
+      return;
+    }
+
+    if (activeFetchKeyRef.current === fetchKey) {
+      return;
+    }
+
+    activeFetchKeyRef.current = fetchKey;
+    const fetchSequence = fetchSequenceRef.current + 1;
+    fetchSequenceRef.current = fetchSequence;
 
     setWallet(nextWallet);
     setIsLoading(true);
@@ -169,7 +196,9 @@ export default function DashboardPage() {
     setShouldShowEmptyHome(false);
 
     try {
-      const principal = currentPrincipal ?? await loadAccess();
+      const principal = await loadAccess();
+      if (fetchSequence !== fetchSequenceRef.current) return;
+
       const kind = resolveDashboardKindFromAccess(principal);
       setDashboardKind(kind);
 
@@ -191,6 +220,8 @@ export default function DashboardPage() {
 
       await loadInvestorDashboard(kind, nextWallet);
     } catch (err) {
+      if (fetchSequence !== fetchSequenceRef.current) return;
+
       if (isMetadataNotAvailableError(err)) {
         resetData();
         setShouldShowEmptyHome(true);
@@ -200,11 +231,20 @@ export default function DashboardPage() {
 
       resetData();
       setShouldShowEmptyHome(false);
+
+      if (isFirmezaApiError(err) && err.response?.status === 401) {
+        setError("Sessão expirada ou não autorizada. Faça login novamente para carregar o dashboard.");
+        return;
+      }
+
       setError(err instanceof Error ? err.message : t("errorLoadingProperty"));
     } finally {
-      setIsLoading(false);
+      if (fetchSequence === fetchSequenceRef.current) {
+        setIsLoading(false);
+      }
+      activeFetchKeyRef.current = null;
     }
-  }, [comm, currentPrincipal, loadAccess, loadInvestorDashboard, loadRenterDashboard, resetData, t, wallet]);
+  }, [comm, loadAccess, loadInvestorDashboard, loadRenterDashboard, resetData, t, tenantDashboardPropertyId, wallet]);
 
   useEffect(() => {
     void fetchData();

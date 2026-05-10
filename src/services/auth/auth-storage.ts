@@ -96,9 +96,13 @@ export function getFirmezaCurrentAccessSnapshot(): Record<string, unknown> | nul
 
 export function clearFirmezaSession(): void {
   if (!isBrowser()) return;
-  localStorage.removeItem(FMZ_AUTH_TOKEN_KEY);
-  localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
-  FMZ_USER_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+
+  const keysToClear = [FMZ_AUTH_TOKEN_KEY, LEGACY_AUTH_TOKEN_KEY, ...FMZ_USER_STORAGE_KEYS];
+  const hadStoredSessionData = keysToClear.some((key) => localStorage.getItem(key) !== null);
+
+  if (!hadStoredSessionData) return;
+
+  keysToClear.forEach((key) => localStorage.removeItem(key));
   notifyFirmezaSessionChanged();
 }
 
