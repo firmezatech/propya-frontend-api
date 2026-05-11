@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import InvoiceBaseAdmin from "../components/invoice/InvoiceBaseAdmin";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { X, Check } from "lucide-react";
 import { login } from "../../../../services/loginweb3";
@@ -20,6 +20,7 @@ registerLocale('pt-BR', ptBR);
 
 export default function InvoicesAdminPage() {
   const router = useRouter();
+  const params = useParams<{ locale?: string }>();
   const t = useTranslations('InvoiceAdmin');
   const { wallet } = useWallet();
   
@@ -604,6 +605,14 @@ export default function InvoicesAdminPage() {
             >
               <span className="text-sm">{t('newInvoiceButtonPurchaseTokens')}</span>
             </button>
+
+              {/* Calculadora tokenomics: apenas simula e não persiste dados */}
+              <button
+                onClick={() => router.push(`${params?.locale ? `/${params.locale}` : ''}/connected/invoicesAdmin/tokenomicsCalculator`)}
+                className="bg-[#0D1321] hover:bg-[#162030] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                Calculadora Tokenomics
+              </button>
 
               {/* Botão Mostrar Todos */}
               <button
