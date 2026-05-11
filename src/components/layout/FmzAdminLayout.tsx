@@ -71,7 +71,6 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
 
   const syncUserSummary = useCallback(() => setCurrentUser(buildFmzConnectedUserSummary()), []);
 
-
   useEffect(() => {
     if (!initialPrincipal) return;
     setCurrentPrincipal(initialPrincipal);
@@ -137,7 +136,7 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
   );
 
   return (
-    <div className="flex flex-1 flex-col overflow-x-hidden lg:flex-row">
+    <div className="flex h-[calc(100dvh-72px)] min-h-0 flex-1 overflow-hidden bg-[#F7F8FA] lg:flex-row">
       <FmzAdminSidebar
         locale={params?.locale}
         pathname={pathname}
@@ -146,7 +145,7 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
         navigationItems={navigationItems}
         onLogout={handleLogout}
       />
-      <div className="flex min-w-0 flex-1 overflow-x-hidden bg-[#F7F8FA]">
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#F7F8FA]">
         <FmzAdminContentShell>{children}</FmzAdminContentShell>
       </div>
     </div>

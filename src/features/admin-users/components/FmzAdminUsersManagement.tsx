@@ -205,6 +205,14 @@ export function FmzAdminUsersManagement() {
   const [toast, setToast] = useState<Toast>(null);
   const pagination = useFmzAdminPagination();
 
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      pagination.setSearch(query);
+    }, 350);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [query, pagination.setSearch]);
+
   const roleByKey = useMemo(() => new Map(roles.map((role) => [roleKey(role), role])), [roles]);
   const isEditing = Boolean(form.id);
 
@@ -213,19 +221,32 @@ export function FmzAdminUsersManagement() {
     window.setTimeout(() => setToast(null), 2800);
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadRoles() {
+      try {
+        const nextRoles = await getAdminUserRoles();
+        if (!isMounted) return;
+        const mergedRoles = new Map(DEFAULT_ROLES.map((role) => [roleKey(role), role]));
+        nextRoles.forEach((role) => mergedRoles.set(roleKey(role), role));
+        setRoles(Array.from(mergedRoles.values()).filter((role) => roleKey(role) !== 'investor'));
+      } catch {
+        if (isMounted) setRoles(DEFAULT_ROLES);
+      }
+    }
+
+    void loadRoles();
+    return () => { isMounted = false; };
+  }, []);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [nextUsers, nextRoles] = await Promise.all([
-        getAdminUsers(pagination.request),
-        getAdminUserRoles().catch(() => DEFAULT_ROLES),
-      ]);
-      const mergedRoles = new Map(DEFAULT_ROLES.map((role) => [roleKey(role), role]));
-      nextRoles.forEach((role) => mergedRoles.set(roleKey(role), role));
+      const nextUsers = await getAdminUsers(pagination.request);
       setUsers(nextUsers.items);
       pagination.applyMeta(nextUsers);
-      setRoles(Array.from(mergedRoles.values()).filter((role) => roleKey(role) !== 'investor'));
     } catch (err) {
       setError(normalizeFmzApiError(err));
     } finally {
@@ -317,8 +338,8 @@ export function FmzAdminUsersManagement() {
     <section className="min-h-[calc(100vh-124px)] text-[#0D1321]">
       <div className="w-full">
         <FmzFormAlert error={error} />
-        {loading ? <Loading /> : view === 'list' ? (
-          <UserList users={filteredUsers} roles={roleByKey} query={query} onQuery={(nextQuery) => { setQuery(nextQuery); pagination.setSearch(nextQuery); }} onCreate={openCreate} onEdit={(user) => void openEdit(user)} pagination={pagination} loading={loading} />
+        {view === 'list' ? (
+          <UserList users={filteredUsers} roles={roleByKey} query={query} onQuery={setQuery} onCreate={openCreate} onEdit={(user) => void openEdit(user)} pagination={pagination} loading={loading} />
         ) : (
           <div className="animate-[fmzFadeIn_.25s_ease]">
             <EditHeader isEditing={isEditing} userName={form.name} onBack={backToList} />
@@ -356,7 +377,56 @@ function EditHeader({ isEditing, userName, onBack }: { isEditing: boolean; userN
 }
 
 function UserList({ users, roles, query, onQuery, onCreate, onEdit, pagination, loading }: { users: FmzAdminUser[]; roles: Map<string, FmzAccessControlRole>; query: string; onQuery: (query: string) => void; onCreate: () => void; onEdit: (user: FmzAdminUser) => void; pagination: FmzAdminPaginationMeta & { setPage: (page: number) => void; setLimit: (limit: number) => void }; loading: boolean }) {
-  return <div className="animate-[fmzFadeIn_.25s_ease]"><div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"><div><p className="mb-1 text-[10px] font-bold uppercase tracking-[.1em] text-[#9AA3B0]">Controle de Acesso</p><h1 className="font-syne text-[clamp(24px,4vw,34px)] font-extrabold tracking-[-.025em]">Usuários</h1><p className="mt-1 max-w-2xl text-[13px] leading-6 text-[#5A6478]">Cadastre, edite e defina quais acessos cada usuário possui.</p></div><button onClick={onCreate} className="inline-flex w-full items-center justify-center gap-2 rounded-[9px] bg-[#0D1321] px-6 py-3 font-syne text-[13px] font-bold uppercase tracking-[.04em] text-white transition hover:-translate-y-0.5 hover:bg-[#162030] sm:w-auto"><Plus className="h-3.5 w-3.5" />Novo usuário</button></div><label className="relative mb-4 block"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9AA3B0]" /><input value={query} onChange={(event) => onQuery(event.target.value)} placeholder="Buscar por nome, e-mail, telefone, wallet, imóvel ou role..." className="w-full rounded-[9px] border border-[#E8EAF0] bg-white py-3 pl-10 pr-4 text-[13.5px] outline-none transition focus:border-[#F5C842] focus:shadow-[0_0_0_3px_rgba(245,200,66,.12)]" /></label><div className="flex flex-col gap-3">{users.length ? users.map((user) => <UserRow key={user.id || user.email} user={user} roles={roles} onEdit={() => onEdit(user)} />) : <EmptyUsers hasQuery={Boolean(query.trim())} onCreate={onCreate} />}</div><FmzAdminPagination {...pagination} disabled={loading} onPageChange={pagination.setPage} onLimitChange={pagination.setLimit} /></div>;
+  const isInitialLoading = loading && users.length === 0;
+
+  return (
+    <div className="flex h-[calc(100dvh-152px)] min-h-[560px] min-w-0 animate-[fmzFadeIn_.25s_ease] flex-col overflow-hidden">
+      <div className="shrink-0">
+        <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-[.1em] text-[#9AA3B0]">Controle de Acesso</p>
+            <h1 className="font-syne text-[clamp(24px,4vw,34px)] font-extrabold tracking-[-.025em]">Usuários</h1>
+            <p className="mt-1 max-w-2xl text-[13px] leading-6 text-[#5A6478]">Cadastre, edite e defina quais acessos cada usuário possui.</p>
+          </div>
+          <button onClick={onCreate} className="inline-flex w-full items-center justify-center gap-2 rounded-[9px] bg-[#0D1321] px-6 py-3 font-syne text-[13px] font-bold uppercase tracking-[.04em] text-white transition hover:-translate-y-0.5 hover:bg-[#162030] sm:w-auto">
+            <Plus className="h-3.5 w-3.5" />Novo usuário
+          </button>
+        </div>
+
+        <label className="relative mb-3 block">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9AA3B0]" />
+          <input
+            value={query}
+            onChange={(event) => onQuery(event.target.value)}
+            placeholder="Buscar por nome, e-mail, telefone, wallet, imóvel ou role..."
+            className="w-full rounded-[9px] border border-[#E8EAF0] bg-white py-3 pl-10 pr-4 text-[13.5px] outline-none transition focus:border-[#F5C842] focus:shadow-[0_0_0_3px_rgba(245,200,66,.12)]"
+          />
+        </label>
+
+        <FmzAdminPagination {...pagination} disabled={loading} onPageChange={pagination.setPage} onLimitChange={pagination.setLimit} />
+      </div>
+
+      <div className="relative mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
+        {isInitialLoading ? (
+          <Loading />
+        ) : (
+          <div className={fmzCn('flex flex-col gap-3 transition-opacity', loading && 'opacity-60')}>
+            {users.length ? users.map((user) => (
+              <UserRow key={user.id || user.email} user={user} roles={roles} onEdit={() => onEdit(user)} />
+            )) : (
+              <EmptyUsers hasQuery={Boolean(query.trim())} onCreate={onCreate} />
+            )}
+          </div>
+        )}
+
+        {loading && !isInitialLoading && (
+          <div className="pointer-events-none sticky top-3 z-10 mx-auto flex w-fit items-center gap-2 rounded-full border border-[#E8EAF0] bg-white/95 px-4 py-2 text-[12px] font-semibold text-[#5A6478] shadow-sm backdrop-blur">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />Atualizando lista...
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function UserRow({ user, roles, onEdit }: { user: FmzAdminUser; roles: Map<string, FmzAccessControlRole>; onEdit: () => void }) {

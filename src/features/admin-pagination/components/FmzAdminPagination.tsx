@@ -21,19 +21,19 @@ export function FmzAdminPagination({
   onPageChange,
   onLimitChange,
   disabled = false,
-  limitOptions = [10, 20, 50, 100],
+  limitOptions = [6, 10, 20, 50],
 }: FmzAdminPaginationProps) {
   const firstItem = total === 0 ? 0 : (page - 1) * limit + 1;
   const lastItem = Math.min(total, page * limit);
 
   return (
-    <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#E8EAF0] bg-white px-4 py-3 text-[12.5px] text-[#5A6478] shadow-sm md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col gap-3 rounded-2xl border border-[#E8EAF0] bg-white px-4 py-3 text-[12.5px] text-[#5A6478] shadow-sm sm:flex-row sm:items-center sm:justify-between">
       <div>
         <span className="font-semibold text-[#0D1321]">{firstItem}–{lastItem}</span> de{' '}
         <span className="font-semibold text-[#0D1321]">{total}</span> registros
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         <label className="flex items-center gap-2">
           <span>Itens por página</span>
           <select

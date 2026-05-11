@@ -81,7 +81,7 @@ export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayout
                 <div className="flex flex-1 flex-col">{children}</div>
               )}
             </FmzRouteAccessGuard>
-            <FooterConn />
+            {!shouldRenderAdminLayout && <FooterConn />}
           </>
         )}
       </AuthenticatedRoute>

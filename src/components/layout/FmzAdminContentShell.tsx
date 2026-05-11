@@ -13,7 +13,7 @@ export function FmzAdminContentShell({ children, className }: FmzAdminContentShe
   return (
     <main
       className={fmzCn(
-        'fmz-admin-content-shell mx-auto flex w-full max-w-[1480px] flex-1 flex-col px-5 py-8 text-[#0D1321] sm:px-6 lg:px-10 xl:px-12 2xl:px-14',
+        'fmz-admin-content-shell mx-auto flex min-h-full w-full max-w-[1480px] flex-col px-5 py-8 text-[#0D1321] sm:px-6 lg:px-10 xl:px-12 2xl:px-14',
         className,
       )}
     >
