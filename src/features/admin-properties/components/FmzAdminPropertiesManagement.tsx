@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
 import { FmzFormAlert } from '../../api-errors/components';
+import { FmzAdminPagination, useFmzAdminPagination } from '../../admin-pagination';
 import { normalizeFmzApiError, type FmzNormalizedApiError } from '../../api-errors/domain';
 import {
   buildDraftFromProperty,
@@ -179,6 +180,7 @@ export function FmzAdminPropertiesManagement() {
   const [cepLoading, setCepLoading] = useState(false);
   const [error, setError] = useState<FmzNormalizedApiError | null>(null);
   const [toast, setToast] = useState<Toast>(null);
+  const pagination = useFmzAdminPagination();
 
   const isEditing = Boolean(form.id);
 
@@ -191,13 +193,18 @@ export function FmzAdminPropertiesManagement() {
     setLoading(true);
     setError(null);
     try {
-      setProperties(await getAdminProperties());
+      const nextProperties = await getAdminProperties({
+        ...pagination.request,
+        filters: { status: statusFilter || undefined },
+      });
+      setProperties(nextProperties.items);
+      pagination.applyMeta(nextProperties);
     } catch (err) {
       setError(normalizeFmzApiError(err));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pagination.request, pagination.applyMeta, statusFilter]);
 
   useEffect(() => { void loadProperties(); }, [loadProperties]);
 
@@ -211,15 +218,7 @@ export function FmzAdminPropertiesManagement() {
     return { total: properties.length, available, totalValue };
   }, [properties]);
 
-  const filteredProperties = useMemo(() => {
-    const currentQuery = normalizeText(query);
-    return properties.filter((property) => {
-      const matchesStatus = !statusFilter || property.status === statusFilter;
-      if (!matchesStatus) return false;
-      if (!currentQuery) return true;
-      return [property.name, property.description ?? '', property.addressLine1 ?? '', property.district ?? '', property.city ?? '', property.state ?? '', property.postalCode ?? ''].some((value) => normalizeText(value).includes(currentQuery));
-    });
-  }, [properties, query, statusFilter]);
+  const filteredProperties = properties;
 
   const updateForm = useCallback(<K extends keyof FmzAdminPropertyDraft>(key: K, value: FmzAdminPropertyDraft[K]) => {
     setForm((previous) => ({ ...previous, [key]: value }));
@@ -394,9 +393,9 @@ export function FmzAdminPropertiesManagement() {
           <div className="mb-4 flex flex-wrap items-center gap-2.5">
             <label className="relative min-w-[180px] flex-1">
               <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9AA3B0]" />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} className="w-full rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white py-2.5 pl-[38px] pr-3.5 text-[13.5px] text-[#0D1321] outline-none transition focus:border-[#F5C842] focus:shadow-[0_0_0_3px_rgba(245,200,66,0.12)]" placeholder="Buscar por nome, endereço ou cidade..." />
+              <input value={query} onChange={(event) => { setQuery(event.target.value); pagination.setSearch(event.target.value); }} className="w-full rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white py-2.5 pl-[38px] pr-3.5 text-[13.5px] text-[#0D1321] outline-none transition focus:border-[#F5C842] focus:shadow-[0_0_0_3px_rgba(245,200,66,0.12)]" placeholder="Buscar por nome, endereço ou cidade..." />
             </label>
-            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as FmzAdminPropertyStatus | '')} className="rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white px-3.5 py-2.5 text-[13px] text-[#5A6478] outline-none transition focus:border-[#F5C842]">
+            <select value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value as FmzAdminPropertyStatus | ''); pagination.setPage(1); }} className="rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white px-3.5 py-2.5 text-[13px] text-[#5A6478] outline-none transition focus:border-[#F5C842]">
               <option value="">Todos os status</option>
               {STATUS_OPTIONS.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}
             </select>
@@ -405,6 +404,7 @@ export function FmzAdminPropertiesManagement() {
           {loading ? (
             <div className="flex min-h-[260px] items-center justify-center rounded-xl border-[1.5px] border-[#E8EAF0] bg-white text-[#5A6478]"><Loader2 className="mr-2 animate-spin" size={18} /> Carregando imóveis...</div>
           ) : filteredProperties.length ? (
+            <>
             <div className="flex flex-col gap-2.5">
               {filteredProperties.map((property) => (
                 <button key={property.id || property.name} type="button" onClick={() => void openProperty(property)} className="group flex w-full flex-col gap-3 rounded-xl border-[1.5px] border-[#E8EAF0] bg-white p-4 text-left transition hover:-translate-y-0.5 hover:border-transparent hover:shadow-[0_6px_22px_rgba(13,19,33,0.09)] sm:flex-row sm:items-center md:px-5">
@@ -426,6 +426,8 @@ export function FmzAdminPropertiesManagement() {
                 </button>
               ))}
             </div>
+            <FmzAdminPagination {...pagination} disabled={loading} onPageChange={pagination.setPage} onLimitChange={pagination.setLimit} />
+            </>
           ) : (
             <div className="rounded-xl border-[1.5px] border-[#E8EAF0] bg-white px-6 py-16 text-center">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border-2 border-dashed border-[#E8EAF0] bg-[#F7F8FA]"><Building2 size={24} className="text-[#D0D4DE]" /></div>

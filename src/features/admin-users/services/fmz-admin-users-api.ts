@@ -1,4 +1,5 @@
 import { firmezaApiClient } from '../../../services/firmeza-api-client';
+import { buildAdminPaginationParams, normalizeAdminPaginatedPayload, type FmzAdminPaginationRequest, type FmzPaginatedAdminResult } from '../../admin-pagination';
 import { normalizeRole } from '../../access-control/services/fmz-access-control-api';
 import type { FmzAccessControlPage, FmzAccessControlRole } from '../../access-control/domain';
 import type {
@@ -367,9 +368,22 @@ const stripReadOnlyPayload = (draft: FmzAdminUserDraft) => ({
   birthdate: normalizeBirthdateForApi(draft.birthdate),
 });
 
-export async function getAdminUsers(): Promise<FmzAdminUser[]> {
-  const { data } = await firmezaApiClient.get(ADMIN_USERS_PATH);
-  return arrFromPayload<unknown>(data, ['users']).map(normalizeAdminUser).filter((user) => Boolean(user.id || user.email));
+export async function getAdminUsers(request: FmzAdminPaginationRequest = {}): Promise<FmzPaginatedAdminResult<FmzAdminUser>> {
+  const { data } = await firmezaApiClient.get(ADMIN_USERS_PATH, {
+    params: buildAdminPaginationParams(request),
+  });
+
+  const result = normalizeAdminPaginatedPayload(
+    data,
+    ['users'],
+    normalizeAdminUser,
+    request,
+  );
+
+  return {
+    ...result,
+    items: result.items.filter((user) => Boolean(user.id || user.email)),
+  };
 }
 
 export async function getAdminUser(userId: string): Promise<FmzAdminUser> {

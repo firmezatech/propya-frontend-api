@@ -82,6 +82,15 @@ function ResultMetric({ label, value }: { label: string; value: string }) {
   );
 }
 
+function FinancialSummaryItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-[#E8EAF0] py-3 last:border-b-0">
+      <dt className="text-sm font-bold text-[#5A6478]">{label}</dt>
+      <dd className="text-right text-sm font-extrabold text-[#0D1321]">{value}</dd>
+    </div>
+  );
+}
+
 export function FmzTokenomicsCalculatorPage() {
   const [formState, setFormState] = useState<CalculatorFormState>(initialFormState);
   const [participants, setParticipants] = useState<ParticipantFormRow[]>(initialParticipants);
@@ -145,8 +154,8 @@ export function FmzTokenomicsCalculatorPage() {
   }, [buildPayload]);
 
   return (
-    <FmzConnectedPageShell className="w-full max-w-none space-y-6 px-0 py-0 sm:px-0 md:px-0 lg:px-0 xl:px-0" width="wide">
-      <section className="overflow-hidden rounded-[28px] border border-[#E8EAF0] bg-white shadow-sm">
+    <FmzConnectedPageShell className="space-y-6 overflow-x-hidden" width="wide">
+      <section className="w-full overflow-hidden rounded-[28px] border border-[#E8EAF0] bg-white shadow-sm">
         <div className="border-b border-[#E8EAF0] bg-gradient-to-br from-[#FFF9E6] via-white to-[#F7F8FA] p-6 sm:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-3xl">
@@ -167,14 +176,14 @@ export function FmzTokenomicsCalculatorPage() {
           </div>
         </div>
 
-        <div className="grid w-full gap-6 p-4 sm:p-6 xl:grid-cols-[minmax(360px,430px)_minmax(720px,1fr)] xl:items-start 2xl:grid-cols-[minmax(390px,460px)_minmax(820px,1fr)]">
-          <section className="min-w-0 space-y-5 rounded-3xl border border-[#E8EAF0] bg-[#F7F8FA] p-5">
+        <div className="grid min-w-0 gap-5 p-4 md:p-6 xl:grid-cols-[minmax(320px,380px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(360px,430px)_minmax(0,1fr)] 2xl:p-8">
+          <section className="min-w-0 space-y-5 rounded-3xl border border-[#E8EAF0] bg-[#F7F8FA] p-4 sm:p-5">
             <div>
               <h2 className="text-lg font-extrabold text-[#0D1321]">Parâmetros gerais</h2>
               <p className="mt-1 text-sm text-[#5A6478]">Informe os valores base para a simulação.</p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+            <div className="grid gap-4">
               <label className="grid gap-2 text-sm font-bold text-[#5A6478]">
                 Mês de referência
                 <input
@@ -249,7 +258,7 @@ export function FmzTokenomicsCalculatorPage() {
             </label>
           </section>
 
-          <section className="min-w-0 space-y-5 rounded-3xl border border-[#E8EAF0] bg-white p-4 sm:p-5">
+          <section className="min-w-0 space-y-5 overflow-hidden rounded-3xl border border-[#E8EAF0] bg-white p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-extrabold text-[#0D1321]">Participantes</h2>
@@ -261,30 +270,30 @@ export function FmzTokenomicsCalculatorPage() {
             </div>
 
             <div className="overflow-x-auto rounded-2xl border border-[#E8EAF0]">
-              <table className="w-full min-w-[720px] table-fixed border-collapse text-left text-sm">
+              <table className="w-full min-w-[680px] table-fixed border-collapse text-left text-sm">
                 <thead className="bg-[#F7F8FA] text-xs uppercase tracking-[0.08em] text-[#9AA3B0]">
                   <tr>
-                    <th className="w-[24%] px-3 py-3 sm:px-4">Nome</th>
-                    <th className="w-[20%] px-3 py-3 sm:px-4">Tipo</th>
-                    <th className="w-[18%] px-3 py-3 sm:px-4">% posse</th>
-                    <th className="w-[22%] px-3 py-3 sm:px-4">Tokens comprados</th>
-                    <th className="w-[16%] px-3 py-3 sm:px-4" />
+                    <th className="w-[23%] px-3 py-3">Nome</th>
+                    <th className="w-[18%] px-3 py-3">Tipo</th>
+                    <th className="w-[17%] px-3 py-3">% posse</th>
+                    <th className="w-[22%] px-3 py-3">Tokens comprados</th>
+                    <th className="w-[20%] px-3 py-3" />
                   </tr>
                 </thead>
                 <tbody>
                   {participants.map((participant) => (
                     <tr key={participant.id} className="border-t border-[#E8EAF0]">
-                      <td className="px-3 py-3 sm:px-4"><input value={participant.name} onChange={(event) => updateParticipant(participant.id, 'name', event.target.value)} className="min-h-10 w-full rounded-xl border border-[#E8EAF0] px-3 outline-none focus:border-[#F5C842]" /></td>
-                      <td className="px-3 py-3 sm:px-4">
+                      <td className="px-3 py-3"><input value={participant.name} onChange={(event) => updateParticipant(participant.id, 'name', event.target.value)} className="min-h-10 w-full rounded-xl border border-[#E8EAF0] px-3 outline-none focus:border-[#F5C842]" /></td>
+                      <td className="px-3 py-3">
                         <select value={participant.role} onChange={(event) => updateParticipant(participant.id, 'role', event.target.value as FmzTokenomicsParticipantRole)} className="min-h-10 w-full rounded-xl border border-[#E8EAF0] px-3 outline-none focus:border-[#F5C842]">
                           {Object.entries(roleLabels).map(([role, label]) => <option key={role} value={role}>{label}</option>)}
                         </select>
                       </td>
-                      <td className="px-3 py-3 sm:px-4"><input type="number" step="0.0001" value={participant.ownership_percent} onChange={(event) => updateParticipant(participant.id, 'ownership_percent', normalizeNumber(event.target.value))} className="min-h-10 w-full rounded-xl border border-[#E8EAF0] px-3 outline-none focus:border-[#F5C842]" /></td>
-                      <td className="px-3 py-3 sm:px-4"><input type="number" step="0.01" value={participant.tokens_purchased} onChange={(event) => updateParticipant(participant.id, 'tokens_purchased', normalizeNumber(event.target.value))} className="min-h-10 w-full rounded-xl border border-[#E8EAF0] px-3 outline-none focus:border-[#F5C842]" /></td>
-                      <td className="px-3 py-3 text-right sm:px-4">
-                        <button type="button" onClick={() => removeParticipant(participant.id)} className="inline-flex items-center gap-1 rounded-xl bg-red-50 px-2.5 py-2 text-xs font-bold text-red-700 hover:bg-red-100">
-                          <Trash2 className="h-4 w-4" /> <span className="hidden sm:inline">Remover</span>
+                      <td className="px-3 py-3"><input type="number" step="0.0001" value={participant.ownership_percent} onChange={(event) => updateParticipant(participant.id, 'ownership_percent', normalizeNumber(event.target.value))} className="min-h-10 w-full rounded-xl border border-[#E8EAF0] px-3 outline-none focus:border-[#F5C842]" /></td>
+                      <td className="px-3 py-3"><input type="number" step="0.01" value={participant.tokens_purchased} onChange={(event) => updateParticipant(participant.id, 'tokens_purchased', normalizeNumber(event.target.value))} className="min-h-10 w-full rounded-xl border border-[#E8EAF0] px-3 outline-none focus:border-[#F5C842]" /></td>
+                      <td className="px-3 py-3 text-right">
+                        <button type="button" onClick={() => removeParticipant(participant.id)} className="inline-flex items-center justify-center gap-1 rounded-xl bg-red-50 px-2.5 py-2 text-xs font-bold text-red-700 hover:bg-red-100">
+                          <Trash2 className="h-4 w-4" /> Remover
                         </button>
                       </td>
                     </tr>
@@ -293,9 +302,11 @@ export function FmzTokenomicsCalculatorPage() {
               </table>
             </div>
 
-            <button type="button" onClick={handleCalculate} disabled={isCalculating} className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#0D1321] px-5 text-sm font-extrabold uppercase tracking-[0.08em] text-white transition hover:bg-[#162030] disabled:cursor-not-allowed disabled:opacity-60">
-              {isCalculating ? 'Calculando...' : 'Calcular distribuição'}
-            </button>
+            <div className="pt-1">
+              <button type="button" onClick={handleCalculate} disabled={isCalculating} className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#0D1321] px-5 text-sm font-extrabold uppercase tracking-[0.08em] text-white transition hover:bg-[#162030] disabled:cursor-not-allowed disabled:opacity-60">
+                {isCalculating ? 'Calculando...' : 'Calcular distribuição'}
+              </button>
+            </div>
 
             {errorMessage && (
               <div className="flex gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -329,9 +340,9 @@ export function FmzTokenomicsCalculatorPage() {
               <table className="min-w-[980px] w-full border-collapse text-left text-sm">
                 <thead className="bg-[#F7F8FA] text-xs uppercase tracking-[0.08em] text-[#9AA3B0]">
                   <tr>
-                    <th className="px-4 py-3">Nome</th>
-                    <th className="px-4 py-3">Tipo</th>
-                    <th className="px-4 py-3">% posse</th>
+                    <th className="w-[23%] px-3 py-3">Nome</th>
+                    <th className="w-[18%] px-3 py-3">Tipo</th>
+                    <th className="w-[17%] px-3 py-3">% posse</th>
                     <th className="px-4 py-3">Repasse bruto</th>
                     <th className="px-4 py-3">Taxa adm aluguel</th>
                     <th className="px-4 py-3">Taxa adm token</th>
@@ -355,6 +366,29 @@ export function FmzTokenomicsCalculatorPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <div className="rounded-3xl border border-[#E8EAF0] bg-white p-5 shadow-sm">
+            <div className="mb-2">
+              <h2 className="text-lg font-extrabold text-[#0D1321]">Resumo financeiro</h2>
+              <p className="mt-1 text-sm text-[#5A6478]">Conferência dos principais valores retornados pelo backend.</p>
+            </div>
+            <dl className="grid gap-x-8 md:grid-cols-2">
+              <FinancialSummaryItem label="Mês de referência" value={result.reference_month} />
+              <FinancialSummaryItem label="Valor do imóvel" value={formatCurrency(result.property_value)} />
+              <FinancialSummaryItem label="Valor unitário do token" value={formatCurrency(result.token_unit_value)} />
+              <FinancialSummaryItem label="Total de tokens informados" value={String(result.total_tokens)} />
+              <FinancialSummaryItem label="Aluguel bruto" value={formatCurrency(result.rent_gross_amount)} />
+              <FinancialSummaryItem label="Posse total da inquilina" value={formatPercent(result.tenant_total_ownership_percent)} />
+              <FinancialSummaryItem label="Aluguel após desconto da inquilina" value={formatCurrency(result.rent_amount_after_tenant_discount)} />
+              <FinancialSummaryItem label="Encargos adicionais" value={formatCurrency(result.charges_amount)} />
+              <FinancialSummaryItem label="Descontos adicionais" value={formatCurrency(result.extra_discounts_amount)} />
+              <FinancialSummaryItem label="Multa e juros" value={formatCurrency(result.fine_and_interest_amount)} />
+              <FinancialSummaryItem label="Taxa adm aluguel" value={formatCurrency(result.admin_fee_amount)} />
+              <FinancialSummaryItem label="Taxa adm token" value={formatCurrency(result.token_admin_fee_amount)} />
+              <FinancialSummaryItem label="Base distribuível após taxas" value={formatCurrency(result.distributable_amount_after_admin_fees)} />
+              <FinancialSummaryItem label="Validação de posse" value={result.ownership_validation_status} />
+            </dl>
           </div>
         </section>
       )}

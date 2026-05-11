@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { firmezaApiClient } from './firmeza-api-client';
+import { buildAdminPaginationParams, normalizeAdminPaginatedPayload, type FmzAdminPaginationMeta, type FmzAdminPaginationRequest } from '../features/admin-pagination';
 
 export type UserContactType = {
   name?: string;
@@ -14,7 +15,8 @@ export type UserContactType = {
 export type ListContactUserResponse = {
   success: boolean;
   message: string;
-  users?: UserContactType[];  
+  users?: UserContactType[];
+  pagination?: FmzAdminPaginationMeta;
 };
 
 export async function createContactUser(user: UserContactType): Promise<any> {
@@ -42,14 +44,30 @@ export async function createContactUser(user: UserContactType): Promise<any> {
   }
 }
 
-export async function listContactUser(): Promise<ListContactUserResponse> {
+export async function listContactUser(request: FmzAdminPaginationRequest = {}): Promise<ListContactUserResponse> {
   try {
-    const response = await firmezaApiClient.get(`/listContactUsers`);
+    const response = await firmezaApiClient.get(`/listContactUsers`, {
+      params: buildAdminPaginationParams(request),
+    });
+    const result = normalizeAdminPaginatedPayload<UserContactType>(
+      response.data,
+      ['users', 'contacts', 'contactUsers'],
+      (item) => item as UserContactType,
+      request,
+    );
 
     return {
       success: true,
       message: "",
-      users: response.data.users, 
+      users: result.items,
+      pagination: {
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages: result.totalPages,
+        hasNextPage: result.hasNextPage,
+        hasPreviousPage: result.hasPreviousPage,
+      },
     };
   } catch (err) {
     if (axios.isAxiosError(err) && err.response) {

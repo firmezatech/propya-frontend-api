@@ -1,4 +1,5 @@
 import { firmezaApiClient } from '../../../services/firmeza-api-client';
+import { buildAdminPaginationParams, normalizeAdminPaginatedPayload, type FmzAdminPaginationRequest, type FmzPaginatedAdminResult } from '../../admin-pagination';
 import type { FmzAdminProperty, FmzAdminPropertyDraft, FmzAdminPropertyMetadata, FmzAdminPropertyStatus, FmzAdminPropertyType, FmzCepAddress } from '../domain';
 
 const ADMIN_PROPERTIES_PATH = process.env.NEXT_PUBLIC_FMZ_ADMIN_PROPERTIES_PATH || '/admin/properties';
@@ -142,9 +143,22 @@ const payloadFromDraft = (draft: FmzAdminPropertyDraft) => ({
   },
 });
 
-export async function getAdminProperties(): Promise<FmzAdminProperty[]> {
-  const { data } = await firmezaApiClient.get(ADMIN_PROPERTIES_PATH);
-  return arrFromPayload<unknown>(data, ['properties']).map(normalizeAdminProperty).filter((property) => Boolean(property.id || property.name));
+export async function getAdminProperties(request: FmzAdminPaginationRequest = {}): Promise<FmzPaginatedAdminResult<FmzAdminProperty>> {
+  const { data } = await firmezaApiClient.get(ADMIN_PROPERTIES_PATH, {
+    params: buildAdminPaginationParams(request),
+  });
+
+  const result = normalizeAdminPaginatedPayload(
+    data,
+    ['properties'],
+    normalizeAdminProperty,
+    request,
+  );
+
+  return {
+    ...result,
+    items: result.items.filter((property) => Boolean(property.id || property.name)),
+  };
 }
 
 export async function getAdminProperty(propertyId: string): Promise<FmzAdminProperty> {

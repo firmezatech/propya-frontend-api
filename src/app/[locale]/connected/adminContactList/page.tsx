@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { UserContactType, listContactUser } from "../../../../services/contact-fmz-api";
 import { useProfile } from '../../../context/ProfileContext';
 import { formatCurrency, formatDateTime } from "services/format";
+import { FmzAdminPagination, useFmzAdminPagination } from '../../../../features/admin-pagination';
 
 export default function ContactUsersList() {
   const router = useRouter();
@@ -12,7 +13,8 @@ export default function ContactUsersList() {
   const { profile, setCurrentProfile } = useProfile();
   const [wallet, setWallet] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [contactUsers, setContactUsers] = useState<UserContactType[] | null>([]); 
+  const [contactUsers, setContactUsers] = useState<UserContactType[] | null>([]);
+  const pagination = useFmzAdminPagination(); 
 
   useEffect(() => {
     const storedWallet = localStorage.getItem("wallet");
@@ -22,13 +24,14 @@ export default function ContactUsersList() {
 
     const fetchData = async () => {
       try {
-        const response = await listContactUser();
+        const response = await listContactUser(pagination.request);
 
         if (!response.success || !response.users || response.users.length === 0) {
           setMessage(response.message || "Não há dados");
           setContactUsers([]);
         } else {
           setContactUsers(response.users);
+          if (response.pagination) pagination.applyMeta(response.pagination);
         }
       } catch (err) {
         console.error("Erro carregando dados da API", err);
@@ -39,7 +42,7 @@ export default function ContactUsersList() {
     if (wallet) {
       fetchData();
     }
-  }, [wallet, profile]);
+  }, [wallet, profile, pagination.request, pagination.applyMeta]);
 
   const handleBackNavigation = () => {
     router.back();
@@ -57,6 +60,7 @@ export default function ContactUsersList() {
         <h1 className="text-2xl font-semibold mb-4">Lista dos Contatos - Calculadora</h1>
 
         {contactUsers && contactUsers.length > 0 ? (
+          <>
             <div className="bg-white shadow rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -109,6 +113,8 @@ export default function ContactUsersList() {
                 </table>
               </div>
             </div>
+            <FmzAdminPagination {...pagination} onPageChange={pagination.setPage} onLimitChange={pagination.setLimit} />
+          </>
           ) : (
             <div className="mb-6 rounded-md p-4 text-sm bg-blue-50 text-blue-700 border-l-4 border-blue-500">
               {message || "Carregando dados..."}
