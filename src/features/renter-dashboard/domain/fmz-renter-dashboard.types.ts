@@ -21,17 +21,23 @@ export type FmzRenterDashboardViewModel = {
   monthlySavingsLabel: string;
   yearlySavingsLabel: string;
   acquiredTokensLabel: string;
+  acquiredTokensNumber: number;
   remainingToOwnLabel: string;
+  remainingToOwnNumber: number;
+  propertyValueNumber: number;
   nextMilestonePercentage: number;
   nextMilestoneLabel: string;
   nextMilestoneRemainingLabel: string;
+  nextMilestoneRemainingNumber: number;
   nextMilestoneProgressPercentage: number;
   nextMilestoneRentReductionLabel: string;
   nextMilestoneGapLabel: string;
   ownershipVisualPosition: number;
   journeyMilestones: FmzRenterDashboardMilestone[];
   currentRentLabel: string;
+  currentRentNumber: number;
   originalRentLabel: string;
+  originalRentNumber: number;
   rentPaidPercentage: number;
   rentCopy: string;
   invoice: {

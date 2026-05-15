@@ -1,9 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import type { InvoiceData, PropertyData, RentDetailData } from '../../../services/web3-api';
+import type { FmzTenantPaymentHistoryItem } from '../../../features/tenant-portal/domain';
 import { buildRenterDashboardViewModel, hasRenterDashboardData } from '../domain/fmz-renter-dashboard-view-model';
+import { FmzRenterDashboardPaymentHistoryCard } from './FmzRenterDashboardPaymentHistoryCard';
+import { FmzRenterDashboardRentSimulatorCard } from './FmzRenterDashboardRentSimulatorCard';
 import styles from './FmzRenterDashboard.module.css';
 
 type FmzRenterDashboardProps = {
@@ -12,6 +14,7 @@ type FmzRenterDashboardProps = {
   invoiceData: InvoiceData | null;
   renterName?: string | null;
   referenceMonthLabel?: string | null;
+  paymentHistory?: FmzTenantPaymentHistoryItem[];
   onPayInvoice?: (paymentUrl?: string | null) => void;
 };
 
@@ -23,6 +26,7 @@ export function FmzRenterDashboard({
   invoiceData,
   renterName,
   referenceMonthLabel,
+  paymentHistory = [],
   onPayInvoice,
 }: FmzRenterDashboardProps) {
   const viewModel = useMemo(
@@ -59,7 +63,7 @@ export function FmzRenterDashboard({
     <main className={styles.dashboard} aria-label="Dashboard da inquilina">
       <section className={styles.greeting}>
         <div className={styles.greetingTag}>📅 {viewModel.referenceMonthLabel}</div>
-        <h1 className={styles.greetingTitle}>Olá, {viewModel.renterName}! Você está mais perto da sua casa própria 🎉</h1>
+        <h1 className={styles.greetingTitle}>Olá {viewModel.renterName}!</h1>
         <p className={styles.greetingSub}>Cada token comprado aumenta sua participação no imóvel e reduz o aluguel ao longo da jornada.</p>
       </section>
 
@@ -100,12 +104,12 @@ export function FmzRenterDashboard({
 
           <aside className={styles.ctaPanel}>
             <div className={styles.ctaContent}>
-              <div className={styles.ctaKicker}>🎯 próximo marco</div>
+              <div className={styles.ctaKicker}>🎯 próxima meta</div>
               <h3 className={styles.ctaTitle}>Faltam {viewModel.nextMilestoneRemainingLabel} para chegar em {viewModel.nextMilestoneLabel}</h3>
-              <Link href="/connected/tokensToPurchasePix" className={styles.primaryButton}>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                Comprar mais tokens
-              </Link>
+              <button type="button" className={styles.primaryButton} onClick={handlePayInvoice}>
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" /><path d="M2 7h12" stroke="currentColor" strokeWidth="1.3" /><path d="M5 10h2M9 10h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
+                Pagar boleto
+              </button>
               <div className={styles.ctaSmall}>Cada compra aproxima você da propriedade total.</div>
             </div>
           </aside>
@@ -113,60 +117,39 @@ export function FmzRenterDashboard({
       </section>
 
       <section className={styles.contentGrid}>
-        <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Resumo do mês</h3>
-          <p className={styles.cardSub}>Competência: {viewModel.referenceMonthLabel}</p>
-          <div className={styles.billTotal}>{viewModel.invoice.totalLabel}</div>
-          <div className={styles.billDue}>Vencimento: <strong>{viewModel.invoice.dueDateLabel}</strong></div>
-          <div className={styles.billLines}>
-            {viewModel.invoice.lines.map((line, index) => (
-              <div key={line.key}>
-                {index === 3 ? <div className={styles.billSeparator} /> : null}
-                <div className={styles.billLine}>
-                  <span className={styles.billLabel}>{line.label}</span>
-                  <span className={`${styles.billValue} ${line.tone === 'success' ? styles.billValueSuccess : ''} ${line.tone === 'warning' ? styles.billValueWarning : ''}`}>{line.value}</span>
+        <div className={styles.contentPrimaryColumn}>
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Resumo do mês</h3>
+            <p className={styles.cardSub}>Competência: {viewModel.referenceMonthLabel}</p>
+            <div className={styles.billTotal}>{viewModel.invoice.totalLabel}</div>
+            <div className={styles.billDue}>Vencimento: <strong>{viewModel.invoice.dueDateLabel}</strong></div>
+            <div className={styles.billLines}>
+              {viewModel.invoice.lines.map((line, index) => (
+                <div key={line.key}>
+                  {index === 3 ? <div className={styles.billSeparator} /> : null}
+                  <div className={styles.billLine}>
+                    <span className={styles.billLabel}>{line.label}</span>
+                    <span className={`${styles.billValue} ${line.tone === 'success' ? styles.billValueSuccess : ''} ${line.tone === 'warning' ? styles.billValueWarning : ''}`}>{line.value}</span>
+                  </div>
                 </div>
+              ))}
+              <div className={styles.billSeparator} />
+              <div className={`${styles.billLine} ${styles.billTotalLine}`}>
+                <span className={styles.billTotalLabel}>Total</span>
+                <span className={styles.billTotalValue}>{viewModel.invoice.totalLabel}</span>
               </div>
-            ))}
-            <div className={styles.billSeparator} />
-            <div className={`${styles.billLine} ${styles.billTotalLine}`}>
-              <span className={styles.billTotalLabel}>Total</span>
-              <span className={styles.billTotalValue}>{viewModel.invoice.totalLabel}</span>
             </div>
+            <button type="button" className={styles.primaryButton} onClick={handlePayInvoice}>
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" /><path d="M2 7h12" stroke="currentColor" strokeWidth="1.3" /><path d="M5 10h2M9 10h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
+              Pagar boleto
+            </button>
           </div>
-          <button type="button" className={styles.primaryButton} onClick={handlePayInvoice}>
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" /><path d="M2 7h12" stroke="currentColor" strokeWidth="1.3" /><path d="M5 10h2M9 10h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
-            Pagar boleto
-          </button>
-          <div className={styles.billLinks}>
-            <Link href="/connected/myContract" className={styles.secondaryLink}>Ver meu contrato →</Link>
-            <Link href="/connected/paymentHistory" className={styles.secondaryLink}>Ver histórico de pagamentos →</Link>
-          </div>
+
+          <FmzRenterDashboardPaymentHistoryCard items={paymentHistory} />
         </div>
 
         <div className={styles.insightStack}>
-          <div className={`${styles.card} ${styles.rentCard}`}>
-            <div>
-              <div className={styles.rentTitle}>↗ Seu aluguel caiu</div>
-              <div className={styles.rentCompare}>
-                <div className={styles.rentCurrent}>{viewModel.currentRentLabel}</div>
-                <div className={styles.rentOriginal}>{viewModel.originalRentLabel}</div>
-              </div>
-              <p className={styles.rentCopy}>{viewModel.rentCopy}</p>
-              <div className={styles.savingsPill}>Você economiza {viewModel.yearlySavingsLabel}/ano</div>
-            </div>
-            <div>
-              <div className={styles.barTrack}><div className={styles.barFill} style={{ width: hasAnimated ? `${viewModel.rentPaidPercentage}%` : '0%' }} /></div>
-              <div className={styles.barLabels}>
-                <span className={`${styles.barLabel} ${styles.barLabelSuccess}`}>Atual: {viewModel.currentRentLabel}</span>
-                <span className={styles.barLabel}>Original: {viewModel.originalRentLabel}</span>
-              </div>
-              <Link href="/connected/tokensToPurchasePix" className={styles.rentActionButton}>
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                Comprar mais tokens
-              </Link>
-            </div>
-          </div>
+          <FmzRenterDashboardRentSimulatorCard viewModel={viewModel} hasAnimated={hasAnimated} />
 
           <div className={styles.card}>
             <h3 className={styles.cardTitle}>O próximo passo é simples</h3>

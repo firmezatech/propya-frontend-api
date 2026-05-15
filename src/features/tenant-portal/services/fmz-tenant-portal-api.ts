@@ -37,7 +37,49 @@ const normalizeWallet = (wallet: unknown): FmzTenantWallet => {
   };
 };
 
+const normalizePaymentHistoryItem = (value: unknown, fallbackReference?: string | null): FmzTenantPaymentHistoryItem | null => {
+  const row = recordOf(value);
+  const id = str(row.id ?? row.paymentTransactionId ?? row.payment_transaction_id ?? row.rentChargeId ?? row.rent_charge_id);
+  const reference = str(row.reference ?? row.label ?? row.competence ?? row.competency ?? row.monthLabel ?? row.month_label ?? row.month ?? fallbackReference);
+  const amount = num(row.amount ?? row.totalDueAmount ?? row.total_due_amount ?? row.totalAmount ?? row.total_amount, Number.NaN);
+
+  if (!id && !reference) return null;
+
+  return {
+    id: id ?? reference ?? 'payment-history-item',
+    reference: reference ?? 'Competência',
+    dueDate: str(row.dueDate ?? row.due_date),
+    paidAt: str(row.paidAt ?? row.paid_at ?? row.paymentDate ?? row.payment_date),
+    status: str(row.status ?? row.statusDescription ?? row.status_description),
+    amount: Number.isFinite(amount) ? amount : 0,
+    paymentProvider: str(row.paymentProvider ?? row.payment_provider ?? row.provider),
+    paymentMethod: str(row.paymentMethod ?? row.payment_method) ?? 'boleto',
+    downloadUrl: str(row.downloadUrl ?? row.download_url ?? row.boletoUrl ?? row.boleto_url),
+    digitableLine: str(row.digitableLine ?? row.digitable_line),
+  };
+};
+
 const buildTenantPaymentHistoryFromDashboard = (dashboard: FmzTenantDashboard | null): FmzTenantPaymentHistoryItem[] => {
+  const dashboardRecord = recordOf(dashboard);
+  const candidates = [
+    dashboardRecord.paymentHistory,
+    dashboardRecord.payment_history,
+    dashboardRecord.history,
+    dashboardRecord.payments,
+    dashboardRecord.rentCharges,
+    dashboardRecord.rent_charges,
+    recordOf(dashboardRecord.parameters).paymentHistory,
+    recordOf(dashboardRecord.parameters).payment_history,
+  ];
+
+  for (const candidate of candidates) {
+    const items = arrayOf(candidate)
+      .map((item) => normalizePaymentHistoryItem(item, dashboard?.competence?.label ?? dashboard?.competence?.month ?? null))
+      .filter((item): item is FmzTenantPaymentHistoryItem => item !== null);
+
+    if (items.length > 0) return items;
+  }
+
   const boleto = dashboard?.boleto;
   const summary = dashboard?.monthlySummary;
 

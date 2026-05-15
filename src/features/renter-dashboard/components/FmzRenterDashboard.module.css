@@ -72,3 +72,213 @@
   .heroInner{grid-template-columns:1fr;gap:28px}
   .heroCopy{border-right:none;border-bottom:1.5px solid var(--fmz-border);padding-right:0;padding-bottom:26px}
 }
+
+
+.contentPrimaryColumn {
+  display: grid;
+  gap: 18px;
+}
+
+.historyHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.historyViewAllButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--fmz-border);
+  background: #fff;
+  color: var(--fmz-navy);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: border-color .2s, background .2s;
+}
+
+.historyViewAllButton:hover {
+  border-color: var(--fmz-navy);
+  background: var(--fmz-page);
+}
+
+.historyEmptyState {
+  border: 1px dashed var(--fmz-border);
+  border-radius: 14px;
+  padding: 20px;
+  color: var(--fmz-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.historyTableWrap {
+  overflow-x: auto;
+}
+
+.historyTable {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.historyTable th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--fmz-hint);
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--fmz-border);
+}
+
+.historyTable td {
+  font-size: 14px;
+  color: var(--fmz-muted);
+  padding: 14px 0;
+  border-bottom: 1px solid var(--fmz-border);
+}
+
+.historyTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.historyAmount {
+  font-weight: 700;
+  color: var(--fmz-navy) !important;
+}
+
+.historyStatusPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.historyStatusPaid {
+  background: #E4F67F;
+  color: #4D5A00;
+}
+
+.historyStatusOpen {
+  background: #ECEAE2;
+  color: #4E4A3F;
+}
+
+.historyStatusNeutral {
+  background: #F0F1F5;
+  color: var(--fmz-muted);
+}
+
+.simulatorPanel {
+  display: grid;
+  gap: 18px;
+}
+
+.simulatorHeader {
+  display: grid;
+  gap: 6px;
+}
+
+.simulatorTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--fmz-navy);
+}
+
+.simulatorSub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fmz-muted);
+}
+
+.simulatorMetricGrid,
+.simulatorImpactGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.simulatorMetricCard,
+.simulatorImpactItem {
+  border: 1px solid var(--fmz-border);
+  background: var(--fmz-page);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.simulatorMetricLabel,
+.simulatorImpactLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--fmz-hint);
+  margin-bottom: 6px;
+}
+
+.simulatorMetricValue,
+.simulatorImpactValue {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--fmz-navy);
+  line-height: 1.2;
+}
+
+.simulatorImpactValueSuccess {
+  color: var(--fmz-green);
+}
+
+.simulatorSliderBlock {
+  display: grid;
+  gap: 10px;
+}
+
+.simulatorSlider {
+  width: 100%;
+  accent-color: var(--fmz-gold);
+  cursor: pointer;
+}
+
+.simulatorRangeLabels {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--fmz-hint);
+}
+
+@media(max-width:920px){
+  .contentPrimaryColumn {
+    gap: 16px;
+  }
+}
+
+@media(max-width:760px){
+  .historyHeader {
+    flex-direction: column;
+  }
+
+  .historyViewAllButton {
+    width: 100%;
+  }
+
+  .simulatorMetricGrid,
+  .simulatorImpactGrid {
+    grid-template-columns: 1fr;
+  }
+}

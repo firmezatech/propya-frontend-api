@@ -1,0 +1,3 @@
+export const DEFAULT_PROPERTY_ID = 1;
+export const LEGACY_CO_OWNER_PROFILE_CODE = 4;
+export const STANDARD_CO_OWNER_PROFILE_CODE = 3;
