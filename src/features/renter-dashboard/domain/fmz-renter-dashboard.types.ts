@@ -13,14 +13,6 @@ export type FmzRenterDashboardMilestone = {
   status: 'done' | 'next' | 'future';
 };
 
-export type FmzRenterDashboardQuickAction = {
-  key: string;
-  title: string;
-  subtitle: string;
-  href: string;
-  badge?: number;
-};
-
 export type FmzRenterDashboardViewModel = {
   renterName: string;
   referenceMonthLabel: string;
@@ -48,5 +40,4 @@ export type FmzRenterDashboardViewModel = {
     paymentUrl?: string | null;
     lines: FmzDashboardMoneyLine[];
   };
-  quickActions: FmzRenterDashboardQuickAction[];
 };

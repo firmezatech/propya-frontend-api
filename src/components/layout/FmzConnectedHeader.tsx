@@ -86,7 +86,7 @@ export function FmzConnectedHeader({ adminOffset = false, principal = null }: Fm
 
   if (adminOffset) {
     return (
-      <header className="sticky top-0 z-50 h-[72px] border-b border-fmz-border-light bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
+      <header className="sticky top-0 z-50 h-[72px] shrink-0 border-b border-fmz-border-light bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
         <div className={fmzCn('grid h-full w-full grid-cols-[minmax(0,1fr)_auto] items-center', ADMIN_SIDEBAR_WIDTH_CLASS)}>
           <Link
             href={localizeHref(fmzPublicLayoutConfig.connectedDashboardPath)}
@@ -105,7 +105,7 @@ export function FmzConnectedHeader({ adminOffset = false, principal = null }: Fm
   }
 
   return (
-    <header className="sticky top-0 z-50 h-[72px] border-b border-fmz-border-light bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
+    <header className="sticky top-0 z-50 h-[72px] shrink-0 border-b border-fmz-border-light bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
       <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between gap-4 px-6 md:px-14">
         <Link href={localizeHref(fmzPublicLayoutConfig.connectedDashboardPath)} aria-label={fmzPublicLayoutConfig.appName} className="min-w-0 no-underline">
           <FmzBrandMark size="header" />

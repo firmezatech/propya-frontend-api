@@ -14,6 +14,7 @@ import type { FmzAccessControlPrincipal } from '../../../../../features/access-c
 import { FMZ_AUTH_SESSION_CHANGED_EVENT } from '../../../../../services/auth/auth-storage';
 import { hasAdminAccessiblePage } from '../../../../../features/access-control/domain';
 import { FmzRouteAccessGuard } from '../../../../../features/access-control/components/FmzRouteAccessGuard';
+import { fmzCn } from '../../../../../lib/fmz-classnames';
 
 interface FmzConnectedLayoutFrameProps {
   children: ReactNode;
@@ -64,7 +65,12 @@ export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayout
   }
 
   return (
-    <div className="flex min-h-screen min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">
+    <div
+      className={fmzCn(
+        'flex min-h-screen min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary',
+        shouldRenderAdminLayout && 'h-[100dvh] overflow-hidden',
+      )}
+    >
       <AuthenticatedRoute>
         {isAccessLoading ? (
           <FmzFullPageLoading

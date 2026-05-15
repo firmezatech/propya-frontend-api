@@ -59,14 +59,15 @@ export function FmzRenterDashboard({
     <main className={styles.dashboard} aria-label="Dashboard da inquilina">
       <section className={styles.greeting}>
         <div className={styles.greetingTag}>📅 {viewModel.referenceMonthLabel}</div>
-        <h1 className={styles.greetingTitle}>Olá, {viewModel.renterName}!</h1>
+        <h1 className={styles.greetingTitle}>Olá, {viewModel.renterName}! Você está mais perto da sua casa própria 🎉</h1>
+        <p className={styles.greetingSub}>Cada token comprado aumenta sua participação no imóvel e reduz o aluguel ao longo da jornada.</p>
       </section>
 
       <section className={styles.heroCard}>
         <div className={styles.heroInner}>
           <div className={styles.heroCopy}>
             <div className={styles.heroEyebrow}><span className={styles.eyebrowDot} />Sua jornada de compra</div>
-            <h2 className={styles.heroTitle}>Você já conquistou <em>{viewModel.ownershipPercentageLabel}</em> da sua casa!</h2>
+            <h2 className={styles.heroTitle}>Você já é dona de <em>{viewModel.ownershipPercentageLabel}</em> da sua casa</h2>
             <p className={styles.heroDescription}>Se mantiver seu ritmo atual de compra, você pode atingir {viewModel.nextMilestoneLabel} do imóvel em breve. Cada token comprado aproxima você da propriedade total.</p>
 
             <div className={styles.timelineWrap}>
@@ -177,25 +178,6 @@ export function FmzRenterDashboard({
             </div>
           </div>
         </div>
-      </section>
-
-      <section className={styles.quickGrid} aria-label="Ações rápidas da inquilina">
-        {viewModel.quickActions.map((action) => (
-          <Link key={action.key} href={action.href} className={styles.quickCard}>
-            <span className={styles.quickInfo}>
-              <span className={styles.quickTitle}>
-                {action.title}
-                {action.badge ? <span className={styles.quickBadge}>{action.badge}</span> : null}
-              </span>
-              <span className={styles.quickSub}>{action.subtitle}</span>
-            </span>
-            <span className={styles.quickIconButton} aria-hidden="true">
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-          </Link>
-        ))}
       </section>
     </main>
   );
