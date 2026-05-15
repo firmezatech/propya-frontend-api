@@ -68,7 +68,7 @@ The backend should identify the authenticated tenant from the token/session. The
     "status": "open",
     "paymentUrl": "https://...",
     "lines": [
-      { "key": "discounted_rent", "label": "Aluguel com desconto", "value": 792.62, "valueLabel": "R$ 792,62", "tone": "success" },
+      { "key": "rent", "label": "Aluguel", "value": 792.62, "valueLabel": "R$ 792,62", "tone": "success" },
       { "key": "rent_admin_fee", "label": "Taxa Adm Aluguel", "value": 6.14, "valueLabel": "R$ 6,14", "tone": "default" },
       { "key": "condominium", "label": "Condomínio", "value": 480, "valueLabel": "R$ 480,00", "tone": "default" },
       { "key": "scheduled_token_purchase", "label": "Compra programada de tokens", "value": 1000, "valueLabel": "R$ 1.000,00", "tone": "warning" },

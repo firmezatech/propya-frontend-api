@@ -340,7 +340,7 @@
     "monthSummary": "Month Summary",
     "totalToPay": "Total to pay of",
     "dueDate": "Due date",
-    "rentWithDiscount": "Rent with discount",
+    "rent": "Rent",
     "rentDiscountInfo": "The more tokens you have, the lower the rent.",
     "rentValueFee": "Admin Fee Rent",
     "rentValueFeeInfo": "The Rental Management Fee is 10% of the total rent, but since the property is co-owned, you only pay the portion proportional to your share of the property. The greater your ownership stake, the lower your rent — and the greater your share of responsibility.",

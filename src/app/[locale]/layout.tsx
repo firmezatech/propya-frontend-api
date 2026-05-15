@@ -1,28 +1,16 @@
 import React from "react";
 import type { Metadata } from "next";
-import { DM_Sans, Syne } from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { notFound } from 'next/navigation';
 import { routing } from '../../i18n/routing';
 import { setRequestLocale } from 'next-intl/server';
 import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
+import { fmzFontVariablesClassName } from '../../config/fmz-font-config';
 
 import { ProfileProvider } from "../context/ProfileContext";
 import { LanguageProvider } from "../context/LanguageContext";
 
 import "./../globals.css";
-
-const dmSans = DM_Sans({
-  variable: '--font-dm-sans',
-  subsets: ['latin'],
-  weight: ['300', '400', '500'],
-});
-
-const syne = Syne({
-  variable: '--font-syne',
-  subsets: ['latin'],
-  weight: ['400', '600', '700', '800'],
-});
 
 export const metadata: Metadata = {
   title: fmzPublicLayoutConfig.appName,
@@ -52,7 +40,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <body className={`${dmSans.variable} ${syne.variable} antialiased`}>
+      <body className={`${fmzFontVariablesClassName} antialiased`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <LanguageProvider>
             <ProfileProvider>

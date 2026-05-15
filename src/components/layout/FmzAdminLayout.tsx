@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { fmzAdminNavigationConfig, fmzAdminNavigationPaths, fmzAdminPageIconByKey, type FmzAdminNavigationItem } from '../../config/fmz-admin-navigation-config';
 import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
+import { fmzAdminShellLayoutConfig } from '../../config/fmz-admin-sidebar-layout-config';
 import { getCurrentAccessControlPrincipal } from '../../features/access-control/services';
 import { FMZ_AUTH_SESSION_CHANGED_EVENT } from '../../services/auth/auth-storage';
 import { performFirmezaLogout } from '../../services/auth/fmz-logout';
@@ -136,7 +137,7 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
   );
 
   return (
-    <div className="flex h-[calc(100dvh-72px)] min-h-0 flex-1 overflow-hidden bg-[#F7F8FA] lg:flex-row">
+    <div className={fmzAdminShellLayoutConfig.root}>
       <FmzAdminSidebar
         locale={params?.locale}
         pathname={pathname}
@@ -145,7 +146,7 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
         navigationItems={navigationItems}
         onLogout={handleLogout}
       />
-      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#F7F8FA]">
+      <div className={fmzAdminShellLayoutConfig.contentScroll}>
         <FmzAdminContentShell>{children}</FmzAdminContentShell>
       </div>
     </div>

@@ -94,7 +94,7 @@ function getCurrentRentNumber(rentDetail: RentDetailData, invoiceData?: InvoiceD
 function buildInvoiceLines(invoiceData: InvoiceData | null, rentDetail: RentDetailData): FmzRenterDashboardViewModel['invoice']['lines'] {
   if (!invoiceData) {
     return [
-      { key: 'current-rent', label: 'Aluguel com desconto', value: rentDetail.currentRentAsOwnerValue, tone: 'success' },
+      { key: 'current-rent', label: 'Aluguel, value: rentDetail.currentRentAsOwnerValue, tone: 'success' },
       { key: 'rent-fee', label: 'Taxa Adm Aluguel', value: rentDetail.valueRentFee },
       { key: 'condominium', label: 'Condomínio', value: rentDetail.condoFee },
       { key: 'scheduled-token-purchase', label: 'Compra programada de tokens', value: rentDetail.tokensToBuyCurrency, tone: 'warning' },
@@ -103,7 +103,7 @@ function buildInvoiceLines(invoiceData: InvoiceData | null, rentDetail: RentDeta
   }
 
   const lines: FmzRenterDashboardViewModel['invoice']['lines'] = [
-    { key: 'current-rent', label: 'Aluguel com desconto', value: invoiceData.currentRentAsOwnerValue, tone: 'success' },
+    { key: 'current-rent', label: 'Aluguel', value: invoiceData.currentRentAsOwnerValue, tone: 'success' },
     { key: 'rent-fee', label: 'Taxa Adm Aluguel', value: invoiceData.rentValueFee },
     { key: 'condominium', label: 'Condomínio', value: invoiceData.condoFee },
   ];

@@ -33,7 +33,7 @@ export function FmzFormAlert({ error }: FmzFormAlertProps) {
         {isWarning ? <AlertTriangle className="h-3 w-3" aria-hidden="true" /> : <X className="h-3 w-3" aria-hidden="true" />}
       </span>
       <span className="flex-1">
-        <strong className={fmzCn('mb-0.5 block font-syne text-[13px] font-semibold', isWarning ? 'text-[#C97B10]' : 'text-[#D94F3D]')}>
+        <strong className={fmzCn('mb-0.5 block font-syne text-[13px] font-bold', isWarning ? 'text-[#C97B10]' : 'text-[#D94F3D]')}>
           {error.title}
         </strong>
         <span className={fmzCn('block text-[13px] leading-5', isWarning ? 'text-[#7A4D10]' : 'text-[#7A3028]')}>

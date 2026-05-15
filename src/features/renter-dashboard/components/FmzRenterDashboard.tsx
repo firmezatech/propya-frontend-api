@@ -15,22 +15,7 @@ type FmzRenterDashboardProps = {
   onPayInvoice?: (paymentUrl?: string | null) => void;
 };
 
-const CIRCLE_RADIUS = 90;
-const CIRCLE_CENTER = 120;
-const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
-const HALF_CIRCLE = CIRCLE_CIRCUMFERENCE / 2;
 const buildLeftStyle = (percentage: number) => ({ left: `${Math.min(Math.max(percentage, 0), 100)}%` });
-
-function getGaugePoint(percentage: number) {
-  const normalized = Math.min(Math.max(percentage, 0), 100);
-  const angleDeg = 180 + (normalized / 100) * 180;
-  const angleRad = (angleDeg * Math.PI) / 180;
-
-  return {
-    x: CIRCLE_CENTER + CIRCLE_RADIUS * Math.cos(angleRad),
-    y: CIRCLE_CENTER + CIRCLE_RADIUS * Math.sin(angleRad),
-  };
-}
 
 export function FmzRenterDashboard({
   propertyDetail,
@@ -45,29 +30,17 @@ export function FmzRenterDashboard({
     [propertyDetail, rentDetail, invoiceData, renterName, referenceMonthLabel],
   );
 
-  const [animatedPercentage, setAnimatedPercentage] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
 
   useEffect(() => {
+    setHasAnimated(false);
     const startTimer = window.setTimeout(() => setHasAnimated(true), 180);
-    const step = Math.max(viewModel.ownershipPercentage / 60, 0.1);
-    const counter = window.setInterval(() => {
-      setAnimatedPercentage((current) => {
-        const next = Math.min(current + step, viewModel.ownershipPercentage);
-        if (next >= viewModel.ownershipPercentage) window.clearInterval(counter);
-        return next;
-      });
-    }, 24);
 
     return () => {
       window.clearTimeout(startTimer);
-      window.clearInterval(counter);
     };
   }, [viewModel.ownershipPercentage]);
 
-  const filledArc = (viewModel.ownershipPercentage / 100) * HALF_CIRCLE;
-  const gaugePoint = getGaugePoint(hasAnimated ? viewModel.ownershipPercentage : 0);
-  const nextMilestonePoint = getGaugePoint(viewModel.nextMilestonePercentage);
   const timelineVisualPosition = hasAnimated ? viewModel.ownershipVisualPosition : 0;
   const timelineStyle = buildLeftStyle(timelineVisualPosition);
 
@@ -92,48 +65,35 @@ export function FmzRenterDashboard({
 
       <section className={styles.heroCard}>
         <div className={styles.heroInner}>
-          <div className={styles.progressSide}>
-            <div className={styles.gaugeCol}>
-              <div className={styles.gaugeContainer}>
-                <svg className={styles.gaugeSvg} viewBox="0 0 240 240" aria-hidden="true">
-                  <defs>
-                    <linearGradient id="fmz-renter-arc-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#1A8C5B" />
-                      <stop offset="62%" stopColor="#27AE60" />
-                      <stop offset="100%" stopColor="#F5C842" />
-                    </linearGradient>
-                    <filter id="fmz-renter-glow">
-                      <feGaussianBlur stdDeviation="3" result="blur" />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                  </defs>
-                  <circle className={styles.arcBg} cx="120" cy="120" r="90" strokeDasharray="282.7 282.7" strokeDashoffset="-141.3" />
-                  <circle className={styles.arcGlow} cx="120" cy="120" r="90" strokeDasharray={hasAnimated ? `${filledArc} ${CIRCLE_CIRCUMFERENCE - filledArc}` : `0 ${CIRCLE_CIRCUMFERENCE}`} strokeDashoffset="-141.3" />
-                  <circle className={styles.arcProgress} cx="120" cy="120" r="90" strokeDasharray={hasAnimated ? `${filledArc} ${CIRCLE_CIRCUMFERENCE - filledArc}` : `0 ${CIRCLE_CIRCUMFERENCE}`} strokeDashoffset="-141.3" />
-                  <circle cx={gaugePoint.x} cy={gaugePoint.y} r="7" fill="var(--fmz-gold)" stroke="#fff" strokeWidth="2.5" style={{ transition: 'all 2s cubic-bezier(.4,0,.2,1)' }} filter="url(#fmz-renter-glow)" />
-                  <text x="20" y="175" fontSize="11" fill="#9AA3B0" fontFamily="DM Sans" fontWeight="600">0%</text>
-                  <text x="206" y="175" fontSize="11" fill="#9AA3B0" fontFamily="DM Sans" fontWeight="600" textAnchor="end">100%</text>
-                  <circle cx={nextMilestonePoint.x} cy={nextMilestonePoint.y} r="4" fill="#F0D870" stroke="#C8A020" strokeWidth="1.5" opacity="0.75" />
-                </svg>
+          <div className={styles.heroCopy}>
+            <div className={styles.heroEyebrow}><span className={styles.eyebrowDot} />Sua jornada de compra</div>
+            <h2 className={styles.heroTitle}>Você já é dona de <em>{viewModel.ownershipPercentageLabel}</em> da sua casa</h2>
+            <p className={styles.heroDescription}>Se mantiver seu ritmo atual de compra, você pode atingir {viewModel.nextMilestoneLabel} do imóvel em breve. Cada token comprado aproxima você da propriedade total.</p>
 
-                <div className={styles.gaugeText}>
-                  <div className={styles.gaugePercent}>{animatedPercentage.toFixed(1).replace('.', ',')}<span>%</span></div>
-                  <div className={styles.gaugeLabel}>da casa<br />já é sua ✨</div>
-                  <div className={styles.gaugeBadge}>↗ {viewModel.monthlySavingsLabel}/mês economizado</div>
-                </div>
+            <div className={styles.timelineWrap}>
+              <div className={styles.timelineLabel} style={timelineStyle}>{viewModel.ownershipPercentageLabel} — você</div>
+              <div className={styles.timelineTrack}>
+                <div className={styles.timelineFill} style={{ width: hasAnimated ? `${viewModel.ownershipVisualPosition}%` : '0%' }} />
+                <div className={styles.timelineHouse} style={timelineStyle}>🏡</div>
               </div>
-            </div>
+              <div className={styles.timelinePoints}>
+                {viewModel.journeyMilestones.map((milestone) => {
+                  const isDone = milestone.status === 'done';
+                  const isNext = milestone.status === 'next';
+                  const isFinal = milestone.percentage === 100;
 
-            <div className={styles.heroCopy}>
-              <div className={styles.heroEyebrow}><span className={styles.eyebrowDot} />Sua jornada de compra</div>
-              <h2 className={styles.heroTitle}>Você já é dona de <em>{viewModel.ownershipPercentageLabel}</em> da sua casa</h2>
-              <p className={styles.heroDescription}>Quanto mais tokens você compra, maior fica sua participação no imóvel — e menor fica o aluguel pago todos os meses.</p>
-              <div className={styles.heroMiniMetrics}>
-                <div className={`${styles.miniPill} ${styles.miniPillSuccess}`}><strong>{viewModel.acquiredTokensLabel}</strong> em tokens adquiridos</div>
-                <div className={styles.miniPill}><strong>{viewModel.remainingToOwnLabel}</strong> para 100%</div>
+                  return (
+                    <div
+                      key={milestone.percentage}
+                      className={`${styles.timelinePoint} ${isDone ? styles.timelinePointDone : ''} ${isNext ? styles.timelinePointNext : ''}`}
+                      style={buildLeftStyle(milestone.visualPosition)}
+                    >
+                      <span className={`${styles.timelineDot} ${isDone ? styles.timelineDotDone : ''} ${isNext ? styles.timelineDotNext : styles.timelineDotFuture}`} />
+                      <span className={styles.timelinePointLabel}>{milestone.label}{isNext ? ' 🎯' : isFinal ? ' 🏠' : ''}</span>
+                      <span className={styles.timelinePointCaption}>{milestone.caption}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -142,17 +102,6 @@ export function FmzRenterDashboard({
             <div className={styles.ctaContent}>
               <div className={styles.ctaKicker}>🎯 próximo marco</div>
               <h3 className={styles.ctaTitle}>Faltam {viewModel.nextMilestoneRemainingLabel} para chegar em {viewModel.nextMilestoneLabel}</h3>
-              <p className={styles.ctaDescription}>Ao atingir o próximo marco, seu aluguel pode cair mais <strong>{viewModel.nextMilestoneRentReductionLabel}/mês</strong>. Comprar tokens agora acelera sua jornada até a casa própria.</p>
-              <div className={styles.ctaImpact}>
-                <div className={styles.impactItem}>
-                  <div className={`${styles.impactValue} ${styles.impactValueSuccess}`}>− {viewModel.nextMilestoneRentReductionLabel}</div>
-                  <div className={styles.impactLabel}>estimado no aluguel mensal</div>
-                </div>
-                <div className={styles.impactItem}>
-                  <div className={styles.impactValue}>{viewModel.nextMilestoneLabel}</div>
-                  <div className={styles.impactLabel}>próximo objetivo da jornada</div>
-                </div>
-              </div>
               <Link href="/connected/tokensToPurchasePix" className={styles.primaryButton}>
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
                 Comprar mais tokens
@@ -160,60 +109,6 @@ export function FmzRenterDashboard({
               <div className={styles.ctaSmall}>Cada compra aproxima você da propriedade total.</div>
             </div>
           </aside>
-        </div>
-      </section>
-
-      <section className={styles.timelineCard}>
-        <div className={styles.sectionHead}>
-          <div>
-            <h3 className={styles.cardTitle}>Sua jornada até a casa própria</h3>
-            <p className={styles.cardSub}>A casa acompanha sua participação atual e mostra os próximos marcos de forma clara.</p>
-            <div className={styles.timelineScaleNote}>✨ Primeiros 10% em destaque para a meta parecer acompanhável</div>
-          </div>
-        </div>
-        <div className={styles.timelineWrap}>
-          <div className={styles.timelineLabel} style={timelineStyle}>{viewModel.ownershipPercentageLabel} — você</div>
-          <div className={styles.timelineTrack}>
-            <div className={styles.timelineFill} style={{ width: hasAnimated ? `${viewModel.ownershipVisualPosition}%` : '0%' }} />
-            <div className={styles.timelineHouse} style={timelineStyle}>🏡</div>
-          </div>
-          <div className={styles.timelinePoints}>
-            {viewModel.journeyMilestones.map((milestone) => {
-              const isDone = milestone.status === 'done';
-              const isNext = milestone.status === 'next';
-              const isFinal = milestone.percentage === 100;
-
-              return (
-                <div
-                  key={milestone.percentage}
-                  className={`${styles.timelinePoint} ${isDone ? styles.timelinePointDone : ''} ${isNext ? styles.timelinePointNext : ''}`}
-                  style={buildLeftStyle(milestone.visualPosition)}
-                >
-                  <div className={`${styles.timelineDot} ${isDone ? styles.timelineDotDone : ''} ${isNext ? styles.timelineDotNext : ''} ${!isDone && !isNext ? styles.timelineDotFuture : ''}`} />
-                  <div className={styles.timelinePointLabel}>{milestone.label}{isNext ? ' 🎯' : isFinal ? ' 🏠' : ''}</div>
-                  <div className={styles.timelinePointCaption}>{milestone.caption}</div>
-                </div>
-              );
-            })}
-          </div>
-          <div className={styles.timelineSummary}>
-            <div className={styles.timelineSummaryItem}>
-              <div className={`${styles.timelineSummaryValue} ${styles.timelineSummaryValueSuccess}`}>{viewModel.ownershipPercentageLabel}</div>
-              <div className={styles.timelineSummaryLabel}>participação atual</div>
-            </div>
-            <div className={styles.timelineSummaryItem}>
-              <div className={`${styles.timelineSummaryValue} ${styles.timelineSummaryValueWarning}`}>{viewModel.nextMilestoneGapLabel}</div>
-              <div className={styles.timelineSummaryLabel}>faltam para {viewModel.nextMilestoneLabel}</div>
-            </div>
-            <div className={styles.timelineSummaryItem}>
-              <div className={styles.timelineSummaryValue}>{viewModel.nextMilestoneRemainingLabel}</div>
-              <div className={styles.timelineSummaryLabel}>para o próximo marco</div>
-            </div>
-            <div className={styles.timelineSummaryItem}>
-              <div className={styles.timelineSummaryValue}>100%</div>
-              <div className={styles.timelineSummaryLabel}>objetivo final</div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -266,6 +161,10 @@ export function FmzRenterDashboard({
                 <span className={`${styles.barLabel} ${styles.barLabelSuccess}`}>Atual: {viewModel.currentRentLabel}</span>
                 <span className={styles.barLabel}>Original: {viewModel.originalRentLabel}</span>
               </div>
+              <Link href="/connected/tokensToPurchasePix" className={styles.rentActionButton}>
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                Comprar mais tokens
+              </Link>
             </div>
           </div>
 

@@ -29,6 +29,7 @@ export const fmzAdminPageIconByKey: Record<string, LucideIcon> = {
   'admin.gas': Building2,
   'admin.investors': UsersRound,
   'admin.contracts': FileText,
+  'admin.contract.upload': FileText,
   'admin.rent.adjustment': FileText,
 };
 
@@ -85,6 +86,14 @@ export const fmzAdminNavigationConfig = {
       href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_INVOICES_PATH', '/connected/invoicesAdmin'),
       requiredPermissionKey: 'admin.invoices.view',
       icon: ReceiptText,
+    },
+    {
+      id: 'admin.contract.upload',
+      pageKey: 'admin.contract.upload',
+      label: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_CONTRACTS_LABEL', 'Contratos'),
+      href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_CONTRACTS_PATH', '/connected/contracts'),
+      requiredPermissionKey: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_CONTRACTS_PERMISSION', 'admin.contracts.manage'),
+      icon: FileText,
     },
     {
       id: 'admin.maintenance',

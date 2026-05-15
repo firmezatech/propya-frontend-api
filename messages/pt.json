@@ -340,7 +340,7 @@
     "monthSummary": "Resumo do Mês",
     "totalToPay": "Total a pagar de",
     "dueDate": "Data de vencimento",
-    "rentWithDiscount": "Aluguel com desconto",
+    "rent": "Aluguel",
     "rentDiscountInfo": "Quanto mais tokens você tiver, menor o aluguel.",
     "rentValueFee": "Taxa Adm Aluguel",
     "rentValueFeeInfo": "A Taxa de Administração do Aluguel é 10% do aluguel total, mas como já existe copropriedade, você só paga a parte proporcional à sua fração no imóvel. Quanto maior a participação na propriedade, menor o aluguel — e maior a corresponsabilidade.",
