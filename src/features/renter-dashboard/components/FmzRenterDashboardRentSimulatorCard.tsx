@@ -9,7 +9,6 @@ type FmzRenterDashboardRentSimulatorCardProps = {
   hasAnimated: boolean;
 };
 
-const TOKEN_UNIT_VALUE = 1;
 const MAX_SIMULATION_AMOUNT = 5000;
 const SLIDER_STEP = 50;
 
@@ -26,7 +25,7 @@ const compactCurrencyFormatter = new Intl.NumberFormat('pt-BR', {
 });
 
 const percentFormatter = new Intl.NumberFormat('pt-BR', {
-  maximumFractionDigits: 2,
+  maximumFractionDigits: 1,
   minimumFractionDigits: 0,
 });
 
@@ -43,6 +42,14 @@ function resolveSimulationMaxAmount(viewModel: FmzRenterDashboardViewModel): num
   return Math.max(SLIDER_STEP, Math.min(remainingToOwn, MAX_SIMULATION_AMOUNT));
 }
 
+function calculateRentReductionPerPercentagePoint(viewModel: FmzRenterDashboardViewModel): number {
+  if (viewModel.ownershipPercentage <= 0) {
+    return viewModel.originalRentNumber / 100;
+  }
+
+  return Math.max(viewModel.originalRentNumber - viewModel.currentRentNumber, 0) / viewModel.ownershipPercentage;
+}
+
 export function FmzRenterDashboardRentSimulatorCard({ viewModel, hasAnimated }: FmzRenterDashboardRentSimulatorCardProps) {
   const maxAmount = useMemo(() => resolveSimulationMaxAmount(viewModel), [viewModel]);
   const [purchaseAmount, setPurchaseAmount] = useState(0);
@@ -54,30 +61,30 @@ export function FmzRenterDashboardRentSimulatorCard({ viewModel, hasAnimated }: 
   }, [purchaseAmount, viewModel]);
 
   const simulatedRent = useMemo(() => {
-    const nextRent = viewModel.originalRentNumber * (1 - simulatedOwnership / 100);
-    return Math.max(nextRent, 0);
-  }, [simulatedOwnership, viewModel.originalRentNumber]);
+    const addedOwnership = Math.max(simulatedOwnership - viewModel.ownershipPercentage, 0);
+    const rentReduction = addedOwnership * calculateRentReductionPerPercentagePoint(viewModel);
+    return Math.max(viewModel.currentRentNumber - rentReduction, 0);
+  }, [simulatedOwnership, viewModel]);
 
-  const additionalAnnualDiscount = Math.max(viewModel.currentRentNumber - simulatedRent, 0) * 12;
+  const annualSavings = Math.max(viewModel.originalRentNumber - simulatedRent, 0) * 12;
+  const rentBarPercentage = viewModel.originalRentNumber > 0 ? clamp((simulatedRent / viewModel.originalRentNumber) * 100, 0, 100) : 0;
   const rangeProgress = maxAmount > 0 ? (purchaseAmount / maxAmount) * 100 : 0;
 
   return (
-    <article className={styles.simulatorCompactCard} aria-label="Simulador de compra de tokens">
-      <p className={styles.simulatorCompactLabel}>Simule comprar mais tokens</p>
-      <p className={styles.simulatorCompactHint}>{TOKEN_UNIT_VALUE} token = R$ 1,00 · arraste para simular</p>
-
-      <div className={styles.simulatorCompactGrid}>
-        <div className={styles.simulatorCompactMetric}>
-          <p className={styles.simulatorCompactMetricLabel}>Compra simulada</p>
-          <p className={styles.simulatorCompactMetricValue}>{formatCompactCurrency(purchaseAmount)}</p>
+    <article className={`${styles.card} ${styles.rentCard}`} aria-label="Simulador de compra de tokens e aluguel">
+      <div className={styles.rentLeft}>
+        <div className={styles.rentEyebrow}><span className={styles.rentArrow}>↗</span> Seu aluguel caiu</div>
+        <div className={styles.rentCompare}>
+          <div className={styles.rentCurrent}>{viewModel.currentRentLabel}</div>
+          <div className={styles.rentOriginal}>{viewModel.originalRentLabel}</div>
         </div>
-        <div className={styles.simulatorCompactMetric}>
-          <p className={styles.simulatorCompactMetricLabel}>Posse simulada</p>
-          <p className={styles.simulatorCompactMetricValue}>{formatPercentage(simulatedOwnership)}</p>
-        </div>
+        <p className={styles.rentCopy}>{viewModel.rentCopy}</p>
+        <div className={styles.savingsPill}>Você economiza {viewModel.yearlySavingsLabel}/ano</div>
       </div>
 
-      <div className={styles.simulatorCompactSliderWrap}>
+      <div className={styles.rentRight}>
+        <div className={styles.simLabel}>Simule comprar mais tokens</div>
+
         <input
           type="range"
           min={0}
@@ -85,36 +92,46 @@ export function FmzRenterDashboardRentSimulatorCard({ viewModel, hasAnimated }: 
           step={SLIDER_STEP}
           value={purchaseAmount}
           onChange={(event) => setPurchaseAmount(Number(event.target.value))}
-          className={styles.simulatorCompactSlider}
+          className={styles.simSlider}
           style={{ ['--simulator-progress' as string]: hasAnimated ? `${rangeProgress}%` : '0%' }}
           aria-label="Quantidade de tokens para simulação"
         />
-        <div className={styles.simulatorCompactRangeLabels}>
+        <div className={styles.simRangeLabels}>
           <span>R$ 0</span>
+          <span className={styles.simCurrentAmount}>{formatCompactCurrency(purchaseAmount)}</span>
           <span>{formatCompactCurrency(maxAmount)}</span>
         </div>
-      </div>
 
-      <div className={`${styles.simulatorCompactGrid} ${styles.simulatorCompactDivider}`}>
-        <div className={styles.simulatorCompactMetric}>
-          <p className={styles.simulatorCompactMetricLabel}>Posse atual</p>
-          <p className={styles.simulatorCompactMetricValue}>{viewModel.ownershipPercentageLabel}</p>
+        <div className={styles.simRentBox}>
+          <div className={styles.simRentLabel}>Seu aluguel com essa compra</div>
+          <div className={styles.simRentValues}>
+            <span className={styles.simRentCurrent}>{formatCurrency(simulatedRent)}</span>
+            <span className={styles.simRentOriginal}>{viewModel.originalRentLabel}</span>
+          </div>
+          <div className={styles.simRentTrack}>
+            <div className={styles.simRentFill} style={{ width: `${rentBarPercentage}%` }} />
+          </div>
         </div>
-        <div className={styles.simulatorCompactMetric}>
-          <p className={styles.simulatorCompactMetricLabel}>Aluguel estimado</p>
-          <p className={styles.simulatorCompactMetricValue}>{formatCurrency(simulatedRent)}</p>
-        </div>
-      </div>
 
-      <div className={`${styles.simulatorCompactSavings} ${purchaseAmount > 0 ? styles.simulatorCompactSavingsVisible : ''}`}>
-        <span className={styles.simulatorCompactSavingsLabel}>
-          <svg className={styles.simulatorCompactSavingsIcon} viewBox="0 0 24 24" aria-hidden="true">
-            <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
-            <polyline points="17 18 23 18 23 12" />
-          </svg>
-          Seu aluguel caiu
-        </span>
-        <span className={styles.simulatorCompactSavingsValue}>{formatCurrency(additionalAnnualDiscount)}/ano</span>
+        <div className={styles.simPillGrid}>
+          <div className={styles.simPill}>
+            <p>Compra</p>
+            <strong>{formatCompactCurrency(purchaseAmount)}</strong>
+          </div>
+          <div className={styles.simPill}>
+            <p>Posse atual</p>
+            <strong>{viewModel.ownershipPercentageLabel}</strong>
+          </div>
+          <div className={styles.simPill}>
+            <p>Posse nova</p>
+            <strong className={styles.simPillSuccess}>{formatPercentage(simulatedOwnership)}</strong>
+          </div>
+        </div>
+
+        <div className={styles.simSavingsNote}>
+          <span>Economia anual estimada</span>
+          <strong>{formatCurrency(annualSavings)}/ano</strong>
+        </div>
       </div>
     </article>
   );

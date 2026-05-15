@@ -73,19 +73,14 @@ export function FmzRenterDashboardPaymentHistoryCard({ items, maxItems = 3 }: Fm
   return (
     <div className={styles.card}>
       <div className={styles.historyHeader}>
-        <div>
-          <h3 className={styles.cardTitle}>Histórico</h3>
-          <p className={styles.cardSub}>Confira os boletos mais recentes da sua jornada.</p>
-        </div>
+        <h3 className={styles.cardTitle}>Histórico</h3>
         <Link href="/connected/paymentHistory" className={styles.historyViewAllButton}>
-          Ver tudo
+          Ver tudo →
         </Link>
       </div>
 
       {visibleItems.length === 0 ? (
-        <div className={styles.historyEmptyState}>
-          Nenhum pagamento encontrado até o momento.
-        </div>
+        <div className={styles.historyEmptyState}>Nenhum pagamento encontrado até o momento.</div>
       ) : (
         <div className={styles.historyTableWrap}>
           <table className={styles.historyTable}>
@@ -93,23 +88,23 @@ export function FmzRenterDashboardPaymentHistoryCard({ items, maxItems = 3 }: Fm
               <tr>
                 <th>Mês</th>
                 <th>Total</th>
-                <th>Vencimento</th>
+                <th className={styles.historyOptionalColumn}>Vencimento</th>
                 <th>Status</th>
-                <th>Pagamento</th>
+                <th className={styles.historyOptionalColumn}>Pagamento</th>
               </tr>
             </thead>
             <tbody>
               {visibleItems.map((item) => (
                 <tr key={item.id}>
-                  <td>{item.reference}</td>
-                  <td className={styles.historyAmount}>{formatAmount(item.amount)}</td>
-                  <td>{formatDate(item.dueDate)}</td>
+                  <td className={styles.historyMonth}>{item.reference}</td>
+                  <td>{formatAmount(item.amount)}</td>
+                  <td className={styles.historyOptionalColumn}>{formatDate(item.dueDate)}</td>
                   <td>
                     <span className={`${styles.historyStatusPill} ${getStatusClassName(item.status)}`}>
                       {getStatusLabel(item.status)}
                     </span>
                   </td>
-                  <td>{formatDate(item.paidAt)}</td>
+                  <td className={`${styles.historyPayment} ${styles.historyOptionalColumn}`}>{formatDate(item.paidAt)}</td>
                 </tr>
               ))}
             </tbody>
