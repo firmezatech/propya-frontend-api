@@ -5,6 +5,29 @@ const DEFAULT_RENTER_NAME = 'Diana';
 const DEFAULT_REFERENCE_MONTH = 'Dezembro 2025';
 const DEFAULT_NEXT_MILESTONE_PERCENTAGE = 10;
 
+const QUICK_ACTIONS: FmzRenterDashboardViewModel['quickActions'] = [
+  {
+    key: 'maintenance',
+    title: 'Manutenção',
+    subtitle: 'Não há manutenções',
+    href: '/connected/maintenances',
+  },
+  {
+    key: 'owner-messages',
+    title: 'Falar com proprietários',
+    subtitle: 'Você tem 1 mensagem não lida',
+    href: '/connected/adminContactList',
+    badge: 1,
+  },
+  {
+    key: 'documentation',
+    title: 'Documentação',
+    subtitle: 'Contratos e documentos do imóvel',
+    href: '/connected/myContract',
+  },
+];
+
+
 const JOURNEY_MILESTONES = [
   { percentage: 0, visualPosition: 0, caption: 'início' },
   { percentage: 5, visualPosition: 22, caption: 'alcançado' },
@@ -184,5 +207,6 @@ export function buildRenterDashboardViewModel(params: {
       paymentUrl: invoiceData?.path,
       lines: buildInvoiceLines(invoiceData, rentDetail),
     },
+    quickActions: QUICK_ACTIONS,
   };
 }
