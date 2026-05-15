@@ -150,16 +150,6 @@ export function FmzRenterDashboard({
 
         <div className={styles.insightStack}>
           <FmzRenterDashboardRentSimulatorCard viewModel={viewModel} hasAnimated={hasAnimated} />
-
-          <div className={styles.card}>
-            <h3 className={styles.cardTitle}>O próximo passo é simples</h3>
-            <p className={styles.cardSub}>Você está a {viewModel.nextMilestoneProgressPercentage.toFixed(1).replace('.', ',')}% do objetivo de {viewModel.nextMilestoneLabel}. Uma nova compra de tokens acelera essa conquista.</p>
-            <div className={styles.barTrack}><div className={`${styles.barFill} ${styles.barFillGold}`} style={{ width: hasAnimated ? `${viewModel.nextMilestoneProgressPercentage}%` : '0%' }} /></div>
-            <div className={styles.barLabels}>
-              <span className={styles.barLabel}>{viewModel.acquiredTokensLabel} até {viewModel.nextMilestoneLabel}</span>
-              <span className={`${styles.barLabel} ${styles.barLabelSuccess}`}>{viewModel.nextMilestoneProgressPercentage.toFixed(1).replace('.', ',')}%</span>
-            </div>
-          </div>
         </div>
       </section>
     </main>

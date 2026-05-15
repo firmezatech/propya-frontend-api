@@ -282,3 +282,191 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Renter dashboard layout stabilization */
+.contentGrid {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);
+  gap: 22px;
+  align-items: start;
+}
+
+.contentPrimaryColumn,
+.insightStack,
+.card {
+  min-width: 0;
+}
+
+.insightStack {
+  justify-items: stretch;
+}
+
+.historyTableWrap {
+  max-width: 100%;
+}
+
+/* Compact token simulator based on the attached reference */
+.simulatorCompactCard {
+  width: 100%;
+  max-width: 360px;
+  justify-self: end;
+  background: #ffffff;
+  border: 0.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 1px 8px rgba(13, 19, 33, 0.04);
+}
+
+.simulatorCompactLabel {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #888;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.simulatorCompactHint {
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: #aaa;
+  line-height: 1.45;
+}
+
+.simulatorCompactGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.simulatorCompactMetric {
+  background: #f6f5f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.simulatorCompactMetricLabel {
+  margin: 0 0 2px;
+  font-size: 11px;
+  color: #888;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.25;
+}
+
+.simulatorCompactMetricValue {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.35;
+}
+
+.simulatorCompactSliderWrap {
+  margin-bottom: 16px;
+}
+
+.simulatorCompactSlider {
+  width: 100%;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, #c8a84b 0%, #c8a84b var(--simulator-progress, 0%), #e0dfd8 var(--simulator-progress, 0%), #e0dfd8 100%);
+  outline: none;
+  margin: 0 0 6px;
+  cursor: pointer;
+}
+
+.simulatorCompactSlider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #c8a84b;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+  cursor: pointer;
+}
+
+.simulatorCompactSlider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #c8a84b;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+  cursor: pointer;
+}
+
+.simulatorCompactRangeLabels {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  color: #aaa;
+}
+
+.simulatorCompactDivider {
+  border-top: 0.5px solid rgba(0,0,0,0.08);
+  padding-top: 12px;
+}
+
+.simulatorCompactSavings {
+  margin-top: 10px;
+  background: #eaf6ee;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.simulatorCompactSavingsVisible {
+  display: flex;
+}
+
+.simulatorCompactSavingsLabel {
+  font-size: 12px;
+  color: #2a7a42;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.simulatorCompactSavingsValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2a7a42;
+  white-space: nowrap;
+}
+
+.simulatorCompactSavingsIcon {
+  width: 14px;
+  height: 14px;
+  stroke: #2a7a42;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media(max-width: 980px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .simulatorCompactCard {
+    justify-self: stretch;
+    max-width: none;
+  }
+}
+
+@media(max-width: 520px) {
+  .simulatorCompactGrid {
+    grid-template-columns: 1fr;
+  }
+}

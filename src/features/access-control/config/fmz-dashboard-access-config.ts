@@ -1,4 +1,4 @@
-export type FmzDashboardKind = 'admin' | 'renter' | 'coOwner' | 'legacyCoOwner';
+export type FmzDashboardKind = 'admin' | 'renter' | 'investor' | 'legacyInvestor';
 
 export type FmzDashboardAccessRule = {
   kind: FmzDashboardKind;
@@ -37,16 +37,16 @@ export const fmzDashboardAccessConfig = {
       pageKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_ADMIN_DASHBOARD_PAGE_KEYS', 'admin.dashboard'),
     },
     {
-      kind: 'legacyCoOwner',
-      roleKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_LEGACY_CO_OWNER_ROLE_KEYS', process.env.NEXT_PUBLIC_FMZ_LEGACY_INVESTOR_ROLE_KEYS || 'legacy_co_owner,co_owner_legacy,legacy_investor,investor_legacy,legado'),
-      permissionKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_LEGACY_CO_OWNER_DASHBOARD_PERMISSIONS', process.env.NEXT_PUBLIC_FMZ_LEGACY_INVESTOR_DASHBOARD_PERMISSIONS || 'legacy.dashboard.view,co_owner.legacy.dashboard.view,investor.legacy.dashboard.view'),
-      pageKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_LEGACY_CO_OWNER_DASHBOARD_PAGE_KEYS', process.env.NEXT_PUBLIC_FMZ_LEGACY_INVESTOR_DASHBOARD_PAGE_KEYS || 'legacy.dashboard,co_owner.legacy.dashboard,investor.legacy.dashboard'),
+      kind: 'legacyInvestor',
+      roleKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_LEGACY_INVESTOR_ROLE_KEYS', 'legacy_investor,investor_legacy,legado'),
+      permissionKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_LEGACY_INVESTOR_DASHBOARD_PERMISSIONS', 'legacy.dashboard.view,investor.legacy.dashboard.view'),
+      pageKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_LEGACY_INVESTOR_DASHBOARD_PAGE_KEYS', 'legacy.dashboard,investor.legacy.dashboard'),
     },
     {
-      kind: 'coOwner',
-      roleKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_CO_OWNER_ROLE_KEYS', process.env.NEXT_PUBLIC_FMZ_INVESTOR_ROLE_KEYS || 'co_owner,coproprietario,coproprietária,coproprietaria,investor,investidor,owner,proprietario'),
-      permissionKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_CO_OWNER_DASHBOARD_PERMISSIONS', process.env.NEXT_PUBLIC_FMZ_INVESTOR_DASHBOARD_PERMISSIONS || 'co_owner.dashboard.view,investor.dashboard.view,investments.view'),
-      pageKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_CO_OWNER_DASHBOARD_PAGE_KEYS', process.env.NEXT_PUBLIC_FMZ_INVESTOR_DASHBOARD_PAGE_KEYS || 'co_owner.dashboard,investor.dashboard'),
+      kind: 'investor',
+      roleKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_INVESTOR_ROLE_KEYS', 'investor,investidor,owner,proprietario'),
+      permissionKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_INVESTOR_DASHBOARD_PERMISSIONS', 'investor.dashboard.view,investments.view'),
+      pageKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_INVESTOR_DASHBOARD_PAGE_KEYS', 'investor.dashboard'),
     },
     {
       kind: 'renter',
