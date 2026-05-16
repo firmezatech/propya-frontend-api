@@ -1,14 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Copy, Download, FileText, House, ReceiptText, WalletCards } from 'lucide-react';
+import { ArrowLeft, Copy, Download, House, ReceiptText, WalletCards } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FmzConnectedPageShell } from '../../../components/layout';
 import { getCurrentTenantDashboard, getCurrentTenantPaymentHistory, getCurrentTenantWallets } from '../services';
 import type { FmzTenantDashboard, FmzTenantPaymentHistoryItem, FmzTenantWallet } from '../domain';
-import { FmzTenantContractPage } from './FmzTenantContractPage';
 
-type FmzTenantPortalPageKind = 'invoice' | 'paymentHistory' | 'wallet' | 'tokens' | 'contract';
+type FmzTenantPortalPageKind = 'invoice' | 'paymentHistory' | 'wallet' | 'tokens';
 
 type FmzTenantPortalPageProps = {
   kind: FmzTenantPortalPageKind;
@@ -16,10 +15,10 @@ type FmzTenantPortalPageProps = {
 
 const moneyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const percentFormatter = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+const tokenFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 8 });
 
 const formatMoney = (value?: number | null): string => moneyFormatter.format(Number(value ?? 0));
 const formatPercent = (value?: number | null): string => `${percentFormatter.format(Number(value ?? 0))}%`;
-const tokenFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 8 });
 const formatTokenAmount = (value?: number | null): string => tokenFormatter.format(Number(value ?? 0));
 
 const formatDate = (value?: string | null): string => {
@@ -29,22 +28,23 @@ const formatDate = (value?: string | null): string => {
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium' }).format(date);
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  paid: 'Pago',
+  received: 'Pago',
+  confirmed: 'Confirmado',
+  pending: 'Aguardando pagamento',
+  created: 'Criado',
+  registered: 'Registrado',
+  overdue: 'Vencido',
+  expired: 'Expirado',
+  canceled: 'Cancelado',
+  cancelled: 'Cancelado',
+  not_generated: 'Não gerado',
+};
+
 const statusLabel = (status?: string | null): string => {
   const normalized = String(status ?? '').trim().toLowerCase();
-  const labels: Record<string, string> = {
-    paid: 'Pago',
-    received: 'Pago',
-    confirmed: 'Confirmado',
-    pending: 'Aguardando pagamento',
-    created: 'Criado',
-    registered: 'Registrado',
-    overdue: 'Vencido',
-    expired: 'Expirado',
-    canceled: 'Cancelado',
-    cancelled: 'Cancelado',
-    not_generated: 'Não gerado',
-  };
-  return labels[normalized] ?? status ?? 'Não informado';
+  return STATUS_LABELS[normalized] ?? status ?? 'Não informado';
 };
 
 function EmptyState({ title, description }: { title: string; description: string }) {
@@ -144,38 +144,6 @@ function TenantInvoiceView({ dashboard }: { dashboard: FmzTenantDashboard | null
     </div>
   );
 }
-
-
-function ContractInfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-fmz-border-light bg-fmz-page p-4">
-      <dt className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">{label}</dt>
-      <dd className="mt-1 break-words text-sm font-semibold text-fmz-navy">{value}</dd>
-    </div>
-  );
-}
-
-const optionalString = (value: unknown): string | null => (typeof value === 'string' && value.trim() ? value.trim() : null);
-
-function resolveContractDocumentUrl(dashboard: FmzTenantDashboard | null): string | null {
-  const contract = dashboard?.contract;
-  const contractRecord = (contract && typeof contract === 'object' ? contract : {}) as Record<string, unknown>;
-
-  return optionalString(contract?.contractFileUrl)
-    ?? optionalString(contract?.signedDocumentUrl)
-    ?? optionalString(contract?.documentUrl)
-    ?? optionalString(contractRecord.contract_file_url)
-    ?? optionalString(contractRecord.signed_document_url)
-    ?? optionalString(contractRecord.document_url)
-    ?? optionalString(contractRecord.file_url);
-}
-
-function TenantContractView({ dashboard }: { dashboard: FmzTenantDashboard | null }) {
-  const contractDocumentUrl = resolveContractDocumentUrl(dashboard);
-
-  return <FmzTenantContractPage dashboard={dashboard} contractDocumentUrl={contractDocumentUrl} />;
-}
-
 
 function TenantPaymentHistoryView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
   if (history.length === 0) {
@@ -334,23 +302,18 @@ export function FmzTenantPortalPage({ kind }: FmzTenantPortalPageProps) {
     paymentHistory: 'Histórico de pagamentos',
     wallet: 'Minha carteira',
     tokens: 'Meus tokens',
-    contract: 'Meu contrato',
   };
 
   return (
     <FmzConnectedPageShell width="wide">
-      {kind !== 'contract' ? (
-        <>
-          <button type="button" onClick={() => router.back()} className="mb-7 inline-flex items-center gap-1.5 border-0 bg-transparent p-0 text-[13px] text-fmz-text-hint transition hover:text-fmz-text-primary">
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Voltar
-          </button>
+      <button type="button" onClick={() => router.back()} className="mb-7 inline-flex items-center gap-1.5 border-0 bg-transparent p-0 text-[13px] text-fmz-text-hint transition hover:text-fmz-text-primary">
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Voltar
+      </button>
 
-          <div className="mb-8">
-            <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-fmz-text-hint">Área da inquilina</p>
-            <h1 className="font-syne text-3xl font-extrabold tracking-[-0.025em] text-fmz-navy">{titleByKind[kind]}</h1>
-          </div>
-        </>
-      ) : null}
+      <div className="mb-8">
+        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-fmz-text-hint">Área da inquilina</p>
+        <h1 className="font-syne text-3xl font-extrabold tracking-[-0.025em] text-fmz-navy">{titleByKind[kind]}</h1>
+      </div>
 
       {isLoading ? (
         <div className="rounded-2xl border border-fmz-border-light bg-white p-8 text-center text-sm text-fmz-text-muted">
@@ -363,8 +326,6 @@ export function FmzTenantPortalPage({ kind }: FmzTenantPortalPageProps) {
         <TenantInvoiceView dashboard={dashboard} />
       ) : kind === 'paymentHistory' ? (
         <TenantPaymentHistoryView history={history} />
-      ) : kind === 'contract' ? (
-        <TenantContractView dashboard={dashboard} />
       ) : (
         <TenantWalletView dashboard={dashboard} wallets={wallets} />
       )}
