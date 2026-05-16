@@ -1,0 +1,1 @@
+export { FmzAccountPage } from './FmzAccountPage';
