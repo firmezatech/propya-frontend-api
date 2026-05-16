@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { FmzConnectedPageShell } from '../../../components/layout';
 import { getCurrentTenantDashboard, getCurrentTenantPaymentHistory, getCurrentTenantWallets } from '../services';
 import type { FmzTenantDashboard, FmzTenantPaymentHistoryItem, FmzTenantWallet } from '../domain';
+import { FmzTenantContractPage } from './FmzTenantContractPage';
 
 type FmzTenantPortalPageKind = 'invoice' | 'paymentHistory' | 'wallet' | 'tokens' | 'contract';
 
@@ -170,73 +171,11 @@ function resolveContractDocumentUrl(dashboard: FmzTenantDashboard | null): strin
 }
 
 function TenantContractView({ dashboard }: { dashboard: FmzTenantDashboard | null }) {
-  const contract = dashboard?.contract;
-  const property = dashboard?.property;
-  const tenant = dashboard?.tenant;
   const contractDocumentUrl = resolveContractDocumentUrl(dashboard);
 
-  if (!dashboard || !contract) {
-    return <EmptyState title="Contrato não encontrado" description="A rota GET /tenant/dashboard não retornou contrato ativo para esta inquilina." />;
-  }
-
-  return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
-      <section className="rounded-2xl border border-fmz-border-light bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">Contrato da inquilina</p>
-            <h2 className="mt-2 font-syne text-3xl font-extrabold text-fmz-navy">
-              {contract.contractNumber ?? 'Contrato ativo'}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-fmz-text-muted">
-              Dados carregados pela rota <strong>GET /tenant/dashboard</strong>, usando o contrato vinculado ao usuário autenticado.
-            </p>
-          </div>
-          <span className="rounded-full border border-fmz-success-border bg-fmz-success-bg px-3 py-1.5 text-xs font-bold text-fmz-success">
-            {statusLabel(contract.status)}
-          </span>
-        </div>
-
-        <dl className="mt-8 grid gap-4 md:grid-cols-2">
-          <ContractInfoRow label="Inquilina" value={tenant?.name ?? 'Não informado'} />
-          <ContractInfoRow label="Imóvel" value={property?.name ?? property?.code ?? 'Não informado'} />
-          <ContractInfoRow label="Endereço" value={[property?.addressLine1, property?.district, property?.city, property?.state].filter(Boolean).join(', ') || 'Não informado'} />
-          <ContractInfoRow label="Número do contrato" value={contract.contractNumber ?? contract.id ?? 'Não informado'} />
-          <ContractInfoRow label="Início" value={formatDate(contract.startDate)} />
-          <ContractInfoRow label="Fim" value={formatDate(contract.endDate)} />
-          <ContractInfoRow label="Dia de vencimento" value={contract.paymentDay ? `Dia ${contract.paymentDay}` : 'Não informado'} />
-          <ContractInfoRow label="Aluguel base" value={formatMoney(contract.baseMonthlyRent)} />
-          <ContractInfoRow label="Aluguel original" value={formatMoney(contract.originalBaseRent)} />
-          <ContractInfoRow label="Moeda" value={contract.currency ?? 'BRL'} />
-        </dl>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          {contractDocumentUrl ? (
-            <a href={contractDocumentUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-fmz-navy px-5 py-3 text-sm font-bold uppercase tracking-[0.03em] text-white no-underline transition hover:bg-[#162030]">
-              <Download className="h-4 w-4" /> Visualizar contrato
-            </a>
-          ) : (
-            <button type="button" disabled className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl bg-fmz-border-light px-5 py-3 text-sm font-bold uppercase tracking-[0.03em] text-fmz-text-hint">
-              <Download className="h-4 w-4" /> Documento indisponível
-            </button>
-          )}
-        </div>
-      </section>
-
-      <aside className="rounded-2xl border border-fmz-border-light bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between gap-4">
-          <h3 className="font-syne text-xl font-bold text-fmz-navy">Resumo</h3>
-          <FileText className="h-6 w-6 text-fmz-navy" />
-        </div>
-        <div className="mt-5 grid gap-3">
-          <MetricCard label="Status" value={statusLabel(contract.status)} icon={FileText} />
-          <MetricCard label="Vencimento" value={contract.paymentDay ? `Dia ${contract.paymentDay}` : '—'} icon={ReceiptText} />
-          <MetricCard label="Aluguel base" value={formatMoney(contract.baseMonthlyRent)} icon={House} />
-        </div>
-      </aside>
-    </div>
-  );
+  return <FmzTenantContractPage dashboard={dashboard} contractDocumentUrl={contractDocumentUrl} />;
 }
+
 
 function TenantPaymentHistoryView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
   if (history.length === 0) {
@@ -400,14 +339,18 @@ export function FmzTenantPortalPage({ kind }: FmzTenantPortalPageProps) {
 
   return (
     <FmzConnectedPageShell width="wide">
-      <button type="button" onClick={() => router.back()} className="mb-7 inline-flex items-center gap-1.5 border-0 bg-transparent p-0 text-[13px] text-fmz-text-hint transition hover:text-fmz-text-primary">
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Voltar
-      </button>
+      {kind !== 'contract' ? (
+        <>
+          <button type="button" onClick={() => router.back()} className="mb-7 inline-flex items-center gap-1.5 border-0 bg-transparent p-0 text-[13px] text-fmz-text-hint transition hover:text-fmz-text-primary">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Voltar
+          </button>
 
-      <div className="mb-8">
-        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-fmz-text-hint">Área da inquilina</p>
-        <h1 className="font-syne text-3xl font-extrabold tracking-[-0.025em] text-fmz-navy">{titleByKind[kind]}</h1>
-      </div>
+          <div className="mb-8">
+            <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-fmz-text-hint">Área da inquilina</p>
+            <h1 className="font-syne text-3xl font-extrabold tracking-[-0.025em] text-fmz-navy">{titleByKind[kind]}</h1>
+          </div>
+        </>
+      ) : null}
 
       {isLoading ? (
         <div className="rounded-2xl border border-fmz-border-light bg-white p-8 text-center text-sm text-fmz-text-muted">
