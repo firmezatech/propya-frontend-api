@@ -10,7 +10,6 @@ import {
   setRentAdjustment
 } from "../../../../services/web3-api";
 
-import RentInfoPanel from "../panels/RentInfoPanel"; 
 import RentAdjustIGPMList from "../records/RentAdjustIGPMList";
 
 const RentAdjustmentAdminPage = () => {
@@ -137,12 +136,6 @@ const RentAdjustmentAdminPage = () => {
         </button>
         <h1 className="text-xl font-medium text-gray-800"></h1>
       </div>
-
-      <RentInfoPanel
-        rentDetail={rentDetail}
-        investorProfile={profile}
-        handleNavigation={handleNavigation}
-      />
 
       {message && (
         <div className={`mb-6 rounded-md p-4 ${
