@@ -4,28 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import DashboardRenter from "../../DashboardRenter";
 import { FmzConnectedEmptyHome } from "../../../../../features/connected-home/components/FmzConnectedEmptyHome";
 import { hasRenterDashboardData } from "../../../../../features/renter-dashboard/components";
-import { getTenantDashboardData } from "../../../../../features/renter-dashboard/services/fmz-tenant-dashboard-api";
-import { getCurrentTenantPaymentHistory } from "../../../../../features/tenant-portal/services";
+import { getTenantDashboard, getCurrentTenantPaymentHistory } from "../../../../../features/tenant-portal/services";
+import type { FmzTenantDashboard } from "../../../../../features/tenant-portal/domain/fmz-tenant-portal.types";
 import type { FmzTenantPaymentHistoryItem } from "../../../../../features/tenant-portal/domain";
-import type { InvoiceData, PropertyData, RentDetailData } from "../../../../../services/web3-api";
 import { DashboardErrorState, DashboardLoadingState } from "./DashboardFeedback";
 import { getDashboardErrorMessage, isMetadataNotAvailableError } from "./dashboard-module-errors";
 
 type RenterDashboardState = {
-  propertyDetail: PropertyData | null;
-  rentDetail: RentDetailData | null;
-  invoiceData: InvoiceData | null;
-  renterName: string | null;
-  referenceMonthLabel: string | null;
+  dashboard: FmzTenantDashboard | null;
   paymentHistory: FmzTenantPaymentHistoryItem[];
 };
 
 const emptyRenterDashboardState: RenterDashboardState = {
-  propertyDetail: null,
-  rentDetail: null,
-  invoiceData: null,
-  renterName: null,
-  referenceMonthLabel: null,
+  dashboard: null,
   paymentHistory: [],
 };
 
@@ -46,22 +37,17 @@ export function RenterDashboardModule({ propertyId }: { propertyId: string | nul
       setShowEmptyHome(false);
 
       try {
-        const [tenantDashboardData, paymentHistory] = await Promise.all([
-          getTenantDashboardData(propertyId),
+        const [payload, paymentHistory] = await Promise.all([
+          getTenantDashboard(propertyId),
           getCurrentTenantPaymentHistory(propertyId),
         ]);
 
         if (requestSequence !== requestSequenceRef.current) return;
 
-        setState({
-          propertyDetail: tenantDashboardData.propertyDetail,
-          rentDetail: tenantDashboardData.rentDetail,
-          invoiceData: tenantDashboardData.invoiceData,
-          renterName: tenantDashboardData.renterName,
-          referenceMonthLabel: tenantDashboardData.referenceMonthLabel,
-          paymentHistory,
-        });
-        setShowEmptyHome(!hasRenterDashboardData(tenantDashboardData.propertyDetail, tenantDashboardData.rentDetail));
+        const dashboard = payload.hasData === false ? null : payload.dashboard ?? null;
+
+        setState({ dashboard, paymentHistory });
+        setShowEmptyHome(!hasRenterDashboardData(dashboard));
       } catch (error) {
         if (requestSequence !== requestSequenceRef.current) return;
 
@@ -83,17 +69,13 @@ export function RenterDashboardModule({ propertyId }: { propertyId: string | nul
   if (showEmptyHome) return <FmzConnectedEmptyHome />;
   if (error) return <DashboardErrorState message={error} />;
 
-  if (!hasRenterDashboardData(state.propertyDetail, state.rentDetail)) {
+  if (!hasRenterDashboardData(state.dashboard)) {
     return <FmzConnectedEmptyHome />;
   }
 
   return (
     <DashboardRenter
-      rentDetail={state.rentDetail}
-      propertyDetail={state.propertyDetail}
-      invoiceData={state.invoiceData}
-      renterName={state.renterName}
-      referenceMonthLabel={state.referenceMonthLabel}
+      dashboard={state.dashboard!}
       paymentHistory={state.paymentHistory}
     />
   );

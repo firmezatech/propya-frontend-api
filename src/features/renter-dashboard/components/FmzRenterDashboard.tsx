@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import type { InvoiceData, PropertyData, RentDetailData } from '../../../services/web3-api';
+import type { FmzTenantDashboard } from '../../../features/tenant-portal/domain/fmz-tenant-portal.types';
 import type { FmzTenantPaymentHistoryItem } from '../../../features/tenant-portal/domain';
 import { buildRenterDashboardViewModel, hasRenterDashboardData } from '../domain/fmz-renter-dashboard-view-model';
 import { FmzRenterDashboardPaymentHistoryCard } from './FmzRenterDashboardPaymentHistoryCard';
@@ -10,11 +10,7 @@ import { FmzRenterDashboardRentSimulatorCard } from './FmzRenterDashboardRentSim
 import styles from './FmzRenterDashboard.module.css';
 
 type FmzRenterDashboardProps = {
-  propertyDetail: PropertyData;
-  rentDetail: RentDetailData;
-  invoiceData: InvoiceData | null;
-  renterName?: string | null;
-  referenceMonthLabel?: string | null;
+  dashboard: FmzTenantDashboard;
   paymentHistory?: FmzTenantPaymentHistoryItem[];
   onPayInvoice?: (paymentUrl?: string | null) => void;
 };
@@ -71,17 +67,13 @@ function FmzRenterDashboardQuickActions() {
 }
 
 export function FmzRenterDashboard({
-  propertyDetail,
-  rentDetail,
-  invoiceData,
-  renterName,
-  referenceMonthLabel,
+  dashboard,
   paymentHistory = [],
   onPayInvoice,
 }: FmzRenterDashboardProps) {
   const viewModel = useMemo(
-    () => buildRenterDashboardViewModel({ propertyDetail, rentDetail, invoiceData, renterName, referenceMonthLabel }),
-    [propertyDetail, rentDetail, invoiceData, renterName, referenceMonthLabel],
+    () => buildRenterDashboardViewModel(dashboard),
+    [dashboard],
   );
 
   const [hasAnimated, setHasAnimated] = useState(false);
