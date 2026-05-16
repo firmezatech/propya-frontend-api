@@ -32,6 +32,7 @@
 
 .greeting {
   margin-bottom: 22px;
+  padding-inline: clamp(22px, 3vw, 36px);
 }
 
 .greetingTitle {
@@ -205,7 +206,7 @@
   top: -40px;
   left: 0%;
   z-index: 5;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(4px);
   border-radius: 999px;
   padding: 4px 9px;
   background: var(--fmz-navy);
@@ -214,7 +215,15 @@
   font-weight: 800;
   white-space: nowrap;
   box-shadow: 0 6px 16px rgba(13, 19, 33, .16);
-  transition: left 2s cubic-bezier(.4, 0, .2, 1);
+  opacity: 0;
+  pointer-events: none;
+  transition: left 2s cubic-bezier(.4, 0, .2, 1), opacity .18s ease, transform .18s ease;
+}
+
+.timelineLabelVisible,
+.timelineWrap:hover .timelineLabel {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .timelineLabel::after {
@@ -1032,5 +1041,17 @@
 
   .simPillGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+
+.heroAvatar,
+.ctaAvatar {
+  display: none;
+}
+
+@media(max-width: 760px) {
+  .greeting {
+    padding-inline: 0;
   }
 }

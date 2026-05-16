@@ -17,11 +17,11 @@ export const metadata: Metadata = {
   description: "Sem barreiras. Sem dívidas de longo prazo.",
   icons: {
     icon: [
-      { url: fmzPublicLayoutConfig.logoPath, type: 'image/png' },
       { url: '/favicon.ico', type: 'image/x-icon' },
+      { url: '/favicon.png', type: 'image/png' },
     ],
-    shortcut: [{ url: fmzPublicLayoutConfig.logoPath, type: 'image/png' }],
-    apple: [{ url: fmzPublicLayoutConfig.logoPath, type: 'image/png' }],
+    shortcut: [{ url: '/favicon.ico', type: 'image/x-icon' }],
+    apple: [{ url: '/favicon.png', type: 'image/png' }],
   },
 };
 

@@ -47,12 +47,6 @@ const quickActions: QuickAction[] = [
 
 const buildLeftStyle = (percentage: number) => ({ left: `${Math.min(Math.max(percentage, 0), 100)}%` });
 
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  const initials = parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : parts[0]?.[0] ?? 'D';
-  return initials.toUpperCase();
-}
-
 function FmzRenterDashboardQuickActions() {
   return (
     <section className={styles.quickGrid} aria-label="Ações rápidas da inquilina">
@@ -91,20 +85,23 @@ export function FmzRenterDashboard({
   );
 
   const [hasAnimated, setHasAnimated] = useState(false);
+  const [shouldShowTimelineHint, setShouldShowTimelineHint] = useState(true);
 
   useEffect(() => {
     setHasAnimated(false);
+    setShouldShowTimelineHint(true);
+
     const startTimer = window.setTimeout(() => setHasAnimated(true), 180);
+    const hintTimer = window.setTimeout(() => setShouldShowTimelineHint(false), 3200);
 
     return () => {
       window.clearTimeout(startTimer);
+      window.clearTimeout(hintTimer);
     };
   }, [viewModel.ownershipPercentage]);
 
   const timelineVisualPosition = hasAnimated ? viewModel.ownershipVisualPosition : 0;
   const timelineStyle = buildLeftStyle(timelineVisualPosition);
-  const initials = getInitials(viewModel.renterName);
-
   const handlePayInvoice = () => {
     if (onPayInvoice) {
       onPayInvoice(viewModel.invoice.paymentUrl);
@@ -128,12 +125,11 @@ export function FmzRenterDashboard({
             <div className={styles.heroEyebrow}><span className={styles.eyebrowDot} />Sua jornada de compra</div>
             <div className={styles.heroTitleRow}>
               <h2 className={styles.heroTitle}>Você já é dona de <em>{viewModel.ownershipPercentageLabel}</em> da sua casa</h2>
-              <div className={styles.heroAvatar}>{initials.slice(0, 1)}</div>
             </div>
             <p className={styles.heroDescription}>Se mantiver seu ritmo atual de compra, você pode atingir {viewModel.nextMilestoneLabel} do imóvel em breve.</p>
 
             <div className={styles.timelineWrap}>
-              <div className={styles.timelineLabel} style={timelineStyle}>{viewModel.ownershipPercentageLabel} — você</div>
+              <div className={`${styles.timelineLabel} ${shouldShowTimelineHint ? styles.timelineLabelVisible : ''}`} style={timelineStyle}>{viewModel.ownershipPercentageLabel} — você</div>
               <div className={styles.timelineTrack}>
                 <div className={styles.timelineFill} style={{ width: hasAnimated ? `${viewModel.ownershipVisualPosition}%` : '0%' }} />
                 <div className={styles.timelineHouse} style={timelineStyle}>🏡</div>
@@ -161,7 +157,6 @@ export function FmzRenterDashboard({
           </div>
 
           <aside className={styles.ctaPanel}>
-            <div className={styles.ctaAvatar}>{initials.slice(0, 1)}</div>
             <div className={styles.ctaContent}>
               <div className={styles.ctaKicker}><span className={styles.ctaKickerDot} />Próximo marco</div>
               <h3 className={styles.ctaTitle}>Faltam {viewModel.nextMilestoneRemainingLabel} para chegar em {viewModel.nextMilestoneLabel}</h3>
