@@ -81,7 +81,18 @@ const formatLongDate = (value?: string | null, fallback = 'Data não informada')
   return fullDateFormatter.format(date);
 };
 
-const safeNumber = (value?: number | null, fallback = 0): number => Number.isFinite(Number(value)) ? Number(value) : fallback;
+const safeNumber = (value?: number | string | null, fallback = 0): number => Number.isFinite(Number(value)) ? Number(value) : fallback;
+
+const resolveOwnershipPercentage = (ownership?: FmzTenantDashboard['ownership'] | null): number => {
+  const tokenBalance = safeNumber(ownership?.tokenBalance, Number.NaN);
+  const totalSupply = safeNumber(ownership?.totalSupply, Number.NaN);
+
+  if (Number.isFinite(tokenBalance) && Number.isFinite(totalSupply) && totalSupply > 0) {
+    return (tokenBalance / totalSupply) * 100;
+  }
+
+  return safeNumber(ownership?.currentPercentage, 7.2);
+};
 
 const normalizeDocumentType = (value?: string | null): string => String(value ?? '').trim().toLowerCase();
 
@@ -213,7 +224,7 @@ function buildTimeline(dashboard: FmzTenantDashboard | null): TenantTimelineItem
   const contract = dashboard?.contract;
   const startDate = formatLongDate(contract?.startDate, '01 de fevereiro de 2024');
   const endDate = formatLongDate(contract?.endDate, '01 de fevereiro de 2026');
-  const ownershipPercentage = formatPercent(dashboard?.ownership?.currentPercentage ?? 7.2);
+  const ownershipPercentage = formatPercent(resolveOwnershipPercentage(dashboard?.ownership));
   const currentRent = formatMoney(contract?.currentRentAmount ?? dashboard?.rentInsight?.currentRentAmount ?? dashboard?.monthlySummary?.rentWithDiscountAmount ?? contract?.baseMonthlyRent ?? 0);
 
   return [
@@ -345,7 +356,7 @@ function TenantDocumentList({ documents }: { documents: TenantDocumentItem[] }) 
 
 function TenantOwnershipCard({ dashboard }: { dashboard: FmzTenantDashboard | null }) {
   const ownership = dashboard?.ownership;
-  const ownershipPercentage = safeNumber(ownership?.currentPercentage, 7.2);
+  const ownershipPercentage = resolveOwnershipPercentage(ownership);
   const ownershipValue = safeNumber(ownership?.currentOwnedValue, 61488);
   const nextGoalPercentage = safeNumber(dashboard?.nextGoal?.percentage, 10);
   const amountNeeded = safeNumber(dashboard?.nextGoal?.amountNeeded, 3500);
