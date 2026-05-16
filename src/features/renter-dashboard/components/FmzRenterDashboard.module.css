@@ -46,36 +46,45 @@
 
 .heroCard {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 20px;
   padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.heroCard::before {
+  content: none;
+}
+
+.heroInner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(300px, .7fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.heroLeft {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
   border: 1.5px solid var(--fmz-border);
   border-radius: 20px;
+  padding: clamp(22px, 3vw, 36px);
+  padding-right: clamp(18px, 2.5vw, 32px);
   background: #fff;
   box-shadow: var(--fmz-shadow);
 }
 
-.heroCard::before {
+.heroLeft::before {
   content: '';
   position: absolute;
   inset: 0 0 auto;
   height: 5px;
   border-radius: 20px 20px 0 0;
   background: linear-gradient(90deg, var(--fmz-green), var(--fmz-gold));
-}
-
-.heroInner {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(300px, .7fr);
-  gap: 0;
-  align-items: stretch;
-}
-
-.heroLeft {
-  min-width: 0;
-  padding: clamp(22px, 3vw, 36px);
-  padding-right: clamp(18px, 2.5vw, 32px);
-  border-right: 1.5px solid var(--fmz-border);
 }
 
 .heroEyebrow {
@@ -203,7 +212,7 @@
 
 .timelineLabel {
   position: absolute;
-  top: -40px;
+  top: -34px;
   left: 0%;
   z-index: 5;
   transform: translateX(-50%) translateY(4px);
@@ -310,8 +319,11 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  border: 1.5px solid #F0D870;
+  border-radius: 20px;
   padding: clamp(22px, 3vw, 34px);
   background: linear-gradient(150deg, var(--fmz-gold-light) 0%, #FFFDF5 100%);
+  box-shadow: var(--fmz-shadow);
 }
 
 .ctaPanel::before {
@@ -979,8 +991,12 @@
     grid-template-columns: 1fr;
   }
 
+  .heroInner {
+    gap: 18px;
+  }
+
   .heroLeft {
-    border-right: none;
+    border-right: 1.5px solid var(--fmz-border);
     border-bottom: 1.5px solid var(--fmz-border);
   }
 
