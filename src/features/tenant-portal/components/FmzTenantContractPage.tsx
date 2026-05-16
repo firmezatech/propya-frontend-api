@@ -2,7 +2,6 @@
 
 import type { ReactNode } from 'react';
 import {
-  AlertTriangle,
   ArrowRight,
   Building2,
   CalendarDays,
@@ -84,12 +83,31 @@ const formatLongDate = (value?: string | null, fallback = 'Data não informada')
 
 const safeNumber = (value?: number | null, fallback = 0): number => Number.isFinite(Number(value)) ? Number(value) : fallback;
 
+const normalizeDocumentType = (value?: string | null): string => String(value ?? '').trim().toLowerCase();
+
+const formatFileSize = (value?: number | null): string | null => {
+  const bytes = Number(value ?? 0);
+  if (!Number.isFinite(bytes) || bytes <= 0) return null;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`;
+};
+
+const resolveAnnualAdjustment = (dashboard: FmzTenantDashboard | null) => {
+  const contractAdjustment = dashboard?.contract?.annualAdjustment;
+  const parameters = dashboard?.parameters as { annualAdjustment?: typeof contractAdjustment } | null | undefined;
+  return contractAdjustment ?? parameters?.annualAdjustment ?? null;
+};
+
 function resolveAddress(dashboard: FmzTenantDashboard | null): { line: string; city: string } {
   const property = dashboard?.property;
   const tenant = dashboard?.tenant;
-  const addressLine = property?.addressLine1 ?? tenant?.fullAddress ?? tenant?.address ?? 'Rua das Palmeiras, 412 — Apto 54';
+  const addressLine = [property?.addressLine1, property?.addressLine2].filter(Boolean).join(' — ')
+    || tenant?.fullAddress
+    || tenant?.address
+    || 'Endereço do imóvel não informado';
+  const postalCode = property?.postalCode ?? property?.zipcode;
   const cityParts = [property?.district, property?.city, property?.state].filter(Boolean);
-  const cityLine = cityParts.length > 0 ? cityParts.join(' · ') : 'Vila Madalena · São Paulo — SP · CEP 05435-010';
+  const cityLine = [cityParts.join(' · '), postalCode ? `CEP ${postalCode}` : null].filter(Boolean).join(' · ') || 'Cidade não informada';
   return { line: addressLine, city: cityLine };
 }
 
@@ -126,35 +144,67 @@ function getTimelineToneClass(tone: TenantTimelineItem['tone']) {
   return classes[tone];
 }
 
-function buildDocuments(contractDocumentUrl?: string | null): TenantDocumentItem[] {
-  return [
-    {
+function resolveDocumentVisual(type?: string | null): { title: string; icon: LucideIcon; tone: TenantDocumentItem['tone'] } {
+  const normalized = normalizeDocumentType(type);
+  const visuals: Record<string, { title: string; icon: LucideIcon; tone: TenantDocumentItem['tone'] }> = {
+    contrato_locacao: { title: 'Contrato de locação', icon: ClipboardList, tone: 'gold' },
+    aditivo_contrato: { title: 'Aditivo contratual', icon: ClipboardList, tone: 'gold' },
+    laudo_avaliacao: { title: 'Laudo de avaliação', icon: Search, tone: 'blue' },
+    matricula: { title: 'Matrícula do imóvel', icon: Home, tone: 'green' },
+    escritura: { title: 'Escritura do imóvel', icon: FileText, tone: 'green' },
+    iptu: { title: 'Documento de IPTU', icon: Building2, tone: 'blue' },
+    avcb: { title: 'AVCB', icon: ShieldCheck, tone: 'red' },
+    other: { title: 'Documento do imóvel', icon: FileText, tone: 'blue' },
+  };
+
+  return visuals[normalized] ?? visuals.other;
+}
+
+function buildDocuments(dashboard: FmzTenantDashboard | null, contractDocumentUrl?: string | null): TenantDocumentItem[] {
+  const backendDocuments = dashboard?.documents ?? [];
+  const documents = backendDocuments.map((document) => {
+    const visual = resolveDocumentVisual(document.type);
+    const fileSize = formatFileSize(document.fileSizeBytes);
+    const date = formatDate(document.createdAt, 'Data não informada');
+    const fileName = document.fileName || visual.title;
+
+    return {
+      title: visual.title,
+      meta: [fileName, fileSize, date].filter(Boolean).join(' · '),
+      href: document.storagePath || null,
+      icon: visual.icon,
+      tone: visual.tone,
+    };
+  });
+
+  if (contractDocumentUrl && !documents.some((document) => document.href === contractDocumentUrl)) {
+    documents.unshift({
       title: 'Contrato de locação',
-      meta: 'Assinado digitalmente · PDF · 1,2 MB',
+      meta: 'Assinado digitalmente · PDF',
       href: contractDocumentUrl,
       icon: ClipboardList,
       tone: 'gold',
-    },
-    {
-      title: 'Laudo de vistoria — entrada',
-      meta: 'Aprovado · PDF · 3,8 MB',
-      href: '#',
-      icon: Search,
-      tone: 'blue',
-    },
-    {
+    });
+  }
+
+  const propertyRegistry = dashboard?.property?.registryNumber;
+  if (propertyRegistry && !documents.some((document) => document.title === 'Matrícula do imóvel')) {
+    documents.push({
       title: 'Matrícula do imóvel',
-      meta: 'Cartório 4º Ofício SP · PDF · 620 KB',
-      href: '#',
+      meta: `Matrícula ${propertyRegistry}`,
+      href: null,
       icon: Home,
       tone: 'green',
-    },
+    });
+  }
+
+  return documents.length > 0 ? documents : [
     {
-      title: 'Apólice de seguro incêndio',
-      meta: 'Válida até o fim do contrato · PDF · 450 KB',
-      href: '#',
-      icon: ShieldCheck,
-      tone: 'red',
+      title: 'Contrato de locação',
+      meta: 'Documento ainda não enviado pela gestora',
+      href: null,
+      icon: ClipboardList,
+      tone: 'gold',
     },
   ];
 }
@@ -164,7 +214,7 @@ function buildTimeline(dashboard: FmzTenantDashboard | null): TenantTimelineItem
   const startDate = formatLongDate(contract?.startDate, '01 de fevereiro de 2024');
   const endDate = formatLongDate(contract?.endDate, '01 de fevereiro de 2026');
   const ownershipPercentage = formatPercent(dashboard?.ownership?.currentPercentage ?? 7.2);
-  const currentRent = formatMoney(dashboard?.rentInsight?.currentRentAmount ?? dashboard?.monthlySummary?.rentWithDiscountAmount ?? contract?.baseMonthlyRent ?? 792.62);
+  const currentRent = formatMoney(contract?.currentRentAmount ?? dashboard?.rentInsight?.currentRentAmount ?? dashboard?.monthlySummary?.rentWithDiscountAmount ?? contract?.baseMonthlyRent ?? 0);
 
   return [
     {
@@ -196,13 +246,6 @@ function buildTimeline(dashboard: FmzTenantDashboard | null): TenantTimelineItem
       tone: 'now',
     },
     {
-      date: 'Antes do vencimento',
-      event: 'Prazo para avisar renovação',
-      description: 'Avise a gestora com antecedência se deseja renovar ou encerrar o contrato.',
-      icon: AlertTriangle,
-      tone: 'warn',
-    },
-    {
       date: endDate,
       event: 'Vencimento do contrato',
       description: 'Renovação ou encerramento. Seus tokens continuam seus em qualquer cenário.',
@@ -212,12 +255,19 @@ function buildTimeline(dashboard: FmzTenantDashboard | null): TenantTimelineItem
   ];
 }
 
-function buildInfoItems(): TenantInfoItem[] {
+function buildInfoItems(dashboard: FmzTenantDashboard | null): TenantInfoItem[] {
+  const annualAdjustment = resolveAnnualAdjustment(dashboard);
+  const adjustmentLabel = annualAdjustment?.label ?? 'índice definido no contrato';
+  const nextAdjustment = annualAdjustment?.nextAdjustmentDate ? ` Próximo reajuste previsto: ${formatDate(annualAdjustment.nextAdjustmentDate)}.` : '';
+  const lastRate = annualAdjustment?.lastRatePercentage !== null && annualAdjustment?.lastRatePercentage !== undefined
+    ? ` Última taxa aplicada: ${formatPercent(annualAdjustment.lastRatePercentage)}.`
+    : '';
+
   return [
     {
-      title: 'Reajuste anual pelo IPCA',
+      title: `Reajuste anual pelo ${adjustmentLabel}`,
       icon: KeyRound,
-      body: 'O aluguel é reajustado conforme contrato. O desconto por tokens reduz a base antes do reajuste ser aplicado.',
+      body: `${annualAdjustment?.description ?? `O aluguel é reajustado conforme ${adjustmentLabel} acordado no contrato.`}${nextAdjustment}${lastRate}`,
     },
     {
       title: 'Manutenção: quem paga o quê?',
@@ -385,12 +435,12 @@ export function FmzTenantContractPage({ dashboard, contractDocumentUrl }: FmzTen
   const address = resolveAddress(dashboard);
 
   const propertyValue = property?.appraisedValue ?? ownership?.totalPropertyValue ?? 854000;
-  const currentRent = rentInsight?.currentRentAmount ?? monthlySummary?.rentWithDiscountAmount ?? contract?.baseMonthlyRent ?? 792.62;
-  const originalRent = rentInsight?.originalRentAmount ?? monthlySummary?.originalRentAmount ?? contract?.originalBaseRent ?? 854;
+  const currentRent = contract?.currentRentAmount ?? rentInsight?.currentRentAmount ?? monthlySummary?.rentWithDiscountAmount ?? contract?.baseMonthlyRent ?? 0;
+  const originalRent = rentInsight?.originalRentAmount ?? monthlySummary?.originalRentAmount ?? contract?.originalBaseRent ?? contract?.baseMonthlyRent ?? 0;
 
-  const documents = buildDocuments(contractDocumentUrl);
+  const documents = buildDocuments(dashboard, contractDocumentUrl);
   const timelineItems = buildTimeline(dashboard);
-  const infoItems = buildInfoItems();
+  const infoItems = buildInfoItems(dashboard);
 
   return (
     <section className={styles.page} aria-label="Meu imóvel e contrato">
@@ -400,8 +450,8 @@ export function FmzTenantContractPage({ dashboard, contractDocumentUrl }: FmzTen
         <div className={styles.photoTopBadge}><span className={styles.blinkDot} />{resolveContractStatus(contract?.status)}</div>
         <div className={styles.photoBottom}>
           <div className={styles.photoEyebrow}>Seu imóvel</div>
-          <div className={styles.photoAddress}>{property?.name ?? address.line}</div>
-          <div className={styles.photoCity}>{address.city}</div>
+          <div className={styles.photoAddress}>{address.line}</div>
+          <div className={styles.photoCity}>{[property?.name, address.city].filter(Boolean).join(' · ')}</div>
         </div>
       </div>
 
@@ -409,7 +459,7 @@ export function FmzTenantContractPage({ dashboard, contractDocumentUrl }: FmzTen
         <TenantMetricCard label="Valor do imóvel" value={formatMoney(propertyValue, { noCents: true })} sub="Avaliação mais recente" />
         <TenantMetricCard label="Aluguel atual" value={formatMoney(currentRent)} tone="green" sub={<span className={styles.metricSubStrike}>{formatMoney(originalRent)} sem desconto</span>} />
         <TenantMetricCard label="Início do contrato" value={formatDate(contract?.startDate, '01/02/2024')} sub="Data de início da locação" />
-        <TenantMetricCard label="Término do contrato" value={formatDate(contract?.endDate, '01/02/2026')} tone="red" sub={<span className={styles.metricSubWarn}><AlertTriangle className="h-3 w-3" /> Acompanhe a renovação</span>} />
+        <TenantMetricCard label="Término do contrato" value={formatDate(contract?.endDate, '01/02/2026')} sub="Data final do contrato" />
       </div>
 
       <div className={styles.sectionLabel}>Contrato e documentação</div>

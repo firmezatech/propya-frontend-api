@@ -25,6 +25,7 @@ export type FmzTenantDashboard = {
   monthlySummary?: FmzTenantMonthlySummary | null;
   rentInsight?: FmzTenantRentInsight | null;
   boleto?: FmzTenantBoleto | null;
+  documents?: FmzTenantDocument[];
   parameters?: Record<string, unknown> | null;
 };
 
@@ -57,12 +58,29 @@ export type FmzTenantProperty = {
   id?: string | number | null;
   code?: string | null;
   name?: string | null;
+  description?: string | null;
+  type?: string | null;
   addressLine1?: string | null;
+  addressLine2?: string | null;
   district?: string | null;
   city?: string | null;
   state?: string | null;
+  postalCode?: string | null;
+  zipcode?: string | null;
+  country?: string | null;
+  registryNumber?: string | null;
   appraisedValue?: number | null;
   currency?: string | null;
+};
+
+export type FmzTenantAnnualAdjustment = {
+  index?: string | null;
+  label?: string | null;
+  lastAdjustedAt?: string | null;
+  nextAdjustmentDate?: string | null;
+  lastRateBps?: number | null;
+  lastRatePercentage?: number | null;
+  description?: string | null;
 };
 
 export type FmzTenantContract = {
@@ -74,10 +92,18 @@ export type FmzTenantContract = {
   status?: string | null;
   baseMonthlyRent?: number | null;
   originalBaseRent?: number | null;
+  currentRentAmount?: number | null;
+  currentRentSource?: string | null;
+  rentAdjustmentIndex?: string | null;
+  annualAdjustment?: FmzTenantAnnualAdjustment | null;
+  nextAdjustmentDate?: string | null;
+  lastAdjustedAt?: string | null;
   currency?: string | null;
   contractFileUrl?: string | null;
   documentUrl?: string | null;
   signedDocumentUrl?: string | null;
+  signedAt?: string | null;
+  importantTerms?: Record<string, unknown> | null;
 };
 
 export type FmzTenantOwnership = {
@@ -140,6 +166,23 @@ export type FmzTenantBoleto = {
   digitableLine?: string | null;
   barcode?: string | null;
   paidAt?: string | null;
+};
+
+
+export type FmzTenantDocument = {
+  id?: string | null;
+  entitySchema?: string | null;
+  entityName?: string | null;
+  entityId?: string | null;
+  type?: string | null;
+  fileName?: string | null;
+  storagePath?: string | null;
+  storageBucket?: string | null;
+  mimeType?: string | null;
+  fileSizeBytes?: number | null;
+  expiresAt?: string | null;
+  notes?: string | null;
+  createdAt?: string | null;
 };
 
 export type FmzTenantWallet = {
