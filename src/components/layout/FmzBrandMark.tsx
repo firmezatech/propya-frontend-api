@@ -35,7 +35,7 @@ export function FmzBrandMark({ size = 'header', showText = true, className = '' 
           alt="Firmeza Token"
           width={sizeClassNames.image}
           height={sizeClassNames.image}
-          className="h-full w-full rounded-[inherit] object-cover"
+          className="h-full w-full rounded-[inherit] object-contain"
         />
       </span>
       {showText && (

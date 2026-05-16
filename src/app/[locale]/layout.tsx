@@ -16,9 +16,12 @@ export const metadata: Metadata = {
   title: fmzPublicLayoutConfig.appName,
   description: "Sem barreiras. Sem dívidas de longo prazo.",
   icons: {
-    icon: fmzPublicLayoutConfig.logoPath,
-    shortcut: fmzPublicLayoutConfig.logoPath,
-    apple: fmzPublicLayoutConfig.logoPath,
+    icon: [
+      { url: fmzPublicLayoutConfig.logoPath, type: 'image/png' },
+      { url: '/favicon.ico', type: 'image/x-icon' },
+    ],
+    shortcut: [{ url: fmzPublicLayoutConfig.logoPath, type: 'image/png' }],
+    apple: [{ url: fmzPublicLayoutConfig.logoPath, type: 'image/png' }],
   },
 };
 

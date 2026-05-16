@@ -91,12 +91,12 @@ export function FmzConnectedHeader({ adminOffset = false, principal = null }: Fm
           <Link
             href={localizeHref(fmzPublicLayoutConfig.connectedDashboardPath)}
             aria-label={fmzPublicLayoutConfig.appName}
-            className="flex h-full min-w-0 items-center px-5 no-underline sm:px-6 lg:border-r lg:border-fmz-border-light"
+            className="flex h-full min-w-0 items-center px-[clamp(18px,4vw,48px)] no-underline lg:border-r lg:border-fmz-border-light"
           >
             <FmzBrandMark size="header" />
           </Link>
 
-          <div className="flex min-w-0 justify-end px-5 sm:px-6 lg:px-10 xl:px-14">
+          <div className="flex min-w-0 justify-end px-[clamp(18px,4vw,48px)]">
             <FmzConnectedUserIdentity />
           </div>
         </div>
@@ -106,7 +106,7 @@ export function FmzConnectedHeader({ adminOffset = false, principal = null }: Fm
 
   return (
     <header className="sticky top-0 z-50 h-[72px] shrink-0 border-b border-fmz-border-light bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
-      <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between gap-4 px-6 md:px-14">
+      <div className="mx-auto flex h-full w-full max-w-[1360px] items-center justify-between gap-4 px-[clamp(18px,4vw,48px)]">
         <Link href={localizeHref(fmzPublicLayoutConfig.connectedDashboardPath)} aria-label={fmzPublicLayoutConfig.appName} className="min-w-0 no-underline">
           <FmzBrandMark size="header" />
         </Link>

@@ -12,10 +12,11 @@
   --fmz-green-bg: #F0FAF5;
   --fmz-green-bd: #A8DFC4;
   --fmz-shadow: 0 10px 30px rgba(13, 19, 33, .08);
+  --fmz-page-inline-padding: clamp(18px, 4vw, 48px);
   width: 100%;
   max-width: 1360px;
   margin: 0 auto;
-  padding: clamp(24px, 4vw, 44px) clamp(18px, 4vw, 48px) 80px;
+  padding: clamp(24px, 4vw, 44px) var(--fmz-page-inline-padding) 80px;
   color: var(--fmz-navy);
   font-family: var(--font-fmz-body);
   overflow-x: hidden;
