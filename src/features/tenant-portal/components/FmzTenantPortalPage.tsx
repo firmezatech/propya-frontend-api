@@ -305,7 +305,7 @@ export function FmzTenantPortalPage({ kind }: FmzTenantPortalPageProps) {
   };
 
   return (
-    <FmzConnectedPageShell width="wide">
+    <FmzConnectedPageShell width="tenant">
       <button type="button" onClick={() => router.back()} className="mb-7 inline-flex items-center gap-1.5 border-0 bg-transparent p-0 text-[13px] text-fmz-text-hint transition hover:text-fmz-text-primary">
         <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Voltar
       </button>

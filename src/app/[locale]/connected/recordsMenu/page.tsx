@@ -511,7 +511,7 @@ export default function _RecordsMenu() {
   };
 
   return (
-    <div className="container mx-auto">
+    <div className="mx-auto w-full max-w-[1360px] flex-1">
       <main className="mt-4 px-2 mb-6">
         {/* Botão voltar */}
         <div className="mb-4">

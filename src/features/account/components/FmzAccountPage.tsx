@@ -428,7 +428,7 @@ export function FmzAccountPage() {
   }, [common]);
 
   return (
-    <FmzConnectedPageShell width="wide" className={styles.page}>
+    <FmzConnectedPageShell width="tenant" className={styles.page}>
       <button type="button" onClick={() => router.back()} className={styles.backLink}>
         <ArrowLeft aria-hidden="true" /> Voltar
       </button>

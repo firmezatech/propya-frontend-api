@@ -72,6 +72,7 @@ export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayout
       )}
     >
       <AuthenticatedRoute>
+        <HeaderConn adminOffset={isAccessLoading ? false : shouldRenderAdminLayout} principal={currentPrincipal} />
         {isAccessLoading ? (
           <FmzFullPageLoading
             label="Preparando sua área logada..."
@@ -79,7 +80,6 @@ export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayout
           />
         ) : (
           <>
-            <HeaderConn adminOffset={shouldRenderAdminLayout} principal={currentPrincipal} />
             <FmzRouteAccessGuard principal={currentPrincipal} isLoading={false}>
               {shouldRenderAdminLayout ? (
                 <FmzAdminLayout initialPrincipal={currentPrincipal}>{children}</FmzAdminLayout>

@@ -84,7 +84,7 @@ export function TenantContractModule() {
   }, [propertyId]);
 
   return (
-    <FmzConnectedPageShell width="wide">
+    <FmzConnectedPageShell width="tenant">
       {isLoading ? (
         <ContractLoadingState />
       ) : errorMessage ? (

@@ -577,14 +577,14 @@ export default function TokensToPurchasePage() {
   // Loading state enquanto wallet não está carregado
   if (wallet === null) {
     return (
-      <div className="container mx-auto px-4 flex justify-center items-center min-h-screen">
+      <div className="mx-auto w-full max-w-[1360px] flex-1 px-4 flex justify-center items-center min-h-screen">
         <LoadingSpinner message="Carregando dados da carteira..." />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 flex justify-left">
+    <div className="mx-auto w-full max-w-[1360px] flex-1 px-4 flex justify-left">
       <main className="mt-4 mb-6">
         <div className="mx-auto bg-white px-4">
           <div>
