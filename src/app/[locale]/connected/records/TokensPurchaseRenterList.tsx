@@ -8,7 +8,6 @@ import { useTranslations } from "next-intl";
 import { getTokensPurchasedList, TokensPurchasedType } from "../../../../services/web3-api";
 
 import { useInvoiceDetails } from "../components/invoice/UseInvoiceDetail";
-import TokensPurchaseBanner from "../TokensPurchaseBanner";
 
 interface Props {
   profile: number | null;
@@ -163,13 +162,6 @@ const TokensPurchaseRentList: React.FC<Props> = ({ profile, propertyId }) => {
 
   return (
     <>
-        <div className="card overflow-x-auto mb-7">
-            
-          {(Number(profile) === 2) && (
-            <TokensPurchaseBanner profile={profile} propertyId={propertyId} />
-          )}
-        </div>
-
     <div className="card overflow-x-auto mb-7">
 
       {message && (

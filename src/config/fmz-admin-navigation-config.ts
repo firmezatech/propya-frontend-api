@@ -1,4 +1,4 @@
-import { BarChart3, Building2, FileText, Home, LucideIcon, ReceiptText, ShieldCheck, UserRound, UsersRound, Wrench } from 'lucide-react';
+import { Building2, FileText, Home, LucideIcon, ReceiptText, ShieldCheck, UserRound, Wrench } from 'lucide-react';
 import { fmzPublicLayoutConfig } from './fmz-public-layout-config';
 
 const getPublicEnvValue = (key: string, fallback: string): string => {
@@ -20,14 +20,10 @@ export const fmzAdminPageIconByKey: Record<string, LucideIcon> = {
   'admin.users': UserRound,
   'admin.roles': ShieldCheck,
   'admin.properties': Building2,
-  'admin.reports.payments_investor': BarChart3,
   'admin.invoices': ReceiptText,
   'admin.invoice.detail': ReceiptText,
   'admin.invoice.upload': ReceiptText,
   'admin.maintenances': Wrench,
-  'admin.contacts': UsersRound,
-  'admin.gas': Building2,
-  'admin.investors': UsersRound,
   'admin.contracts': FileText,
   'admin.contract.upload': FileText,
   'admin.rent.adjustment': FileText,
@@ -70,14 +66,6 @@ export const fmzAdminNavigationConfig = {
       href: fmzPublicLayoutConfig.connectedAdminPropertiesPath,
       requiredPermissionKey: 'admin.properties.view',
       icon: Building2,
-    },
-    {
-      id: 'admin.reports.payments_investor',
-      pageKey: 'admin.reports.payments_investor',
-      label: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_REPORTS_LABEL', 'Relatórios'),
-      href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_REPORTS_PATH', '/connected/reportAdminPaymentsInvestor'),
-      requiredPermissionKey: 'admin.reports.view',
-      icon: BarChart3,
     },
     {
       id: 'admin.invoices',

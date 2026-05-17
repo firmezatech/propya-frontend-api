@@ -1,28 +1,27 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import DashboardRenter from "../../DashboardRenter";
-import { FmzConnectedEmptyHome } from "../../../../../features/connected-home/components/FmzConnectedEmptyHome";
-import { hasRenterDashboardData } from "../../../../../features/renter-dashboard/components";
-import { getTenantDashboard, getCurrentTenantPaymentHistory } from "../../../../../features/tenant-portal/services";
-import type { FmzTenantDashboard } from "../../../../../features/tenant-portal/domain/fmz-tenant-portal.types";
-import type { FmzTenantPaymentHistoryItem } from "../../../../../features/tenant-portal/domain";
-import { DashboardErrorState, DashboardLoadingState } from "./DashboardFeedback";
-import { getDashboardErrorMessage, isMetadataNotAvailableError } from "./dashboard-module-errors";
+import { FmzConnectedEmptyHome } from "../../connected-home/components/FmzConnectedEmptyHome";
+import { DashboardErrorState, DashboardLoadingState } from "../../connected-home/components/DashboardFeedback";
+import { getDashboardErrorMessage, isMetadataNotAvailableError } from "../../connected-home/domain/dashboard-module-errors";
+import { getTenantDashboard, getCurrentTenantPaymentHistory } from "../../tenant-portal/services";
+import type { FmzTenantDashboard } from "../../tenant-portal/domain/fmz-tenant-portal.types";
+import type { FmzTenantPaymentHistoryItem } from "../../tenant-portal/domain";
+import { FmzRenterDashboard, hasRenterDashboardData } from "./index";
 
 type RenterDashboardState = {
   dashboard: FmzTenantDashboard | null;
   paymentHistory: FmzTenantPaymentHistoryItem[];
 };
 
-const emptyRenterDashboardState: RenterDashboardState = {
+const emptyState: RenterDashboardState = {
   dashboard: null,
   paymentHistory: [],
 };
 
 export function RenterDashboardModule({ propertyId }: { propertyId: string | null }) {
   const requestSequenceRef = useRef(0);
-  const [state, setState] = useState<RenterDashboardState>(emptyRenterDashboardState);
+  const [state, setState] = useState<RenterDashboardState>(emptyState);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEmptyHome, setShowEmptyHome] = useState(false);
@@ -51,7 +50,7 @@ export function RenterDashboardModule({ propertyId }: { propertyId: string | nul
       } catch (error) {
         if (requestSequence !== requestSequenceRef.current) return;
 
-        setState(emptyRenterDashboardState);
+        setState(emptyState);
         if (isMetadataNotAvailableError(error)) {
           setShowEmptyHome(true);
           return;
@@ -74,7 +73,7 @@ export function RenterDashboardModule({ propertyId }: { propertyId: string | nul
   }
 
   return (
-    <DashboardRenter
+    <FmzRenterDashboard
       dashboard={state.dashboard!}
       paymentHistory={state.paymentHistory}
     />

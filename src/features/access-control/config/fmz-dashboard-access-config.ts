@@ -1,4 +1,4 @@
-export type FmzDashboardKind = 'admin' | 'renter' | 'investor' | 'legacyInvestor';
+export type FmzDashboardKind = 'admin' | 'renter';
 
 export type FmzDashboardAccessRule = {
   kind: FmzDashboardKind;
@@ -35,18 +35,6 @@ export const fmzDashboardAccessConfig = {
       roleKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_ADMIN_ROLE_KEYS', 'admin'),
       permissionKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_ADMIN_DASHBOARD_PERMISSIONS', 'admin.dashboard.view'),
       pageKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_ADMIN_DASHBOARD_PAGE_KEYS', 'admin.dashboard'),
-    },
-    {
-      kind: 'legacyInvestor',
-      roleKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_LEGACY_INVESTOR_ROLE_KEYS', 'legacy_investor,investor_legacy,legado'),
-      permissionKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_LEGACY_INVESTOR_DASHBOARD_PERMISSIONS', 'legacy.dashboard.view,investor.legacy.dashboard.view'),
-      pageKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_LEGACY_INVESTOR_DASHBOARD_PAGE_KEYS', 'legacy.dashboard,investor.legacy.dashboard'),
-    },
-    {
-      kind: 'investor',
-      roleKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_INVESTOR_ROLE_KEYS', 'investor,investidor,owner,proprietario'),
-      permissionKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_INVESTOR_DASHBOARD_PERMISSIONS', 'investor.dashboard.view,investments.view'),
-      pageKeys: getPublicEnvCsv('NEXT_PUBLIC_FMZ_INVESTOR_DASHBOARD_PAGE_KEYS', 'investor.dashboard'),
     },
     {
       kind: 'renter',

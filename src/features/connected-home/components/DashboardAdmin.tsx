@@ -4,7 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
 
-import { useProfile } from '../../context/ProfileContext';
+import { useProfile } from '../../../app/context/ProfileContext';
 import Link from "next/link";
 
 interface Report {
@@ -39,40 +39,14 @@ const DashboardAdmin: React.FC<Report> = ({ profile = null }) => {
               <button className="text-xs border rounded button-line px-2 py-1" onClick={() => handleNavigation("/connected/maintenancesAdmin")}>
                 {t('maintenances')}
               </button>
-              <button className="text-xs border rounded button-line px-2 py-1" onClick={() => handleNavigation("/connected/investPropertyAdmin")}>
-                Incluir Investidores
-              </button>
-
-<br/>
-              <button className="text-2xl  bg-blue-400 text-white flex items-center px-1 py-1 rounded-lg mb-2">
-             </button>
-<br/>
-
-              <button className="text-xs border rounded button-line px-2 py-1"
-               onClick={() => handleNavigation("/connected/reportAdminPaymentsInvestor")}>
-                {t('paymentInvestor')}
-              </button>
-              {/* <button className="text-xs border rounded button-line px-2 py-1" onClick={() => handleNavigation("/connected/invoiceOpenAdmin")}>
-                {t('receiveRentAndTransferTokens')}
-              </button> */}
 
               <button className="text-xs border rounded button-line px-2 py-1" onClick={() => handleNavigation("/connected/feeList")}>
                 {t('receivedFees')}
-              </button> 
+              </button>
 
               <button className="text-xs border rounded button-line px-2 py-1" onClick={() => handleNavigation("/connected/adminUserList")}>
                 {t('users')}
               </button>
-
-              {/* <hr className="mb-3 mt-3 " />
-              <button
-                onClick={() => {
-                  setCurrentProfile(profile);
-                  router.push("/connected/recordsMenu/");
-                }}
-               className="text-sm bg-blue-400 text-white flex items-center px-1 py-1 rounded-lg mb-2">
-                {t('profileUsers')}
-              </button>              */}
             </div>
 
           </div>
@@ -88,10 +62,6 @@ const DashboardAdmin: React.FC<Report> = ({ profile = null }) => {
               <button className="text-xs border rounded button-line px-2 py-1" onClick={() => handleNavigation("/connected/adminContactList")}>
                 {t('contactsCalculator')}
               </button>
-              {/* <button className="text-xs border rounded button-line px-2 py-1" onClick={() => handleNavigation("/connected/adminGas")}>
-                {t('gasCost')}
-              </button> */}
-
             </div>
 
           </div>
@@ -110,7 +80,7 @@ const DashboardAdmin: React.FC<Report> = ({ profile = null }) => {
             >
               🎮 {t('gameSystemLink')}
             </Link>
-          </div> 
+          </div>
       </div>
     </>
   );

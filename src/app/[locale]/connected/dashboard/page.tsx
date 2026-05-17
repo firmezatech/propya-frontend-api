@@ -10,20 +10,16 @@ import type { FmzAccessControlPrincipal } from "../../../../features/access-cont
 import { resolveDashboardKindFromAccess, type FmzDashboardKind } from "../../../../features/access-control/domain";
 import { getFirmezaAccessToken } from "../../../../services/auth/auth-storage";
 import { isFirmezaApiError } from "../../../../services/firmeza-api-client";
-import { AdminDashboardModule } from "./_modules/AdminDashboardModule";
-import { CoOwnerDashboardModule } from "./_modules/CoOwnerDashboardModule";
-import { DashboardErrorState, DashboardLoadingState } from "./_modules/DashboardFeedback";
-import { LegacyCoOwnerDashboardModule } from "./_modules/LegacyCoOwnerDashboardModule";
-import { RenterDashboardModule } from "./_modules/RenterDashboardModule";
-import { DEFAULT_PROPERTY_ID } from "./_modules/co-owner-dashboard.constants";
-import { getTenantDashboardPropertyIdFromUrl, getWalletFromStorage } from "./_modules/dashboard-client-state";
+import DashboardAdmin from "../../../../features/connected-home/components/DashboardAdmin";
+import { DashboardErrorState, DashboardLoadingState } from "../../../../features/connected-home/components/DashboardFeedback";
+import { RenterDashboardModule } from "../../../../features/renter-dashboard/components";
+import { getTenantDashboardPropertyIdFromUrl } from "../../../../features/connected-home/domain/dashboard-client-state";
 
 export default function DashboardPage() {
   const comm = useTranslations("Common");
   const { setPropertyId: setContextPropertyId } = useProfile();
-  const [propertyId] = useState<number>(DEFAULT_PROPERTY_ID);
+  const [propertyId] = useState<number>(1);
   const [tenantDashboardPropertyId, setTenantDashboardPropertyId] = useState<string | null>(null);
-  const [wallet, setWallet] = useState<string | null>(null);
   const [dashboardKind, setDashboardKind] = useState<FmzDashboardKind | null>(null);
   const [isLoadingAccess, setIsLoadingAccess] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +27,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setContextPropertyId(propertyId);
-    setWallet(getWalletFromStorage());
     setTenantDashboardPropertyId(getTenantDashboardPropertyIdFromUrl());
   }, [propertyId, setContextPropertyId]);
 
@@ -71,10 +66,8 @@ export default function DashboardPage() {
   if (isLoadingAccess) return <DashboardLoadingState />;
   if (error) return <DashboardErrorState message={error} />;
 
-  if (dashboardKind === "admin") return <AdminDashboardModule />;
+  if (dashboardKind === "admin") return <DashboardAdmin />;
   if (dashboardKind === "renter") return <RenterDashboardModule propertyId={tenantDashboardPropertyId} />;
-  if (dashboardKind === "investor") return <CoOwnerDashboardModule propertyId={propertyId} wallet={wallet} />;
-  if (dashboardKind === "legacyInvestor") return <LegacyCoOwnerDashboardModule propertyId={propertyId} wallet={wallet} />;
 
   return <FmzConnectedEmptyHome />;
 }
