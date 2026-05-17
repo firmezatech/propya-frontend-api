@@ -4,9 +4,10 @@ import { ChevronDown } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { fmzCn } from '../../../lib/fmz-classnames';
-import { buildFmzConnectedUserInitials, buildFmzConnectedUserSummary } from './fmz-connected-dropdown-storage';
+import { buildFmzConnectedUserInitials, buildFmzConnectedUserSummary } from '../connected-user/fmz-connected-user-storage';
 import { performFirmezaLogout } from '../../../services/auth/fmz-logout';
-import type { FmzConnectedDropdownItem, FmzConnectedDropdownUserSummary } from './fmz-connected-dropdown.types';
+import type { FmzConnectedDropdownItem } from './fmz-connected-dropdown.types';
+import type { FmzConnectedUserSummary } from '../connected-user/fmz-connected-user.types';
 
 type FmzConnectedDropdownProps = {
   items: readonly FmzConnectedDropdownItem[];
@@ -26,7 +27,7 @@ export function FmzConnectedDropdown({ items, localizeHref, defaultUserName, def
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [userSummary, setUserSummary] = useState<FmzConnectedDropdownUserSummary>(() => ({
+  const [userSummary, setUserSummary] = useState<FmzConnectedUserSummary>(() => ({
     name: defaultUserName,
     email: defaultUserEmail,
     initials: buildFmzConnectedUserInitials(defaultUserName),
@@ -74,7 +75,7 @@ export function FmzConnectedDropdown({ items, localizeHref, defaultUserName, def
         )}
       >
         <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-fmz-navy font-syne text-xs font-bold text-fmz-gold">{userSummary.initials}</span>
-        <span className="max-w-[100px] truncate text-[13px] font-medium text-fmz-text-primary">{userSummary.name.split(' ')[0]}</span>
+        <span className="min-w-[56px] max-w-[100px] truncate text-[13px] font-medium text-fmz-text-primary">{userSummary.name.split(' ')[0]}</span>
         <ChevronDown className={fmzCn('h-3.5 w-3.5 text-fmz-text-hint transition', isDropdownOpen && 'rotate-180')} aria-hidden="true" />
       </button>
 

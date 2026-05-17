@@ -41,6 +41,13 @@
 
 html {
   background: var(--background);
+  /*
+   * Reserve the scrollbar gutter at all times so the available viewport width
+   * never changes when content height changes between pages. Without this,
+   * mx-auto max-w containers (including the tenant header) shift left/right
+   * whenever a vertical scrollbar appears or disappears on navigation.
+   */
+  scrollbar-gutter: stable;
 }
 
 body {

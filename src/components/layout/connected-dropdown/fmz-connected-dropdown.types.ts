@@ -13,8 +13,3 @@ export type FmzConnectedDropdownItem = {
   section: 'main' | 'session';
 };
 
-export type FmzConnectedDropdownUserSummary = {
-  name: string;
-  email: string;
-  initials: string;
-};
