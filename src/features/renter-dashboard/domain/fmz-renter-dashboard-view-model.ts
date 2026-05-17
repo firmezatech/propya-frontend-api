@@ -104,7 +104,7 @@ function buildInvoiceLinesFromSummary(summary: FmzTenantMonthlySummary | null | 
   const tokenPurchase = summary.scheduledTokenPurchaseAmount ?? 0;
   const tokenFee = summary.tokenPurchaseFeeAmount ?? 0;
 
-  lines.push({ key: 'current-rent', label: 'Aluguel com desconto', value: formatCurrency(rentWithDiscount), tone: 'success' });
+  lines.push({ key: 'current-rent', label: 'Aluguel', value: formatCurrency(rentWithDiscount), tone: 'success' });
 
   if (adminFee > 0) {
     lines.push({ key: 'rent-fee', label: 'Taxa Adm Aluguel', value: formatCurrency(adminFee) });
