@@ -138,8 +138,13 @@ export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): Fm
   const currentOwnedValue = ownership?.currentOwnedValue ?? (totalPropertyValue * ownershipPercentage / 100);
   const amountRemainingToFullOwnership = ownership?.amountRemainingToFullOwnership ?? Math.max(totalPropertyValue - currentOwnedValue, 0);
 
-  const originalRentAmount = rentInsight?.originalRentAmount ?? monthlySummary?.originalRentAmount ?? 0;
-  const currentRentAmount = rentInsight?.currentRentAmount ?? monthlySummary?.rentWithDiscountAmount ?? originalRentAmount;
+  const currentRentAmount = rentInsight?.currentRentAmount
+    ?? monthlySummary?.rentWithDiscountAmount
+    ?? monthlySummary?.originalRentAmount
+    ?? 0;
+  const originalRentAmount = rentInsight?.originalRentAmount
+    ?? monthlySummary?.originalRentAmount
+    ?? currentRentAmount;
   const monthlySavings = rentInsight?.monthlySavingsAmount ?? Math.max(originalRentAmount - currentRentAmount, 0);
   const yearlySavings = rentInsight?.annualSavingsAmount ?? (monthlySavings * 12);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FmzRenterDashboardViewModel } from '../domain';
 import styles from './FmzRenterDashboard.module.css';
 
@@ -9,7 +9,6 @@ type FmzRenterDashboardRentSimulatorCardProps = {
   hasAnimated: boolean;
 };
 
-const MAX_SIMULATION_AMOUNT = 5000;
 const SLIDER_STEP = 50;
 
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
@@ -34,41 +33,59 @@ const formatCurrency = (value: number): string => currencyFormatter.format(Math.
 const formatCompactCurrency = (value: number): string => compactCurrencyFormatter.format(Math.max(value, 0));
 const formatPercentage = (value: number): string => `${percentFormatter.format(Math.max(value, 0))}%`;
 
-function resolveSimulationMaxAmount(viewModel: FmzRenterDashboardViewModel): number {
-  const remainingToOwn = Math.floor(viewModel.remainingToOwnNumber);
-
-  if (remainingToOwn <= 0) return MAX_SIMULATION_AMOUNT;
-
-  return Math.max(SLIDER_STEP, Math.min(remainingToOwn, MAX_SIMULATION_AMOUNT));
+function roundToStep(value: number): number {
+  return Math.round(value / SLIDER_STEP) * SLIDER_STEP;
 }
 
-function calculateRentReductionPerPercentagePoint(viewModel: FmzRenterDashboardViewModel): number {
-  if (viewModel.ownershipPercentage <= 0) {
-    return viewModel.originalRentNumber / 100;
-  }
+function resolveSliderBounds(viewModel: FmzRenterDashboardViewModel) {
+  const propertyValue = Math.max(Math.floor(viewModel.propertyValueNumber), 0);
+  const currentOwnedValue = clamp(roundToStep(viewModel.acquiredTokensNumber), 0, propertyValue);
 
-  return Math.max(viewModel.originalRentNumber - viewModel.currentRentNumber, 0) / viewModel.ownershipPercentage;
+  return {
+    minOwnedValue: currentOwnedValue,
+    maxOwnedValue: propertyValue > 0 ? propertyValue : currentOwnedValue + SLIDER_STEP,
+  };
+}
+
+function calculateRentByOwnership(
+  viewModel: FmzRenterDashboardViewModel,
+  simulatedOwnershipPercentage: number,
+): number {
+  const currentRent = Math.max(viewModel.currentRentNumber, 0);
+
+  if (currentRent <= 0) return 0;
+
+  const extraOwnershipPercentage = Math.max(
+    clamp(simulatedOwnershipPercentage, viewModel.ownershipPercentage, 100) - viewModel.ownershipPercentage,
+    0,
+  );
+
+  return Math.max(
+    currentRent * (1 - extraOwnershipPercentage / 100),
+    0,
+  );
 }
 
 export function FmzRenterDashboardRentSimulatorCard({ viewModel, hasAnimated }: FmzRenterDashboardRentSimulatorCardProps) {
-  const maxAmount = useMemo(() => resolveSimulationMaxAmount(viewModel), [viewModel]);
-  const [purchaseAmount, setPurchaseAmount] = useState(0);
+  const { minOwnedValue, maxOwnedValue } = useMemo(() => resolveSliderBounds(viewModel), [viewModel]);
+  const [simulatedOwnedValue, setSimulatedOwnedValue] = useState(minOwnedValue);
 
-  const simulatedOwnership = useMemo(() => {
-    if (viewModel.propertyValueNumber <= 0) return viewModel.ownershipPercentage;
-    const nextOwnership = viewModel.ownershipPercentage + (purchaseAmount / viewModel.propertyValueNumber) * 100;
-    return clamp(nextOwnership, viewModel.ownershipPercentage, 100);
-  }, [purchaseAmount, viewModel]);
+  useEffect(() => {
+    setSimulatedOwnedValue(minOwnedValue);
+  }, [minOwnedValue]);
 
-  const simulatedRent = useMemo(() => {
-    const addedOwnership = Math.max(simulatedOwnership - viewModel.ownershipPercentage, 0);
-    const rentReduction = addedOwnership * calculateRentReductionPerPercentagePoint(viewModel);
-    return Math.max(viewModel.currentRentNumber - rentReduction, 0);
-  }, [simulatedOwnership, viewModel]);
-
-  const annualSavings = Math.max(viewModel.originalRentNumber - simulatedRent, 0) * 12;
-  const rentBarPercentage = viewModel.originalRentNumber > 0 ? clamp((simulatedRent / viewModel.originalRentNumber) * 100, 0, 100) : 0;
-  const rangeProgress = maxAmount > 0 ? (purchaseAmount / maxAmount) * 100 : 0;
+  const normalizedOwnedValue = clamp(simulatedOwnedValue, minOwnedValue, maxOwnedValue);
+  const purchaseAmount = Math.max(normalizedOwnedValue - minOwnedValue, 0);
+  const simulatedOwnership = viewModel.propertyValueNumber > 0
+    ? clamp((normalizedOwnedValue / viewModel.propertyValueNumber) * 100, viewModel.ownershipPercentage, 100)
+    : viewModel.ownershipPercentage;
+  const simulatedRent = calculateRentByOwnership(viewModel, simulatedOwnership);
+  const rentBarPercentage = viewModel.currentRentNumber > 0
+    ? clamp((simulatedRent / viewModel.currentRentNumber) * 100, 0, 100)
+    : 0;
+  const rangeProgress = maxOwnedValue > minOwnedValue
+    ? ((normalizedOwnedValue - minOwnedValue) / (maxOwnedValue - minOwnedValue)) * 100
+    : 0;
 
   return (
     <article className={`${styles.card} ${styles.rentCard}`} aria-label="Simulador de compra de tokens e aluguel">
@@ -87,19 +104,19 @@ export function FmzRenterDashboardRentSimulatorCard({ viewModel, hasAnimated }: 
 
         <input
           type="range"
-          min={0}
-          max={maxAmount}
+          min={minOwnedValue}
+          max={maxOwnedValue}
           step={SLIDER_STEP}
-          value={purchaseAmount}
-          onChange={(event) => setPurchaseAmount(Number(event.target.value))}
+          value={normalizedOwnedValue}
+          onChange={(event) => setSimulatedOwnedValue(Number(event.target.value))}
           className={styles.simSlider}
           style={{ ['--simulator-progress' as string]: hasAnimated ? `${rangeProgress}%` : '0%' }}
-          aria-label="Quantidade de tokens para simulação"
+          aria-label="Total de tokens após a compra simulada"
         />
         <div className={styles.simRangeLabels}>
-          <span>R$ 0</span>
-          <span className={styles.simCurrentAmount}>{formatCompactCurrency(purchaseAmount)}</span>
-          <span>{formatCompactCurrency(maxAmount)}</span>
+          <span>{formatCompactCurrency(minOwnedValue)}</span>
+          <span className={styles.simCurrentAmount}>{formatCompactCurrency(normalizedOwnedValue)}</span>
+          <span>{formatCompactCurrency(maxOwnedValue)}</span>
         </div>
 
         <div className={styles.simRentBox}>
@@ -126,11 +143,6 @@ export function FmzRenterDashboardRentSimulatorCard({ viewModel, hasAnimated }: 
             <p>Posse nova</p>
             <strong className={styles.simPillSuccess}>{formatPercentage(simulatedOwnership)}</strong>
           </div>
-        </div>
-
-        <div className={styles.simSavingsNote}>
-          <span>Economia anual estimada</span>
-          <strong>{formatCurrency(annualSavings)}/ano</strong>
         </div>
       </div>
     </article>
