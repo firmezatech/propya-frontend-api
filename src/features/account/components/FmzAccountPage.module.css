@@ -438,6 +438,23 @@
 }
 
 /* ─────────────────────────────────────────────
+   Phone input
+───────────────────────────────────────────── */
+.phoneRow {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 8px;
+}
+
+.phoneCountrySelect {
+  flex-shrink: 0;
+}
+
+.phoneNumberInput {
+  min-width: 0;
+}
+
+/* ─────────────────────────────────────────────
    CEP row
 ───────────────────────────────────────────── */
 .cepRow {

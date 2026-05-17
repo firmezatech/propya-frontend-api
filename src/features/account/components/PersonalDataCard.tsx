@@ -1,8 +1,10 @@
-import { Calendar, Check, Info, Lock, Mail, Phone, UserRound } from 'lucide-react';
+import { Calendar, Check, Info, Lock, Mail, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { formatBirthdateInput } from '../../../services/phone-country-format';
+import type { FmzPhoneCountryCode } from '../../../services/phone-country-format';
 import type { AccountPageUser } from '../domain/account-page.types';
 import { AccountFieldShell } from './AccountFieldShell';
+import { AccountPhoneInput } from './AccountPhoneInput';
 import { AccountSectionCard } from './AccountSectionCard';
 import styles from './FmzAccountPage.module.css';
 
@@ -16,6 +18,11 @@ type PersonalDataCardProps = {
 
 export function PersonalDataCard({ userData, isSaving, onFieldChange, onCancel, onSave }: PersonalDataCardProps) {
   const t = useTranslations('MyAccount');
+
+  const handlePhoneChange = (nationalNumber: string, countryCode: FmzPhoneCountryCode) => {
+    onFieldChange('phone', nationalNumber);
+    onFieldChange('phoneCountry', countryCode);
+  };
 
   const footer = (
     <>
@@ -44,10 +51,11 @@ export function PersonalDataCard({ userData, isSaving, onFieldChange, onCancel, 
         </AccountFieldShell>
 
         <AccountFieldShell label="Contato (WhatsApp)" required>
-          <div className={styles.fieldInput}>
-            <Phone className={styles.iconLeft} aria-hidden="true" />
-            <input className={styles.hasIcon} type="tel" value={userData.phone ?? ''} onChange={(e) => onFieldChange('phone', e.target.value)} />
-          </div>
+          <AccountPhoneInput
+            phone={userData.phone ?? ''}
+            phoneCountry={userData.phoneCountry ?? ''}
+            onPhoneChange={handlePhoneChange}
+          />
         </AccountFieldShell>
 
         <AccountFieldShell label={t('labelBirthdate')} required>
