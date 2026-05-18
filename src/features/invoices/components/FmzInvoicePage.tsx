@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Check, ChevronRight, Copy, Download, FileText, List, MessageCircle, QrCode, ReceiptText, Zap } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { FmzConnectedPageShell } from '../../../components/layout';
 import { getCurrentTenantDashboard } from '../../tenant-portal/services';
 import type { FmzTenantDashboard } from '../../tenant-portal/domain';
@@ -102,7 +103,27 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
   const digitableLine = boleto?.digitableLine ?? '';
   const pixCode = 'Código PIX não disponível';
 
-  const lines = summary?.lines ?? [];
+  const lines = (() => {
+    if (summary?.lines && summary.lines.length > 0) return summary.lines;
+
+    const fallback: { key: string; label: string; amount: number }[] = [];
+    if ((summary?.rentWithDiscountAmount ?? 0) > 0) {
+      fallback.push({ key: 'current-rent', label: 'Aluguel', amount: summary!.rentWithDiscountAmount! });
+    }
+    if ((summary?.rentalAdminFeeAmount ?? 0) > 0) {
+      fallback.push({ key: 'rent-fee', label: 'Taxa adm. aluguel', amount: summary!.rentalAdminFeeAmount! });
+    }
+    if ((summary?.condominiumAmount ?? 0) > 0) {
+      fallback.push({ key: 'condominium', label: 'Condomínio', amount: summary!.condominiumAmount! });
+    }
+    if ((summary?.scheduledTokenPurchaseAmount ?? 0) > 0) {
+      fallback.push({ key: 'scheduled-token-purchase', label: 'Compra programada de tokens', amount: summary!.scheduledTokenPurchaseAmount! });
+    }
+    if ((summary?.tokenPurchaseFeeAmount ?? 0) > 0) {
+      fallback.push({ key: 'token-fee', label: 'Taxa de compra de tokens', amount: summary!.tokenPurchaseFeeAmount! });
+    }
+    return fallback;
+  })();
 
   return (
     <>
@@ -286,7 +307,6 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
 }
 
 export function FmzInvoicePage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const propertyId = searchParams.get('propertyId');
 
@@ -316,13 +336,9 @@ export function FmzInvoicePage() {
 
   return (
     <FmzConnectedPageShell width="tenant">
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="mb-7 inline-flex items-center gap-1.5 border-0 bg-transparent p-0 text-[13px] text-fmz-text-hint transition hover:text-fmz-text-primary"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Voltar
-      </button>
+      <Link href="/connected/dashboard" className={styles.backLink}>
+        <ArrowLeft size={14} /> Voltar ao dashboard
+      </Link>
 
       <div className={styles.page}>
         {isLoading ? (

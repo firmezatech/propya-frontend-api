@@ -1,23 +1,206 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { ArrowLeft, ArrowRight, ArrowUp, Circle, Download, House, Plus, TrendingUp, Wallet } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  ArrowLeft, ArrowRight, ArrowUp, Circle, Download,
+  House, Plus, Search, Star, TrendingUp, Wallet,
+} from 'lucide-react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { FmzConnectedPageShell } from '../../../components/layout';
-import { getCurrentTenantDashboard, getCurrentTenantWallets } from '../../tenant-portal/services';
-import type { FmzTenantDashboard, FmzTenantWallet } from '../../tenant-portal/domain';
+import {
+  getCurrentTenantDashboard,
+  getCurrentTenantPaymentHistory,
+  getCurrentTenantWallets,
+} from '../../tenant-portal/services';
+import type { FmzTenantDashboard, FmzTenantPaymentHistoryItem, FmzTenantWallet } from '../../tenant-portal/domain';
 import styles from './FmzWalletPage.module.css';
 
 const moneyFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const pctFmt = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-const tokenFmt = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 8 });
+const numFmt = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 8 });
+const dateFmt = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
 
 const formatMoney = (v?: number | null) => moneyFmt.format(Number(v ?? 0));
 const formatPct = (v?: number | null) => `${pctFmt.format(Number(v ?? 0))}%`;
-const formatToken = (v?: number | null) => tokenFmt.format(Number(v ?? 0));
+const formatNum = (v?: number | null) => numFmt.format(Number(v ?? 0));
+
+const formatShortDate = (v?: string | null): string => {
+  if (!v) return '—';
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? v : dateFmt.format(d);
+};
 
 const SPARKLINE_POINTS = 'M0,58 L40,56 L80,54 L120,50 L160,52 L200,46 L240,40 L280,38 L320,34 L360,32 L400,26 L440,24 L480,18 L520,14 L560,10 L600,6';
 const SPARKLINE_AREA = `${SPARKLINE_POINTS} L600,64 L0,64 Z`;
+
+type TxFilter = 'all' | 'buy' | 'bonus' | 'reval';
+
+type WalletTransaction = {
+  id: string;
+  type: 'buy' | 'bonus' | 'reval';
+  title: string;
+  tag?: string;
+  date: string;
+  txId?: string;
+  quantityLabel: string;
+  amountLabel: string;
+  monthGroup: string;
+};
+
+const TX_FILTER_CONFIG: { key: TxFilter; label: string }[] = [
+  { key: 'all', label: 'Todas' },
+  { key: 'buy', label: 'Compras' },
+  { key: 'bonus', label: 'Recompensas' },
+  { key: 'reval', label: 'Reavaliações' },
+];
+
+const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function buildMonthGroup(reference: string): string {
+  const d = new Date(reference);
+  if (!Number.isNaN(d.getTime())) {
+    return `${MONTH_NAMES[d.getMonth()]} · ${d.getFullYear()}`;
+  }
+  return reference;
+}
+
+function buildTransactionsFromHistory(history: FmzTenantPaymentHistoryItem[]): WalletTransaction[] {
+  return history.map((item) => ({
+    id: item.id,
+    type: 'buy',
+    title: 'Compra de tokens',
+    tag: (item.paymentMethod ?? 'Boleto').toUpperCase(),
+    date: formatShortDate(item.paidAt ?? item.dueDate),
+    txId: item.id.slice(0, 20),
+    quantityLabel: '—',
+    amountLabel: formatMoney(item.amount),
+    monthGroup: buildMonthGroup(item.reference),
+  }));
+}
+
+const TX_ICO_CLASS: Record<WalletTransaction['type'], string> = {
+  buy: styles.txIcoBuy,
+  bonus: styles.txIcoBonus,
+  reval: styles.txIcoReval,
+};
+
+function TxTypeIcon({ type }: { type: WalletTransaction['type'] }) {
+  if (type === 'bonus') return <Star size={16} />;
+  if (type === 'reval') return <TrendingUp size={16} />;
+  return <Plus size={16} />;
+}
+
+function WalletTransactionSection({ transactions }: { transactions: WalletTransaction[] }) {
+  const [filter, setFilter] = useState<TxFilter>('all');
+  const [search, setSearch] = useState('');
+
+  const counts = useMemo(() => {
+    const c: Record<TxFilter, number> = { all: transactions.length, buy: 0, bonus: 0, reval: 0 };
+    for (const tx of transactions) c[tx.type] = (c[tx.type] ?? 0) + 1;
+    return c;
+  }, [transactions]);
+
+  const filtered = useMemo(() => {
+    let items = filter === 'all' ? transactions : transactions.filter((t) => t.type === filter);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      items = items.filter(
+        (t) => t.title.toLowerCase().includes(q) || t.amountLabel.includes(q) || (t.txId ?? '').toLowerCase().includes(q),
+      );
+    }
+    return items;
+  }, [transactions, filter, search]);
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, WalletTransaction[]>();
+    for (const tx of filtered) {
+      const g = tx.monthGroup;
+      if (!map.has(g)) map.set(g, []);
+      map.get(g)!.push(tx);
+    }
+    return Array.from(map.entries());
+  }, [filtered]);
+
+  return (
+    <>
+      <div className={styles.sectionLabel}>
+        <span className={styles.sectionLabelTitle}>Histórico de transações</span>
+      </div>
+
+      <section className={styles.txCard}>
+        <div className={styles.txToolbar}>
+          <div className={styles.txFilters} role="tablist">
+            {TX_FILTER_CONFIG.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={filter === key}
+                className={`${styles.txFilter} ${filter === key ? styles.txFilterActive : ''}`}
+                onClick={() => setFilter(key)}
+              >
+                {label}
+                <span className={styles.txCount}>{counts[key]}</span>
+              </button>
+            ))}
+          </div>
+          <div className={styles.txSearch}>
+            <Search size={14} />
+            <input
+              type="text"
+              placeholder="Buscar transação…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={styles.txSearchInput}
+            />
+          </div>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className={styles.txEmpty}>
+            <p className={styles.txEmptyTitle}>Nenhuma transação encontrada</p>
+            <p className={styles.txEmptyDesc}>
+              {transactions.length === 0
+                ? 'Suas compras de tokens aparecerão aqui após a primeira aquisição.'
+                : 'Tente ajustar os filtros ou o termo de busca.'}
+            </p>
+          </div>
+        ) : (
+          <div className={styles.txList}>
+            {grouped.map(([group, txs]) => (
+              <div key={group}>
+                <div className={styles.txGroupHead}>{group}</div>
+                {txs.map((tx: WalletTransaction) => (
+                  <div key={tx.id} className={styles.txRow}>
+                    <div className={`${styles.txIco} ${TX_ICO_CLASS[tx.type]}`}>
+                      <TxTypeIcon type={tx.type} />
+                    </div>
+                    <div className={styles.txBody}>
+                      <div className={styles.txTitle}>
+                        {tx.title}
+                        {tx.tag && <span className={styles.txTag}>{tx.tag}</span>}
+                      </div>
+                      <div className={styles.txSub}>
+                        <span>{tx.date}</span>
+                        {tx.txId && <><span className={styles.txSep}>·</span><span className={styles.txMono}>{tx.txId}</span></>}
+                      </div>
+                    </div>
+                    <div className={styles.txQty}>
+                      {tx.quantityLabel !== '—' && <span className={styles.deltaPlus}>{tx.quantityLabel}</span>}
+                      {tx.quantityLabel === '—' && <span className={styles.txMuted}>—</span>}
+                    </div>
+                    <div className={styles.txAmount}>{tx.amountLabel}</div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </>
+  );
+}
 
 function WalletHeroCard({ dashboard, wallets }: { dashboard: FmzTenantDashboard; wallets: FmzTenantWallet[] }) {
   const ownership = dashboard.ownership;
@@ -29,6 +212,8 @@ function WalletHeroCard({ dashboard, wallets }: { dashboard: FmzTenantDashboard;
 
   const walletId = wallets[0]?.id ?? wallets[0]?.walletAddress ?? null;
   const walletIdShort = walletId ? walletId.slice(-8).toUpperCase() : null;
+
+  const balanceFormatted = formatMoney(ownedValue).replace('R$ ', '').replace('R$ ', '');
 
   return (
     <div className={styles.walletCard}>
@@ -43,12 +228,12 @@ function WalletHeroCard({ dashboard, wallets }: { dashboard: FmzTenantDashboard;
       <div>
         <div className={styles.walletBalance}>
           <span className={styles.walletCurrency}>R$</span>
-          {formatMoney(ownedValue).replace('R$ ', '').replace('R$ ', '')}
+          {balanceFormatted}
         </div>
         <div className={styles.walletMeta}>
           <span className={styles.walletChip}>
             <Circle size={10} fill="currentColor" />
-            {formatToken(tokenBalance)} tokens
+            {formatNum(tokenBalance)} tokens
           </span>
           {ownership?.currentPercentage != null && (
             <span className={styles.walletGain}>
@@ -72,56 +257,60 @@ function WalletHeroCard({ dashboard, wallets }: { dashboard: FmzTenantDashboard;
           <circle cx="600" cy="6" r="3" fill="#E8B620" />
           <circle cx="600" cy="6" r="6" fill="#E8B620" opacity=".25" />
         </svg>
+        <div className={styles.chartAxis}>
+          <span>fev/24</span>
+          <span>ago/24</span>
+          <span>fev/25</span>
+          <span>ago/25</span>
+          <span>mai/26</span>
+        </div>
       </div>
 
-      <div className={styles.distCard} style={{ display: 'flex', flexDirection: 'column', gap: 0, border: 'none', padding: 0, boxShadow: 'none', marginTop: 8 }}>
-        {property && (
-          <div className={styles.assetRow}>
-            <div className={styles.assetThumb}><House size={20} /></div>
-            <div className={styles.assetBody}>
-              <div className={styles.assetName}>{property.name ?? property.code ?? 'Imóvel'}</div>
-              <div className={styles.assetSub}>
-                {property.code && <span>{property.code}</span>}
-                {property.code && <span className={styles.assetSep}>·</span>}
-                <span>{formatToken(tokenBalance)} tokens</span>
-                <span className={styles.assetSep}>·</span>
-                <span>{formatPct(ownership?.currentPercentage)} de posse</span>
+      {property && (
+        <div className={styles.assetRow}>
+          <div className={styles.assetThumb}><House size={20} /></div>
+          <div className={styles.assetBody}>
+            <div className={styles.assetName}>{property.name ?? property.code ?? 'Imóvel'}</div>
+            <div className={styles.assetSub}>
+              {property.code && <><span>{property.code}</span><span className={styles.assetSep}>·</span></>}
+              <span>{formatNum(tokenBalance)} tokens</span>
+              <span className={styles.assetSep}>·</span>
+              <span>{formatPct(ownership?.currentPercentage)} de posse</span>
+            </div>
+          </div>
+          <div className={styles.assetVal}>
+            <div className={styles.assetValAmt}>{formatMoney(ownedValue)}</div>
+            {ownership?.currentPercentage != null && (
+              <div className={styles.assetValPct}>
+                <ArrowUp />{formatPct(ownership.currentPercentage)}
               </div>
-            </div>
-            <div className={styles.assetVal}>
-              <div className={styles.assetValAmt}>{formatMoney(ownedValue).replace('R$ ', 'R$ ')}</div>
-              {ownership?.currentPercentage != null && (
-                <div className={styles.assetValPct}>
-                  <ArrowUp />{formatPct(ownership.currentPercentage)}
-                </div>
-              )}
-            </div>
+            )}
           </div>
-        )}
+        </div>
+      )}
 
-        <div className={styles.assetPerf}>
-          <div className={styles.perfCol}>
-            <span className={styles.perfKey}>Compra mensal</span>
-            <span className={styles.perfVal}>{formatMoney(contract?.baseMonthlyRent).replace('R$ ', 'R$ ')}</span>
-          </div>
-          <div className={styles.perfCol}>
-            <span className={styles.perfKey}>Dia de vencimento</span>
-            <span className={styles.perfVal}>{contract?.paymentDay ?? '—'}</span>
-          </div>
-          <div className={styles.perfCol}>
-            <span className={styles.perfKey}>Aluguel economizado</span>
-            <span className={`${styles.perfVal} ${styles.perfValGreen}`}>
-              {formatMoney(rentInsight?.monthlySavingsAmount)}
-              <span className={styles.perfUnit}>/mês</span>
-            </span>
-          </div>
+      <div className={styles.assetPerf}>
+        <div className={styles.perfCol}>
+          <span className={styles.perfKey}>Compra mensal</span>
+          <span className={styles.perfVal}>{formatMoney(contract?.baseMonthlyRent)}</span>
+        </div>
+        <div className={styles.perfCol}>
+          <span className={styles.perfKey}>Próxima compra</span>
+          <span className={styles.perfVal}>{contract?.paymentDay ? `Dia ${contract.paymentDay}` : '—'}</span>
+        </div>
+        <div className={styles.perfCol}>
+          <span className={styles.perfKey}>Aluguel economizado</span>
+          <span className={`${styles.perfVal} ${styles.perfValGreen}`}>
+            {formatMoney(rentInsight?.monthlySavingsAmount)}
+            <span className={styles.perfUnit}>/mês</span>
+          </span>
         </div>
       </div>
     </div>
   );
 }
 
-function AssetDistributionCard({ dashboard, wallets }: { dashboard: FmzTenantDashboard; wallets: FmzTenantWallet[] }) {
+function AssetDistributionCard({ dashboard }: { dashboard: FmzTenantDashboard }) {
   const ownership = dashboard.ownership;
   const property = dashboard.property;
 
@@ -139,7 +328,7 @@ function AssetDistributionCard({ dashboard, wallets }: { dashboard: FmzTenantDas
             <div className={styles.assetName}>{property.name ?? property.code ?? 'Imóvel'}</div>
             <div className={styles.assetSub}>
               {property.code && <><span>{property.code}</span><span className={styles.assetSep}>·</span></>}
-              <span>{formatToken(ownership?.tokenBalance)} tokens</span>
+              <span>{formatNum(ownership?.tokenBalance)} / {formatNum(ownership?.totalSupply)} tokens</span>
               <span className={styles.assetSep}>·</span>
               <span>{formatPct(ownership?.currentPercentage)} de posse</span>
             </div>
@@ -154,13 +343,11 @@ function AssetDistributionCard({ dashboard, wallets }: { dashboard: FmzTenantDas
           </div>
         </div>
       ) : (
-        <p style={{ fontSize: 13, color: 'var(--fmz-text-muted)', marginTop: 8 }}>Nenhum imóvel vinculado.</p>
+        <p className={styles.distEmpty}>Nenhum imóvel vinculado.</p>
       )}
 
       <div className={styles.distFoot}>
-        <span>
-          Tokens disponíveis <strong>{formatToken(ownership?.tokenBalance)}</strong>
-        </span>
+        <span>Preço médio do token <strong>{formatMoney(ownership?.tokenUnitValue)}</strong></span>
         <a href="#" className={styles.distFootLink}>
           Ver detalhes <ArrowRight size={12} />
         </a>
@@ -169,41 +356,13 @@ function AssetDistributionCard({ dashboard, wallets }: { dashboard: FmzTenantDas
   );
 }
 
-function WalletAddressCards({ wallets }: { wallets: FmzTenantWallet[] }) {
-  if (wallets.length === 0) return null;
-  return (
-    <div className={styles.walletList}>
-      {wallets.map((w) => (
-        <div key={w.id ?? w.walletAddress ?? w.publicKey} className={styles.walletItem}>
-          <div className={styles.walletItemGrid}>
-            <div>
-              <p className={styles.walletItemLabel}>ID da wallet</p>
-              <p className={styles.walletItemValue}>{w.id ?? 'Não informado'}</p>
-            </div>
-            <div>
-              <p className={styles.walletItemLabel}>Endereço</p>
-              <p className={styles.walletItemValue}>{w.walletAddress ?? w.publicKey ?? 'Não informado'}</p>
-            </div>
-          </div>
-          <div className={styles.walletItemMeta}>
-            <div><p className={styles.walletItemMetaKey}>Rede</p><p className={styles.walletItemMetaVal}>{w.chainId ?? '—'}</p></div>
-            <div><p className={styles.walletItemMetaKey}>Tipo</p><p className={styles.walletItemMetaVal}>{w.walletType ?? '—'}</p></div>
-            <div><p className={styles.walletItemMetaKey}>Custódia</p><p className={styles.walletItemMetaVal}>{w.custodyType ?? '—'}</p></div>
-            <div><p className={styles.walletItemMetaKey}>Status</p><p className={styles.walletItemMetaVal}>{w.status ?? w.verificationStatus ?? '—'}</p></div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export function FmzWalletPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const propertyId = searchParams.get('propertyId');
 
   const [dashboard, setDashboard] = useState<FmzTenantDashboard | null>(null);
   const [wallets, setWallets] = useState<FmzTenantWallet[]>([]);
+  const [history, setHistory] = useState<FmzTenantPaymentHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -214,13 +373,14 @@ export function FmzWalletPage() {
       setIsLoading(true);
       setErrorMessage(null);
       try {
-        const [data, wlts] = await Promise.all([
+        const [data, wlts, hist] = await Promise.all([
           getCurrentTenantDashboard(propertyId),
           getCurrentTenantWallets(),
+          getCurrentTenantPaymentHistory(propertyId),
         ]);
-        if (active) { setDashboard(data); setWallets(wlts); }
+        if (active) { setDashboard(data); setWallets(wlts); setHistory(hist); }
       } catch {
-        if (active) setErrorMessage('Não foi possível carregar os dados da carteira. Verifique se a sessão está ativa.');
+        if (active) setErrorMessage('Não foi possível carregar os dados da carteira.');
       } finally {
         if (active) setIsLoading(false);
       }
@@ -231,16 +391,18 @@ export function FmzWalletPage() {
   }, [propertyId]);
 
   const ownership = dashboard?.ownership;
+  const transactions = useMemo(() => buildTransactionsFromHistory(history), [history]);
+
+  const walletDisplayId = wallets[0]?.id?.slice(-8).toUpperCase()
+    ?? wallets[0]?.walletAddress?.slice(-8).toUpperCase()
+    ?? null;
 
   return (
     <FmzConnectedPageShell width="tenant">
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="mb-7 inline-flex items-center gap-1.5 border-0 bg-transparent p-0 text-[13px] text-fmz-text-hint transition hover:text-fmz-text-primary"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Voltar
-      </button>
+      <Link href="/connected/dashboard" className={styles.backLink}>
+        <ArrowLeft size={14} />
+        Voltar ao dashboard
+      </Link>
 
       {isLoading ? (
         <div className={styles.empty}>
@@ -254,30 +416,38 @@ export function FmzWalletPage() {
         </div>
       ) : (
         <>
-          {/* Page head */}
           <div className={styles.pageHead}>
             <div className={styles.pageHeadLeft}>
-              <h1>Carteira</h1>
-              <p className={styles.pageSub}>
-                {ownership?.tokenBalance != null && <span>{formatToken(ownership.tokenBalance)} tokens</span>}
-                {dashboard?.property && <span>· {dashboard.property.name ?? dashboard.property.code ?? 'Imóvel'}</span>}
-              </p>
+              <h1 className={styles.pageTitle}>Carteira</h1>
+              <div className={styles.pageSub}>
+                {ownership?.tokenBalance != null && (
+                  <span>{formatNum(ownership.tokenBalance)} tokens</span>
+                )}
+                {dashboard?.property && (
+                  <span>· 1 imóvel ativo</span>
+                )}
+                {walletDisplayId && (
+                  <span className={styles.pageSubId}>· {walletDisplayId}</span>
+                )}
+              </div>
             </div>
             <div className={styles.pageHeadRight}>
-              <button type="button" className={styles.btn}><Download /> Extrato</button>
-              <button type="button" className={`${styles.btn} ${styles.btnPrimary}`}><Plus /> Comprar tokens</button>
+              <button type="button" className={styles.btn}>
+                <Download size={15} /> Extrato
+              </button>
+              <Link href="/connected/tokensToPurchasePix" className={`${styles.btn} ${styles.btnPrimary}`}>
+                <Plus size={15} /> Comprar tokens
+              </Link>
             </div>
           </div>
 
-          {/* Hero */}
           {dashboard && (
             <section className={styles.hero}>
               <WalletHeroCard dashboard={dashboard} wallets={wallets} />
-              <AssetDistributionCard dashboard={dashboard} wallets={wallets} />
+              <AssetDistributionCard dashboard={dashboard} />
             </section>
           )}
 
-          {/* Metrics */}
           <section className={styles.metrics}>
             <div className={styles.metric}>
               <div className={styles.metricKey}>
@@ -285,9 +455,9 @@ export function FmzWalletPage() {
                 Tokens em carteira
               </div>
               <div className={styles.metricValue}>
-                {formatToken(ownership?.tokenBalance)}
+                {formatNum(ownership?.tokenBalance)}
                 {ownership?.totalSupply != null && (
-                  <span className={styles.metricSmall}>/ {formatToken(ownership.totalSupply)}</span>
+                  <span className={styles.metricSmall}>/ {formatNum(ownership.totalSupply)}</span>
                 )}
               </div>
               <div className={styles.metricSub}>
@@ -298,12 +468,12 @@ export function FmzWalletPage() {
             <div className={styles.metric}>
               <div className={styles.metricKey}>
                 <TrendingUp size={13} />
-                Valor adquirido
+                Preço por token
               </div>
-              <div className={styles.metricValue}>{formatMoney(ownership?.currentOwnedValue)}</div>
+              <div className={styles.metricValue}>{formatMoney(ownership?.tokenUnitValue)}</div>
               <div className={styles.metricSub}>
                 <span className={styles.tagUp}>
-                  <ArrowUp size={9} />{formatPct(ownership?.currentPercentage)}
+                  <ArrowUp size={9} />valor de mercado
                 </span>
               </div>
             </div>
@@ -311,29 +481,19 @@ export function FmzWalletPage() {
             <div className={styles.metric}>
               <div className={styles.metricKey}>
                 <Wallet size={13} />
-                Tokens pendentes
+                Próxima recompensa
               </div>
-              <div className={styles.metricValue}>{formatToken(ownership?.pendingTokenBalance)}</div>
-              <div className={styles.metricSub}>aguardando confirmação</div>
+              <div className={styles.metricValue}>
+                {formatPct(dashboard?.nextGoal?.percentage ?? 10)}
+                <span className={styles.metricSmall}> de posse</span>
+              </div>
+              <div className={styles.metricSub}>
+                Faltam <strong style={{ color: 'var(--fmz-navy)' }}>{formatMoney(dashboard?.nextGoal?.amountNeeded)}</strong>
+              </div>
             </div>
           </section>
 
-          {/* Wallet addresses */}
-          {wallets.length > 0 && (
-            <>
-              <div className={styles.sectionLabel}>
-                <span className={styles.sectionLabelTitle}>Carteiras vinculadas</span>
-              </div>
-              <WalletAddressCards wallets={wallets} />
-            </>
-          )}
-
-          {!dashboard && wallets.length === 0 && (
-            <div className={styles.empty}>
-              <p className={styles.emptyTitle}>Carteira não encontrada</p>
-              <p className={styles.emptyDesc}>Nenhuma wallet vinculada ao usuário autenticado.</p>
-            </div>
-          )}
+          <WalletTransactionSection transactions={transactions} />
         </>
       )}
     </FmzConnectedPageShell>

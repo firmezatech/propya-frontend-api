@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ChevronDown, CreditCard, Download, FileText, ReceiptText, Search, Target, TrendingUp } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { FmzConnectedPageShell } from '../../../components/layout';
 import { getCurrentTenantDashboard, getCurrentTenantPaymentHistory } from '../../tenant-portal/services';
 import type { FmzTenantDashboard, FmzTenantPaymentHistoryItem } from '../../tenant-portal/domain';
@@ -197,7 +198,6 @@ const FILTER_LABELS: { key: FilterKey; label: string }[] = [
 ];
 
 export function FmzPaymentHistoryPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const propertyId = searchParams.get('propertyId');
 
@@ -264,13 +264,9 @@ export function FmzPaymentHistoryPage() {
 
   return (
     <FmzConnectedPageShell width="tenant">
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="mb-7 inline-flex items-center gap-1.5 border-0 bg-transparent p-0 text-[13px] text-fmz-text-hint transition hover:text-fmz-text-primary"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Voltar
-      </button>
+      <Link href="/connected/dashboard" className={styles.backLink}>
+        <ArrowLeft size={14} /> Voltar ao dashboard
+      </Link>
 
       {isLoading ? (
         <div style={{ padding: '48px 0', textAlign: 'center' }}>

@@ -1,5 +1,15 @@
 .page { display: flex; flex-direction: column; gap: 0; }
 
+/* ── BACK LINK ───────────────────────────── */
+.backLink {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--fmz-text-hint);
+  text-decoration: none; margin-bottom: 28px;
+  transition: color .15s;
+}
+.backLink:hover { color: var(--fmz-navy); }
+.backLink svg { width: 14px; height: 14px; }
+
 /* ── PAGE HEAD ───────────────────────────── */
 .pageHead { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 24px; flex-wrap: wrap; }
 .pageHeadLeft { display: flex; flex-direction: column; gap: 4px; }
