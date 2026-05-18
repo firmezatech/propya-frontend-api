@@ -204,9 +204,6 @@ function WalletTransactionSection({ transactions }: { transactions: WalletTransa
 
 function WalletHeroCard({ dashboard, wallets }: { dashboard: FmzTenantDashboard; wallets: FmzTenantWallet[] }) {
   const ownership = dashboard.ownership;
-  const property = dashboard.property;
-  const contract = dashboard.contract;
-  const rentInsight = dashboard.rentInsight;
   const tokenBalance = ownership?.tokenBalance ?? 0;
   const ownedValue = ownership?.currentOwnedValue ?? 0;
 
@@ -266,46 +263,6 @@ function WalletHeroCard({ dashboard, wallets }: { dashboard: FmzTenantDashboard;
         </div>
       </div>
 
-      {property && (
-        <div className={styles.assetRow}>
-          <div className={styles.assetThumb}><House size={20} /></div>
-          <div className={styles.assetBody}>
-            <div className={styles.assetName}>{property.name ?? property.code ?? 'Imóvel'}</div>
-            <div className={styles.assetSub}>
-              {property.code && <><span>{property.code}</span><span className={styles.assetSep}>·</span></>}
-              <span>{formatNum(tokenBalance)} tokens</span>
-              <span className={styles.assetSep}>·</span>
-              <span>{formatPct(ownership?.currentPercentage)} de posse</span>
-            </div>
-          </div>
-          <div className={styles.assetVal}>
-            <div className={styles.assetValAmt}>{formatMoney(ownedValue)}</div>
-            {ownership?.currentPercentage != null && (
-              <div className={styles.assetValPct}>
-                <ArrowUp />{formatPct(ownership.currentPercentage)}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      <div className={styles.assetPerf}>
-        <div className={styles.perfCol}>
-          <span className={styles.perfKey}>Compra mensal</span>
-          <span className={styles.perfVal}>{formatMoney(contract?.baseMonthlyRent)}</span>
-        </div>
-        <div className={styles.perfCol}>
-          <span className={styles.perfKey}>Próxima compra</span>
-          <span className={styles.perfVal}>{contract?.paymentDay ? `Dia ${contract.paymentDay}` : '—'}</span>
-        </div>
-        <div className={styles.perfCol}>
-          <span className={styles.perfKey}>Aluguel economizado</span>
-          <span className={`${styles.perfVal} ${styles.perfValGreen}`}>
-            {formatMoney(rentInsight?.monthlySavingsAmount)}
-            <span className={styles.perfUnit}>/mês</span>
-          </span>
-        </div>
-      </div>
     </div>
   );
 }
@@ -344,6 +301,26 @@ function AssetDistributionCard({ dashboard }: { dashboard: FmzTenantDashboard })
         </div>
       ) : (
         <p className={styles.distEmpty}>Nenhum imóvel vinculado.</p>
+      )}
+
+      {property && (
+        <div className={styles.assetPerf}>
+          <div className={styles.perfCol}>
+            <span className={styles.perfKey}>Compra mensal</span>
+            <span className={styles.perfVal}>{formatMoney(dashboard.contract?.baseMonthlyRent)}</span>
+          </div>
+          <div className={styles.perfCol}>
+            <span className={styles.perfKey}>Próxima compra</span>
+            <span className={styles.perfVal}>{dashboard.contract?.paymentDay ? `Dia ${dashboard.contract.paymentDay}` : '—'}</span>
+          </div>
+          <div className={styles.perfCol}>
+            <span className={styles.perfKey}>Aluguel economizado</span>
+            <span className={`${styles.perfVal} ${styles.perfValGreen}`}>
+              {formatMoney(dashboard.rentInsight?.monthlySavingsAmount)}
+              <span className={styles.perfUnit}>/mês</span>
+            </span>
+          </div>
+        </div>
       )}
 
       <div className={styles.distFoot}>

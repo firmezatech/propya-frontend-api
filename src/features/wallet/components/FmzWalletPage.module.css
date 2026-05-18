@@ -45,6 +45,16 @@
     radial-gradient(circle at 5% 100%, rgba(232,182,32,.08) 0%, transparent 40%);
   pointer-events: none;
 }
+.walletCard::after {
+  content: ''; position: absolute; inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(14,22,38,.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(14,22,38,.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  mask-image: radial-gradient(circle at 50% 50%, black 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 0%, transparent 75%);
+}
 .walletCard > * { position: relative; z-index: 1; }
 .walletHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 6px; }
 .walletEyebrow { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--fmz-gold-dark); display: inline-flex; align-items: center; gap: 6px; }
@@ -114,13 +124,12 @@
 .tagUp svg { width: 9px; height: 9px; }
 
 /* ── SECTION LABEL ───────────────────────── */
-.sectionLabel { display: flex; align-items: center; gap: 14px; margin: 0 0 14px; }
+.sectionLabel { display: flex; align-items: center; gap: 14px; margin: 0 0 16px; }
+.sectionLabel::after { content: ''; flex: 1; height: 1px; background: var(--fmz-border-light); }
 .sectionLabelTitle {
   font-family: var(--font-syne), sans-serif; font-weight: 600;
   font-size: 15px; color: var(--fmz-navy); letter-spacing: -.005em; white-space: nowrap;
-  display: flex; align-items: center; gap: 14px;
 }
-.sectionLabelTitle::after { content: ''; display: block; width: 100px; height: 1px; background: var(--fmz-border-light); }
 
 /* ── TRANSACTION SECTION ─────────────────── */
 .txCard {
@@ -197,7 +206,8 @@
 .txMuted { color: var(--fmz-text-hint); font-family: var(--font-mono, monospace); font-size: 13px; }
 .txQty { font-family: var(--font-mono, monospace); font-size: 13px; font-weight: 600; color: var(--fmz-navy); text-align: right; white-space: nowrap; }
 .deltaPlus { color: var(--fmz-success); }
-.txAmount { font-family: var(--font-mono, monospace); font-size: 13.5px; font-weight: 600; color: var(--fmz-navy); white-space: nowrap; }
+.txAmount { font-family: var(--font-fmz-display), sans-serif; font-size: 14px; font-weight: 700; color: var(--fmz-navy); letter-spacing: -.01em; text-align: right; min-width: 96px; white-space: nowrap; }
+.txAmountMuted { color: var(--fmz-text-muted); font-weight: 500; }
 
 .txEmpty { padding: 40px 24px; text-align: center; }
 .txEmptyTitle { font-family: var(--font-syne), sans-serif; font-size: 17px; font-weight: 700; color: var(--fmz-navy); margin-bottom: 6px; }
