@@ -152,6 +152,15 @@ export function FmzRenterDashboard({
             <div className={styles.ctaContent}>
               <div className={styles.ctaKicker}><span className={styles.ctaKickerDot} />Próximo marco</div>
               <h3 className={styles.ctaTitle}>Faltam {viewModel.nextMilestoneRemainingLabel} para chegar em {viewModel.nextMilestoneLabel}</h3>
+              <div className={styles.nextProgressWrap}>
+                <div className={styles.nextProgressBar}>
+                  <div
+                    className={styles.nextProgressFill}
+                    style={{ width: hasAnimated ? `${viewModel.nextMilestoneProgressPercentage}%` : '0%' }}
+                  />
+                </div>
+                <span className={styles.nextProgressLabel}>{viewModel.ownershipPercentageLabel} de {viewModel.nextMilestoneLabel}</span>
+              </div>
               <Link href="/connected/tokensToPurchasePix" className={styles.buyCtaButton}>
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
                 Comprar mais tokens

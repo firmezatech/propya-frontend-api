@@ -91,13 +91,13 @@
 }
 
 .sidebarLinkActive {
-  background: var(--fmz-success-bg);
-  color: var(--fmz-success);
+  background: #FBF3DA;
+  color: #8A6B12;
   font-weight: 600;
 }
 
 .sidebarLinkActive svg {
-  color: var(--fmz-success);
+  color: #8A6B12;
 }
 
 .sidebarDot {
@@ -168,12 +168,29 @@
    KYC Progress Banner
 ───────────────────────────────────────────── */
 .kycBanner {
+  position: relative;
+  overflow: hidden;
   background: #fff;
   border: 1px solid var(--fmz-border-light);
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
   margin-bottom: 1.25rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+}
+
+.kycBanner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 95% 5%, rgba(232, 182, 32, 0.22) 0%, transparent 45%),
+    radial-gradient(circle at 5% 100%, rgba(232, 182, 32, 0.08) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.kycBanner > * {
+  position: relative;
+  z-index: 1;
 }
 
 .kycBannerTop {
@@ -215,7 +232,7 @@
 .kycProgressFill {
   height: 100%;
   border-radius: 999px;
-  background: var(--fmz-success);
+  background: linear-gradient(90deg, #E8B620 0%, #F5D26B 100%);
   transition: width 0.4s ease;
 }
 
@@ -253,9 +270,9 @@
 }
 
 .chipPending {
-  background: var(--fmz-warning-bg);
-  color: var(--fmz-warning);
-  border: 1px solid var(--fmz-warning-border);
+  background: #FBF3DA;
+  color: #8A6B12;
+  border: 1px solid #E8D080;
 }
 
 /* ─────────────────────────────────────────────

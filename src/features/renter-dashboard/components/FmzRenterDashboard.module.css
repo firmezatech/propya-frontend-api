@@ -428,6 +428,31 @@
   box-shadow: 0 10px 24px rgba(13, 19, 33, .18);
 }
 
+.nextProgressWrap {
+  margin-bottom: 16px;
+}
+
+.nextProgressBar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(200, 160, 32, 0.18);
+  margin-bottom: 6px;
+}
+
+.nextProgressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--fmz-gold-dark) 0%, var(--fmz-gold) 100%);
+  transition: width 2s cubic-bezier(.4, 0, .2, 1);
+}
+
+.nextProgressLabel {
+  color: var(--fmz-gold-dark);
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .ctaSmall {
   margin-top: 9px;
   text-align: center;
