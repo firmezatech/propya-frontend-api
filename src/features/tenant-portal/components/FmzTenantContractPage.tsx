@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   ArrowRight,
   Building2,
@@ -132,13 +132,6 @@ function resolveContractStatus(status?: string | null): string {
   const normalized = String(status ?? '').trim().toLowerCase();
   return CONTRACT_STATUS_LABELS[normalized] ?? status ?? 'Contrato ativo';
 }
-
-const TONE_CLASSES: Record<TenantDocumentItem['tone'], string> = {
-  gold: styles.cardIconGold,
-  blue: styles.cardIconBlue,
-  green: styles.cardIconGreen,
-  red: styles.cardIconRed,
-};
 
 const TIMELINE_TONE_CLASSES: Record<TenantTimelineItem['tone'], string> = {
   done: styles.timelineDotDone,
@@ -325,9 +318,12 @@ function TenantMetricCard({ label, value, sub, tone = 'default' }: { label: stri
 function TenantDocumentList({ documents }: { documents: TenantDocumentItem[] }) {
   return (
     <div className={styles.card}>
-      <div className={styles.cardTitle}>
-        <span className={`${styles.cardIcon} ${styles.cardIconGold}`}><FileText className="h-4 w-4" /></span>
-        Documentos do imóvel
+      <div className={styles.cardHead}>
+        <div className={styles.cardTitle}>
+          <span className={styles.cardIco}><FileText className="h-[13px] w-[13px]" /></span>
+          Documentos do imóvel
+        </div>
+        <span className={styles.cardAction}>Baixar todos</span>
       </div>
 
       {documents.map((document) => {
@@ -336,7 +332,7 @@ function TenantDocumentList({ documents }: { documents: TenantDocumentItem[] }) 
 
         return (
           <a key={document.title} className={styles.docItem} href={href} target={href === '#' ? undefined : '_blank'} rel={href === '#' ? undefined : 'noreferrer'}>
-            <span className={`${styles.docFileIcon} ${TONE_CLASSES[document.tone]}`}><Icon className="h-4 w-4" /></span>
+            <span className={styles.docFileIcon}><Icon className="h-4 w-4" /></span>
             <span className={styles.docInfo}>
               <span className={styles.docName}>{document.title}</span>
               <span className={styles.docMeta}>{document.meta}</span>
@@ -349,43 +345,41 @@ function TenantDocumentList({ documents }: { documents: TenantDocumentItem[] }) 
   );
 }
 
-function TenantOwnershipCard({ contractPage }: { contractPage: FmzTenantContractPageData | null }) {
-  const ownership = contractPage?.ownership;
-  const ownershipPercentage = resolveOwnershipPercentage(ownership);
-  const ownershipValue = safeNumber(ownership?.currentOwnedValue);
-  const nextGoalPercentage = safeNumber(contractPage?.nextGoal?.percentage);
-  const amountNeeded = safeNumber(contractPage?.nextGoal?.amountNeeded);
-  const rentReduction = safeNumber(contractPage?.nextGoal?.estimatedMonthlyRentReduction);
-  const hasNextGoal = nextGoalPercentage > 0 || amountNeeded > 0;
+function TenantEconomySnapshotCard({ contractPage }: { contractPage: FmzTenantContractPageData | null }) {
+  const rentInsight = contractPage?.rentInsight;
+  const contract = contractPage?.contract;
+  const monthlySavings = safeNumber(rentInsight?.monthlySavingsAmount);
+  const originalRent = safeNumber(rentInsight?.originalRentAmount ?? contract?.baseMonthlyRent);
+  const currentRent = safeNumber(rentInsight?.currentRentAmount ?? contract?.currentRentAmount ?? contract?.baseMonthlyRent);
+  const savings = monthlySavings > 0 ? monthlySavings : Math.max(originalRent - currentRent, 0);
 
   return (
     <div className={styles.card}>
-      <div className={styles.cardTitle}>
-        <span className={`${styles.cardIcon} ${styles.cardIconGreen}`}><TrendingUp className="h-4 w-4" /></span>
-        Sua participação no imóvel
+      <div className={styles.cardHead}>
+        <div className={styles.cardTitle}>
+          <span className={styles.cardIco}><TrendingUp className="h-[13px] w-[13px]" /></span>
+          Sua economia até hoje
+        </div>
       </div>
-      <div className={styles.ownershipValueRow}>
-        <span className={styles.ownershipValue}>{formatPercent(ownershipPercentage)}</span>
-        <span className={styles.ownershipTotal}>de 100%</span>
+      <div className={styles.economyValue}>
+        <span className={styles.economyAmount}>{formatMoney(savings)}</span>
+        <span className={styles.economySub}>economizados por mês</span>
       </div>
-      {ownershipValue > 0 && (
-        <div className={styles.ownershipBody}>Equivale a <strong>{formatMoney(ownershipValue, { noCents: true })}</strong> em valor de mercado hoje</div>
-      )}
-      <div className={styles.ownershipBarTrack}>
-        <div className={styles.ownershipBarFill} style={{ width: `${Math.min(Math.max(ownershipPercentage, 0), 100)}%` }} />
-      </div>
-      {hasNextGoal && (
-        <div className={styles.ownershipBarLabels}>
-          <span>0%</span>
-          <span className={styles.ownershipGoal}>{formatPercent(nextGoalPercentage)} próxima meta</span>
-          <span>100%</span>
+      {contract?.startDate && (
+        <div className={styles.economyMeta}>
+          <span>Desde {formatDate(contract.startDate)}</span>
         </div>
       )}
-      {hasNextGoal && (
-        <div className={styles.ownershipCallout}>
-          <strong>Faltam {formatMoney(amountNeeded, { noCents: true })}</strong> em tokens para atingir {formatPercent(nextGoalPercentage)} e economizar mais {formatMoney(rentReduction, { noCents: true })}/mês no aluguel.
-        </div>
-      )}
+      <svg viewBox="0 0 280 50" width="100%" height="50" className={styles.sparkline} aria-hidden="true">
+        <defs>
+          <linearGradient id="ct-spark" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#E8B620" stopOpacity=".25" />
+            <stop offset="100%" stopColor="#E8B620" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d="M0,45 L20,44 L40,42 L60,40 L80,36 L100,32 L120,30 L140,26 L160,22 L180,18 L200,16 L220,12 L240,10 L260,7 L280,5 L280,50 L0,50 Z" fill="url(#ct-spark)" />
+        <path d="M0,45 L20,44 L40,42 L60,40 L80,36 L100,32 L120,30 L140,26 L160,22 L180,18 L200,16 L220,12 L240,10 L260,7 L280,5" fill="none" stroke="#E8B620" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
     </div>
   );
 }
@@ -393,22 +387,28 @@ function TenantOwnershipCard({ contractPage }: { contractPage: FmzTenantContract
 function TenantContractTimeline({ items }: { items: TenantTimelineItem[] }) {
   return (
     <div className={styles.card}>
-      <div className={styles.cardTitle}>
-        <span className={`${styles.cardIcon} ${styles.cardIconBlue}`}><CalendarDays className="h-4 w-4" /></span>
-        Linha do tempo do contrato
+      <div className={styles.cardHead}>
+        <div className={styles.cardTitle}>
+          <span className={styles.cardIco}><CalendarDays className="h-[13px] w-[13px]" /></span>
+          Linha do tempo
+        </div>
       </div>
       <div className={styles.timelineWrap}>
         {items.map((item, index) => {
           const Icon = item.icon;
           const isLast = index === items.length - 1;
+          const isNow = item.tone === 'now';
           const isWarn = item.tone === 'warn';
 
           return (
             <div className={styles.timelineLine} key={`${item.date}-${item.event}`}>
-              <div className={`${styles.timelineDot} ${TIMELINE_TONE_CLASSES[item.tone]}`}><Icon className="h-4 w-4" /></div>
+              <div className={`${styles.timelineDot} ${TIMELINE_TONE_CLASSES[item.tone]}`}><Icon className="h-3 w-3" /></div>
               <div className={`${styles.timelineInfo} ${isLast ? styles.timelineInfoLast : ''}`}>
                 <div className={styles.timelineDate}>{item.date}</div>
-                <div className={`${styles.timelineEvent} ${isWarn ? styles.timelineEventWarn : ''}`}>{item.event}</div>
+                <div className={`${styles.timelineEvent} ${isWarn ? styles.timelineEventWarn : ''}`}>
+                  {item.event}
+                  {isNow && <span className={styles.timelineNowTag}>Agora</span>}
+                </div>
                 <div className={`${styles.timelineDesc} ${isWarn ? styles.timelineDescWarn : ''}`}>{item.description}</div>
               </div>
             </div>
@@ -420,19 +420,32 @@ function TenantContractTimeline({ items }: { items: TenantTimelineItem[] }) {
 }
 
 function TenantImportantInfo({ items }: { items: TenantInfoItem[] }) {
+  const [openIndex, setOpenIndex] = useState<number>(0);
+
   return (
-    <div className={styles.infoGrid}>
-      {items.map((item) => {
+    <div className={styles.infoList}>
+      {items.map((item, i) => {
         const Icon = item.icon;
-        const isGold = item.tone === 'gold';
+        const isOpen = i === openIndex;
         return (
-          <article key={item.title} className={`${styles.infoItem} ${isGold ? styles.infoItemGold : ''}`}>
-            <Icon className={`${styles.infoIcon} ${isGold ? styles.infoIconGreen : ''}`} />
-            <div>
-              <div className={styles.infoTitle}>{item.title}</div>
-              <div className={styles.infoBody}>{item.body}</div>
+          <div key={item.title} className={`${styles.infoRow} ${isOpen ? styles.infoRowOpen : ''}`}>
+            <button
+              type="button"
+              className={styles.infoQ}
+              onClick={() => setOpenIndex(isOpen ? -1 : i)}
+            >
+              <span className={styles.infoIco}><Icon className="h-4 w-4" /></span>
+              <div className={styles.infoQText}>
+                <div className={styles.infoQTitle}>{item.title}</div>
+              </div>
+              <svg className={styles.infoQChev} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div className={styles.infoA}>
+              <div className={styles.infoAInner}>{item.body}</div>
             </div>
-          </article>
+          </div>
         );
       })}
     </div>
@@ -602,16 +615,20 @@ export function FmzTenantContractPage({ contractPage, contractDocumentUrl }: Fmz
         />
       </div>
 
-      <div className={styles.sectionLabel}>Contrato e documentação</div>
+      <div className={styles.sectionLabel}>
+        <span className={styles.sectionLabelTitle}>Contrato e histórico</span>
+      </div>
       <div className={styles.contentGrid}>
         <div className={styles.leftStack}>
           <TenantDocumentList documents={documents} />
-          <TenantOwnershipCard contractPage={contractPage} />
+          <TenantEconomySnapshotCard contractPage={contractPage} />
         </div>
         <TenantContractTimeline items={timelineItems} />
       </div>
 
-      <div className={styles.sectionLabel}>Informações importantes para você</div>
+      <div className={styles.sectionLabel}>
+        <span className={styles.sectionLabelTitle}>Informações importantes</span>
+      </div>
       <TenantImportantInfo items={infoItems} />
     </section>
   );
