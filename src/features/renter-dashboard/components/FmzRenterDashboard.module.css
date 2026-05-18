@@ -422,6 +422,11 @@
 .simPillK { font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
 .simPillV { font-family: var(--font-fmz-display); font-weight: 700; font-size: 14px; color: var(--navy); letter-spacing: -.01em; }
 .simPillVGreen { color: var(--green); }
+.simPillSub { font-size: 10px; color: var(--gold-deep); font-weight: 600; margin-top: 2px; }
+.simSliderDisabled {
+  font-size: 12px; color: var(--muted); text-align: center;
+  padding: 10px 0; border: 1px dashed var(--line); border-radius: 8px;
+}
 
 /* ── HISTORY ─────────────────────────────── */
 .histEmpty {

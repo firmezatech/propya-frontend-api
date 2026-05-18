@@ -207,6 +207,10 @@ export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): Fm
     originalRentNumber: originalRentAmount,
     rentPaidPercentage,
     rentCopy: 'Seus tokens já reduzem o aluguel. Comprar mais tokens aumenta sua participação e melhora esse desconto.',
+    tokenBalance: Math.max(ownership?.tokenBalance ?? 0, 0),
+    totalTokenSupply: Math.max(ownership?.totalSupply ?? 0, 0),
+    tokenUnitValue: Math.max(ownership?.tokenUnitValue ?? 0, 0),
+    baseRentForSimulation: originalRentAmount,
     invoice: {
       totalLabel: formatCurrency(totalDueAmount),
       dueDateLabel: dueDate ?? '-',

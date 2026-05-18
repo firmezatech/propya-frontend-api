@@ -40,6 +40,11 @@ export type FmzRenterDashboardViewModel = {
   originalRentNumber: number;
   rentPaidPercentage: number;
   rentCopy: string;
+  // Simulator-specific fields — consumed only by FmzRenterDashboardRentSimulatorCard
+  tokenBalance: number;
+  totalTokenSupply: number;
+  tokenUnitValue: number;
+  baseRentForSimulation: number;
   invoice: {
     totalLabel: string;
     dueDateLabel: string;
