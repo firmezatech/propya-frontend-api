@@ -27,12 +27,18 @@ type QuickAction = {
 const LINE_ICON: Record<string, typeof CreditCard> = {
   'current-rent': Home,
   'rent-with-discount': Home,
+  'discounted_rent': Home,
   'rent-fee': DollarSign,
+  'rental_admin_fee': DollarSign,
   'condominium': LayoutGrid,
+  'condominium_fee': LayoutGrid,
   'scheduled-token-purchase': Target,
+  'scheduled_token_purchase': Target,
   'token-purchase': Target,
   'token-purchase-fee': DollarSign,
+  'token_purchase_fee': DollarSign,
   'token-fee': DollarSign,
+  'token_fee': DollarSign,
 };
 
 const quickActions: QuickAction[] = [

@@ -115,6 +115,7 @@ export type FmzTenantOwnership = {
   totalSupply?: number | null;
   tokenUnitValue?: number | null;
   amountRemainingToFullOwnership?: number | null;
+  ownershipBps?: number | null;
 };
 
 export type FmzTenantNextGoal = {
@@ -135,6 +136,7 @@ export type FmzTenantMonthlySummary = {
   rentChargeId?: string | null;
   dueDate?: string | null;
   status?: string | null;
+  // Legacy field names (pre-v2)
   originalRentAmount?: number | null;
   rentWithDiscountAmount?: number | null;
   discountAmount?: number | null;
@@ -142,26 +144,43 @@ export type FmzTenantMonthlySummary = {
   condominiumAmount?: number | null;
   scheduledTokenPurchaseAmount?: number | null;
   tokenPurchaseFeeAmount?: number | null;
-  totalDueAmount?: number | null;
   annualSavingsAmount?: number | null;
+  // v2 field names from backend buildMonthlySummaryFromRentCharge
+  baseRentAmount?: number | null;
+  adjustmentAmount?: number | null;
+  adjustedBaseRentAmount?: number | null;
+  discountedRentAmount?: number | null;
+  condominiumFeeAmount?: number | null;
+  totalPurchasedTokens?: number | null;
+  tokenFeeAmount?: number | null;
+  totalDueAmount?: number | null;
   currency?: string | null;
   lines?: FmzTenantMonthlySummaryLine[];
 };
 
 export type FmzTenantRentInsight = {
+  // Legacy field names (pre-v2)
   currentRentAmount?: number | null;
   originalRentAmount?: number | null;
+  // v2 field names from backend buildRentInsight
+  baseRentAmount?: number | null;
+  adjustmentAmount?: number | null;
+  adjustedBaseRentAmount?: number | null;
+  discountedRentAmount?: number | null;
   monthlySavingsAmount?: number | null;
   annualSavingsAmount?: number | null;
   rentBarPercentage?: number | null;
 };
 
 export type FmzTenantBoleto = {
+  rentChargeId?: string | null;
   paymentTransactionId?: string | null;
   status?: string | null;
   paymentProvider?: string | null;
   paymentMethod?: string | null;
   externalReference?: string | null;
+  amount?: number | null;
+  dueDate?: string | null;
   downloadUrl?: string | null;
   digitableLine?: string | null;
   barcode?: string | null;

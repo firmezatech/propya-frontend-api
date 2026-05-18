@@ -54,7 +54,7 @@ function formatPercentagePoints(value: number): string {
 }
 
 function normalizeInvoiceLineLabel(label: string, key: string): string {
-  if (key === 'current-rent' || key === 'rent-with-discount') return 'Aluguel';
+  if (key === 'current-rent' || key === 'rent-with-discount' || key === 'discounted_rent') return 'Aluguel';
   return label.trim().toLowerCase() === 'aluguel com desconto' ? 'Aluguel' : label;
 }
 
@@ -96,18 +96,18 @@ function buildInvoiceLinesFromSummary(summary: FmzTenantMonthlySummary | null | 
       key: line.key,
       label: normalizeInvoiceLineLabel(line.label, line.key),
       value: formatCurrency(line.amount),
-      tone: line.key === 'current-rent' || line.key === 'rent-with-discount' ? 'success' as const
-        : line.key === 'scheduled-token-purchase' || line.key === 'token-purchase' ? 'warning' as const
+      tone: line.key === 'current-rent' || line.key === 'rent-with-discount' || line.key === 'discounted_rent' ? 'success' as const
+        : line.key === 'scheduled-token-purchase' || line.key === 'token-purchase' || line.key === 'scheduled_token_purchase' ? 'warning' as const
         : undefined,
     }));
   }
 
   const lines: FmzRenterDashboardViewModel['invoice']['lines'] = [];
-  const rentWithDiscount = summary.rentWithDiscountAmount ?? 0;
+  const rentWithDiscount = summary.discountedRentAmount ?? summary.rentWithDiscountAmount ?? 0;
   const adminFee = summary.rentalAdminFeeAmount ?? 0;
-  const condominium = summary.condominiumAmount ?? 0;
+  const condominium = summary.condominiumFeeAmount ?? summary.condominiumAmount ?? 0;
   const tokenPurchase = summary.scheduledTokenPurchaseAmount ?? 0;
-  const tokenFee = summary.tokenPurchaseFeeAmount ?? 0;
+  const tokenFee = summary.tokenFeeAmount ?? summary.tokenPurchaseFeeAmount ?? 0;
 
   lines.push({ key: 'current-rent', label: 'Aluguel', value: formatCurrency(rentWithDiscount), tone: 'success' });
 
@@ -138,7 +138,10 @@ export function hasRenterDashboardData(dashboard: FmzTenantDashboard | null): bo
   return Boolean(
     dashboard &&
     typeof dashboard.ownership?.currentPercentage === 'number' &&
-    (dashboard.rentInsight?.currentRentAmount || dashboard.monthlySummary?.rentWithDiscountAmount),
+    (dashboard.rentInsight?.discountedRentAmount ||
+      dashboard.rentInsight?.currentRentAmount ||
+      dashboard.monthlySummary?.discountedRentAmount ||
+      dashboard.monthlySummary?.rentWithDiscountAmount),
   );
 }
 
@@ -150,15 +153,18 @@ export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): Fm
   const currentOwnedValue = ownership?.currentOwnedValue ?? (totalPropertyValue * ownershipPercentage / 100);
   const amountRemainingToFullOwnership = ownership?.amountRemainingToFullOwnership ?? Math.max(totalPropertyValue - currentOwnedValue, 0);
 
-  const currentRentAmount = rentInsight?.currentRentAmount
+  const currentRentAmount = rentInsight?.discountedRentAmount
+    ?? rentInsight?.currentRentAmount
+    ?? monthlySummary?.discountedRentAmount
     ?? monthlySummary?.rentWithDiscountAmount
-    ?? monthlySummary?.originalRentAmount
     ?? 0;
-  const originalRentAmount = rentInsight?.originalRentAmount
+  const originalRentAmount = rentInsight?.adjustedBaseRentAmount
+    ?? rentInsight?.originalRentAmount
+    ?? monthlySummary?.adjustedBaseRentAmount
     ?? monthlySummary?.originalRentAmount
     ?? currentRentAmount;
-  const monthlySavings = rentInsight?.monthlySavingsAmount ?? Math.max(originalRentAmount - currentRentAmount, 0);
-  const yearlySavings = rentInsight?.annualSavingsAmount ?? (monthlySavings * 12);
+  const monthlySavings = rentInsight?.monthlySavingsAmount ?? 0;
+  const yearlySavings = rentInsight?.annualSavingsAmount ?? 0;
 
   const nextMilestonePercentage = nextGoal?.percentage != null
     ? normalizePercentage(nextGoal.percentage)
@@ -168,11 +174,11 @@ export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): Fm
   const nextMilestoneProgressPercentage = nextGoal?.progressToGoalPercentage != null
     ? normalizePercentage(nextGoal.progressToGoalPercentage)
     : (nextMilestoneTotal > 0 ? normalizePercentage((currentOwnedValue / nextMilestoneTotal) * 100) : 0);
-  const nextMilestoneGap = Math.max(nextMilestonePercentage - ownershipPercentage, 0);
-  const estimatedNextReduction = nextGoal?.estimatedMonthlyRentReduction ?? (originalRentAmount * nextMilestoneGap / 100);
+  const estimatedNextReduction = nextGoal?.estimatedMonthlyRentReduction ?? 0;
 
   const rentPaidPercentage = originalRentAmount > 0 ? normalizePercentage((currentRentAmount / originalRentAmount) * 100) : 0;
-  const totalDueAmount = monthlySummary?.totalDueAmount ?? 0;
+  const totalDueAmount = boleto?.amount ?? monthlySummary?.totalDueAmount ?? 0;
+  const dueDate = boleto?.dueDate ?? monthlySummary?.dueDate ?? null;
 
   return {
     renterName: dashboard.tenant?.name || DEFAULT_RENTER_NAME,
@@ -192,7 +198,7 @@ export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): Fm
     nextMilestoneRemainingNumber: nextMilestoneRemaining,
     nextMilestoneProgressPercentage,
     nextMilestoneRentReductionLabel: formatCurrency(estimatedNextReduction),
-    nextMilestoneGapLabel: formatPercentagePoints(nextMilestoneGap),
+    nextMilestoneGapLabel: formatPercentagePoints(Math.max(nextMilestonePercentage - ownershipPercentage, 0)),
     ownershipVisualPosition: getJourneyVisualPosition(ownershipPercentage),
     journeyMilestones: buildJourneyMilestones(ownershipPercentage, nextMilestonePercentage),
     currentRentLabel: formatCurrency(currentRentAmount),
@@ -203,8 +209,8 @@ export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): Fm
     rentCopy: 'Seus tokens já reduzem o aluguel. Comprar mais tokens aumenta sua participação e melhora esse desconto.',
     invoice: {
       totalLabel: formatCurrency(totalDueAmount),
-      dueDateLabel: monthlySummary?.dueDate ?? '-',
-      daysUntilDue: computeDaysUntilDue(monthlySummary?.dueDate),
+      dueDateLabel: dueDate ?? '-',
+      daysUntilDue: computeDaysUntilDue(dueDate),
       paymentUrl: boleto?.downloadUrl,
       lines: buildInvoiceLinesFromSummary(monthlySummary),
     },
