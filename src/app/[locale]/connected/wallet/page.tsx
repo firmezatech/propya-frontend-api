@@ -1,5 +1,5 @@
-import { FmzTenantPortalPage } from '../../../../features/tenant-portal/components';
+import { FmzWalletPage } from '../../../../features/wallet/components/FmzWalletPage';
 
 export default function TenantWalletPage() {
-  return <FmzTenantPortalPage kind="wallet" />;
+  return <FmzWalletPage />;
 }

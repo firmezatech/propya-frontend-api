@@ -14,6 +14,7 @@ import {
   KeyRound,
   MapPin,
   MessageCircle,
+  Plus,
   Search,
   ShieldCheck,
   TrendingDown,
@@ -51,8 +52,6 @@ type TenantInfoItem = {
   icon: LucideIcon;
   tone?: 'default' | 'gold';
 };
-
-const heroImagePath = '/images/tenant/condominium-hero.png';
 
 const fullDateFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium' });
 const shortDateFormatter = new Intl.DateTimeFormat('pt-BR');
@@ -440,15 +439,117 @@ function TenantImportantInfo({ items }: { items: TenantInfoItem[] }) {
   );
 }
 
+function TenantPropertyHeroCard({ contractPage }: { contractPage: FmzTenantContractPageData | null }) {
+  const address = resolveAddress(contractPage);
+  const property = contractPage?.property;
+  const contract = contractPage?.contract;
+
+  return (
+    <div className={styles.propCard}>
+      <div className={styles.propHead}>
+        <div>
+          <div className={styles.propEyebrow}>Endereço</div>
+          <div className={styles.propAddress}>{address.line}</div>
+          <div className={styles.propCity}>{address.city}</div>
+        </div>
+        {(property?.code ?? contract?.contractNumber) && (
+          <span className={styles.propId}>#{property?.code ?? contract?.contractNumber}</span>
+        )}
+      </div>
+      <div className={styles.propFoot}>
+        <div className={styles.propSpec}>
+          {property?.type && (
+            <div className={styles.propSpecItem}>
+              <span className={styles.propSpecKey}>Tipo</span>
+              <span className={styles.propSpecVal}>{property.type}</span>
+            </div>
+          )}
+          {contract?.startDate && (
+            <div className={styles.propSpecItem}>
+              <span className={styles.propSpecKey}>Início</span>
+              <span className={styles.propSpecVal}>{formatDate(contract.startDate)}</span>
+            </div>
+          )}
+          {contract?.endDate && (
+            <div className={styles.propSpecItem}>
+              <span className={styles.propSpecKey}>Término</span>
+              <span className={styles.propSpecVal}>{formatDate(contract.endDate)}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TenantOwnershipHeroCard({ contractPage }: { contractPage: FmzTenantContractPageData | null }) {
+  const ownership = contractPage?.ownership;
+  const pct = resolveOwnershipPercentage(ownership);
+  const nextGoal = contractPage?.nextGoal;
+  const amountNeeded = safeNumber(nextGoal?.amountNeeded);
+  const ownedValue = safeNumber(ownership?.currentOwnedValue);
+
+  const RADIUS = 40;
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+  const dashOffset = CIRCUMFERENCE - (Math.min(Math.max(pct, 0), 100) / 100) * CIRCUMFERENCE;
+
+  return (
+    <div className={styles.ownCard}>
+      <div className={styles.ownHead}>
+        <span className={styles.ownLabel}>Sua participação</span>
+        {nextGoal?.percentage != null && (
+          <span className={styles.ownBadge}>
+            Próx. meta {formatPercent(nextGoal.percentage)}
+          </span>
+        )}
+      </div>
+      <div className={styles.ownBody}>
+        <div className={styles.ownDonut}>
+          <svg width="96" height="96" viewBox="0 0 96 96">
+            <circle cx="48" cy="48" r={RADIUS} fill="none" stroke="#F0F1F5" strokeWidth="10" />
+            <circle
+              cx="48" cy="48" r={RADIUS} fill="none"
+              stroke="var(--fmz-gold)" strokeWidth="10" strokeLinecap="round"
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={dashOffset}
+              style={{ transition: 'stroke-dashoffset 1.6s cubic-bezier(.4,0,.2,1)' }}
+            />
+          </svg>
+          <div className={styles.ownPct}>{formatPercent(pct)}</div>
+        </div>
+        <div className={styles.ownInfo}>
+          {ownedValue > 0 && (
+            <>
+              <div className={styles.ownInfoValue}>{formatMoney(ownedValue, { noCents: true })}</div>
+              <div className={styles.ownInfoSub}>valor de mercado da sua fatia</div>
+            </>
+          )}
+        </div>
+      </div>
+      <div className={styles.ownFoot}>
+        {amountNeeded > 0 ? (
+          <span>Faltam <strong>{formatMoney(amountNeeded, { noCents: true })}</strong> para a próxima meta</span>
+        ) : (
+          <span>Tokens acumulados ao longo do contrato</span>
+        )}
+        <a href="#" className={styles.ownFootLink}>
+          Comprar tokens <ArrowRight className="h-3 w-3" />
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export function FmzTenantContractPage({ contractPage, contractDocumentUrl }: FmzTenantContractPageProps) {
   const property = contractPage?.property;
   const contract = contractPage?.contract;
   const rentInsight = contractPage?.rentInsight;
-  const address = resolveAddress(contractPage);
 
   const propertyValue = property?.appraisedValue ?? contractPage?.ownership?.totalPropertyValue ?? 0;
   const currentRent = contract?.currentRentAmount ?? rentInsight?.currentRentAmount ?? contract?.baseMonthlyRent ?? 0;
   const originalRent = rentInsight?.originalRentAmount ?? contract?.originalBaseRent ?? contract?.baseMonthlyRent ?? 0;
+
+  const contractStatus = resolveContractStatus(contract?.status);
 
   const documents = buildDocuments(contractPage, contractDocumentUrl);
   const timelineItems = buildTimeline(contractPage);
@@ -456,17 +557,32 @@ export function FmzTenantContractPage({ contractPage, contractDocumentUrl }: Fmz
 
   return (
     <section className={styles.page} aria-label="Meu imóvel e contrato">
-      <div className={styles.photoHero}>
-        <img className={styles.photoHeroImage} src={heroImagePath} alt="Imagem do condomínio" />
-        <div className={styles.photoOverlay} />
-        <div className={styles.photoTopBadge}><span className={styles.blinkDot} />{resolveContractStatus(contract?.status)}</div>
-        <div className={styles.photoBottom}>
-          <div className={styles.photoEyebrow}>Seu imóvel</div>
-          <div className={styles.photoAddress}>{address.line}</div>
-          <div className={styles.photoCity}>{[property?.name, address.city].filter(Boolean).join(' · ')}</div>
+      {/* Page head */}
+      <div className={styles.pageHead}>
+        <div className={styles.pageHeadLeft}>
+          <h1>Meu Imóvel</h1>
+          <div className={styles.pageHeadSub}>
+            <span className={styles.pageHeadPill}>
+              <span className={styles.pageHeadPillDot} />
+              {contractStatus}
+            </span>
+            {contract?.startDate && <span>Locação iniciada em {formatDate(contract.startDate)}</span>}
+          </div>
+        </div>
+        <div className={styles.pageHeadRight}>
+          <button type="button" className={styles.btnPrimary}>
+            <Plus className="h-4 w-4" /> Comprar tokens
+          </button>
         </div>
       </div>
 
+      {/* Hero 2-col */}
+      <section className={styles.hero}>
+        <TenantPropertyHeroCard contractPage={contractPage} />
+        <TenantOwnershipHeroCard contractPage={contractPage} />
+      </section>
+
+      {/* Metrics strip (3 cards) */}
       <div className={styles.metricsStrip}>
         <TenantMetricCard
           label="Valor do imóvel"
@@ -474,13 +590,16 @@ export function FmzTenantContractPage({ contractPage, contractDocumentUrl }: Fmz
           sub="Avaliação mais recente"
         />
         <TenantMetricCard
-          label="Aluguel atual"
+          label="Aluguel mensal"
           value={formatMoney(currentRent)}
           tone="green"
           sub={<span className={styles.metricSubStrike}>{formatMoney(originalRent)} sem desconto</span>}
         />
-        <TenantMetricCard label="Início do contrato" value={formatDate(contract?.startDate)} sub="Data de início da locação" />
-        <TenantMetricCard label="Término do contrato" value={formatDate(contract?.endDate)} sub="Data final do contrato" />
+        <TenantMetricCard
+          label="Período do contrato"
+          value={contract?.startDate ? formatDate(contract.startDate) : 'Não informado'}
+          sub={contract?.endDate ? `até ${formatDate(contract.endDate)}` : 'Vigente'}
+        />
       </div>
 
       <div className={styles.sectionLabel}>Contrato e documentação</div>

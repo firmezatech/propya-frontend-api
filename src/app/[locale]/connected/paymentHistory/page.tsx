@@ -1,5 +1,5 @@
-import { FmzTenantPortalPage } from '../../../../features/tenant-portal/components';
+import { FmzPaymentHistoryPage } from '../../../../features/payment-history/components/FmzPaymentHistoryPage';
 
 export default function TenantPaymentHistoryPage() {
-  return <FmzTenantPortalPage kind="paymentHistory" />;
+  return <FmzPaymentHistoryPage />;
 }
