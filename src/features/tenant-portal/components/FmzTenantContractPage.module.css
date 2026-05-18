@@ -80,9 +80,8 @@
 .cardAction:hover{color:var(--fmz-navy)}
 
 /* ── DOCS ────────────────────────────────────── */
-.docItem{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid var(--fmz-border-light);background:#fff;transition:all .15s;cursor:pointer;margin-bottom:8px;text-decoration:none}
+.docItem{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid var(--fmz-border-light);background:#fff;cursor:pointer;margin-bottom:8px;text-decoration:none}
 .docItem:last-child{margin-bottom:0}
-.docItem:hover{border-color:#D0D4DE;background:#FAFBFC}
 .docFileIcon{width:36px;height:36px;border-radius:8px;background:var(--fmz-page);color:var(--fmz-navy);display:grid;place-items:center;flex-shrink:0}
 .docInfo{flex:1;min-width:0;display:flex;flex-direction:column}
 .docName{display:block;font-size:13.5px;font-weight:600;color:var(--fmz-navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

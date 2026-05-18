@@ -22,7 +22,6 @@ type QuickAction = {
   description: string;
   href: string;
   icon: typeof Wrench;
-  unreadCount?: number;
 };
 
 const LINE_ICON: Record<string, typeof CreditCard> = {
@@ -44,7 +43,7 @@ const LINE_ICON: Record<string, typeof CreditCard> = {
 
 const quickActions: QuickAction[] = [
   { title: 'Manutenção', description: 'Nenhum chamado aberto', href: '/connected/maintenances', icon: Wrench },
-  { title: 'Falar com a gestora', description: 'Você tem 1 mensagem não lida', href: '/connected/recordsMenu', icon: MessageCircle, unreadCount: 1 },
+  { title: 'Falar com a gestora', description: 'Você tem 1 mensagem não lida', href: '/connected/recordsMenu', icon: MessageCircle },
   { title: 'Documentação', description: 'Contratos e documentos do imóvel', href: '/connected/myContract', icon: FileText },
 ];
 
@@ -246,14 +245,13 @@ export function FmzRenterDashboard({
       {/* Quick actions */}
       <div className={styles.quickGrid}>
         {quickActions.map((action) => (
-          <Link key={action.title} href={action.href} className={styles.quickCard}>
+          <Link key={action.title} href={action.href} className={`${styles.quickCard} fmz-lift-card`}>
             <div className={styles.quickIco}>
               <action.icon size={18} />
             </div>
             <div className={styles.quickBody}>
               <div className={styles.quickTitle}>
                 {action.title}
-                {action.unreadCount ? <span className={styles.quickBadge}>{action.unreadCount}</span> : null}
               </div>
               <div className={styles.quickSub}>{action.description}</div>
             </div>

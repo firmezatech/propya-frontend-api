@@ -1434,3 +1434,23 @@ margin-top: 20px;
 .fmz-admin-content-shell > .container > main:first-child {
   margin-top: 0;
 }
+
+/* ── Reusable interactive-card animation ─────────────────────────────────────
+   Apply alongside a component-specific class to get the standard lift/press
+   behavior. Used by: dashboard quickCard, myContract docItem.
+   ─────────────────────────────────────────────────────────────────────────── */
+.fmz-lift-card {
+  transition: border-color 0.15s ease, background 0.15s ease,
+              transform 0.15s ease, box-shadow 0.15s ease;
+}
+.fmz-lift-card:hover {
+  border-color: #D0D4DE;
+  background: #FAFBFC;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(17, 24, 39, 0.08);
+}
+.fmz-lift-card:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(17, 24, 39, 0.04);
+  background: #F0F1F5;
+}

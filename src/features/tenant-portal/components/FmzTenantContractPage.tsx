@@ -331,7 +331,7 @@ function TenantDocumentList({ documents }: { documents: TenantDocumentItem[] }) 
         const href = document.href || '#';
 
         return (
-          <a key={document.title} className={styles.docItem} href={href} target={href === '#' ? undefined : '_blank'} rel={href === '#' ? undefined : 'noreferrer'}>
+          <a key={document.title} className={`${styles.docItem} fmz-lift-card`} href={href} target={href === '#' ? undefined : '_blank'} rel={href === '#' ? undefined : 'noreferrer'}>
             <span className={styles.docFileIcon}><Icon className="h-4 w-4" /></span>
             <span className={styles.docInfo}>
               <span className={styles.docName}>{document.title}</span>
