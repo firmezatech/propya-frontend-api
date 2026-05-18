@@ -264,6 +264,7 @@ export function FmzPaymentHistoryPage() {
 
   return (
     <FmzConnectedPageShell width="tenant">
+      <div className={styles.page}>
       <Link href="/connected/dashboard" className={styles.backLink}>
         <ArrowLeft size={14} /> Voltar ao dashboard
       </Link>
@@ -377,6 +378,7 @@ export function FmzPaymentHistoryPage() {
           )}
         </>
       )}
+      </div>
     </FmzConnectedPageShell>
   );
 }

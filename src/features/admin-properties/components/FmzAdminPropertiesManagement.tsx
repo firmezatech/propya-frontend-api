@@ -367,10 +367,10 @@ export function FmzAdminPropertiesManagement() {
           <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
             <div>
               <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#9AA3B0]">Gestão de Portfólio</div>
-              <h1 className="font-['Syne'] text-[26px] font-extrabold tracking-[-0.025em] text-[#0D1321]">Imóveis</h1>
+              <h1 className="font-sans text-[26px] font-extrabold tracking-[-0.025em] text-[#0D1321]">Imóveis</h1>
               <p className="mt-1 text-[13px] leading-6 text-[#5A6478]">Cadastre e gerencie os imóveis disponíveis no portfólio.</p>
             </div>
-            <button type="button" onClick={openNewProperty} className="inline-flex items-center gap-2 rounded-[9px] bg-[#0D1321] px-[22px] py-[11px] font-['Syne'] text-[13px] font-bold uppercase tracking-[0.04em] text-white transition hover:-translate-y-0.5 hover:bg-[#162030]">
+            <button type="button" onClick={openNewProperty} className="inline-flex items-center gap-2 rounded-[9px] bg-[#0D1321] px-[22px] py-[11px] font-sans text-[13px] font-bold uppercase tracking-[0.04em] text-white transition hover:-translate-y-0.5 hover:bg-[#162030]">
               <Plus size={14} /> Novo imóvel
             </button>
           </div>
@@ -378,15 +378,15 @@ export function FmzAdminPropertiesManagement() {
           <div className="mb-[22px] grid grid-cols-1 gap-3 lg:grid-cols-3">
             <article className="flex items-center gap-3 rounded-xl border-[1.5px] border-[#E8EAF0] bg-white p-4">
               <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[9px] bg-[#F0F1F5]"><Building2 size={18} className="text-[#5A6478]" /></div>
-              <div><div className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#9AA3B0]">Total de imóveis</div><div className="font-['Syne'] text-[22px] font-extrabold text-[#0D1321]">{stats.total}</div></div>
+              <div><div className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#9AA3B0]">Total de imóveis</div><div className="font-sans text-[22px] font-extrabold text-[#0D1321]">{stats.total}</div></div>
             </article>
             <article className="flex items-center gap-3 rounded-xl border-[1.5px] border-[#E8EAF0] bg-white p-4">
               <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[9px] bg-[#F0FAF5]"><Check size={18} className="text-[#1A8C5B]" /></div>
-              <div><div className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#9AA3B0]">Disponíveis</div><div className="font-['Syne'] text-[22px] font-extrabold text-[#1A8C5B]">{stats.available}</div></div>
+              <div><div className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#9AA3B0]">Disponíveis</div><div className="font-sans text-[22px] font-extrabold text-[#1A8C5B]">{stats.available}</div></div>
             </article>
             <article className="flex items-center gap-3 rounded-xl border-[1.5px] border-[#E8EAF0] bg-white p-4">
               <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[9px] bg-[#FFF9E6]"><CircleDollarSign size={18} className="text-[#C8A020]" /></div>
-              <div><div className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#9AA3B0]">Valor total</div><div className="font-['Syne'] text-[15px] font-extrabold text-[#0D1321]">{formatCompactMoney(stats.totalValue)}</div></div>
+              <div><div className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#9AA3B0]">Valor total</div><div className="font-sans text-[15px] font-extrabold text-[#0D1321]">{formatCompactMoney(stats.totalValue)}</div></div>
             </article>
           </div>
 
@@ -410,7 +410,7 @@ export function FmzAdminPropertiesManagement() {
                 <button key={property.id || property.name} type="button" onClick={() => void openProperty(property)} className="group flex w-full flex-col gap-3 rounded-xl border-[1.5px] border-[#E8EAF0] bg-white p-4 text-left transition hover:-translate-y-0.5 hover:border-transparent hover:shadow-[0_6px_22px_rgba(13,19,33,0.09)] sm:flex-row sm:items-center md:px-5">
                   <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center self-start rounded-[10px] bg-[#F0F1F5] text-xl sm:self-auto">{typeIconByKey.get(property.propertyType) ?? '🏢'}</div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-['Syne'] text-[14.5px] font-bold text-[#0D1321]">{property.name}</div>
+                    <div className="truncate font-sans text-[14.5px] font-bold text-[#0D1321]">{property.name}</div>
                     <div className="mt-0.5 truncate text-xs text-[#5A6478]">{propertyAddress(property)}</div>
                     <div className="mt-2 flex flex-wrap gap-1">
                       <span className="rounded-[5px] border border-[#E8EAF0] bg-[#F0F1F5] px-2 py-0.5 text-[10.5px] font-semibold text-[#5A6478]">{typeLabelByKey.get(property.propertyType)}</span>
@@ -419,7 +419,7 @@ export function FmzAdminPropertiesManagement() {
                     </div>
                   </div>
                   <div className="hidden flex-shrink-0 flex-col items-end gap-1.5 sm:flex">
-                    <div className="font-['Syne'] text-sm font-bold text-[#0D1321]">{formatMoney(property.appraisedValue)}</div>
+                    <div className="font-sans text-sm font-bold text-[#0D1321]">{formatMoney(property.appraisedValue)}</div>
                     <div className="flex items-center gap-1.5 text-xs text-[#5A6478]"><span className={fmzCn('h-[7px] w-[7px] rounded-full', statusClasses[property.status].dot)} />{statusLabelByKey.get(property.status)}</div>
                   </div>
                   <ChevronRight size={18} className="hidden flex-shrink-0 text-[#9AA3B0] transition group-hover:translate-x-0.5 group-hover:text-[#0D1321] sm:block" />
@@ -431,9 +431,9 @@ export function FmzAdminPropertiesManagement() {
           ) : (
             <div className="rounded-xl border-[1.5px] border-[#E8EAF0] bg-white px-6 py-16 text-center">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border-2 border-dashed border-[#E8EAF0] bg-[#F7F8FA]"><Building2 size={24} className="text-[#D0D4DE]" /></div>
-              <h3 className="mb-1.5 font-['Syne'] text-base font-bold text-[#0D1321]">{query || statusFilter ? 'Nenhum imóvel encontrado' : 'Nenhum imóvel cadastrado'}</h3>
+              <h3 className="mb-1.5 font-sans text-base font-bold text-[#0D1321]">{query || statusFilter ? 'Nenhum imóvel encontrado' : 'Nenhum imóvel cadastrado'}</h3>
               <p className="mx-auto mb-5 max-w-[300px] text-[13px] leading-6 text-[#5A6478]">{query || statusFilter ? 'Tente outro filtro ou termo de busca.' : 'Adicione o primeiro imóvel ao portfólio.'}</p>
-              {!query && !statusFilter ? <button type="button" onClick={openNewProperty} className="inline-flex items-center gap-2 rounded-[9px] bg-[#0D1321] px-[22px] py-[11px] font-['Syne'] text-[13px] font-bold uppercase tracking-[0.04em] text-white"><Plus size={14} /> Cadastrar agora</button> : null}
+              {!query && !statusFilter ? <button type="button" onClick={openNewProperty} className="inline-flex items-center gap-2 rounded-[9px] bg-[#0D1321] px-[22px] py-[11px] font-sans text-[13px] font-bold uppercase tracking-[0.04em] text-white"><Plus size={14} /> Cadastrar agora</button> : null}
             </div>
           )}
         </section>
@@ -448,7 +448,7 @@ export function FmzAdminPropertiesManagement() {
               const isActive = item.id === step;
               return (
                 <button key={item.id} type="button" onClick={() => goStep(item.id)} className={fmzCn('relative flex flex-1 items-center gap-2.5 px-[18px] py-3.5 text-left transition md:before:absolute md:before:left-0 md:before:top-[20%] md:before:h-[60%] md:before:w-px md:before:bg-[#E8EAF0] first:before:hidden', isDone && 'bg-[#F0FAF5]', isActive && 'bg-[#FFFDF0]')}>
-                  <span className={fmzCn('flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-[#E8EAF0] bg-[#F7F8FA] font-[Syne] text-[11px] font-bold text-[#9AA3B0]', isDone && 'border-[#1A8C5B] bg-[#1A8C5B] text-white', isActive && 'border-[#0D1321] bg-[#0D1321] text-white')}>{isDone ? '✓' : item.id}</span>
+                  <span className={fmzCn('flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-[#E8EAF0] bg-[#F7F8FA] font-sans text-[11px] font-bold text-[#9AA3B0]', isDone && 'border-[#1A8C5B] bg-[#1A8C5B] text-white', isActive && 'border-[#0D1321] bg-[#0D1321] text-white')}>{isDone ? '✓' : item.id}</span>
                   <span className={fmzCn('text-[12.5px] font-medium text-[#9AA3B0]', isDone && 'text-[#1A8C5B]', isActive && 'font-semibold text-[#0D1321]')}>{item.label}</span>
                 </button>
               );
@@ -458,7 +458,7 @@ export function FmzAdminPropertiesManagement() {
           {step === 1 ? (
             <div>
               <div className="mb-4 rounded-[14px] border-[1.5px] border-[#E8EAF0] bg-white p-7">
-                <h2 className="mb-1 font-['Syne'] text-base font-bold text-[#0D1321]">Qual é esse imóvel?</h2>
+                <h2 className="mb-1 font-sans text-base font-bold text-[#0D1321]">Qual é esse imóvel?</h2>
                 <p className="mb-[22px] text-[13px] leading-6 text-[#5A6478]">Informe o nome de identificação, o tipo e o status atual do imóvel.</p>
                 <div className="grid grid-cols-1 gap-x-5 md:grid-cols-2">
                   <PropertyField label="Nome / Identificação *" error={fieldErrors.name} full><TextInput value={form.name} onChange={(event) => updateForm('name', event.target.value)} error={Boolean(fieldErrors.name)} placeholder="Ex: Apartamento Jardins 302" /></PropertyField>
@@ -492,14 +492,14 @@ export function FmzAdminPropertiesManagement() {
                   </div>
                 </div>
               </div>
-              <div className="mt-6 flex justify-end"><button type="button" onClick={() => goStep(2)} className="inline-flex items-center gap-2 rounded-[9px] bg-[#0D1321] px-7 py-3 font-['Syne'] text-[13px] font-bold uppercase tracking-[0.04em] text-white transition hover:-translate-y-0.5 hover:bg-[#162030]">Próximo: endereço <ChevronRight size={14} /></button></div>
+              <div className="mt-6 flex justify-end"><button type="button" onClick={() => goStep(2)} className="inline-flex items-center gap-2 rounded-[9px] bg-[#0D1321] px-7 py-3 font-sans text-[13px] font-bold uppercase tracking-[0.04em] text-white transition hover:-translate-y-0.5 hover:bg-[#162030]">Próximo: endereço <ChevronRight size={14} /></button></div>
             </div>
           ) : null}
 
           {step === 2 ? (
             <div>
               <div className="mb-4 rounded-[14px] border-[1.5px] border-[#E8EAF0] bg-white p-7">
-                <h2 className="mb-1 font-['Syne'] text-base font-bold text-[#0D1321]">Onde fica esse imóvel?</h2>
+                <h2 className="mb-1 font-sans text-base font-bold text-[#0D1321]">Onde fica esse imóvel?</h2>
                 <p className="mb-[22px] text-[13px] leading-6 text-[#5A6478]">Preencha o endereço completo. Essas informações aparecem no portfólio e nos contratos.</p>
                 <div className="mb-[18px] flex items-start gap-2.5 rounded-[10px] border border-[#F0D870] bg-[#FFF9E6] px-3.5 py-3 text-[12.5px] leading-6 text-[#7D5A00]"><Info size={16} className="mt-1 flex-shrink-0 text-[#C8A020]" />Digite o CEP para preencher automaticamente o logradouro, bairro e cidade.</div>
                 <div className="grid grid-cols-1 gap-x-5 md:grid-cols-2">
@@ -512,14 +512,14 @@ export function FmzAdminPropertiesManagement() {
                   <PropertyField label="Cidade *" error={fieldErrors.city}><TextInput value={form.city} onChange={(event) => updateForm('city', event.target.value)} error={Boolean(fieldErrors.city)} placeholder="Ex: São Paulo" /></PropertyField>
                 </div>
               </div>
-              <div className="mt-6 flex justify-between gap-2"><button type="button" onClick={() => goStep(1)} className="inline-flex items-center gap-1.5 rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white px-5 py-3 text-[13px] font-medium text-[#5A6478] transition hover:border-[#0D1321] hover:text-[#0D1321]"><ArrowLeft size={14} /> Voltar</button><button type="button" onClick={() => goStep(3)} className="inline-flex items-center gap-2 rounded-[9px] bg-[#0D1321] px-7 py-3 font-['Syne'] text-[13px] font-bold uppercase tracking-[0.04em] text-white transition hover:-translate-y-0.5 hover:bg-[#162030]">Próximo: financeiro <ChevronRight size={14} /></button></div>
+              <div className="mt-6 flex justify-between gap-2"><button type="button" onClick={() => goStep(1)} className="inline-flex items-center gap-1.5 rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white px-5 py-3 text-[13px] font-medium text-[#5A6478] transition hover:border-[#0D1321] hover:text-[#0D1321]"><ArrowLeft size={14} /> Voltar</button><button type="button" onClick={() => goStep(3)} className="inline-flex items-center gap-2 rounded-[9px] bg-[#0D1321] px-7 py-3 font-sans text-[13px] font-bold uppercase tracking-[0.04em] text-white transition hover:-translate-y-0.5 hover:bg-[#162030]">Próximo: financeiro <ChevronRight size={14} /></button></div>
             </div>
           ) : null}
 
           {step === 3 ? (
             <div>
               <div className="mb-4 rounded-[14px] border-[1.5px] border-[#E8EAF0] bg-white p-7">
-                <h2 className="mb-1 font-['Syne'] text-base font-bold text-[#0D1321]">Dados financeiros</h2>
+                <h2 className="mb-1 font-sans text-base font-bold text-[#0D1321]">Dados financeiros</h2>
                 <p className="mb-[22px] text-[13px] leading-6 text-[#5A6478]">Informe os valores de venda, locação e condições financeiras do imóvel.</p>
                 <div className="grid grid-cols-1 gap-x-5 md:grid-cols-2">
                   <PropertyField label="Valor total do imóvel (R$) *" error={fieldErrors.appraisedValue} full><div className="relative"><span className="pointer-events-none absolute left-[14px] top-1/2 -translate-y-1/2 text-[13.5px] font-medium text-[#5A6478]">R$</span><TextInput value={form.appraisedValue} onChange={(event) => updateForm('appraisedValue', formatMoneyInput(event.target.value))} error={Boolean(fieldErrors.appraisedValue)} className="pl-[38px]" placeholder="0,00" /></div></PropertyField>
@@ -529,7 +529,7 @@ export function FmzAdminPropertiesManagement() {
                 </div>
                 <PropertyField label="Observações financeiras"><TextAreaInput value={form.financialNotes} onChange={(event) => updateForm('financialNotes', event.target.value)} className="min-h-[70px]" placeholder="Ex: Aceita permuta parcial, entrada mínima 20%..." /></PropertyField>
               </div>
-              <div className="mt-6 flex justify-between gap-2"><button type="button" onClick={() => goStep(2)} className="inline-flex items-center gap-1.5 rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white px-5 py-3 text-[13px] font-medium text-[#5A6478] transition hover:border-[#0D1321] hover:text-[#0D1321]"><ArrowLeft size={14} /> Voltar</button><button type="button" onClick={() => goStep(4)} className="inline-flex items-center gap-2 rounded-[9px] bg-[#0D1321] px-7 py-3 font-['Syne'] text-[13px] font-bold uppercase tracking-[0.04em] text-white transition hover:-translate-y-0.5 hover:bg-[#162030]">Revisar e salvar <ChevronRight size={14} /></button></div>
+              <div className="mt-6 flex justify-between gap-2"><button type="button" onClick={() => goStep(2)} className="inline-flex items-center gap-1.5 rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white px-5 py-3 text-[13px] font-medium text-[#5A6478] transition hover:border-[#0D1321] hover:text-[#0D1321]"><ArrowLeft size={14} /> Voltar</button><button type="button" onClick={() => goStep(4)} className="inline-flex items-center gap-2 rounded-[9px] bg-[#0D1321] px-7 py-3 font-sans text-[13px] font-bold uppercase tracking-[0.04em] text-white transition hover:-translate-y-0.5 hover:bg-[#162030]">Revisar e salvar <ChevronRight size={14} /></button></div>
             </div>
           ) : null}
 
@@ -538,7 +538,7 @@ export function FmzAdminPropertiesManagement() {
               <div className="mb-4 overflow-hidden rounded-[14px] border-[1.5px] border-[#E8EAF0] bg-white">
                 <div className="flex items-center gap-3.5 border-b border-[#E8EAF0] px-[22px] py-[18px]">
                   <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[10px] bg-[#F0F1F5] text-[22px]">{typeIconByKey.get(form.propertyType) ?? '🏢'}</div>
-                  <div className="min-w-0"><div className="truncate font-['Syne'] text-[17px] font-extrabold text-[#0D1321]">{form.name || '—'}</div><div className="mt-0.5 truncate text-xs text-[#9AA3B0]">{[form.addressLine1, form.addressNumber].filter(Boolean).join(' ') || '—'}</div></div>
+                  <div className="min-w-0"><div className="truncate font-sans text-[17px] font-extrabold text-[#0D1321]">{form.name || '—'}</div><div className="mt-0.5 truncate text-xs text-[#9AA3B0]">{[form.addressLine1, form.addressNumber].filter(Boolean).join(' ') || '—'}</div></div>
                   <div className={fmzCn('ml-auto inline-flex whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold', statusClasses[form.status].badge)}>{statusLabelByKey.get(form.status)}</div>
                 </div>
                 <div className="p-[22px]">
@@ -564,7 +564,7 @@ export function FmzAdminPropertiesManagement() {
               </div>
               <div className="mt-6 flex items-center justify-between gap-2">
                 <div className="flex gap-2"><button type="button" onClick={() => goStep(3)} className="inline-flex items-center gap-1.5 rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white px-5 py-3 text-[13px] font-medium text-[#5A6478] transition hover:border-[#0D1321] hover:text-[#0D1321]"><ArrowLeft size={14} /> Voltar</button>{isEditing ? <button type="button" onClick={() => void removeProperty()} disabled={saving} className="inline-flex items-center gap-1.5 rounded-[9px] border-[1.5px] border-[#F5C4BF] bg-[#FEF5F4] px-4 py-2.5 text-[13px] font-medium text-[#D94F3D] transition hover:border-[#D94F3D] hover:bg-[#FDE8E6] disabled:opacity-60"><Trash2 size={14} /> Excluir</button> : null}</div>
-                <button type="button" onClick={() => void saveProperty()} disabled={saving} className="inline-flex items-center gap-2 rounded-[9px] bg-[#F5C842] px-7 py-3 font-['Syne'] text-[13px] font-bold uppercase tracking-[0.04em] text-[#0D1321] shadow-[0_4px_16px_rgba(245,200,66,0.3)] transition hover:-translate-y-0.5 hover:bg-[#C8A020] disabled:opacity-60">{saving ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />} {isEditing ? 'Atualizar imóvel' : 'Salvar imóvel'}</button>
+                <button type="button" onClick={() => void saveProperty()} disabled={saving} className="inline-flex items-center gap-2 rounded-[9px] bg-[#F5C842] px-7 py-3 font-sans text-[13px] font-bold uppercase tracking-[0.04em] text-[#0D1321] shadow-[0_4px_16px_rgba(245,200,66,0.3)] transition hover:-translate-y-0.5 hover:bg-[#C8A020] disabled:opacity-60">{saving ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />} {isEditing ? 'Atualizar imóvel' : 'Salvar imóvel'}</button>
               </div>
             </div>
           ) : null}
@@ -587,7 +587,7 @@ function SummaryField({ label, value, full = false, highlight = false }: { label
   return (
     <div className={fmzCn('rounded-[9px] border border-[#E8EAF0] bg-[#F7F8FA] px-3.5 py-3', full && 'md:col-span-2', highlight && 'border-[#F0D870] bg-[#FFFDF0]')}>
       <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#9AA3B0]">{label}</div>
-      <div className={fmzCn('text-[13.5px] font-medium text-[#0D1321]', highlight && 'font-[Syne] text-base font-bold')}>{value}</div>
+      <div className={fmzCn('text-[13.5px] font-medium text-[#0D1321]', highlight && 'font-sans text-base font-bold')}>{value}</div>
     </div>
   );
 }

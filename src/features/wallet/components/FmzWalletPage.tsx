@@ -370,12 +370,9 @@ export function FmzWalletPage() {
   const ownership = dashboard?.ownership;
   const transactions = useMemo(() => buildTransactionsFromHistory(history), [history]);
 
-  const walletDisplayId = wallets[0]?.id?.slice(-8).toUpperCase()
-    ?? wallets[0]?.walletAddress?.slice(-8).toUpperCase()
-    ?? null;
-
   return (
     <FmzConnectedPageShell width="tenant">
+      <div className={styles.page}>
       <Link href="/connected/dashboard" className={styles.backLink}>
         <ArrowLeft size={14} />
         Voltar ao dashboard
@@ -396,17 +393,6 @@ export function FmzWalletPage() {
           <div className={styles.pageHead}>
             <div className={styles.pageHeadLeft}>
               <h1 className={styles.pageTitle}>Carteira</h1>
-              <div className={styles.pageSub}>
-                {ownership?.tokenBalance != null && (
-                  <span>{formatNum(ownership.tokenBalance)} tokens</span>
-                )}
-                {dashboard?.property && (
-                  <span>· 1 imóvel ativo</span>
-                )}
-                {walletDisplayId && (
-                  <span className={styles.pageSubId}>· {walletDisplayId}</span>
-                )}
-              </div>
             </div>
             <div className={styles.pageHeadRight}>
               <button type="button" className={styles.btn}>
@@ -473,6 +459,7 @@ export function FmzWalletPage() {
           <WalletTransactionSection transactions={transactions} />
         </>
       )}
+      </div>
     </FmzConnectedPageShell>
   );
 }

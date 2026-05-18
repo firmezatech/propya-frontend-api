@@ -28,22 +28,6 @@ function splitMoneyDisplay(v?: number | null): { whole: string; cents: string } 
   return { whole: stripped.slice(0, commaIndex), cents: stripped.slice(commaIndex) };
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  paid: 'Pago', received: 'Pago', confirmed: 'Confirmado',
-  pending: 'Aguardando pagamento', created: 'Criado', registered: 'Registrado',
-  overdue: 'Vencido', expired: 'Expirado', canceled: 'Cancelado',
-  cancelled: 'Cancelado', not_generated: 'Não gerado',
-};
-
-function resolveStatusLabel(status?: string | null) {
-  const key = String(status ?? '').trim().toLowerCase();
-  return STATUS_LABEL[key] ?? status ?? 'Não informado';
-}
-
-function isStatusOk(status?: string | null) {
-  const key = String(status ?? '').trim().toLowerCase();
-  return key === 'paid' || key === 'received' || key === 'confirmed';
-}
 
 const BARCODE_WIDTHS = [3,1,2,3,1,1,2,1,3,2,1,2,1,3,1,2,3,1,2,1,1,3,2,1,2,3,1,1,2,3,1,2,1,1,3,2,1,3,1,2,1];
 
@@ -117,9 +101,6 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
   const summary = dashboard.monthlySummary;
   const competence = dashboard.competence;
 
-  const status = boleto?.status ?? summary?.status;
-  const isOk = isStatusOk(status);
-
   const daysUntilDue = useMemo(() => {
     if (!summary?.dueDate) return null;
     const due = new Date(summary.dueDate);
@@ -146,10 +127,6 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
             </p>
           )}
         </div>
-        <span className={isOk ? styles.pillOk : styles.pillWarn}>
-          <span className={styles.dot} />
-          {resolveStatusLabel(status)}
-        </span>
       </div>
 
       {/* Hero card */}

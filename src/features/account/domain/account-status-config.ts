@@ -106,7 +106,7 @@ export const SIDEBAR_ITEMS: AccountSidebarItem[] = [
   { id: 'sec-endereco', label: 'Endereço', icon: MapPin },
   { id: 'sec-financeiro', label: 'CPF e Carteira', icon: Wallet },
   { id: 'sec-senha', label: 'Alterar senha', icon: Lock },
-  { id: 'sec-kyc', label: 'Documentos KYC', icon: ShieldCheck, hasDot: true },
+  { id: 'sec-kyc', label: 'Documentos KYC', icon: ShieldCheck },
 ];
 
 export const SECTION_IDS = SIDEBAR_ITEMS.map((item) => item.id);

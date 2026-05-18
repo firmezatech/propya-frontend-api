@@ -11,37 +11,23 @@ export function AccountSidebar() {
   const [activeId, setActiveId] = useState<string>(SECTION_IDS[0]);
 
   useEffect(() => {
-    const visible = new Set<string>();
+    const OFFSET = 120;
 
-    const highlight = () => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY + OFFSET;
+      let currentId = SECTION_IDS[0];
       for (const id of SECTION_IDS) {
-        if (visible.has(id)) {
-          setActiveId(id);
-          return;
-        }
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const top = el.getBoundingClientRect().top + window.scrollY;
+        if (top <= scrollY) currentId = id;
       }
+      setActiveId(currentId);
     };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            visible.add(entry.target.id);
-          } else {
-            visible.delete(entry.target.id);
-          }
-        }
-        highlight();
-      },
-      { rootMargin: '-64px 0px -48% 0px', threshold: 0 },
-    );
-
-    for (const id of SECTION_IDS) {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    }
-
-    return () => observer.disconnect();
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const scrollToSection = (id: string) => {

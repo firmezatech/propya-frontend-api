@@ -93,9 +93,6 @@ export function FmzRenterDashboard({
         <h1 className={styles.pageTitle}>
           Olá, {viewModel.renterName}
         </h1>
-        <div className={styles.pageSub}>
-          <span className={styles.pillGreen}><span className={styles.dot} />Contrato ativo</span>
-        </div>
       </div>
 
       {/* Hero: Journey + Next milestone */}
