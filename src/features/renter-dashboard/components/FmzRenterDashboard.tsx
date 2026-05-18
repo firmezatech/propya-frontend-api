@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { CreditCard, DollarSign, FileText, Home, LayoutGrid, MessageCircle, Plus, Target, TrendingUp, Wrench } from 'lucide-react';
 import type { FmzTenantDashboard } from '../../../features/tenant-portal/domain/fmz-tenant-portal.types';
@@ -71,6 +72,7 @@ export function FmzRenterDashboard({
 }: FmzRenterDashboardProps) {
   const viewModel = useMemo(() => buildRenterDashboardViewModel(dashboard), [dashboard]);
 
+  const router = useRouter();
   const [hasAnimated, setHasAnimated] = useState(false);
 
   useEffect(() => {
@@ -83,9 +85,7 @@ export function FmzRenterDashboard({
 
   const handlePayInvoice = () => {
     if (onPayInvoice) { onPayInvoice(viewModel.invoice.paymentUrl); return; }
-    if (viewModel.invoice.paymentUrl) {
-      window.open(viewModel.invoice.paymentUrl, '_blank', 'width=800,height=600,menubar=no,toolbar=no,location=no,status=no');
-    }
+    router.push('/connected/issueInvoice');
   };
 
   const billSplit = splitBillAmount(viewModel.invoice.totalLabel);

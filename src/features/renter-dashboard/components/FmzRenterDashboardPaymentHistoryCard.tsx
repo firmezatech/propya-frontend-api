@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import type { FmzTenantPaymentHistoryItem } from '../../../features/tenant-portal/domain';
+import { formatDateBR } from '../../../lib/date-utils';
 import styles from './FmzRenterDashboard.module.css';
 
 type Props = {
@@ -9,7 +10,6 @@ type Props = {
   maxItems?: number;
 };
 
-const dateFmt = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' });
 const moneyFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 });
 
 const STATUS_LABEL: Record<string, string> = {
@@ -17,12 +17,6 @@ const STATUS_LABEL: Record<string, string> = {
   pending: 'Em aberto', created: 'Em aberto', registered: 'Em aberto',
   overdue: 'Vencido', expired: 'Expirado', canceled: 'Cancelado', cancelled: 'Cancelado',
 };
-
-function formatDate(v?: string | null): string {
-  if (!v) return '—';
-  const d = new Date(v);
-  return Number.isNaN(d.getTime()) ? v : dateFmt.format(d);
-}
 
 function normalizeStatus(status?: string | null): string {
   return String(status ?? '').trim().toLowerCase();
@@ -81,7 +75,7 @@ export function FmzRenterDashboardPaymentHistoryCard({ items, maxItems = 4 }: Pr
                   {item.reference}
                 </td>
                 <td className={styles.histAmount}>{moneyFmt.format(item.amount)}</td>
-                <td className={styles.histDate}>{formatDate(item.dueDate)}</td>
+                <td className={styles.histDate}>{formatDateBR(item.dueDate)}</td>
                 <td>
                   <span className={`${styles.histBadge} ${getHistBadgeClass(item.status)}`}>
                     <span className={styles.dot} />{getStatusLabel(item.status)}

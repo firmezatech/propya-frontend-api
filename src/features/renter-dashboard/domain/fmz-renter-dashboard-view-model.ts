@@ -1,5 +1,6 @@
 import type { FmzTenantDashboard, FmzTenantMonthlySummary } from '../../../features/tenant-portal/domain/fmz-tenant-portal.types';
 import type { FmzRenterDashboardViewModel } from './fmz-renter-dashboard.types';
+import { formatDateBR } from '../../../lib/date-utils';
 
 const DEFAULT_RENTER_NAME = 'Diana';
 const DEFAULT_REFERENCE_MONTH = 'Dezembro 2025';
@@ -182,7 +183,7 @@ export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): Fm
 
   return {
     renterName: dashboard.tenant?.name || DEFAULT_RENTER_NAME,
-    referenceMonthLabel: dashboard.competence?.label ?? dashboard.competence?.month ?? DEFAULT_REFERENCE_MONTH,
+    referenceMonthLabel: formatDateBR(dashboard.competence?.label ?? dashboard.competence?.month, DEFAULT_REFERENCE_MONTH),
     ownershipPercentage,
     ownershipPercentageLabel: formatPercentage(ownershipPercentage),
     monthlySavingsLabel: formatCurrency(monthlySavings),
@@ -213,7 +214,7 @@ export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): Fm
     baseRentForSimulation: originalRentAmount,
     invoice: {
       totalLabel: formatCurrency(totalDueAmount),
-      dueDateLabel: dueDate ?? '-',
+      dueDateLabel: formatDateBR(dueDate, '-'),
       daysUntilDue: computeDaysUntilDue(dueDate),
       paymentUrl: boleto?.downloadUrl,
       lines: buildInvoiceLinesFromSummary(monthlySummary),

@@ -8,16 +8,12 @@ import { FmzConnectedPageShell } from '../../../components/layout';
 import { getCurrentTenantDashboard } from '../../tenant-portal/services';
 import type { FmzTenantDashboard } from '../../tenant-portal/domain';
 import styles from './FmzInvoicePage.module.css';
+import { formatDateBR } from '../../../lib/date-utils';
 
 const moneyFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-const dateFmt = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' });
 
 const formatMoney = (v?: number | null) => moneyFmt.format(Number(v ?? 0));
-const formatDate = (v?: string | null): string => {
-  if (!v) return 'Não informado';
-  const d = new Date(v);
-  return Number.isNaN(d.getTime()) ? v : dateFmt.format(d);
-};
+const formatDate = (v?: string | null): string => formatDateBR(v, 'Não informado');
 
 function splitMoneyDisplay(v?: number | null): { whole: string; cents: string } {
   const formatted = moneyFmt.format(Number(v ?? 0));
