@@ -34,10 +34,15 @@ export function AccountKycProgressBanner() {
     <div className={styles.kycBanner}>
       <div className={styles.kycBannerTop}>
         <div className={styles.kycBannerLabel}>
-          <AlertTriangle aria-hidden="true" />
+          <span className={styles.kycLblIco}>
+            <AlertTriangle aria-hidden="true" />
+          </span>
           Cadastro incompleto — {pendingCount} documentos pendentes
         </div>
-        <span className={styles.kycBannerPct}>{progressPercent}% concluído</span>
+        <div className={styles.kycBannerPct}>
+          <span className={styles.kycBannerPctValue}>{progressPercent}%</span>
+          <span className={styles.kycBannerPctSub}>concluído</span>
+        </div>
       </div>
       <div className={styles.kycProgressTrack}>
         <div className={styles.kycProgressFill} style={{ width: `${progressPercent}%` }} />

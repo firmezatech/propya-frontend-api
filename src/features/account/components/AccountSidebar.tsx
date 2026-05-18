@@ -55,9 +55,8 @@ export function AccountSidebar() {
     <aside className={styles.sidebar}>
       <button type="button" onClick={() => router.back()} className={styles.sidebarBackLink}>
         <ArrowLeft aria-hidden="true" />
-        Voltar
+        Voltar ao dashboard
       </button>
-      <p className={styles.sidebarLabel}>Configurações</p>
       <nav className={styles.sidebarNav}>
         {SIDEBAR_ITEMS.map((item) => {
           const Icon = item.icon;
