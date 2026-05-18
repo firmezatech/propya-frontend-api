@@ -19,6 +19,15 @@ const formatDate = (v?: string | null): string => {
   return Number.isNaN(d.getTime()) ? v : dateFmt.format(d);
 };
 
+function splitMoneyDisplay(v?: number | null): { whole: string; cents: string } {
+  const formatted = moneyFmt.format(Number(v ?? 0));
+  // pt-BR produces "R$ X.XXX,XX" — strip currency prefix including non-breaking space
+  const stripped = formatted.replace(/^R\$[\s ]+/, '');
+  const commaIndex = stripped.lastIndexOf(',');
+  if (commaIndex === -1) return { whole: stripped, cents: '' };
+  return { whole: stripped.slice(0, commaIndex), cents: stripped.slice(commaIndex) };
+}
+
 const STATUS_LABEL: Record<string, string> = {
   paid: 'Pago', received: 'Pago', confirmed: 'Confirmado',
   pending: 'Aguardando pagamento', created: 'Criado', registered: 'Registrado',
@@ -84,6 +93,25 @@ function EmptyState({ title, description }: { title: string; description: string
   );
 }
 
+type InvoiceLine = { key: string; label: string; amount: number };
+
+function buildInvoiceLines(summary: FmzTenantDashboard['monthlySummary']): InvoiceLine[] {
+  if (summary?.lines && summary.lines.length > 0) return summary.lines;
+
+  const lines: InvoiceLine[] = [];
+  if ((summary?.rentWithDiscountAmount ?? 0) > 0)
+    lines.push({ key: 'current-rent', label: 'Aluguel', amount: summary!.rentWithDiscountAmount! });
+  if ((summary?.rentalAdminFeeAmount ?? 0) > 0)
+    lines.push({ key: 'rent-fee', label: 'Taxa adm. aluguel', amount: summary!.rentalAdminFeeAmount! });
+  if ((summary?.condominiumAmount ?? 0) > 0)
+    lines.push({ key: 'condominium', label: 'Condomínio', amount: summary!.condominiumAmount! });
+  if ((summary?.scheduledTokenPurchaseAmount ?? 0) > 0)
+    lines.push({ key: 'scheduled-token-purchase', label: 'Compra programada de tokens', amount: summary!.scheduledTokenPurchaseAmount! });
+  if ((summary?.tokenPurchaseFeeAmount ?? 0) > 0)
+    lines.push({ key: 'token-fee', label: 'Taxa de compra de tokens', amount: summary!.tokenPurchaseFeeAmount! });
+  return lines;
+}
+
 function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
   const boleto = dashboard.boleto;
   const summary = dashboard.monthlySummary;
@@ -102,28 +130,8 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
 
   const digitableLine = boleto?.digitableLine ?? '';
   const pixCode = 'Código PIX não disponível';
-
-  const lines = (() => {
-    if (summary?.lines && summary.lines.length > 0) return summary.lines;
-
-    const fallback: { key: string; label: string; amount: number }[] = [];
-    if ((summary?.rentWithDiscountAmount ?? 0) > 0) {
-      fallback.push({ key: 'current-rent', label: 'Aluguel', amount: summary!.rentWithDiscountAmount! });
-    }
-    if ((summary?.rentalAdminFeeAmount ?? 0) > 0) {
-      fallback.push({ key: 'rent-fee', label: 'Taxa adm. aluguel', amount: summary!.rentalAdminFeeAmount! });
-    }
-    if ((summary?.condominiumAmount ?? 0) > 0) {
-      fallback.push({ key: 'condominium', label: 'Condomínio', amount: summary!.condominiumAmount! });
-    }
-    if ((summary?.scheduledTokenPurchaseAmount ?? 0) > 0) {
-      fallback.push({ key: 'scheduled-token-purchase', label: 'Compra programada de tokens', amount: summary!.scheduledTokenPurchaseAmount! });
-    }
-    if ((summary?.tokenPurchaseFeeAmount ?? 0) > 0) {
-      fallback.push({ key: 'token-fee', label: 'Taxa de compra de tokens', amount: summary!.tokenPurchaseFeeAmount! });
-    }
-    return fallback;
-  })();
+  const lines = buildInvoiceLines(summary);
+  const totalDisplay = splitMoneyDisplay(summary?.totalDueAmount);
 
   return (
     <>
@@ -151,7 +159,8 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
             <span className={styles.heroEyebrow}>Valor total</span>
             <div className={styles.heroTotal}>
               <span className={styles.heroCurrency}>R$</span>
-              {formatMoney(summary?.totalDueAmount).replace('R$ ', '').replace('R$ ', '')}
+              {totalDisplay.whole}
+              <span className={styles.heroCents}>,{totalDisplay.cents}</span>
             </div>
             <div className={styles.heroDue}>
               {daysUntilDue !== null && daysUntilDue > 0 && (
@@ -174,7 +183,7 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
                 href={boleto.downloadUrl}
                 target="_blank"
                 rel="noreferrer"
-                className={`${styles.btn} ${styles.btnPrimary}`}
+                className={styles.btn}
                 style={{ textDecoration: 'none' }}
               >
                 <Download /> Baixar PDF

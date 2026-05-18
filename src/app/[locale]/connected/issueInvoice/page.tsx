@@ -1,5 +1,5 @@
-import { FmzTenantPortalPage } from '../../../../features/tenant-portal/components';
+import { FmzInvoicePage } from '../../../../features/invoices/components/FmzInvoicePage';
 
 export default function TenantIssueInvoicePage() {
-  return <FmzTenantPortalPage kind="invoice" />;
+  return <FmzInvoicePage />;
 }

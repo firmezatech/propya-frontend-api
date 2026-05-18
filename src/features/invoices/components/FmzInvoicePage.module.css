@@ -52,6 +52,7 @@
 .heroEyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fmz-text-hint); }
 .heroTotal { font-family: var(--font-syne), sans-serif; font-weight: 800; font-size: clamp(40px, 5.5vw, 56px); color: var(--fmz-navy); letter-spacing: -.03em; line-height: 1; display: flex; align-items: baseline; gap: 6px; }
 .heroCurrency { font-size: .5em; font-weight: 500; color: var(--fmz-text-muted); letter-spacing: .04em; }
+.heroCents { font-size: .5em; color: var(--fmz-text-muted); }
 .heroDue { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex-wrap: wrap; font-size: 13.5px; color: var(--fmz-text-muted); }
 .heroDate { font-family: var(--font-mono, monospace); color: var(--fmz-navy); font-weight: 600; font-size: 13.5px; }
 .heroActions { display: flex; flex-direction: column; gap: 8px; align-items: stretch; min-width: 200px; }
