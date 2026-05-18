@@ -4,112 +4,93 @@ import Link from 'next/link';
 import type { FmzTenantPaymentHistoryItem } from '../../../features/tenant-portal/domain';
 import styles from './FmzRenterDashboard.module.css';
 
-type FmzRenterDashboardPaymentHistoryCardProps = {
+type Props = {
   items: FmzTenantPaymentHistoryItem[];
   maxItems?: number;
 };
 
-const paymentDateFormatter = new Intl.DateTimeFormat('pt-BR', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-});
+const dateFmt = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' });
+const moneyFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 });
 
-const statusLabels: Record<string, string> = {
-  paid: 'Pago',
-  received: 'Pago',
-  confirmed: 'Pago',
-  pending: 'Em aberto',
-  created: 'Em aberto',
-  registered: 'Em aberto',
-  overdue: 'Vencido',
-  expired: 'Expirado',
-  canceled: 'Cancelado',
-  cancelled: 'Cancelado',
+const STATUS_LABEL: Record<string, string> = {
+  paid: 'Pago', received: 'Pago', confirmed: 'Pago',
+  pending: 'Em aberto', created: 'Em aberto', registered: 'Em aberto',
+  overdue: 'Vencido', expired: 'Expirado', canceled: 'Cancelado', cancelled: 'Cancelado',
 };
 
-function formatDate(value?: string | null): string {
-  if (!value) return 'Não informado';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return paymentDateFormatter.format(parsed);
+function formatDate(v?: string | null): string {
+  if (!v) return '—';
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? v : dateFmt.format(d);
 }
 
-function normalizeStatus(status?: string | null): keyof typeof statusLabels | 'unknown' {
-  const normalized = String(status ?? '').trim().toLowerCase();
-  return (normalized in statusLabels ? normalized : 'unknown') as keyof typeof statusLabels | 'unknown';
+function normalizeStatus(status?: string | null): string {
+  return String(status ?? '').trim().toLowerCase();
 }
 
 function getStatusLabel(status?: string | null): string {
-  const normalized = normalizeStatus(status);
-  return normalized === 'unknown' ? status?.trim() || 'Não informado' : statusLabels[normalized];
+  const k = normalizeStatus(status);
+  return STATUS_LABEL[k] ?? status?.trim() ?? 'Não informado';
 }
 
-function getStatusClassName(status?: string | null): string {
-  const normalized = normalizeStatus(status);
-
-  if (normalized === 'paid' || normalized === 'received' || normalized === 'confirmed') {
-    return styles.historyStatusPaid;
-  }
-
-  if (normalized === 'pending' || normalized === 'created' || normalized === 'registered') {
-    return styles.historyStatusOpen;
-  }
-
-  return styles.historyStatusNeutral;
+function getHistBadgeClass(status?: string | null): string {
+  const k = normalizeStatus(status);
+  if (k === 'paid' || k === 'received' || k === 'confirmed') return styles.histBadgePago;
+  if (k === 'pending' || k === 'created' || k === 'registered') return styles.histBadgeAberto;
+  return styles.histBadgeNeutral;
 }
 
-function formatAmount(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 2,
-  }).format(Number(value ?? 0));
-}
-
-export function FmzRenterDashboardPaymentHistoryCard({ items, maxItems = 3 }: FmzRenterDashboardPaymentHistoryCardProps) {
-  const visibleItems = items.slice(0, maxItems);
+export function FmzRenterDashboardPaymentHistoryCard({ items, maxItems = 4 }: Props) {
+  const visible = items.slice(0, maxItems);
 
   return (
     <div className={styles.card}>
-      <div className={styles.historyHeader}>
-        <h3 className={styles.cardTitle}>Histórico</h3>
-        <Link href="/connected/paymentHistory" className={styles.historyViewAllButton}>
-          Ver tudo →
+      <div className={styles.cardHead}>
+        <div className={styles.cardTitle}>
+          <span className={styles.ico}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+            </svg>
+          </span>
+          Histórico de pagamentos
+        </div>
+        <Link href="/connected/paymentHistory" className={styles.cardAction}>
+          Ver tudo
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+          </svg>
         </Link>
       </div>
 
-      {visibleItems.length === 0 ? (
-        <div className={styles.historyEmptyState}>Nenhum pagamento encontrado até o momento.</div>
+      {visible.length === 0 ? (
+        <div className={styles.histEmpty}>Nenhum pagamento encontrado.</div>
       ) : (
-        <div className={styles.historyTableWrap}>
-          <table className={styles.historyTable}>
-            <thead>
-              <tr>
-                <th>Mês</th>
-                <th>Total</th>
-                <th className={styles.historyOptionalColumn}>Vencimento</th>
-                <th>Status</th>
-                <th className={styles.historyOptionalColumn}>Pagamento</th>
+        <table className={styles.histTable}>
+          <thead>
+            <tr>
+              <th>Competência</th>
+              <th>Total</th>
+              <th>Vencimento</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((item) => (
+              <tr key={item.id}>
+                <td className={styles.histMes}>
+                  {item.reference}
+                </td>
+                <td className={styles.histAmount}>{moneyFmt.format(item.amount)}</td>
+                <td className={styles.histDate}>{formatDate(item.dueDate)}</td>
+                <td>
+                  <span className={`${styles.histBadge} ${getHistBadgeClass(item.status)}`}>
+                    <span className={styles.dot} />{getStatusLabel(item.status)}
+                  </span>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {visibleItems.map((item) => (
-                <tr key={item.id}>
-                  <td className={styles.historyMonth}>{item.reference}</td>
-                  <td>{formatAmount(item.amount)}</td>
-                  <td className={styles.historyOptionalColumn}>{formatDate(item.dueDate)}</td>
-                  <td>
-                    <span className={`${styles.historyStatusPill} ${getStatusClassName(item.status)}`}>
-                      {getStatusLabel(item.status)}
-                    </span>
-                  </td>
-                  <td className={`${styles.historyPayment} ${styles.historyOptionalColumn}`}>{formatDate(item.paidAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );

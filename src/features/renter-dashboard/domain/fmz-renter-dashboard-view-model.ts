@@ -122,6 +122,13 @@ function buildInvoiceLinesFromSummary(summary: FmzTenantMonthlySummary | null | 
   return lines;
 }
 
+function computeDaysUntilDue(dueDate?: string | null): number | null {
+  if (!dueDate) return null;
+  const due = new Date(dueDate);
+  if (Number.isNaN(due.getTime())) return null;
+  return Math.ceil((due.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+}
+
 export function hasRenterDashboardData(dashboard: FmzTenantDashboard | null): boolean {
   return Boolean(
     dashboard &&
@@ -192,6 +199,7 @@ export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): Fm
     invoice: {
       totalLabel: formatCurrency(totalDueAmount),
       dueDateLabel: monthlySummary?.dueDate ?? '-',
+      daysUntilDue: computeDaysUntilDue(monthlySummary?.dueDate),
       paymentUrl: boleto?.downloadUrl,
       lines: buildInvoiceLinesFromSummary(monthlySummary),
     },

@@ -43,6 +43,7 @@ export type FmzRenterDashboardViewModel = {
   invoice: {
     totalLabel: string;
     dueDateLabel: string;
+    daysUntilDue: number | null;
     paymentUrl?: string | null;
     lines: FmzDashboardMoneyLine[];
   };
