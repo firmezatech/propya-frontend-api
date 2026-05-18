@@ -35,13 +35,13 @@
 .pageHead {
   display: flex; align-items: flex-end; justify-content: space-between;
   gap: 24px; margin-bottom: 24px; flex-wrap: wrap;
+  padding-left: clamp(10px, 1.4vw, 20px);
 }
 .pageTitle {
   font-family: var(--font-fmz-display); font-weight: 700;
   font-size: clamp(28px,3.6vw,38px); letter-spacing: -.025em; line-height: 1.05;
   color: var(--navy); margin-bottom: 6px;
 }
-.wave { display: inline-block; color: var(--gold); }
 .pageSub {
   font-size: 13.5px; color: var(--muted);
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;

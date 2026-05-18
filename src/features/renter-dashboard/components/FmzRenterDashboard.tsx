@@ -91,11 +91,10 @@ export function FmzRenterDashboard({
       {/* Page head */}
       <div className={styles.pageHead}>
         <h1 className={styles.pageTitle}>
-          Olá, {viewModel.renterName} <span className={styles.wave}>·</span>
+          Olá, {viewModel.renterName}
         </h1>
         <div className={styles.pageSub}>
           <span className={styles.pillGreen}><span className={styles.dot} />Contrato ativo</span>
-          <span>Última atualização há 2 min</span>
         </div>
       </div>
 

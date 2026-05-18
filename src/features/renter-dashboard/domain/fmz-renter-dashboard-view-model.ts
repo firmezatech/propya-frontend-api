@@ -53,6 +53,11 @@ function formatPercentagePoints(value: number): string {
   return `${numberFormatter.format(Math.max(value, 0))} p.p.`;
 }
 
+function normalizeInvoiceLineLabel(label: string, key: string): string {
+  if (key === 'current-rent' || key === 'rent-with-discount') return 'Aluguel';
+  return label.trim().toLowerCase() === 'aluguel com desconto' ? 'Aluguel' : label;
+}
+
 function getJourneyVisualPosition(percentage: number): number {
   const value = normalizePercentage(percentage);
 
@@ -89,7 +94,7 @@ function buildInvoiceLinesFromSummary(summary: FmzTenantMonthlySummary | null | 
   if (summary.lines && summary.lines.length > 0) {
     return summary.lines.map((line) => ({
       key: line.key,
-      label: line.label,
+      label: normalizeInvoiceLineLabel(line.label, line.key),
       value: formatCurrency(line.amount),
       tone: line.key === 'current-rent' || line.key === 'rent-with-discount' ? 'success' as const
         : line.key === 'scheduled-token-purchase' || line.key === 'token-purchase' ? 'warning' as const
