@@ -9,10 +9,11 @@ import {
   createFeeParameter,
   createOwnershipGoal,
   getAdminTenantSettings,
+  listEligibleTenants,
   updateFeeParameter,
   updateOwnershipGoal,
 } from '../services';
-import type { FmzAdminFeeParameter, FmzAdminOwnershipGoal } from '../domain';
+import type { FmzAdminEligibleTenant, FmzAdminFeeParameter, FmzAdminOwnershipGoal } from '../domain';
 
 // ─── local form types ───────────────────────────────────────────────────────
 
@@ -29,6 +30,10 @@ type FeeForm = {
 
 type GoalForm = {
   id: string | undefined;
+  tenantUserId: string;
+  propertyId: string;
+  rentalContractId: string;
+  propertyTokenizationId: string;
   title: string;
   targetType: GoalTargetUiType;
   targetValue: string;
@@ -51,6 +56,10 @@ const EMPTY_FEE_FORM: FeeForm = {
 
 const EMPTY_GOAL_FORM: GoalForm = {
   id: undefined,
+  tenantUserId: '',
+  propertyId: '',
+  rentalContractId: '',
+  propertyTokenizationId: '',
   title: '',
   targetType: 'percentage',
   targetValue: '',
@@ -480,6 +489,12 @@ export function FmzAdminTenantSettings() {
   const [goalSaving, setGoalSaving] = useState(false);
   const [goalSaveError, setGoalSaveError] = useState<FmzNormalizedApiError | null>(null);
 
+  // eligible tenants for goal modal
+  const [eligibleTenants, setEligibleTenants] = useState<FmzAdminEligibleTenant[]>([]);
+  const [tenantsLoading, setTenantsLoading] = useState(false);
+  const [tenantsError, setTenantsError] = useState<string | null>(null);
+  const selectedTenant = eligibleTenants.find((t) => t.tenantUserId === goalForm.tenantUserId) ?? null;
+
   useEffect(() => {
     return () => {
       if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -579,6 +594,19 @@ export function FmzAdminTenantSettings() {
 
   // ── goal modal ────────────────────────────────────────────────────────────
 
+  const loadEligibleTenants = useCallback(async () => {
+    setTenantsLoading(true);
+    setTenantsError(null);
+    try {
+      const tenants = await listEligibleTenants();
+      setEligibleTenants(tenants);
+    } catch {
+      setTenantsError('Não foi possível carregar as inquilinas. Tente novamente.');
+    } finally {
+      setTenantsLoading(false);
+    }
+  }, []);
+
   const openGoalModal = useCallback((goal?: FmzAdminOwnershipGoal) => {
     setGoalErrors({});
     setGoalSaveError(null);
@@ -586,6 +614,10 @@ export function FmzAdminTenantSettings() {
       const isPct = goal.targetPercentage != null;
       setGoalForm({
         id: goal.id,
+        tenantUserId: '',
+        propertyId: '',
+        rentalContractId: '',
+        propertyTokenizationId: goal.propertyTokenizationId ?? '',
         title: goal.title,
         targetType: isPct ? 'percentage' : 'token',
         targetValue: isPct
@@ -601,7 +633,8 @@ export function FmzAdminTenantSettings() {
       setGoalForm(EMPTY_GOAL_FORM);
     }
     setGoalModalOpen(true);
-  }, []);
+    loadEligibleTenants();
+  }, [loadEligibleTenants]);
 
   const closeGoalModal = useCallback(() => {
     if (goalSaving) return;
@@ -610,6 +643,12 @@ export function FmzAdminTenantSettings() {
 
   const validateGoalForm = useCallback((): boolean => {
     const errs: FieldErrors = {};
+    const isNew = !goalForm.id;
+    if (isNew && !goalForm.tenantUserId) {
+      errs.tenantUserId = 'Selecione uma inquilina.';
+    } else if (isNew && !goalForm.propertyTokenizationId) {
+      errs.tenantUserId = 'A inquilina selecionada não possui imóvel tokenizado.';
+    }
     if (!goalForm.title.trim()) errs.title = 'Informe um nome para a meta.';
     const parsed = parseFloat(goalForm.targetValue);
     if (!goalForm.targetValue || !Number.isFinite(parsed) || parsed <= 0)
@@ -625,7 +664,7 @@ export function FmzAdminTenantSettings() {
     try {
       const parsed = parseFloat(goalForm.targetValue);
       const reduction = parseFloat(goalForm.rentReduction);
-      const draft = {
+      const baseDraft = {
         goalKey: toSnakeCase(goalForm.title),
         title: goalForm.title.trim(),
         targetPercentage: goalForm.targetType === 'percentage' ? parsed : null,
@@ -636,13 +675,19 @@ export function FmzAdminTenantSettings() {
       };
 
       if (goalForm.id) {
-        const updated = await updateOwnershipGoal(goalForm.id, draft);
+        const updated = await updateOwnershipGoal(goalForm.id, baseDraft);
         setGoals((prev) =>
           prev.map((g) => (g.id === goalForm.id ? { ...g, ...updated } : g)),
         );
         showToast('Meta atualizada com sucesso!');
       } else {
-        const created = await createOwnershipGoal(draft);
+        const created = await createOwnershipGoal({
+          ...baseDraft,
+          tenantUserId: goalForm.tenantUserId,
+          propertyId: goalForm.propertyId,
+          rentalContractId: goalForm.rentalContractId || null,
+          propertyTokenizationId: goalForm.propertyTokenizationId,
+        });
         setGoals((prev) => [...prev, created]);
         showToast('Meta criada com sucesso!');
       }
@@ -840,31 +885,30 @@ export function FmzAdminTenantSettings() {
             />
           </FormField>
 
-          <div className="grid grid-cols-2 gap-x-[18px]">
-            <FormField label="Tipo do valor *">
-              <TypeToggle
-                options={feeValueTypeOptions}
-                selected={feeForm.valueType}
-                onSelect={(k) => setFeeForm((f) => ({ ...f, valueType: k as FeeValueUiType }))}
+          <FormField label="Tipo do valor *">
+            <TypeToggle
+              options={feeValueTypeOptions}
+              selected={feeForm.valueType}
+              onSelect={(k) => setFeeForm((f) => ({ ...f, valueType: k as FeeValueUiType, value: '' }))}
+            />
+          </FormField>
+
+          <FormField
+            label={feeForm.valueType === 'percentage' ? 'Valor (%) *' : 'Valor (R$) *'}
+            error={feeErrors.value}
+          >
+            <InputSuffix suffix={feeForm.valueType === 'percentage' ? '%' : 'R$'}>
+              <input
+                className={fmzCn(inputClass(Boolean(feeErrors.value)), 'pr-10')}
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0,00"
+                value={feeForm.value}
+                onChange={(e) => setFeeForm((f) => ({ ...f, value: e.target.value }))}
               />
-            </FormField>
-            <FormField
-              label={feeForm.valueType === 'percentage' ? 'Valor (%) *' : 'Valor (R$) *'}
-              error={feeErrors.value}
-            >
-              <InputSuffix suffix={feeForm.valueType === 'percentage' ? '%' : 'R$'}>
-                <input
-                  className={fmzCn(inputClass(Boolean(feeErrors.value)), 'pr-10')}
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="0,00"
-                  value={feeForm.value}
-                  onChange={(e) => setFeeForm((f) => ({ ...f, value: e.target.value }))}
-                />
-              </InputSuffix>
-            </FormField>
-          </div>
+            </InputSuffix>
+          </FormField>
 
           <FormField label="Descrição">
             <textarea
@@ -893,6 +937,80 @@ export function FmzAdminTenantSettings() {
         />
         <div className="px-6 py-[22px]">
           <FmzFormAlert error={goalSaveError} />
+
+          {/* ── tenant + property (create only) ──────────────────────────── */}
+          {!goalForm.id && (
+            <div className="mb-5 rounded-[11px] border-[1.5px] border-[#E8EAF0] bg-[#F7F8FA] p-4">
+              <div className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#9AA3B0]">
+                Contexto da meta
+              </div>
+              <div className="mb-3 text-[12px] text-[#5A6478]">
+                Selecione a inquilina para vincular esta meta ao imóvel correto.
+              </div>
+
+              <FormField label="Inquilina *" error={goalErrors.tenantUserId}>
+                {tenantsLoading ? (
+                  <div className={fmzCn(inputClass(), 'flex items-center gap-2 text-[#9AA3B0]')}>
+                    <Loader2 size={13} className="animate-spin" />
+                    <span className="text-[13px]">Carregando inquilinas…</span>
+                  </div>
+                ) : tenantsError ? (
+                  <div className="rounded-[9px] border-[1.5px] border-[#F5C4BF] bg-[#FEF5F4] px-3.5 py-[11px]">
+                    <span className="text-[12.5px] text-[#D94F3D]">{tenantsError}</span>
+                    <button
+                      type="button"
+                      onClick={loadEligibleTenants}
+                      className="ml-2 text-[12px] font-medium text-[#D94F3D] underline"
+                    >
+                      Tentar novamente
+                    </button>
+                  </div>
+                ) : eligibleTenants.length === 0 ? (
+                  <div className={fmzCn(inputClass(), 'text-[13px] text-[#9AA3B0]')}>
+                    Nenhuma inquilina com imóvel e tokenização ativos encontrada.
+                  </div>
+                ) : (
+                  <select
+                    className={fmzCn(inputClass(Boolean(goalErrors.tenantUserId)), 'cursor-pointer')}
+                    value={goalForm.tenantUserId}
+                    onChange={(e) => {
+                      const tenant = eligibleTenants.find((t) => t.tenantUserId === e.target.value) ?? null;
+                      setGoalForm((f) => ({
+                        ...f,
+                        tenantUserId: tenant?.tenantUserId ?? '',
+                        propertyId: tenant?.propertyId ?? '',
+                        rentalContractId: tenant?.rentalContractId ?? '',
+                        propertyTokenizationId: tenant?.propertyTokenizationId ?? '',
+                      }));
+                    }}
+                  >
+                    <option value="">Selecione uma inquilina</option>
+                    {eligibleTenants.map((t) => (
+                      <option key={t.tenantUserId} value={t.tenantUserId}>
+                        {t.tenantName} — {t.tenantEmail}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </FormField>
+
+              <FormField label="Imóvel vinculado">
+                <div
+                  className={fmzCn(
+                    inputClass(),
+                    'cursor-default select-none',
+                    selectedTenant
+                      ? 'border-[#A8DFC4] bg-[#F0FAF5] text-[#1A8C5B]'
+                      : 'text-[#9AA3B0]',
+                  )}
+                >
+                  {selectedTenant
+                    ? [selectedTenant.propertyName, selectedTenant.propertyCode].filter(Boolean).join(' — ')
+                    : 'Preenchido automaticamente após selecionar a inquilina'}
+                </div>
+              </FormField>
+            </div>
+          )}
 
           <FormField label="Nome da meta *" error={goalErrors.title}>
             <input
@@ -957,7 +1075,7 @@ export function FmzAdminTenantSettings() {
           onCancel={closeGoalModal}
           onSave={handleSaveGoal}
           saveLabel="Salvar meta"
-          saving={goalSaving}
+          saving={goalSaving || tenantsLoading}
         />
       </ModalBackdrop>
 
