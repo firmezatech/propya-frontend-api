@@ -48,7 +48,10 @@ export type FmzAdminOwnershipGoal = {
 };
 
 export type FmzAdminOwnershipGoalDraft = {
-  propertyTokenizationId?: string | null;
+  tenantUserId: string;
+  propertyId: string;
+  rentalContractId?: string | null;
+  propertyTokenizationId: string;
   goalKey: string;
   title: string;
   description?: string | null;
@@ -57,6 +60,22 @@ export type FmzAdminOwnershipGoalDraft = {
   rewardDescription?: string | null;
   displayOrder?: number | null;
   isActive: boolean;
+};
+
+export type FmzAdminEligibleTenant = {
+  tenantUserId: string;
+  tenantName: string;
+  tenantEmail: string;
+  propertyId: string;
+  propertyName: string;
+  propertyCode: string | null;
+  rentalContractId: string;
+  propertyTokenizationId: string;
+  tokenSymbol: string | null;
+  totalSupply: number;
+  tokenUnitValue: number | null;
+  contractStatus: string;
+  propertyStatus: string;
 };
 
 export type FmzAdminTenantSettings = {

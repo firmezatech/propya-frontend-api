@@ -1,5 +1,6 @@
 import { firmezaApiClient } from '../../../services/firmeza-api-client';
 import type {
+  FmzAdminEligibleTenant,
   FmzAdminFeeParameter,
   FmzAdminFeeParameterDraft,
   FmzAdminOwnershipGoal,
@@ -107,6 +108,31 @@ const normalizeTenantSettings = (data: unknown): FmzAdminTenantSettings => {
     goals: goals.map(normalizeOwnershipGoal),
   };
 };
+
+export const normalizeEligibleTenant = (raw: unknown): FmzAdminEligibleTenant => {
+  const r = recordOf(raw);
+  return {
+    tenantUserId: str(r.tenantUserId ?? r.tenant_user_id),
+    tenantName: str(r.tenantName ?? r.tenant_name),
+    tenantEmail: str(r.tenantEmail ?? r.tenant_email),
+    propertyId: str(r.propertyId ?? r.property_id),
+    propertyName: str(r.propertyName ?? r.property_name),
+    propertyCode: optionalStr(r.propertyCode ?? r.property_code),
+    rentalContractId: str(r.rentalContractId ?? r.rental_contract_id),
+    propertyTokenizationId: str(r.propertyTokenizationId ?? r.property_tokenization_id),
+    tokenSymbol: optionalStr(r.tokenSymbol ?? r.token_symbol),
+    totalSupply: num(r.totalSupply ?? r.total_supply),
+    tokenUnitValue: optionalNum(r.tokenUnitValue ?? r.token_unit_value),
+    contractStatus: str(r.contractStatus ?? r.contract_status, 'active'),
+    propertyStatus: str(r.propertyStatus ?? r.property_status, 'active'),
+  };
+};
+
+export async function listEligibleTenants(): Promise<FmzAdminEligibleTenant[]> {
+  const { data } = await firmezaApiClient.get(`${TENANT_SETTINGS_PATH}/tenants`);
+  const r = recordOf(data);
+  return arr(r.items ?? r.data).map(normalizeEligibleTenant);
+}
 
 export async function getAdminTenantSettings(): Promise<FmzAdminTenantSettings> {
   const { data } = await firmezaApiClient.get(TENANT_SETTINGS_PATH);
