@@ -75,7 +75,7 @@ const DEFAULT_PARAMETER_SCOPE = 'global' as const;
 const toSnakeCase = (s: string): string =>
   s
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, '_')
@@ -88,7 +88,7 @@ const formatBRL = (value: number): string =>
   value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const formatPct = (value: number): string =>
-  value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  value.toLocaleString('pt-BR', { maximumFractionDigits: 10 });
 
 // ─── shared sub-components ──────────────────────────────────────────────────
 
@@ -141,16 +141,16 @@ function TypeToggle({
           type="button"
           onClick={() => onSelect(opt.key)}
           className={fmzCn(
-            'flex items-center gap-2.5 rounded-[10px] border-[1.5px] p-3 text-left transition',
+            'flex items-start gap-3 rounded-[10px] border-[1.5px] p-3.5 text-left transition',
             selected === opt.key
               ? 'border-[#0D1321] bg-[#F0F1F5]'
               : 'border-[#E8EAF0] bg-white hover:border-[#0D1321]',
           )}
         >
-          {opt.icon}
-          <div>
-            <div className="text-[12.5px] font-semibold text-[#0D1321]">{opt.title}</div>
-            <div className="text-[11px] text-[#5A6478]">{opt.desc}</div>
+          <div className="shrink-0 pt-0.5">{opt.icon}</div>
+          <div className="min-w-0">
+            <div className="text-[13px] font-semibold leading-snug text-[#0D1321]">{opt.title}</div>
+            <div className="text-[12px] leading-snug text-[#5A6478]">{opt.desc}</div>
           </div>
         </button>
       ))}
@@ -217,7 +217,7 @@ function ModalBackdrop({
     >
       <div
         className={fmzCn(
-          'w-full max-w-[500px] overflow-hidden rounded-2xl bg-white shadow-[0_20px_60px_rgba(13,19,33,0.22)] transition-transform duration-[220ms]',
+          'w-full max-w-[500px] max-h-[calc(100vh-64px)] overflow-y-auto rounded-2xl bg-white shadow-[0_20px_60px_rgba(13,19,33,0.22)] transition-transform duration-[220ms]',
           open ? 'translate-y-0 scale-100' : 'translate-y-3 scale-[0.98]',
         )}
       >
@@ -903,31 +903,30 @@ export function FmzAdminTenantSettings() {
             />
           </FormField>
 
-          <div className="grid grid-cols-2 gap-x-[18px]">
-            <FormField label="Tipo de meta *">
-              <TypeToggle
-                options={goalTargetTypeOptions}
-                selected={goalForm.targetType}
-                onSelect={(k) => setGoalForm((f) => ({ ...f, targetType: k as GoalTargetUiType }))}
+          <FormField label="Tipo de meta *">
+            <TypeToggle
+              options={goalTargetTypeOptions}
+              selected={goalForm.targetType}
+              onSelect={(k) => setGoalForm((f) => ({ ...f, targetType: k as GoalTargetUiType, targetValue: '' }))}
+            />
+          </FormField>
+
+          <FormField
+            label={goalForm.targetType === 'percentage' ? 'Porcentagem alvo *' : 'Valor em tokens (R$) *'}
+            error={goalErrors.targetValue}
+          >
+            <InputSuffix suffix={goalForm.targetType === 'percentage' ? '%' : 'R$'}>
+              <input
+                className={fmzCn(inputClass(Boolean(goalErrors.targetValue)), 'pr-10')}
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder={goalForm.targetType === 'percentage' ? '10' : '50000'}
+                value={goalForm.targetValue}
+                onChange={(e) => setGoalForm((f) => ({ ...f, targetValue: e.target.value }))}
               />
-            </FormField>
-            <FormField
-              label={goalForm.targetType === 'percentage' ? 'Porcentagem alvo *' : 'Valor em tokens (R$) *'}
-              error={goalErrors.targetValue}
-            >
-              <InputSuffix suffix={goalForm.targetType === 'percentage' ? '%' : 'R$'}>
-                <input
-                  className={fmzCn(inputClass(Boolean(goalErrors.targetValue)), 'pr-10')}
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder={goalForm.targetType === 'percentage' ? '10' : '50000'}
-                  value={goalForm.targetValue}
-                  onChange={(e) => setGoalForm((f) => ({ ...f, targetValue: e.target.value }))}
-                />
-              </InputSuffix>
-            </FormField>
-          </div>
+            </InputSuffix>
+          </FormField>
 
           <FormField label="Redução no aluguel ao atingir (R$)">
             <InputSuffix suffix="R$">
