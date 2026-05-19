@@ -1,0 +1,1 @@
+export { FmzAdminTenantSettings } from './FmzAdminTenantSettings';

@@ -27,6 +27,7 @@ export const fmzPublicLayoutConfig = {
   connectedAdminRolesLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_ROLES_LABEL', 'Roles'),
   connectedAdminUsersPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_USERS_PATH', '/connected/adminUserList'),
   connectedAdminPropertiesPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_PROPERTIES_PATH', '/connected/propertyManagement'),
+  connectedAdminTenantSettingsPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TENANT_SETTINGS_PATH', '/connected/tenantSettings'),
   connectedAdminUsersLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_USERS_LABEL', 'Usuários'),
   connectedAdminPropertiesLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_PROPERTIES_LABEL', 'Imóveis'),
   defaultConnectedUserName: getPublicEnvValue('NEXT_PUBLIC_FMZ_DEFAULT_CONNECTED_USER_NAME', 'Firmeza Token'),

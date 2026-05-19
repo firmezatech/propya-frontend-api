@@ -1,0 +1,65 @@
+export type FmzTenantSettingsValueType = 'percentage' | 'currency';
+export type FmzTenantSettingsScope = 'global' | 'property' | 'contract';
+
+export type FmzAdminFeeParameter = {
+  id: string;
+  parameterKey: string;
+  parameterValue: number;
+  valueType: FmzTenantSettingsValueType;
+  parameterScope: FmzTenantSettingsScope;
+  propertyId?: string | null;
+  rentalContractId?: string | null;
+  description?: string | null;
+  validFrom?: string | null;
+  validTo?: string | null;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type FmzAdminFeeParameterDraft = {
+  parameterKey: string;
+  parameterValue: number;
+  valueType: FmzTenantSettingsValueType;
+  parameterScope: FmzTenantSettingsScope;
+  propertyId?: string | null;
+  rentalContractId?: string | null;
+  description?: string | null;
+  validFrom?: string | null;
+  validTo?: string | null;
+  isActive: boolean;
+};
+
+export type FmzAdminOwnershipGoal = {
+  id: string;
+  propertyTokenizationId?: string | null;
+  goalKey: string;
+  title: string;
+  description?: string | null;
+  rentReductionAmount?: number | null;
+  targetPercentage?: number | null;
+  targetTokenAmount?: number | null;
+  rewardDescription?: string | null;
+  displayOrder?: number | null;
+  isActive: boolean;
+  achievementRate?: number | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type FmzAdminOwnershipGoalDraft = {
+  propertyTokenizationId?: string | null;
+  goalKey: string;
+  title: string;
+  description?: string | null;
+  targetPercentage?: number | null;
+  targetTokenAmount?: number | null;
+  rewardDescription?: string | null;
+  displayOrder?: number | null;
+  isActive: boolean;
+};
+
+export type FmzAdminTenantSettings = {
+  parameters: FmzAdminFeeParameter[];
+  goals: FmzAdminOwnershipGoal[];
+};
