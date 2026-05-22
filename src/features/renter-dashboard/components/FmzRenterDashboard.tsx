@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { CreditCard, DollarSign, FileText, Home, LayoutGrid, MessageCircle, Plus, Target, TrendingUp, Wrench } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CreditCard, DollarSign, FileText, Home, LayoutGrid, MessageCircle, Plus, Target, TrendingUp, Wrench } from 'lucide-react';
 import type { FmzTenantDashboard } from '../../../features/tenant-portal/domain/fmz-tenant-portal.types';
 import type { FmzTenantPaymentHistoryItem } from '../../../features/tenant-portal/domain';
 import { buildRenterDashboardViewModel, hasRenterDashboardData } from '../domain/fmz-renter-dashboard-view-model';
@@ -22,6 +22,15 @@ type QuickAction = {
   description: string;
   href: string;
   icon: typeof Wrench;
+};
+
+type OwnershipGoalSlide = {
+  id: string;
+  label: string;
+  amountLabel: string;
+  description: string;
+  progressLabel: string;
+  progressPercentage: number;
 };
 
 const LINE_ICON: Record<string, typeof CreditCard> = {
@@ -67,6 +76,66 @@ function splitNextAmount(label: string): string {
   return commaIdx !== -1 ? withoutPrefix.slice(0, commaIdx) : withoutPrefix;
 }
 
+const moneyFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  maximumFractionDigits: 2,
+});
+
+const goalPercentFormatter = new Intl.NumberFormat('pt-BR', {
+  maximumFractionDigits: 1,
+  minimumFractionDigits: 0,
+});
+
+function formatGoalMoney(value: number): string {
+  return moneyFormatter.format(Math.max(value, 0));
+}
+
+function formatGoalPercent(value: number): string {
+  return `${goalPercentFormatter.format(Math.min(Math.max(value, 0), 100))}%`;
+}
+
+function splitGoalAmount(label: string): string {
+  return splitNextAmount(label);
+}
+
+function buildOwnershipGoalSlides(viewModel: ReturnType<typeof buildRenterDashboardViewModel>): OwnershipGoalSlide[] {
+  const currentOwnedValue = Math.max(viewModel.acquiredTokensNumber, 0);
+  const propertyValue = Math.max(viewModel.propertyValueNumber, 0);
+  const baseRent = Math.max(viewModel.originalRentNumber, 0);
+  const candidateTargets = [viewModel.nextMilestonePercentage, 20, 40, 60, 100]
+    .filter((target, index, targets) => target > viewModel.ownershipPercentage && targets.indexOf(target) === index)
+    .sort((left, right) => left - right);
+
+  const targets = candidateTargets.length > 0 ? candidateTargets.slice(0, 4) : [100];
+
+  return targets.map((target, index) => {
+    const targetValue = propertyValue > 0 ? propertyValue * (target / 100) : viewModel.nextMilestoneRemainingNumber;
+    const amountNeeded = index === 0
+      ? viewModel.nextMilestoneRemainingNumber
+      : Math.max(targetValue - currentOwnedValue, 0);
+    const progressPercentage = index === 0
+      ? viewModel.nextMilestoneProgressPercentage
+      : (targetValue > 0 ? Math.min(Math.max((currentOwnedValue / targetValue) * 100, 0), 100) : viewModel.ownershipPercentage);
+    const rentReduction = index === 0
+      ? viewModel.nextMilestoneRentReductionLabel
+      : formatGoalMoney(baseRent * (target / 100));
+    const targetLabel = formatGoalPercent(target);
+    const isFinalGoal = target >= 100;
+
+    return {
+      id: `goal-${target}`,
+      label: `${isFinalGoal ? 'Marco final' : 'Próximo marco'} · ${targetLabel}`,
+      amountLabel: formatGoalMoney(amountNeeded),
+      description: isFinalGoal
+        ? 'Com 100% de posse, você elimina completamente o custo de aluguel do imóvel.'
+        : `Ao atingir ${targetLabel} de posse, seu aluguel pode reduzir em ${rentReduction} por mês.`,
+      progressLabel: `Progresso até ${targetLabel}`,
+      progressPercentage,
+    };
+  });
+}
+
 export function FmzRenterDashboard({
   dashboard,
   paymentHistory = [],
@@ -76,12 +145,19 @@ export function FmzRenterDashboard({
 
   const router = useRouter();
   const [hasAnimated, setHasAnimated] = useState(false);
+  const [currentGoalIndex, setCurrentGoalIndex] = useState(0);
+  const ownershipGoalSlides = useMemo(() => buildOwnershipGoalSlides(viewModel), [viewModel]);
+  const currentGoal = ownershipGoalSlides[currentGoalIndex] ?? ownershipGoalSlides[0];
 
   useEffect(() => {
     setHasAnimated(false);
     const t = window.setTimeout(() => setHasAnimated(true), 180);
     return () => window.clearTimeout(t);
   }, [viewModel.ownershipPercentage]);
+
+  useEffect(() => {
+    setCurrentGoalIndex(0);
+  }, [viewModel.ownershipPercentage, viewModel.nextMilestonePercentage]);
 
   const timelineStyle = buildLeftStyle(hasAnimated ? viewModel.ownershipVisualPosition : 0);
 
@@ -91,7 +167,15 @@ export function FmzRenterDashboard({
   };
 
   const billSplit = splitBillAmount(viewModel.invoice.totalLabel);
-  const nextInteger = splitNextAmount(viewModel.nextMilestoneRemainingLabel);
+  const nextInteger = splitGoalAmount(currentGoal?.amountLabel ?? viewModel.nextMilestoneRemainingLabel);
+
+  const showPreviousGoal = () => {
+    setCurrentGoalIndex((current) => (current - 1 + ownershipGoalSlides.length) % ownershipGoalSlides.length);
+  };
+
+  const showNextGoal = () => {
+    setCurrentGoalIndex((current) => (current + 1) % ownershipGoalSlides.length);
+  };
 
   return (
     <main className={styles.dashboard}>
@@ -143,28 +227,55 @@ export function FmzRenterDashboard({
           </div>
         </div>
 
-        {/* Next milestone card */}
+        {/* Ownership goals carousel */}
         <div className={styles.nextCard}>
-          <span className={styles.nextEyebrow}>
-            <span className={styles.nbadge}><Target size={10} /></span>
-            Próximo marco · {viewModel.nextMilestoneLabel}
-          </span>
-          <h3 className={styles.nextTitle}>Faltam apenas</h3>
-          <div className={styles.nextAmount}>
-            <span className={styles.currency}>R$</span>{nextInteger}
+          <div className={styles.goalCarouselHead}>
+            <span className={styles.nextEyebrow}>
+              <span className={styles.nbadge}><Target size={10} /></span>
+              {currentGoal?.label ?? `Próximo marco · ${viewModel.nextMilestoneLabel}`}
+            </span>
+            <div className={styles.goalCarouselControls}>
+              <button type="button" className={styles.goalNavButton} onClick={showPreviousGoal} aria-label="Meta anterior">
+                <ChevronLeft size={13} />
+              </button>
+              <span className={styles.goalCounter}>{currentGoalIndex + 1}/{ownershipGoalSlides.length}</span>
+              <button type="button" className={styles.goalNavButton} onClick={showNextGoal} aria-label="Próxima meta">
+                <ChevronRight size={13} />
+              </button>
+            </div>
           </div>
-          <p className={styles.nextDesc}>
-            Ao atingir {viewModel.nextMilestoneLabel} de posse, seu aluguel pode reduzir em {viewModel.nextMilestoneRentReductionLabel} por mês.
-          </p>
 
-          <div className={styles.nextProgress}>
-            <div className={styles.nextProgressBar}>
-              <div className={styles.nextProgressFill} style={{ width: hasAnimated ? `${viewModel.nextMilestoneProgressPercentage}%` : '0%' }} />
+          <div key={currentGoal?.id ?? 'next-goal'} className={styles.goalCarouselBody}>
+            <h3 className={styles.nextTitle}>Faltam apenas</h3>
+            <div className={styles.nextAmount}>
+              <span className={styles.currency}>R$</span>{nextInteger}
             </div>
-            <div className={styles.nextProgressText}>
-              <span>Progresso até {viewModel.nextMilestoneLabel}</span>
-              <span className={styles.mono}>{viewModel.ownershipPercentageLabel}</span>
+            <p className={styles.nextDesc}>
+              {currentGoal?.description ?? `Ao atingir ${viewModel.nextMilestoneLabel} de posse, seu aluguel pode reduzir em ${viewModel.nextMilestoneRentReductionLabel} por mês.`}
+            </p>
+
+            <div className={styles.nextProgress}>
+              <div className={styles.nextProgressBar}>
+                <div className={styles.nextProgressFill} style={{ width: hasAnimated ? `${currentGoal?.progressPercentage ?? viewModel.nextMilestoneProgressPercentage}%` : '0%' }} />
+              </div>
+              <div className={styles.nextProgressText}>
+                <span>{currentGoal?.progressLabel ?? `Progresso até ${viewModel.nextMilestoneLabel}`}</span>
+                <span className={styles.mono}>{formatGoalPercent(currentGoal?.progressPercentage ?? viewModel.nextMilestoneProgressPercentage)}</span>
+              </div>
             </div>
+          </div>
+
+          <div className={styles.goalDots} aria-label="Metas disponíveis">
+            {ownershipGoalSlides.map((goal, index) => (
+              <button
+                key={goal.id}
+                type="button"
+                aria-label={`Ir para meta ${index + 1}`}
+                aria-current={index === currentGoalIndex ? 'true' : undefined}
+                className={`${styles.goalDot} ${index === currentGoalIndex ? styles.goalDotActive : ''}`}
+                onClick={() => setCurrentGoalIndex(index)}
+              />
+            ))}
           </div>
 
           <Link href={COMING_SOON_PATH} className={styles.btnCta}>

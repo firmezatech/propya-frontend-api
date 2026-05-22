@@ -201,11 +201,77 @@
   right: -60px; bottom: -60px; pointer-events: none;
 }
 .nextCard > * { position: relative; z-index: 1; }
+.goalCarouselHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
 .nextEyebrow {
   font-size: 11px; font-weight: 700; letter-spacing: .1em;
   text-transform: uppercase; color: var(--gold-deep);
   display: inline-flex; align-items: center; gap: 6px;
-  margin-bottom: 12px;
+  margin-bottom: 0;
+}
+.goalCarouselControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6B5E38;
+  flex-shrink: 0;
+}
+.goalNavButton {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid #D0C8A8;
+  background: transparent;
+  color: #6B5E38;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background .15s, border-color .15s, transform .15s;
+}
+.goalNavButton:hover {
+  background: #EDE8D8;
+  border-color: #C4B990;
+  transform: translateY(-1px);
+}
+.goalCounter {
+  min-width: 32px;
+  text-align: center;
+  font-size: 12px;
+  color: #9A7C3A;
+  font-weight: 600;
+}
+.goalCarouselBody {
+  min-height: 154px;
+  animation: goalFadeIn .24s ease both;
+}
+@keyframes goalFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.goalDots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 0 18px;
+}
+.goalDot {
+  width: 6px;
+  height: 6px;
+  border: none;
+  border-radius: 999px;
+  background: #D6CCB0;
+  cursor: pointer;
+  padding: 0;
+  transition: width .25s, background .25s;
+}
+.goalDotActive {
+  width: 18px;
+  background: #C9A84C;
 }
 .nbadge {
   display: inline-grid; place-items: center;

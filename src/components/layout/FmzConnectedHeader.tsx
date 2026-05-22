@@ -56,6 +56,18 @@ const resolveConnectedPageIcon = (page: FmzAccessControlPage): FmzConnectedDropd
   return FileText;
 };
 
+
+const buildConnectedRoleLabel = (principal: FmzAccessControlPrincipal | null | undefined): string => {
+  const roleKeys = principal?.roleKeys?.map((role) => role.toLowerCase()) ?? [];
+
+  if (roleKeys.some((role) => role.includes('tenant') || role.includes('renter') || role.includes('inquil'))) return 'Inquilina';
+  if (roleKeys.some((role) => role.includes('owner') || role.includes('propriet'))) return 'Proprietária';
+  if (roleKeys.some((role) => role.includes('co-owner') || role.includes('coowner') || role.includes('copro'))) return 'Coproprietária';
+  if (roleKeys.some((role) => role.includes('operator') || role.includes('gestor'))) return 'Gestora';
+
+  return 'Usuária';
+};
+
 const buildConnectedDropdownItems = (principal: FmzAccessControlPrincipal | null | undefined): FmzConnectedDropdownItem[] => {
   const pagesByKey = new Map<string, FmzAccessControlPage>();
 
@@ -97,6 +109,7 @@ export function FmzConnectedHeader({ adminOffset = false, principal = null }: Fm
   }, [params?.locale]);
 
   const connectedDropdownItems = useMemo(() => buildConnectedDropdownItems(principal), [principal]);
+  const roleLabel = useMemo(() => buildConnectedRoleLabel(principal), [principal]);
 
   if (adminOffset) {
     return (
@@ -119,11 +132,17 @@ export function FmzConnectedHeader({ adminOffset = false, principal = null }: Fm
   }
 
   return (
-    <header className="sticky top-0 z-50 h-[72px] shrink-0 border-b border-fmz-border-light bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
-      <div className="mx-auto flex h-full w-full max-w-[1360px] items-center justify-between gap-4 px-[clamp(18px,4vw,48px)]">
-        <Link href={localizeHref(fmzPublicLayoutConfig.connectedDashboardPath)} aria-label={fmzPublicLayoutConfig.appName} className="min-w-0 no-underline">
-          <FmzBrandMark size="header" />
-        </Link>
+    <header className="sticky top-0 z-50 h-[68px] shrink-0 border-b border-fmz-border-light bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/90">
+      <div className="mx-auto flex h-full w-full max-w-[1360px] items-center justify-between gap-[18px] px-[clamp(20px,4vw,40px)]">
+        <div className="flex min-w-0 items-center gap-3.5">
+          <Link href={localizeHref(fmzPublicLayoutConfig.connectedDashboardPath)} aria-label={fmzPublicLayoutConfig.appName} className="min-w-0 no-underline">
+            <FmzBrandMark size="header" />
+          </Link>
+          <span className="hidden h-[22px] w-px shrink-0 bg-fmz-border-light md:inline-block" />
+          <span className="hidden items-center gap-2 whitespace-nowrap text-[12.5px] font-medium leading-none text-fmz-text-muted before:h-1.5 before:w-1.5 before:rounded-full before:bg-fmz-gold before:shadow-[0_0_0_3px_rgba(232,182,32,0.22)] before:content-[''] md:inline-flex">
+            <strong className="font-semibold text-fmz-navy">Painel da {roleLabel}</strong>
+          </span>
+        </div>
 
         <FmzConnectedDropdown
           items={connectedDropdownItems}
@@ -131,6 +150,7 @@ export function FmzConnectedHeader({ adminOffset = false, principal = null }: Fm
           defaultUserName={fmzPublicLayoutConfig.defaultConnectedUserName}
           defaultUserEmail={fmzPublicLayoutConfig.defaultConnectedUserEmail}
           locale={params?.locale}
+          roleLabel={roleLabel}
         />
       </div>
     </header>
