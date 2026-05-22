@@ -97,6 +97,16 @@ export type ListUserResponse = {
 
 const recordOf = (value: unknown): Record<string, unknown> => (value && typeof value === 'object' ? value as Record<string, unknown> : {});
 const normalizeKey = (value: unknown): string => String(value ?? '').trim().toLowerCase();
+const normalizeBoolean = (value: unknown, fallback = true): boolean => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  if (typeof value === 'string') {
+    const normalizedValue = value.trim().toLowerCase();
+    if (['true', '1', 'yes', 'y', 'sim'].includes(normalizedValue)) return true;
+    if (['false', '0', 'no', 'n', 'nao', 'não'].includes(normalizedValue)) return false;
+  }
+  return fallback;
+};
 const normalizeStringArray = (...values: unknown[]): string[] => {
   const normalizedValues = new Set<string>();
 
@@ -147,6 +157,7 @@ const normalizeAccessiblePage = (page: unknown): FmzAccessControlPage | null => 
     path,
     order: Number(record.order ?? record.order_index ?? record.orderIndex ?? 0) || 0,
     requiredPermission: normalizeKey(record.requiredPermission ?? record.required_permission_key ?? record.requiredPermissionKey),
+    showInDropdown: normalizeBoolean(record.showInDropdown ?? record.show_in_dropdown ?? record.isMenuVisible ?? record.is_menu_visible ?? record.includeInDropdown ?? record.include_in_dropdown, true),
   };
 };
 

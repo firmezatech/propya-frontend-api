@@ -10,6 +10,7 @@ The frontend reads the authenticated user's access from the backend and uses the
 - `accessiblePages[].requiredPermission`: value derived from `admin_panel.pages.required_permission_key`.
 - `accessiblePages[].path`: value derived from `admin_panel.pages.path`.
 - `accessiblePages[].order`: value derived from `admin_panel.pages.order_index`.
+- `accessiblePages[].showInDropdown`: optional value derived from `admin_panel.pages.show_in_dropdown`; use `false` for authorized routes that should only be opened from buttons or direct links.
 
 ## Source of truth
 
@@ -50,7 +51,8 @@ This matters because multiple roles can share the same frontend route, for examp
         "label": "Dashboard",
         "path": "/connected/dashboard",
         "order": 1000,
-        "requiredPermission": "tenant.dashboard.view"
+        "requiredPermission": "tenant.dashboard.view",
+        "showInDropdown": true
       }
     ]
   }
@@ -75,3 +77,7 @@ The frontend defaults are aligned with the provided SQL seed/model:
 The admin sidebar is rendered only when the current user has at least one backend-resolved `accessiblePages[].key` that starts with `admin.`.
 
 The sidebar items are built from `accessiblePages`, not from local page arrays. The local config is only a fallback for icon mapping and default labels while data is loading.
+
+## Connected user dropdown
+
+The connected user dropdown also uses `accessiblePages`, but it only renders pages where `showInDropdown !== false`. This allows operational pages such as `/connected/comingSoon` to remain authorized by RBAC while being reached only from dashboard buttons, not as standalone dropdown menu entries.

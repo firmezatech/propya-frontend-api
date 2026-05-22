@@ -11,6 +11,17 @@ const numberValue = (value: unknown, fallback = 0): number => {
   return fallback;
 };
 
+const booleanValue = (value: unknown, fallback = true): boolean => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', '1', 'yes', 'y', 'sim'].includes(normalized)) return true;
+    if (['false', '0', 'no', 'n', 'nao', 'não'].includes(normalized)) return false;
+  }
+  return fallback;
+};
+
 const normalizeKey = (value: string): string => value.trim().toLowerCase();
 
 const pushNormalized = (target: Set<string>, value: unknown): void => {
@@ -54,6 +65,7 @@ const normalizeAccessPage = (page: unknown): FmzAccessControlPage => {
     path,
     order: numberValue(record.order, numberValue(record.order_index, numberValue(record.orderIndex, 0))),
     requiredPermission: normalizeKey(str(record.requiredPermission, str(record.required_permission_key, str(record.requiredPermissionKey)))),
+    showInDropdown: booleanValue(record.showInDropdown ?? record.show_in_dropdown ?? record.isMenuVisible ?? record.is_menu_visible ?? record.includeInDropdown ?? record.include_in_dropdown, true),
   };
 };
 

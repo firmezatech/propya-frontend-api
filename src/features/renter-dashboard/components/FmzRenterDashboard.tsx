@@ -41,9 +41,11 @@ const LINE_ICON: Record<string, typeof CreditCard> = {
   'token_fee': DollarSign,
 };
 
+const TENANT_SUPPORT_BUTTONS_HREF = '/connected/comingSoon';
+
 const quickActions: QuickAction[] = [
-  { title: 'Manutenção', description: 'Nenhum chamado aberto', href: '/connected/maintenances', icon: Wrench },
-  { title: 'Falar com a gestora', description: 'Você tem 1 mensagem não lida', href: '/connected/recordsMenu', icon: MessageCircle },
+  { title: 'Manutenção', description: 'Solicite suporte para o imóvel', href: TENANT_SUPPORT_BUTTONS_HREF, icon: Wrench },
+  { title: 'Falar com a gestora', description: 'Entre em contato com a gestão', href: TENANT_SUPPORT_BUTTONS_HREF, icon: MessageCircle },
   { title: 'Documentação', description: 'Contratos e documentos do imóvel', href: '/connected/myContract', icon: FileText },
 ];
 

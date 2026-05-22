@@ -6,6 +6,7 @@ export type FmzAccessControlPage = {
   path: string;
   order: number;
   requiredPermission?: string;
+  showInDropdown?: boolean;
 };
 
 export type FmzAccessControlPermission = {

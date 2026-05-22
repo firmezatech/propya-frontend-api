@@ -33,8 +33,7 @@ export async function createContactUser(user: UserContactType): Promise<any> {
       age: user.age,
       salary: user.salary,
     });
-    console.log("response==> ",response)
-    return { success: true, message: response.data.msg }; 
+    return { success: true, message: response.data.msg };
   } catch (err) {
     if (axios.isAxiosError(err) && err.response) {
       return { success: false, message: err.response.data.msg }; 

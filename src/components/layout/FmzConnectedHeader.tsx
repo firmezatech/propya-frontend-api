@@ -22,9 +22,23 @@ const ADMIN_SIDEBAR_WIDTH_CLASS = 'lg:grid-cols-[clamp(280px,18vw,320px)_minmax(
 
 const buildFmzLocalizedHref = (locale: string | undefined, href: string): string => `${locale ? `/${locale}` : ''}${href}`;
 
+const HIDDEN_CONNECTED_DROPDOWN_PAGE_KEYS = new Set(['coming_soon', 'comingsoon', 'coming-soon']);
+const HIDDEN_CONNECTED_DROPDOWN_PATHS = new Set(['/connected/comingsoon']);
+
 const isVisibleConnectedPage = (page: FmzAccessControlPage): boolean => {
   const path = normalizeFmzPath(page.path);
-  return Boolean(page.key && path && path !== '#' && path !== '/' && !path.includes('['));
+  const key = page.key.trim().toLowerCase();
+
+  return Boolean(
+    page.key
+      && path
+      && path !== '#'
+      && path !== '/'
+      && !path.includes('[')
+      && page.showInDropdown !== false
+      && !HIDDEN_CONNECTED_DROPDOWN_PAGE_KEYS.has(key)
+      && !HIDDEN_CONNECTED_DROPDOWN_PATHS.has(path.toLowerCase()),
+  );
 };
 
 const resolveConnectedPageIcon = (page: FmzAccessControlPage): FmzConnectedDropdownItem['icon'] => {

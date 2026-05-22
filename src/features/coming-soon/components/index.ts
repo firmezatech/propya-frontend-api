@@ -1,0 +1,1 @@
+export { FmzComingSoonPage } from './FmzComingSoonPage';

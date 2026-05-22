@@ -100,6 +100,7 @@ const normalizeAccessiblePage = (page: unknown): FmzAccessControlPage | null => 
     path,
     order: num(record.order ?? record.orderIndex ?? record.order_index, 0),
     requiredPermission: normalized(record.requiredPermission ?? record.required_permission_key ?? record.requiredPermissionKey),
+    showInDropdown: bool(record.showInDropdown ?? record.show_in_dropdown ?? record.isMenuVisible ?? record.is_menu_visible ?? record.includeInDropdown ?? record.include_in_dropdown, true),
   };
 };
 

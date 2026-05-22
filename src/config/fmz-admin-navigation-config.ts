@@ -1,4 +1,4 @@
-import { Building2, FileText, Home, LucideIcon, ReceiptText, ShieldCheck, SlidersHorizontal, UserRound, Wrench } from 'lucide-react';
+import { Activity, Building2, FileText, Home, LucideIcon, ReceiptText, ShieldCheck, SlidersHorizontal, UserRound, Wrench } from 'lucide-react';
 import { fmzPublicLayoutConfig } from './fmz-public-layout-config';
 
 const getPublicEnvValue = (key: string, fallback: string): string => {
@@ -28,6 +28,7 @@ export const fmzAdminPageIconByKey: Record<string, LucideIcon> = {
   'admin.contract.upload': FileText,
   'admin.rent.adjustment': FileText,
   'admin.tenant_settings': SlidersHorizontal,
+  'admin.gas': Activity,
 };
 
 export const fmzAdminNavigationConfig = {
