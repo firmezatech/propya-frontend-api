@@ -36,8 +36,8 @@ export default {
         "fmz-success-border": "var(--fmz-success-border)",
       },
       fontFamily: {
-        sans: ['var(--font-dm-sans)', 'sans-serif'],
-        syne: ['var(--font-syne)', 'sans-serif'],
+        sans: ['var(--font-inter)', 'sans-serif'],
+        syne: ['var(--font-inter)', 'sans-serif'],
       },
     },
   },

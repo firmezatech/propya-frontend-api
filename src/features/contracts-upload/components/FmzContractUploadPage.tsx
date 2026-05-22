@@ -299,7 +299,7 @@ export function FmzContractUploadPage() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-fmz-text-hint">Gestão de Contratos</p>
-          <h1 className="font-syne text-[26px] font-extrabold tracking-[-0.03em] text-fmz-navy sm:text-3xl">Novo contrato de aluguel</h1>
+          <h1 className="font-sans text-[26px] font-extrabold tracking-[-0.03em] text-fmz-navy sm:text-3xl">Novo contrato de aluguel</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-fmz-text-muted">
             Suba o PDF do contrato, extraia os dados principais e revise as informações antes de salvar no sistema.
           </p>
@@ -309,7 +309,7 @@ export function FmzContractUploadPage() {
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.72fr)]">
         <div className="min-w-0 space-y-4">
           <div className="rounded-[14px] border-[1.5px] border-fmz-border-light bg-white p-5 shadow-sm sm:p-7">
-            <h2 className="font-syne text-base font-bold text-fmz-navy">Contrato em PDF</h2>
+            <h2 className="font-sans text-base font-bold text-fmz-navy">Contrato em PDF</h2>
             <p className="mt-1 text-sm leading-6 text-fmz-text-muted">Arraste o arquivo ou clique para selecionar. A IA poderá preencher os campos abaixo automaticamente.</p>
 
             <button
@@ -327,7 +327,7 @@ export function FmzContractUploadPage() {
               <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-[14px] border-[1.5px] border-fmz-border-light bg-white text-fmz-text-hint">
                 <UploadCloud className="h-6 w-6" aria-hidden="true" />
               </span>
-              <strong className="font-syne text-base text-fmz-navy">Arraste o contrato aqui</strong>
+              <strong className="font-sans text-base text-fmz-navy">Arraste o contrato aqui</strong>
               <span className="mt-1 text-sm text-fmz-text-hint">ou clique para selecionar do seu computador</span>
               <span className="mt-4 rounded-md border border-fmz-border-light bg-[#F0F1F5] px-2 py-0.5 text-[11px] font-semibold text-fmz-text-muted">PDF</span>
             </button>
@@ -351,7 +351,7 @@ export function FmzContractUploadPage() {
               type="button"
               disabled={!selectedFile || isExtracting}
               onClick={extractWithAI}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-[10px] bg-gradient-to-r from-[#6C47FF] to-[#9B72FF] px-4 py-3.5 font-syne text-sm font-bold uppercase tracking-[0.06em] text-white shadow-[0_6px_22px_rgba(108,71,255,0.28)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-[10px] bg-gradient-to-r from-[#6C47FF] to-[#9B72FF] px-4 py-3.5 font-sans text-sm font-bold uppercase tracking-[0.06em] text-white shadow-[0_6px_22px_rgba(108,71,255,0.28)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isExtracting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <WandSparkles className="h-4 w-4" aria-hidden="true" />}
               {isExtracting ? 'Extraindo...' : 'Extrair com IA'}
@@ -365,7 +365,7 @@ export function FmzContractUploadPage() {
 
           <div className="rounded-[14px] border-[1.5px] border-fmz-border-light bg-white p-5 shadow-sm sm:p-7">
             <div className="mb-6 flex flex-wrap items-center gap-2">
-              <h2 className="font-syne text-base font-bold text-fmz-navy">Dados do contrato</h2>
+              <h2 className="font-sans text-base font-bold text-fmz-navy">Dados do contrato</h2>
               <span className="inline-flex items-center gap-1 rounded-md border border-[#D4C8FF] bg-[#F3F0FF] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6C47FF]">
                 <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
                 Preenchido por IA
@@ -431,7 +431,7 @@ export function FmzContractUploadPage() {
                 <X className="h-3.5 w-3.5" aria-hidden="true" />
                 Limpar
               </button>
-              <button type="button" onClick={saveContract} className="inline-flex items-center gap-2 rounded-[9px] bg-fmz-gold px-5 py-2.5 font-syne text-sm font-bold uppercase tracking-[0.06em] text-fmz-navy shadow-[0_4px_16px_rgba(245,200,66,0.3)] transition hover:bg-fmz-gold-dark">
+              <button type="button" onClick={saveContract} className="inline-flex items-center gap-2 rounded-[9px] bg-fmz-gold px-5 py-2.5 font-sans text-sm font-bold uppercase tracking-[0.06em] text-fmz-navy shadow-[0_4px_16px_rgba(245,200,66,0.3)] transition hover:bg-fmz-gold-dark">
                 <Check className="h-4 w-4" aria-hidden="true" />
                 Salvar contrato
               </button>
@@ -441,7 +441,7 @@ export function FmzContractUploadPage() {
 
         <aside className="min-w-0 space-y-4">
           <div className="rounded-[14px] border-[1.5px] border-fmz-border-light bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="mb-5 font-syne text-base font-bold text-fmz-navy">Como funciona</h2>
+            <h2 className="mb-5 font-sans text-base font-bold text-fmz-navy">Como funciona</h2>
             <div className="space-y-0">
               {[
                 ['Suba o PDF do contrato', 'Arraste ou selecione o arquivo. O fluxo foi preparado para contratos digitalizados ou nativos em PDF.'],
@@ -451,9 +451,9 @@ export function FmzContractUploadPage() {
               ].map(([title, description], index, steps) => (
                 <div key={title} className="relative flex gap-3 pb-5 last:pb-0">
                   {index < steps.length - 1 && <span className="absolute left-[15px] top-8 h-[calc(100%-2rem)] w-px bg-fmz-border-light" aria-hidden="true" />}
-                  <span className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-fmz-navy font-syne text-xs font-bold text-white">{index + 1}</span>
+                  <span className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-fmz-navy font-sans text-xs font-bold text-white">{index + 1}</span>
                   <div className="min-w-0">
-                    <h3 className="font-syne text-sm font-bold text-fmz-navy">{title}</h3>
+                    <h3 className="font-sans text-sm font-bold text-fmz-navy">{title}</h3>
                     <p className="mt-1 text-sm leading-6 text-fmz-text-muted">{description}</p>
                   </div>
                 </div>

@@ -11,10 +11,10 @@ export default function HomeCalculator() {
     <section className="w-full max-w-7xl">
       <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_440px]">
         <div className="text-left">
-          <p className="font-syne text-sm font-bold uppercase tracking-[0.08em] text-fmz-gold-dark">
+          <p className="font-sans text-sm font-bold uppercase tracking-[0.08em] text-fmz-gold-dark">
             {t('title')}
           </p>
-          <h1 className="mt-2 font-syne text-3xl font-extrabold tracking-[-0.025em] text-fmz-navy md:text-4xl">
+          <h1 className="mt-2 font-sans text-3xl font-extrabold tracking-[-0.025em] text-fmz-navy md:text-4xl">
             {t('subtitle')}
           </h1>
           <p className="mt-4 max-w-2xl text-fmz-text-muted">

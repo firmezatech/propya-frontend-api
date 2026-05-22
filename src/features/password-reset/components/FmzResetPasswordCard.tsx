@@ -87,7 +87,7 @@ export function FmzResetPasswordCard() {
     <section className="w-full max-w-[440px]" aria-labelledby="fmz-reset-password-title">
       <div className="mb-10 text-center">
         <FmzBrandMark size="form" className="mb-7" />
-        <h1 id="fmz-reset-password-title" className="mb-2 font-syne text-[26px] font-extrabold tracking-[-0.025em] text-fmz-navy">
+        <h1 id="fmz-reset-password-title" className="mb-2 font-sans text-[26px] font-extrabold tracking-[-0.025em] text-fmz-navy">
           Criar nova senha
         </h1>
         <p className="text-sm text-fmz-text-muted">
@@ -126,7 +126,7 @@ export function FmzResetPasswordCard() {
 
       <div className="mt-7 text-center text-sm text-fmz-text-muted">
         Voltar para{' '}
-        <FmzButton type="button" variant="link" className="font-syne font-bold text-fmz-navy" onClick={() => router.push('/')}>
+        <FmzButton type="button" variant="link" className="font-sans font-bold text-fmz-navy" onClick={() => router.push('/')}>
           login
         </FmzButton>
       </div>

@@ -26,7 +26,7 @@ export function FmzConnectedUserIdentity() {
 
   return (
     <div className="flex min-w-0 items-center gap-3 rounded-full border-[1.5px] border-fmz-border-light bg-white py-1.5 pl-1.5 pr-3" aria-label="Usuário conectado">
-      <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-fmz-navy font-syne text-xs font-bold text-fmz-gold">
+      <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-fmz-navy font-sans text-xs font-bold text-fmz-gold">
         {userSummary.initials}
       </span>
       <span className="hidden min-w-0 flex-col sm:flex">

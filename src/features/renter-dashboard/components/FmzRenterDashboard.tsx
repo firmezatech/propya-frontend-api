@@ -41,7 +41,8 @@ const LINE_ICON: Record<string, typeof CreditCard> = {
   'token_fee': DollarSign,
 };
 
-const TENANT_SUPPORT_BUTTONS_HREF = '/connected/comingSoon';
+const COMING_SOON_PATH = '/connected/comingSoon';
+const TENANT_SUPPORT_BUTTONS_HREF = COMING_SOON_PATH;
 
 const quickActions: QuickAction[] = [
   { title: 'Manutenção', description: 'Solicite suporte para o imóvel', href: TENANT_SUPPORT_BUTTONS_HREF, icon: Wrench },
@@ -166,7 +167,7 @@ export function FmzRenterDashboard({
             </div>
           </div>
 
-          <Link href="/connected/tokensToPurchasePix" className={styles.btnCta}>
+          <Link href={COMING_SOON_PATH} className={styles.btnCta}>
             <Plus size={14} /> Comprar mais tokens
           </Link>
         </div>
@@ -247,7 +248,7 @@ export function FmzRenterDashboard({
       {/* Quick actions */}
       <div className={styles.quickGrid}>
         {quickActions.map((action) => (
-          <Link key={action.title} href={action.href} className={`${styles.quickCard} fmz-lift-card`}>
+          <Link key={action.title} href={action.href} className={styles.quickCard}>
             <div className={styles.quickIco}>
               <action.icon size={18} />
             </div>

@@ -118,13 +118,13 @@ function SectionHeader({
     <div className="mb-3.5 flex flex-wrap items-end justify-between gap-3">
       <div>
         <div className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#9AA3B0]">{tag}</div>
-        <div className="font-syne text-[17px] font-bold text-[#0D1321]">{title}</div>
+        <div className="font-sans text-[17px] font-bold text-[#0D1321]">{title}</div>
         <div className="mt-0.5 text-[12.5px] text-[#5A6478]">{subtitle}</div>
       </div>
       <button
         type="button"
         onClick={onNew}
-        className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#0D1321] px-[18px] py-[10px] font-syne text-[12px] font-bold uppercase tracking-[0.04em] text-white transition hover:-translate-y-px hover:bg-[#162030]"
+        className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#0D1321] px-[18px] py-[10px] font-sans text-[12px] font-bold uppercase tracking-[0.04em] text-white transition hover:-translate-y-px hover:bg-[#162030]"
       >
         <Plus size={11} strokeWidth={2.5} />
         {newLabel}
@@ -239,7 +239,7 @@ function ModalBackdrop({
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
     <div className="flex items-center justify-between border-b border-[#E8EAF0] px-6 py-5">
-      <span className="font-syne text-[17px] font-bold text-[#0D1321]">{title}</span>
+      <span className="font-sans text-[17px] font-bold text-[#0D1321]">{title}</span>
       <button
         type="button"
         onClick={onClose}
@@ -288,7 +288,7 @@ function ModalFooter({
         type="button"
         onClick={onSave}
         disabled={saving}
-        className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#F5C842] px-5 py-[10px] font-syne text-[12px] font-bold uppercase tracking-[0.04em] text-[#0D1321] shadow-[0_3px_12px_rgba(245,200,66,0.25)] transition hover:-translate-y-px hover:bg-[#f0c030] disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#F5C842] px-5 py-[10px] font-sans text-[12px] font-bold uppercase tracking-[0.04em] text-[#0D1321] shadow-[0_3px_12px_rgba(245,200,66,0.25)] transition hover:-translate-y-px hover:bg-[#f0c030] disabled:opacity-50"
       >
         {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} strokeWidth={1.8} />}
         {saveLabel}
@@ -315,12 +315,12 @@ function EmptyState({
       <div className="mx-auto mb-3.5 flex h-[52px] w-[52px] items-center justify-center rounded-full border-2 border-dashed border-[#E8EAF0] bg-[#F7F8FA]">
         {icon}
       </div>
-      <h3 className="mb-1 font-syne text-[15px] font-bold text-[#0D1321]">{title}</h3>
+      <h3 className="mb-1 font-sans text-[15px] font-bold text-[#0D1321]">{title}</h3>
       <p className="mx-auto mb-[18px] max-w-[280px] text-[13px] leading-[1.6] text-[#5A6478]">{description}</p>
       <button
         type="button"
         onClick={onNew}
-        className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#0D1321] px-[18px] py-[10px] font-syne text-[12px] font-bold uppercase tracking-[0.04em] text-white transition hover:-translate-y-px hover:bg-[#162030]"
+        className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#0D1321] px-[18px] py-[10px] font-sans text-[12px] font-bold uppercase tracking-[0.04em] text-white transition hover:-translate-y-px hover:bg-[#162030]"
       >
         <Plus size={11} strokeWidth={2.5} />
         {newLabel}
@@ -359,11 +359,11 @@ function FeeParameterRow({
         </svg>
       </div>
       <div className="min-w-0 flex-1">
-        <div className="truncate font-syne text-[14px] font-bold text-[#0D1321]">{toDisplayLabel(parameter.parameterKey)}</div>
+        <div className="truncate font-sans text-[14px] font-bold text-[#0D1321]">{toDisplayLabel(parameter.parameterKey)}</div>
         <div className="mt-0.5 truncate text-[12px] text-[#5A6478]">{parameter.description ?? '—'}</div>
       </div>
       <div className="shrink-0 text-right">
-        <div className="font-syne text-[16px] font-bold text-[#0D1321]">{displayValue}</div>
+        <div className="font-sans text-[16px] font-bold text-[#0D1321]">{displayValue}</div>
         <div className="mt-0.5 text-[10px] font-medium text-[#9AA3B0]">{isPct ? 'Percentual' : 'Valor fixo'}</div>
       </div>
       <div className="ml-2 flex shrink-0 gap-1.5">
@@ -414,7 +414,7 @@ function OwnershipGoalRow({
         style={{ background: isPct ? '#FFF9E6' : '#EFF6FF' }}
       >
         {isPct ? (
-          <span className="font-syne text-[16px] font-bold" style={{ color: '#C8A020' }}>%</span>
+          <span className="font-sans text-[16px] font-bold" style={{ color: '#C8A020' }}>%</span>
         ) : (
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
             <path d="M12 3L3 8.5V15.5L12 21L21 15.5V8.5L12 3Z" stroke="#2563EB" strokeWidth="1.8" />
@@ -422,19 +422,19 @@ function OwnershipGoalRow({
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="truncate font-syne text-[14px] font-bold text-[#0D1321]">{goal.title}</div>
+        <div className="truncate font-sans text-[14px] font-bold text-[#0D1321]">{goal.title}</div>
         <div className="mt-0.5 max-w-[400px] truncate text-[12px] text-[#5A6478]">
           {goal.rewardDescription ?? '—'}
         </div>
       </div>
       <div className="min-w-[100px] shrink-0 text-right">
-        <div className="font-syne text-[16px] font-bold text-[#0D1321]">{targetValue}</div>
+        <div className="font-sans text-[16px] font-bold text-[#0D1321]">{targetValue}</div>
         <div className="mt-0.5 text-[10px] font-medium text-[#9AA3B0]">{reductionLabel}</div>
       </div>
       <div className="flex shrink-0 flex-col gap-1.5" style={{ minWidth: 130 }}>
         <div className="flex items-center justify-between">
           <span className="text-[10.5px] text-[#9AA3B0]">Inquilinos</span>
-          <span className="font-syne text-[11.5px] font-bold text-[#0D1321]">{progress}%</span>
+          <span className="font-sans text-[11.5px] font-bold text-[#0D1321]">{progress}%</span>
         </div>
         <div className="h-[5px] overflow-hidden rounded-full bg-[#E8EAF0]">
           <div
@@ -705,7 +705,7 @@ export function FmzAdminTenantSettings() {
     {
       key: 'percentage',
       icon: (
-        <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[7px] bg-[#FFF9E6] font-syne text-[14px] font-bold" style={{ color: '#C8A020' }}>
+        <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[7px] bg-[#FFF9E6] font-sans text-[14px] font-bold" style={{ color: '#C8A020' }}>
           %
         </div>
       ),
@@ -715,7 +715,7 @@ export function FmzAdminTenantSettings() {
     {
       key: 'currency',
       icon: (
-        <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[7px] bg-[#F0FAF5] font-syne text-[12px] font-bold" style={{ color: '#1A8C5B' }}>
+        <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[7px] bg-[#F0FAF5] font-sans text-[12px] font-bold" style={{ color: '#1A8C5B' }}>
           R$
         </div>
       ),
@@ -728,7 +728,7 @@ export function FmzAdminTenantSettings() {
     {
       key: 'percentage',
       icon: (
-        <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[7px] bg-[#FFF9E6] font-syne text-[14px] font-bold" style={{ color: '#C8A020' }}>
+        <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[7px] bg-[#FFF9E6] font-sans text-[14px] font-bold" style={{ color: '#C8A020' }}>
           %
         </div>
       ),
@@ -782,7 +782,7 @@ export function FmzAdminTenantSettings() {
           <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#9AA3B0]">
             Configurações da Plataforma
           </div>
-          <h1 className="font-syne text-[26px] font-extrabold tracking-[-0.025em] text-[#0D1321]">
+          <h1 className="font-sans text-[26px] font-extrabold tracking-[-0.025em] text-[#0D1321]">
             Parâmetros
           </h1>
           <p className="mt-1 text-[13px] leading-[1.6] text-[#5A6478]">

@@ -622,7 +622,7 @@
 .lockedText {
   font-size: 13.5px;
   color: var(--fmz-text-primary);
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-family: var(--font-inter), sans-serif;
   letter-spacing: -0.01em;
 }
 

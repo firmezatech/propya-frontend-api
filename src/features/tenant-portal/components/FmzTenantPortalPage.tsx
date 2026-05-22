@@ -50,7 +50,7 @@ const statusLabel = (status?: string | null): string => {
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
     <div className="rounded-2xl border border-dashed border-fmz-border-light bg-white p-8 text-center">
-      <p className="font-syne text-xl font-bold text-fmz-navy">{title}</p>
+      <p className="font-sans text-xl font-bold text-fmz-navy">{title}</p>
       <p className="mt-2 text-sm leading-6 text-fmz-text-muted">{description}</p>
     </div>
   );
@@ -63,7 +63,7 @@ function MetricCard({ label, value, icon: Icon }: { label: string; value: string
         <span className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">{label}</span>
         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-fmz-page text-fmz-navy"><Icon className="h-4 w-4" /></span>
       </div>
-      <strong className="mt-4 block font-syne text-2xl text-fmz-navy">{value}</strong>
+      <strong className="mt-4 block font-sans text-2xl text-fmz-navy">{value}</strong>
     </div>
   );
 }
@@ -84,7 +84,7 @@ function TenantInvoiceView({ dashboard }: { dashboard: FmzTenantDashboard | null
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">Boleto da competência</p>
-            <h2 className="mt-2 font-syne text-3xl font-extrabold text-fmz-navy">{dashboard.competence?.label ?? dashboard.competence?.month ?? 'Atual'}</h2>
+            <h2 className="mt-2 font-sans text-3xl font-extrabold text-fmz-navy">{dashboard.competence?.label ?? dashboard.competence?.month ?? 'Atual'}</h2>
           </div>
           <span className="rounded-full border border-fmz-success-border bg-fmz-success-bg px-3 py-1.5 text-xs font-bold text-fmz-success">
             {statusLabel(boleto?.status ?? summary?.status)}
@@ -120,7 +120,7 @@ function TenantInvoiceView({ dashboard }: { dashboard: FmzTenantDashboard | null
       </section>
 
       <aside className="rounded-2xl border border-fmz-border-light bg-white p-6 shadow-sm">
-        <h3 className="font-syne text-xl font-bold text-fmz-navy">Dados bancários</h3>
+        <h3 className="font-sans text-xl font-bold text-fmz-navy">Dados bancários</h3>
         <dl className="mt-5 space-y-4 text-sm">
           <div>
             <dt className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">Provedor</dt>
@@ -155,7 +155,7 @@ function TenantPaymentHistoryView({ history }: { history: FmzTenantPaymentHistor
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">Histórico</p>
-          <h2 className="mt-1 font-syne text-2xl font-extrabold text-fmz-navy">Pagamentos da inquilina</h2>
+          <h2 className="mt-1 font-sans text-2xl font-extrabold text-fmz-navy">Pagamentos da inquilina</h2>
         </div>
       </div>
       <div className="overflow-x-auto">
@@ -201,7 +201,7 @@ function TenantWalletView({ dashboard, wallets }: { dashboard: FmzTenantDashboar
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">Minha carteira</p>
-            <h2 className="mt-1 font-syne text-2xl font-extrabold text-fmz-navy">Wallet vinculada à inquilina</h2>
+            <h2 className="mt-1 font-sans text-2xl font-extrabold text-fmz-navy">Wallet vinculada à inquilina</h2>
           </div>
           <WalletCards className="h-7 w-7 text-fmz-navy" />
         </div>
@@ -242,7 +242,7 @@ function TenantWalletView({ dashboard, wallets }: { dashboard: FmzTenantDashboar
       </section>
 
       <aside className="rounded-2xl border border-fmz-border-light bg-white p-6 shadow-sm">
-        <h3 className="font-syne text-xl font-bold text-fmz-navy">Resumo de tokens</h3>
+        <h3 className="font-sans text-xl font-bold text-fmz-navy">Resumo de tokens</h3>
         <div className="mt-5 grid gap-3">
           <MetricCard label="Saldo de tokens" value={formatTokenAmount(tokenBalance)} icon={WalletCards} />
           <MetricCard label="Tokens pendentes" value={formatTokenAmount(pendingTokenBalance)} icon={ReceiptText} />
@@ -312,7 +312,7 @@ export function FmzTenantPortalPage({ kind }: FmzTenantPortalPageProps) {
 
       <div className="mb-8">
         <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-fmz-text-hint">Área da inquilina</p>
-        <h1 className="font-syne text-3xl font-extrabold tracking-[-0.025em] text-fmz-navy">{titleByKind[kind]}</h1>
+        <h1 className="font-sans text-3xl font-extrabold tracking-[-0.025em] text-fmz-navy">{titleByKind[kind]}</h1>
       </div>
 
       {isLoading ? (

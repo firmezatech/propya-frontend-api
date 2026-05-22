@@ -1,22 +1,16 @@
 import { Inter } from 'next/font/google';
 
-export const fmzInterBodyFont = Inter({
+export const fmzInterFont = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
+  style: ['normal'],
   display: 'swap',
-  variable: '--font-dm-sans',
+  variable: '--font-inter',
 });
 
-export const fmzInterDisplayFont = Inter({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  display: 'swap',
-  variable: '--font-syne',
-});
-
-export const fmzFontVariablesClassName = `${fmzInterBodyFont.variable} ${fmzInterDisplayFont.variable}`;
+export const fmzFontVariablesClassName = fmzInterFont.variable;
 
 export const fmzFontFamily = {
-  body: 'var(--font-dm-sans), sans-serif',
-  display: 'var(--font-syne), sans-serif',
+  body: 'var(--font-inter), sans-serif',
+  display: 'var(--font-inter), sans-serif',
 } as const;

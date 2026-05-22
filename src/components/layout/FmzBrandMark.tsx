@@ -39,7 +39,7 @@ export function FmzBrandMark({ size = 'header', showText = true, className = '' 
         />
       </span>
       {showText && (
-        <span className={fmzCn('font-syne font-bold tracking-[-0.02em] text-fmz-navy', sizeClassNames.text)}>
+        <span className={fmzCn('font-sans font-bold tracking-[-0.02em] text-fmz-navy', sizeClassNames.text)}>
           {fmzPublicLayoutConfig.appName}
         </span>
       )}

@@ -90,7 +90,7 @@ export function FmzInstagramFeedSection() {
               </div>
             </div>
             <div>
-              <h2 className="font-syne text-[13px] font-bold text-fmz-navy">{fmzInstagramFeedConfig.handle}</h2>
+              <h2 className="font-sans text-[13px] font-bold text-fmz-navy">{fmzInstagramFeedConfig.handle}</h2>
               <p className="mt-px text-[11px] text-fmz-text-hint">{fmzInstagramFeedConfig.profileName}</p>
             </div>
           </div>
@@ -99,12 +99,12 @@ export function FmzInstagramFeedSection() {
             <div className="flex gap-4">
               {Object.entries(feed.stats).map(([key, value]) => (
                 <div key={key} className="text-center">
-                  <p className="font-syne text-[13px] font-bold leading-none text-fmz-navy">{value}</p>
+                  <p className="font-sans text-[13px] font-bold leading-none text-fmz-navy">{value}</p>
                   <p className="mt-0.5 text-[10px] text-fmz-text-hint">{key}</p>
                 </div>
               ))}
             </div>
-            <a href={fmzInstagramFeedConfig.profileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-[7px] border-[1.5px] border-fmz-border-light bg-white px-3.5 py-2 font-syne text-[11.5px] font-bold tracking-[0.03em] text-fmz-navy no-underline transition hover:border-fmz-navy hover:bg-fmz-page">
+            <a href={fmzInstagramFeedConfig.profileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-[7px] border-[1.5px] border-fmz-border-light bg-white px-3.5 py-2 font-sans text-[11.5px] font-bold tracking-[0.03em] text-fmz-navy no-underline transition hover:border-fmz-navy hover:bg-fmz-page">
               <Instagram className="h-3 w-3" aria-hidden="true" />
               Ver no Instagram
             </a>

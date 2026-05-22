@@ -195,12 +195,12 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
           {digitableLine && <p className={styles.barcodeFoot}>{digitableLine}</p>}
 
           <div className={styles.rowActions}>
-            <button type="button" className={styles.btnSm}>
+            <Link href="/connected/comingSoon" className={styles.btnSm}>
               <FileText /> Enviar por e-mail
-            </button>
-            <button type="button" className={styles.btnSm}>
+            </Link>
+            <Link href="/connected/comingSoon" className={styles.btnSm}>
               <MessageCircle /> WhatsApp
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -267,22 +267,22 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
 
       {/* Help strip */}
       <div className={styles.help}>
-        <a href="#" className={styles.helpCard}>
+        <Link href="/connected/comingSoon" className={styles.helpCard}>
           <div className={styles.helpIco}><Check /></div>
           <div className={styles.helpBody}>
             <p className={styles.helpTitle}>Já pagou?</p>
             <p className={styles.helpSub}>Envie o comprovante para confirmação manual</p>
           </div>
           <ChevronRight className={styles.helpArrow} size={14} />
-        </a>
-        <a href="#" className={styles.helpCard}>
+        </Link>
+        <Link href="/connected/comingSoon" className={styles.helpCard}>
           <div className={styles.helpIco}><MessageCircle /></div>
           <div className={styles.helpBody}>
             <p className={styles.helpTitle}>Tem dúvidas?</p>
             <p className={styles.helpSub}>Fale com a gestora pelo chat</p>
           </div>
           <ChevronRight className={styles.helpArrow} size={14} />
-        </a>
+        </Link>
       </div>
     </>
   );

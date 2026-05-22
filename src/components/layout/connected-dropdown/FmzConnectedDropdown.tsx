@@ -74,7 +74,7 @@ export function FmzConnectedDropdown({ items, localizeHref, defaultUserName, def
           isDropdownOpen && 'border-fmz-border-light bg-fmz-page',
         )}
       >
-        <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-fmz-navy font-syne text-xs font-bold text-fmz-gold">{userSummary.initials}</span>
+        <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-fmz-navy font-sans text-xs font-bold text-fmz-gold">{userSummary.initials}</span>
         <span className="min-w-[56px] max-w-[100px] truncate text-[13px] font-medium text-fmz-text-primary">{userSummary.name.split(' ')[0]}</span>
         <ChevronDown className={fmzCn('h-3.5 w-3.5 text-fmz-text-hint transition', isDropdownOpen && 'rotate-180')} aria-hidden="true" />
       </button>
@@ -87,7 +87,7 @@ export function FmzConnectedDropdown({ items, localizeHref, defaultUserName, def
         )}
       >
         <div className="mb-1.5 border-b border-fmz-border-light px-3 pb-3 pt-2.5">
-          <p className="truncate font-syne text-sm font-bold text-fmz-navy">{userSummary.name}</p>
+          <p className="truncate font-sans text-sm font-bold text-fmz-navy">{userSummary.name}</p>
           <p className="mt-0.5 truncate text-xs text-fmz-text-hint">{userSummary.email}</p>
         </div>
 

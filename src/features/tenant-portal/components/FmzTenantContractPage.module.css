@@ -24,7 +24,7 @@
 .propEyebrow::before{content:'';width:14px;height:1.5px;background:var(--fmz-gold);border-radius:1px}
 .propAddress{font-family:var(--font-fmz-display),sans-serif;font-weight:700;font-size:clamp(20px,2.6vw,26px);line-height:1.15;letter-spacing:-.015em;color:var(--fmz-navy)}
 .propCity{font-size:13px;color:var(--fmz-text-muted);margin-top:4px}
-.propId{font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;color:var(--fmz-text-muted);padding:5px 9px;border-radius:6px;background:var(--fmz-page);border:1px solid var(--fmz-border-light);white-space:nowrap}
+.propId{font-family:var(--font-inter),sans-serif;font-size:11px;color:var(--fmz-text-muted);padding:5px 9px;border-radius:6px;background:var(--fmz-page);border:1px solid var(--fmz-border-light);white-space:nowrap}
 .propFoot{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
 .propSpec{display:flex;gap:18px;flex-wrap:wrap}
 .propSpecItem{display:flex;flex-direction:column;gap:3px}

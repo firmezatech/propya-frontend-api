@@ -76,7 +76,7 @@ The backend should identify the authenticated tenant from the token/session. The
     ]
   },
   "actions": {
-    "buyTokensPath": "/connected/tokensToPurchasePix",
+    "buyTokensPath": "/connected/comingSoon",
     "paymentHistoryPath": "/connected/recordsMenu?target=history"
   }
 }

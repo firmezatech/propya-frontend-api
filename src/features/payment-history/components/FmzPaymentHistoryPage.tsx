@@ -342,9 +342,9 @@ export function FmzPaymentHistoryPage() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <button type="button" className={styles.btnExport}>
+              <Link href="/connected/comingSoon" className={styles.btnExport}>
                 <Download /> Exportar CSV
-              </button>
+              </Link>
             </div>
           </div>
 

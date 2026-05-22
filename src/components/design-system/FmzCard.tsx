@@ -28,7 +28,7 @@ export function FmzCardHeader({ icon, title, subtitle }: FmzCardHeaderProps) {
         </div>
       ) : null}
       <div>
-        <h2 className="font-syne text-[15px] font-bold tracking-[-0.01em] text-fmz-navy">{title}</h2>
+        <h2 className="font-sans text-[15px] font-bold tracking-[-0.01em] text-fmz-navy">{title}</h2>
         {subtitle ? <p className="mt-0.5 text-xs text-fmz-text-hint">{subtitle}</p> : null}
       </div>
     </div>

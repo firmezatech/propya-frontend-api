@@ -183,7 +183,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
     <section className={className} aria-labelledby="fmz-auth-access-title">
       <div className="mb-10 text-center">
         <FmzBrandMark size="form" className="mb-7" />
-        <h1 id="fmz-auth-access-title" className="mb-2 font-syne text-[26px] font-extrabold tracking-[-0.025em] text-fmz-navy">
+        <h1 id="fmz-auth-access-title" className="mb-2 font-sans text-[26px] font-extrabold tracking-[-0.025em] text-fmz-navy">
           {formTitle}
         </h1>
         <p className="text-sm text-fmz-text-muted">
@@ -296,7 +296,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
 
       <div className="mt-7 text-center text-sm text-fmz-text-muted">
         {formSubtitle}{' '}
-        <FmzButton type="button" variant="link" className="font-syne font-bold text-fmz-navy" disabled={isSubmitting} onClick={() => setIsRegistering((currentValue) => !currentValue)}>
+        <FmzButton type="button" variant="link" className="font-sans font-bold text-fmz-navy" disabled={isSubmitting} onClick={() => setIsRegistering((currentValue) => !currentValue)}>
           {isRegistering ? t('goToLogin') : t('goToRegister')}
         </FmzButton>
       </div>

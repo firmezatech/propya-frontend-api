@@ -36,7 +36,7 @@ function ContractLoadingState() {
 function ContractErrorState({ message }: { message: string }) {
   return (
     <div className="rounded-2xl border border-dashed border-fmz-border-light bg-white p-8 text-center">
-      <p className="font-syne text-xl font-bold text-fmz-navy">Erro ao carregar contrato</p>
+      <p className="font-sans text-xl font-bold text-fmz-navy">Erro ao carregar contrato</p>
       <p className="mt-2 text-sm leading-6 text-fmz-text-muted">{message}</p>
     </div>
   );
@@ -45,7 +45,7 @@ function ContractErrorState({ message }: { message: string }) {
 function ContractEmptyState() {
   return (
     <div className="rounded-2xl border border-dashed border-fmz-border-light bg-white p-8 text-center">
-      <p className="font-syne text-xl font-bold text-fmz-navy">Contrato não encontrado</p>
+      <p className="font-sans text-xl font-bold text-fmz-navy">Contrato não encontrado</p>
       <p className="mt-2 text-sm leading-6 text-fmz-text-muted">
         A rota GET /tenant/contract não retornou dados de contrato para esta inquilina.
       </p>

@@ -31,8 +31,9 @@
   --fmz-success-bg: #F0FAF5;
   --fmz-success-border: #A8DFC4;
 
-  --font-fmz-body: var(--font-dm-sans), sans-serif;
-  --font-fmz-display: var(--font-syne), sans-serif;
+  --font-inter-fallback: "Inter", sans-serif;
+  --font-fmz-body: var(--font-inter), var(--font-inter-fallback);
+  --font-fmz-display: var(--font-inter), var(--font-inter-fallback);
 }
 
 *, *::before, *::after {
@@ -57,7 +58,7 @@ body {
   font-family: var(--font-fmz-body);
 }
 
-h1, h2, h3, h4, h5, h6, .font-syne {
+h1, h2, h3, h4, h5, h6, .font-sans {
   font-family: var(--font-fmz-display);
 }
 
@@ -132,7 +133,7 @@ h1, h2, h3, h4, h5, h6, .font-syne {
           }
     
           .me-3{
-              font-family: var(--font-dm-sans), sans-serif;
+              font-family: var(--font-inter), sans-serif;
     
           }
     
@@ -189,7 +190,7 @@ h1, h2, h3, h4, h5, h6, .font-syne {
     
     
     .titulo-text .subtitulo-text{
-      font-family: var(--font-dm-sans), sans-serif;
+      font-family: var(--font-inter), sans-serif;
     }
     .titulo-text{
       font-size: 36px;
@@ -202,7 +203,7 @@ h1, h2, h3, h4, h5, h6, .font-syne {
     
       .custom-card-title{
     font-size: 22px;
-          font-family: var(--font-dm-sans), sans-serif;
+          font-family: var(--font-inter), sans-serif;
           font-weight: 600;
       }
     
@@ -210,7 +211,7 @@ h1, h2, h3, h4, h5, h6, .font-syne {
       .custom-card-text{
     
           font-size: 28px;
-          font-family: var(--font-dm-sans), sans-serif;
+          font-family: var(--font-inter), sans-serif;
           font-weight: bold;
     
       }
@@ -218,7 +219,7 @@ h1, h2, h3, h4, h5, h6, .font-syne {
     
       .total-word{
           font-size: 14px;
-          font-family: var(--font-dm-sans), sans-serif;
+          font-family: var(--font-inter), sans-serif;
           font-weight: 400;
           color: #9f9d9d;
     
@@ -242,7 +243,7 @@ h1, h2, h3, h4, h5, h6, .font-syne {
           text-decoration: none !important; 
           align-items: center !important;
           margin-top: 50px !important;
-          font-family: var(--font-dm-sans), sans-serif;
+          font-family: var(--font-inter), sans-serif;
           display: block; 
           font-weight: bold;
           margin: 0 auto; 
@@ -266,7 +267,7 @@ h1, h2, h3, h4, h5, h6, .font-syne {
           text-decoration: none !important; 
           align-items: center !important;
           margin-top: 50px !important;
-          font-family: var(--font-dm-sans), sans-serif;
+          font-family: var(--font-inter), sans-serif;
           display: block; 
           font-weight: bold;
           margin: 0 auto; 
@@ -330,7 +331,7 @@ h1, h2, h3, h4, h5, h6, .font-syne {
       .dados .quantofalta,
       .dados .faltapravc {
           font-size: 12px;
-          font-family: var(--font-dm-sans), sans-serif;
+          font-family: var(--font-inter), sans-serif;
       }
     
       .dados .quantotem,
@@ -347,7 +348,7 @@ h1, h2, h3, h4, h5, h6, .font-syne {
       }
     
             .dados .porcentagem{
-              font-family: var(--font-dm-sans), sans-serif;
+              font-family: var(--font-inter), sans-serif;
     font-size: 18px;
     
               }
@@ -379,7 +380,7 @@ h1, h2, h3, h4, h5, h6, .font-syne {
     .gauge {
       width: 100%; /* Faz o gauge ocupar 100% da largura do contêiner pai */
       max-width: 250px; /* Limita a largura máxima do gauge */
-      font-family: var(--font-dm-sans), sans-serif;
+      font-family: var(--font-inter), sans-serif;
       font-size: 32px;
       color: #2E3AFF;
       margin: 20px auto; /* Centraliza horizontalmente e adiciona uma margem vertical */
@@ -449,7 +450,7 @@ h1, h2, h3, h4, h5, h6, .font-syne {
     
             .intro-token{
     
-              font-family: var(--font-dm-sans), sans-serif;
+              font-family: var(--font-inter), sans-serif;
               font-size: 18px;
     color: #BBBBBB;
     
@@ -459,7 +460,7 @@ h1, h2, h3, h4, h5, h6, .font-syne {
     
             .token-text{
     
-              font-family: var(--font-dm-sans), sans-serif;
+              font-family: var(--font-inter), sans-serif;
               font-size: 34px;
               margin-left: 80px;
             }
@@ -487,7 +488,7 @@ h1, h2, h3, h4, h5, h6, .font-syne {
           
           .tokkencard .tokennu,
           .tokkencard .valorreais {
-              font-family: var(--font-dm-sans), sans-serif;
+              font-family: var(--font-inter), sans-serif;
               font-size: 34px;
               margin: auto;
               text-align: center;
@@ -505,7 +506,7 @@ h1, h2, h3, h4, h5, h6, .font-syne {
             }
     
             .simular{
-              font-family: var(--font-dm-sans), sans-serif;
+              font-family: var(--font-inter), sans-serif;
     font-size: 34px;
             
     display: flex;
@@ -943,7 +944,7 @@ font-size: 10px;
     .qrcode h2{
       margin: 0;
       padding: 0;
-      font-family: var(--font-dm-sans), sans-serif;
+      font-family: var(--font-inter), sans-serif;
       color: #6B7280; /* text-gray-500 */
       font-size: 29px;
     }
@@ -1288,7 +1289,7 @@ margin-top: 20px;
 }
 
 .fmz-empty-title {
-  font-family: var(--font-syne), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 800;
   font-size: clamp(22px, 3.1vw, 34px);
   color: var(--fmz-navy);
@@ -1342,7 +1343,7 @@ margin-top: 20px;
 }
 
 .fmz-empty-step-number {
-  font-family: var(--font-syne), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 800;
   font-size: clamp(17px, 1.9vw, 23px);
   color: var(--fmz-gold);
@@ -1370,7 +1371,7 @@ margin-top: 20px;
   border: none;
   border-radius: 8px;
   padding: clamp(11px, 1.35vw, 14px) clamp(24px, 3vw, 32px);
-  font-family: var(--font-syne), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 700;
   font-size: clamp(12.5px, 1.05vw, 14px);
   letter-spacing: 0.04em;

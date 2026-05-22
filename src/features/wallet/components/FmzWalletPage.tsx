@@ -395,10 +395,10 @@ export function FmzWalletPage() {
               <h1 className={styles.pageTitle}>Carteira</h1>
             </div>
             <div className={styles.pageHeadRight}>
-              <button type="button" className={styles.btn}>
+              <Link href="/connected/comingSoon" className={styles.btn}>
                 <Download size={15} /> Extrato
-              </button>
-              <Link href="/connected/tokensToPurchasePix" className={`${styles.btn} ${styles.btnPrimary}`}>
+              </Link>
+              <Link href="/connected/comingSoon" className={`${styles.btn} ${styles.btnPrimary}`}>
                 <Plus size={15} /> Comprar tokens
               </Link>
             </div>
