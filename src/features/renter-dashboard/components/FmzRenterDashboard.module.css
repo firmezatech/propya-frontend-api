@@ -24,7 +24,7 @@
   margin: 0 auto;
   padding: clamp(24px,4vw,40px) clamp(20px,4vw,48px) 80px;
   color: var(--navy);
-  font-family: var(--font-fmz-body);
+  font-family: var(--font-inter), sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -38,7 +38,7 @@
   padding-left: clamp(10px, 1.4vw, 20px);
 }
 .pageTitle {
-  font-family: var(--font-fmz-display); font-weight: 700;
+  font-family: var(--font-inter), sans-serif; font-weight: 700;
   font-size: clamp(28px,3.6vw,38px); letter-spacing: -.025em; line-height: 1.05;
   color: var(--navy); margin-bottom: 6px;
 }
@@ -109,7 +109,7 @@
 .eIco svg { width: 11px; height: 11px; }
 
 .jTitle {
-  font-family: var(--font-fmz-display); font-weight: 700;
+  font-family: var(--font-inter), sans-serif; font-weight: 700;
   font-size: clamp(22px,2.6vw,30px); line-height: 1.18; letter-spacing: -.02em;
   color: var(--navy); margin-bottom: 8px; max-width: 560px;
 }
@@ -157,7 +157,7 @@
   position: absolute; top: 0; left: 0%;
   background: var(--navy); color: #fff;
   padding: 4px 10px; border-radius: 8px;
-  font-family: var(--font-fmz-display); font-weight: 700; font-size: 11px;
+  font-family: var(--font-inter), sans-serif; font-weight: 700; font-size: 11px;
   white-space: nowrap; transform: translateX(-50%);
   transition: left 1.8s cubic-bezier(.4,0,.2,1);
   z-index: 5; letter-spacing: .005em;
@@ -214,12 +214,12 @@
 }
 .nbadge svg { width: 10px; height: 10px; }
 .nextTitle {
-  font-family: var(--font-fmz-display); font-weight: 700;
+  font-family: var(--font-inter), sans-serif; font-weight: 700;
   font-size: clamp(20px,2vw,24px); line-height: 1.2; letter-spacing: -.018em;
   color: var(--navy); margin-bottom: 6px;
 }
 .nextAmount {
-  font-family: var(--font-fmz-display); font-weight: 800;
+  font-family: var(--font-inter), sans-serif; font-weight: 800;
   font-size: 36px; color: var(--navy); letter-spacing: -.03em; line-height: 1; margin-bottom: 6px;
 }
 .currency { font-size: .55em; font-weight: 500; color: var(--muted); margin-right: 4px; }
@@ -269,7 +269,7 @@
   gap: 10px; margin-bottom: 14px;
 }
 .cardTitle {
-  font-family: var(--font-fmz-display); font-weight: 600;
+  font-family: var(--font-inter), sans-serif; font-weight: 600;
   font-size: 14.5px; color: var(--navy); letter-spacing: -.005em;
   display: flex; align-items: center; gap: 9px;
 }
@@ -289,7 +289,7 @@
 
 /* Bill card */
 .billTotal {
-  font-family: var(--font-fmz-display); font-weight: 800;
+  font-family: var(--font-inter), sans-serif; font-weight: 800;
   font-size: 34px; color: var(--navy); letter-spacing: -.028em; line-height: 1;
   margin: 8px 0 8px;
 }
@@ -335,7 +335,7 @@
   text-transform: uppercase; color: var(--muted);
 }
 .billTotalVal {
-  font-family: var(--font-fmz-display); font-weight: 700;
+  font-family: var(--font-inter), sans-serif; font-weight: 700;
   font-size: 18px; color: var(--navy); letter-spacing: -.02em;
 }
 
@@ -362,7 +362,7 @@
 .upIco svg { width: 11px; height: 11px; }
 .simCompare { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
 .simCurrent {
-  font-family: var(--font-fmz-display); font-weight: 700;
+  font-family: var(--font-inter), sans-serif; font-weight: 700;
   font-size: 32px; color: var(--navy); letter-spacing: -.025em; line-height: 1;
 }
 .simOriginal { font-size: 14px; color: var(--hint); text-decoration: line-through; }
@@ -413,14 +413,14 @@
 }
 .simResultRow { display: flex; align-items: baseline; gap: 10px; }
 .simResultV {
-  font-family: var(--font-fmz-display); font-weight: 700;
+  font-family: var(--font-inter), sans-serif; font-weight: 700;
   font-size: 24px; color: var(--navy); letter-spacing: -.022em; line-height: 1;
 }
 .simResultStrike { font-size: 13px; color: var(--hint); text-decoration: line-through; }
 .simPills { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
 .simPill { background: var(--page); border-radius: 9px; padding: 9px 10px; }
 .simPillK { font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
-.simPillV { font-family: var(--font-fmz-display); font-weight: 700; font-size: 14px; color: var(--navy); letter-spacing: -.01em; }
+.simPillV { font-family: var(--font-inter), sans-serif; font-weight: 700; font-size: 14px; color: var(--navy); letter-spacing: -.01em; }
 .simPillVGreen { color: var(--green); }
 .simPillSub { font-size: 10px; color: var(--gold-deep); font-weight: 600; margin-top: 2px; }
 .simSliderDisabled {
@@ -467,14 +467,12 @@
   cursor: pointer; text-decoration: none; text-align: left;
   transition: all .15s;
 }
+.quickCard:hover { border-color: #D0D4DE; background: #FAFBFC; }
 .quickIco {
   width: 42px; height: 42px; border-radius: 11px;
   background: var(--page); color: var(--navy);
   display: grid; place-items: center; flex-shrink: 0;
-  transition: all .15s;
 }
-.quickCard:hover { border-color: #D0D4DE; background: #FAFBFC; }
-.quickCard:hover .quickIco { background: var(--navy); color: var(--gold); }
 .quickIco svg { width: 18px; height: 18px; }
 .quickBody { flex: 1; min-width: 0; }
 .quickTitle { font-size: 14px; font-weight: 600; color: var(--navy); letter-spacing: -.005em; display: flex; align-items: center; gap: 8px; }

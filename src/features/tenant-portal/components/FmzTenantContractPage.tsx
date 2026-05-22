@@ -22,7 +22,6 @@ import {
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
-import Link from 'next/link';
 import type { FmzTenantContractPageData } from '../domain/fmz-tenant-contract.types';
 import styles from './FmzTenantContractPage.module.css';
 
@@ -546,9 +545,9 @@ function TenantOwnershipHeroCard({ contractPage }: { contractPage: FmzTenantCont
         ) : (
           <span>Tokens acumulados ao longo do contrato</span>
         )}
-        <Link href="/connected/comingSoon" className={styles.ownFootLink}>
+        <a href="/connected/comingSoon" className={styles.ownFootLink}>
           Comprar tokens <ArrowRight className="h-3 w-3" />
-        </Link>
+        </a>
       </div>
     </div>
   );
@@ -584,9 +583,9 @@ export function FmzTenantContractPage({ contractPage, contractDocumentUrl }: Fmz
           </div>
         </div>
         <div className={styles.pageHeadRight}>
-          <Link href="/connected/comingSoon" className={styles.btnPrimary}>
+          <a href="/connected/comingSoon" className={styles.btnPrimary}>
             <Plus className="h-4 w-4" /> Comprar tokens
-          </Link>
+          </a>
         </div>
       </div>
 

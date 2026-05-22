@@ -325,9 +325,9 @@ function AssetDistributionCard({ dashboard }: { dashboard: FmzTenantDashboard })
 
       <div className={styles.distFoot}>
         <span>Preço médio do token <strong>{formatMoney(ownership?.tokenUnitValue)}</strong></span>
-        <a href="#" className={styles.distFootLink}>
+        <Link href="/connected/comingSoon" className={styles.distFootLink}>
           Ver detalhes <ArrowRight size={12} />
-        </a>
+        </Link>
       </div>
     </div>
   );

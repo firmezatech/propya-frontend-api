@@ -439,14 +439,14 @@ const AdminGas: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div>
                       <span className="text-gray-600">Hash:</span>
-                      <div className="font-mono text-xs mt-1 flex items-center space-x-1">
+                      <div className="text-xs mt-1 flex items-center space-x-1">
                         <span>{formatAddress(tx.transactionHash)}</span>
                         {/* <ExternalLink className="h-3 w-3 text-gray-400" /> */}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-600">De/Para:</span>
-                      <div className="font-mono text-xs mt-1">
+                      <div className="text-xs mt-1">
                         {formatAddress(tx.from)} → {formatAddress(tx.to)}
                       </div>
                     </div>

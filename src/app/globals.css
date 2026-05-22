@@ -31,9 +31,8 @@
   --fmz-success-bg: #F0FAF5;
   --fmz-success-border: #A8DFC4;
 
-  --font-inter-fallback: "Inter", sans-serif;
-  --font-fmz-body: var(--font-inter), var(--font-inter-fallback);
-  --font-fmz-display: var(--font-inter), var(--font-inter-fallback);
+  --font-fmz-body: var(--font-inter), sans-serif;
+  --font-fmz-display: var(--font-inter), sans-serif;
 }
 
 *, *::before, *::after {
@@ -55,11 +54,11 @@ body {
   min-height: 100vh;
   background: var(--background);
   color: var(--fmz-text-primary);
-  font-family: var(--font-fmz-body);
+  font-family: var(--font-inter), sans-serif;
 }
 
-h1, h2, h3, h4, h5, h6, .font-sans {
-  font-family: var(--font-fmz-display);
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-inter), sans-serif;
 }
 
 

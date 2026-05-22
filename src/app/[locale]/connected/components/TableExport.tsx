@@ -57,10 +57,6 @@ const TableExport: React.FC<TableExportProps> = ({
   };
 
   // Função para exportar para CSV
-  const redirectToComingSoon = () => {
-    window.location.assign('/connected/comingSoon');
-  };
-
   const exportToCSV = () => {
     setIsExporting(true);
     
@@ -269,7 +265,7 @@ const TableExport: React.FC<TableExportProps> = ({
         <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[200px]">
           <div className="py-2">
             <button
-              onClick={redirectToComingSoon}
+              onClick={() => { window.location.href = "/connected/comingSoon"; }}
               disabled={isExporting}
               className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3 disabled:opacity-50"
             >

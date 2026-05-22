@@ -21,7 +21,7 @@
   justify-content: center;
   padding: clamp(40px, 6vw, 80px) clamp(20px, 4vw, 48px);
   width: 100%;
-  font-family: var(--font-fmz-body);
+  font-family: var(--font-inter), sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   color: var(--ink);
@@ -106,7 +106,7 @@
 
 /* ── TITLE ───────────────────────────────── */
 .title {
-  font-family: var(--font-fmz-display);
+  font-family: var(--font-inter), sans-serif;
   font-weight: 700;
   font-size: clamp(26px, 3.5vw, 34px);
   letter-spacing: -.025em;

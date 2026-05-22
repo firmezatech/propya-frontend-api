@@ -209,7 +209,7 @@
 .txMuted { color: var(--fmz-text-hint); font-family: var(--font-inter), sans-serif; font-size: 13px; }
 .txQty { font-family: var(--font-inter), sans-serif; font-size: 13px; font-weight: 600; color: var(--fmz-navy); text-align: right; white-space: nowrap; }
 .deltaPlus { color: var(--fmz-success); }
-.txAmount { font-family: var(--font-fmz-display), sans-serif; font-size: 14px; font-weight: 700; color: var(--fmz-navy); letter-spacing: -.01em; text-align: right; min-width: 96px; white-space: nowrap; }
+.txAmount { font-family: var(--font-inter), sans-serif; font-size: 14px; font-weight: 700; color: var(--fmz-navy); letter-spacing: -.01em; text-align: right; min-width: 96px; white-space: nowrap; }
 .txAmountMuted { color: var(--fmz-text-muted); font-weight: 500; }
 
 .txEmpty { padding: 40px 24px; text-align: center; }

@@ -72,7 +72,7 @@
 .btnPrimary:hover { background: #1C2740; border-color: #1C2740; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(14,22,38,.18); }
 .btnPix { background: linear-gradient(135deg, #00BFA5 0%, #009B85 100%); color: #fff; border-color: transparent; }
 .btnPix:hover { background: linear-gradient(135deg, #00CFB5 0%, #00A693 100%); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,155,133,.3); }
-.btnSm { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; padding: 7px 13px; border-radius: 8px; border: 1px solid var(--fmz-border-light); background: #fff; font-size: 12.5px; font-weight: 600; color: var(--fmz-navy); cursor: pointer; transition: all .15s; }
+.btnSm { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 8px; border: 1px solid var(--fmz-border-light); background: #fff; font-size: 12.5px; font-weight: 600; color: var(--fmz-navy); cursor: pointer; transition: all .15s; }
 .btnSm svg { width: 13px; height: 13px; }
 .btnSm:hover { background: #FAFBFC; border-color: #D0D4DE; }
 
