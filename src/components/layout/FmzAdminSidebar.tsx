@@ -5,31 +5,20 @@ import { LogOut } from 'lucide-react';
 import type { FmzAdminNavigationItem } from '../../config/fmz-admin-navigation-config';
 import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
 import { fmzAdminSidebarLayoutConfig } from '../../config/fmz-admin-sidebar-layout-config';
+import { buildFmzLocalizedHref } from '../../lib/fmz-localize-href';
 import { fmzCn } from '../../lib/fmz-classnames';
-import type { FmzConnectedUserSummary } from './connected-user/fmz-connected-user.types';
-import type { AdminNotificationsState } from '../../features/admin-notifications/hooks/use-admin-notifications';
-import { FmzAdminNotificationBell } from './FmzAdminNotificationBell';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export type FmzAdminSidebarProps = {
   locale?: string;
   pathname: string | null;
-  currentUser: FmzConnectedUserSummary;
   effectivePermissionKeys: Set<string>;
   navigationItems: readonly FmzAdminNavigationItem[];
   onLogout: () => void;
-  notificationUnreadCount?: number;
-  notificationsState?: AdminNotificationsState;
-  onFetchNotifications?: () => Promise<void>;
-  onMarkNotificationAsRead?: (id: string) => Promise<void>;
-  onMarkAllNotificationsAsRead?: () => Promise<void>;
 };
 
-const NOOP_ASYNC = async () => { /* no-op */ };
-
-const buildFmzLocalizedHref = (locale: string | undefined, href: string): string =>
-  `${locale ? `/${locale}` : ''}${href}`;
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const isAdminSidebarItemActive = (pathname: string | null, href: string): boolean => {
   if (!pathname) return false;
@@ -38,37 +27,37 @@ const isAdminSidebarItemActive = (pathname: string | null, href: string): boolea
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+/**
+ * Admin sidebar — navigation items and logout only.
+ * The notification bell has been moved to `FmzAdminHeader` so that it
+ * matches the tenant header's UX pattern and lives in the header bar.
+ */
 export function FmzAdminSidebar({
   locale,
   pathname,
-  currentUser,
   effectivePermissionKeys,
   navigationItems,
   onLogout,
-  notificationUnreadCount = 0,
-  notificationsState = { status: 'idle' },
-  onFetchNotifications = NOOP_ASYNC,
-  onMarkNotificationAsRead = NOOP_ASYNC,
-  onMarkAllNotificationsAsRead = NOOP_ASYNC,
 }: FmzAdminSidebarProps) {
   const visibleItems = navigationItems.filter(
-    (item) => !item.requiredPermissionKey || effectivePermissionKeys.has(item.requiredPermissionKey.toLowerCase()),
+    (item) =>
+      !item.requiredPermissionKey ||
+      effectivePermissionKeys.has(item.requiredPermissionKey.toLowerCase()),
   );
 
   return (
     <aside className={fmzAdminSidebarLayoutConfig.sidebar}>
-      <FmzAdminNotificationBell
-        unreadCount={notificationUnreadCount}
-        notificationsState={notificationsState}
-        onFetchNotifications={onFetchNotifications}
-        onMarkAsRead={onMarkNotificationAsRead}
-        onMarkAllAsRead={onMarkAllNotificationsAsRead}
-      />
-
       <div className={fmzAdminSidebarLayoutConfig.navigationArea}>
-        {visibleItems.length ? visibleItems.map((item) => (
-          <FmzAdminSidebarLink key={item.id} item={item} locale={locale} pathname={pathname} />
-        )) : (
+        {visibleItems.length ? (
+          visibleItems.map((item) => (
+            <FmzAdminSidebarLink
+              key={item.id}
+              item={item}
+              locale={locale}
+              pathname={pathname}
+            />
+          ))
+        ) : (
           <div className={fmzAdminSidebarLayoutConfig.emptyState}>
             Nenhuma página administrativa liberada para este usuário.
           </div>
@@ -113,7 +102,9 @@ function FmzAdminSidebarLink({
       <span
         className={fmzCn(
           fmzAdminSidebarLayoutConfig.icon,
-          isActive ? fmzAdminSidebarLayoutConfig.iconActive : fmzAdminSidebarLayoutConfig.iconInactive,
+          isActive
+            ? fmzAdminSidebarLayoutConfig.iconActive
+            : fmzAdminSidebarLayoutConfig.iconInactive,
         )}
       >
         <Icon className="h-3.5 w-3.5" aria-hidden="true" />

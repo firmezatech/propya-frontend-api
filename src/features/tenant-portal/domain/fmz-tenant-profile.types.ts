@@ -26,20 +26,25 @@ export type TenantKycDocument = {
 
 // ─── Profile Completion ────────────────────────────────────────────────────────
 // All completion values come from the backend; the frontend only renders them.
+// All array fields are required — the backend always returns every bucket, even
+// when empty. The frontend must not treat missing buckets as "no documents".
 
 export type TenantProfileCompletion = {
   percentage: number;
   status: string;
   completedItems: number;
   totalItems: number;
+  completedProfileFields: number;
+  totalProfileFields: number;
+  completedDocuments: number;
+  totalDocuments: number;
   missingFields: string[];
   missingDocuments: string[];
-  pendingDocuments: string[];
+  pendingDocuments: string[];       // not yet submitted
+  underReviewDocuments: string[];   // uploaded, waiting for analysis
   verifiedDocuments: string[];
-  // Optional enrichment fields — present in backend v2+; absent in older responses.
-  underReviewDocuments?: string[];
-  rejectedDocuments?: string[];
-  needsResubmissionDocuments?: string[];
+  rejectedDocuments: string[];
+  needsResubmissionDocuments: string[];
 };
 
 // ─── KYC Overall Status ────────────────────────────────────────────────────────

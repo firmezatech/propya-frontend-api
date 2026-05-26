@@ -1,30 +1,47 @@
+'use client';
+
 // ─── Login Welcome Message ────────────────────────────────────────────────────
 // Reads `propya_has_visited` from localStorage to determine whether to greet
 // the user as a first-time or returning visitor.
 //
-// Invariant: only call this on the client — it accesses `window.localStorage`.
+// Implemented as a hook so that localStorage is only accessed inside useEffect —
+// never during SSR or pre-hydration. The initial render always returns "Bem vindo"
+// (a safe neutral default); the effect corrects to "Bem vindo de volta" for
+// returning visitors on the client, after hydration is complete.
 
-const VISITED_KEY = 'propya_has_visited';
+import { useState, useEffect } from 'react';
+
+const LOGIN_VISITED_KEY = 'propya_has_visited';
 
 /**
  * Returns a personalised welcome message based on whether the user has visited
- * before. On the first call it records the visit and returns "Bem vindo"; on
- * subsequent calls it returns "Bem vindo de volta".
+ * before. The initial value is always "Bem vindo" — the effect updates it
+ * on the client after hydration, ensuring no SSR/client mismatch.
  *
- * Safe to call at component mount (useState initializer or useEffect).
+ * First-time visitors: "Bem vindo" (and the flag is written to localStorage).
+ * Returning visitors:  "Bem vindo de volta".
+ * localStorage error:  falls back to "Bem vindo" silently.
  */
-export function getLoginWelcomeMessage(): string {
-  if (typeof window === 'undefined') {
-    // SSR: always treat as returning visitor; client will correct on hydration.
-    return 'Bem vindo de volta';
-  }
+export function useLoginWelcomeMessage(): string {
+  const [message, setMessage] = useState('Bem vindo');
 
-  const hasVisited = window.localStorage.getItem(VISITED_KEY);
+  useEffect(() => {
+    try {
+      const hasVisited = window.localStorage.getItem(LOGIN_VISITED_KEY) === 'true';
 
-  if (!hasVisited) {
-    window.localStorage.setItem(VISITED_KEY, 'true');
-    return 'Bem vindo';
-  }
+      if (hasVisited) {
+        setMessage('Bem vindo de volta');
+        return;
+      }
 
-  return 'Bem vindo de volta';
+      window.localStorage.setItem(LOGIN_VISITED_KEY, 'true');
+      setMessage('Bem vindo');
+    } catch {
+      // localStorage unavailable (e.g. private browsing with strict settings).
+      // Safe fallback — never throw, never expose "de volta" on error.
+      setMessage('Bem vindo');
+    }
+  }, []);
+
+  return message;
 }

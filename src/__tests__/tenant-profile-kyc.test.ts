@@ -32,10 +32,17 @@ const makeCompletion = (overrides: Partial<TenantProfileCompletion> = {}): Tenan
   status: 'partial',
   completedItems: 9,
   totalItems: 12,
+  completedProfileFields: 7,
+  totalProfileFields: 10,
+  completedDocuments: 2,
+  totalDocuments: 4,
   missingFields: ['birthdate'],
   missingDocuments: ['proof_of_address'],
   pendingDocuments: ['identity_document'],
+  underReviewDocuments: [],
   verifiedDocuments: ['selfie_with_document'],
+  rejectedDocuments: [],
+  needsResubmissionDocuments: [],
   ...overrides,
 });
 
@@ -209,11 +216,11 @@ describe('KYC completion banner — chip status mapping', () => {
   function buildChips(completion: TenantProfileCompletion): { label: string; status: string }[] {
     const chips: { label: string; status: string }[] = [];
     completion.verifiedDocuments.forEach((key) => chips.push({ label: key, status: 'ok' }));
-    (completion.underReviewDocuments ?? []).forEach((key) => chips.push({ label: key, status: 'review' }));
+    completion.underReviewDocuments.forEach((key) => chips.push({ label: key, status: 'review' }));
     completion.pendingDocuments.forEach((key) => chips.push({ label: key, status: 'pending' }));
     completion.missingDocuments.forEach((key) => chips.push({ label: key, status: 'pending' }));
-    (completion.rejectedDocuments ?? []).forEach((key) => chips.push({ label: key, status: 'error' }));
-    (completion.needsResubmissionDocuments ?? []).forEach((key) => chips.push({ label: key, status: 'error' }));
+    completion.rejectedDocuments.forEach((key) => chips.push({ label: key, status: 'error' }));
+    completion.needsResubmissionDocuments.forEach((key) => chips.push({ label: key, status: 'error' }));
     return chips;
   }
 
@@ -280,8 +287,8 @@ describe('KYC completion banner — chip status mapping', () => {
     expect(chips.filter((chip) => chip.status === 'error')).toHaveLength(1);
   });
 
-  it('completion without new optional fields produces no "review" or "error" chips', () => {
-    // Backward compatibility: old API responses without underReviewDocuments etc.
+  it('completion with empty review/error buckets produces no "review" or "error" chips', () => {
+    // All array fields are required — empty arrays produce no chips.
     const completion = makeCompletion();
     const chips = buildChips(completion);
     expect(chips.filter((chip) => chip.status === 'review')).toHaveLength(0);

@@ -1,28 +1,49 @@
 'use client';
 
+// ─── FmzConnectedHeader ───────────────────────────────────────────────────────
+// Sticky top header for tenant users.
+//
+// Renders: brand mark, role label (desktop), and the connected dropdown
+// (notification bell + user menu).
+//
+// Admin users are never served this header — they get `FmzAdminHeader` (which
+// is rendered by `FmzAdminLayout`). The former `adminOffset` variant has been
+// removed; the admin layout is now fully self-contained.
+
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { FileText, Home, LogOut, ReceiptText, Settings, UserRound, WalletCards, Wrench } from 'lucide-react';
+import {
+  FileText,
+  Home,
+  LogOut,
+  ReceiptText,
+  Settings,
+  UserRound,
+  WalletCards,
+  Wrench,
+} from 'lucide-react';
 import { useMemo } from 'react';
 import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
+import { buildFmzLocalizedHref } from '../../lib/fmz-localize-href';
 import type { FmzAccessControlPage, FmzAccessControlPrincipal } from '../../features/access-control/domain';
 import { normalizeFmzPath } from '../../features/access-control/domain';
-import { fmzCn } from '../../lib/fmz-classnames';
 import { FmzBrandMark } from './FmzBrandMark';
 import { FmzConnectedDropdown } from './connected-dropdown';
 import type { FmzConnectedDropdownItem } from './connected-dropdown';
-import { FmzConnectedUserIdentity } from './FmzConnectedUserIdentity';
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 export type FmzConnectedHeaderProps = {
-  adminOffset?: boolean;
   principal?: FmzAccessControlPrincipal | null;
 };
 
-const ADMIN_SIDEBAR_WIDTH_CLASS = 'lg:grid-cols-[clamp(280px,18vw,320px)_minmax(0,1fr)]';
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const buildFmzLocalizedHref = (locale: string | undefined, href: string): string => `${locale ? `/${locale}` : ''}${href}`;
-
-const HIDDEN_CONNECTED_DROPDOWN_PAGE_KEYS = new Set(['coming_soon', 'comingsoon', 'coming-soon']);
+const HIDDEN_CONNECTED_DROPDOWN_PAGE_KEYS = new Set([
+  'coming_soon',
+  'comingsoon',
+  'coming-soon',
+]);
 const HIDDEN_CONNECTED_DROPDOWN_PATHS = new Set(['/connected/comingsoon']);
 
 const isVisibleConnectedPage = (page: FmzAccessControlPage): boolean => {
@@ -31,13 +52,13 @@ const isVisibleConnectedPage = (page: FmzAccessControlPage): boolean => {
 
   return Boolean(
     page.key
-      && path
-      && path !== '#'
-      && path !== '/'
-      && !path.includes('[')
-      && page.showInDropdown !== false
-      && !HIDDEN_CONNECTED_DROPDOWN_PAGE_KEYS.has(key)
-      && !HIDDEN_CONNECTED_DROPDOWN_PATHS.has(path.toLowerCase()),
+    && path
+    && path !== '#'
+    && path !== '/'
+    && !path.includes('[')
+    && page.showInDropdown !== false
+    && !HIDDEN_CONNECTED_DROPDOWN_PAGE_KEYS.has(key)
+    && !HIDDEN_CONNECTED_DROPDOWN_PATHS.has(path.toLowerCase()),
   );
 };
 
@@ -47,17 +68,29 @@ const resolveConnectedPageIcon = (page: FmzAccessControlPage): FmzConnectedDropd
 
   if (key.includes('dashboard') || path.includes('dashboard')) return Home;
   if (key.includes('account') || key.includes('profile') || path.includes('account')) return UserRound;
-  if (key.includes('contract') || path.includes('contract') || path.includes('mycontract')) return FileText;
-  if (key.includes('invoice') || key.includes('boleto') || key.includes('payment') || key.includes('fatura') || path.includes('invoice') || path.includes('issueinvoice') || path.includes('paymenthistory')) return ReceiptText;
-  if (key.includes('wallet') || key.includes('token') || path.includes('wallet') || path.includes('mytokens')) return WalletCards;
-  if (key.includes('maintenance') || key.includes('manutenc') || path.includes('maintenance')) return Wrench;
+  if (
+    key.includes('contract') || path.includes('contract') || path.includes('mycontract')
+  ) return FileText;
+  if (
+    key.includes('invoice') || key.includes('boleto') || key.includes('payment')
+    || key.includes('fatura') || path.includes('invoice')
+    || path.includes('issueinvoice') || path.includes('paymenthistory')
+  ) return ReceiptText;
+  if (
+    key.includes('wallet') || key.includes('token')
+    || path.includes('wallet') || path.includes('mytokens')
+  ) return WalletCards;
+  if (
+    key.includes('maintenance') || key.includes('manutenc') || path.includes('maintenance')
+  ) return Wrench;
   if (key.includes('setting') || key.includes('config')) return Settings;
 
   return FileText;
 };
 
-
-const buildConnectedRoleLabel = (principal: FmzAccessControlPrincipal | null | undefined): string => {
+const buildConnectedRoleLabel = (
+  principal: FmzAccessControlPrincipal | null | undefined,
+): string => {
   const roleKeys = principal?.roleKeys?.map((role) => role.toLowerCase()) ?? [];
 
   if (roleKeys.some((role) => role.includes('tenant') || role.includes('renter') || role.includes('inquil'))) return 'Inquilina';
@@ -68,18 +101,28 @@ const buildConnectedRoleLabel = (principal: FmzAccessControlPrincipal | null | u
   return 'Usuária';
 };
 
-const buildConnectedDropdownItems = (principal: FmzAccessControlPrincipal | null | undefined): FmzConnectedDropdownItem[] => {
+/**
+ * Builds the ordered, deduplicated connected dropdown items from a principal.
+ *
+ * Deduplication runs first (O(n)), then sort (O(k log k) where k ≤ n).
+ * Sorting after dedup avoids ordering duplicate entries that will be discarded.
+ */
+const buildConnectedDropdownItems = (
+  principal: FmzAccessControlPrincipal | null | undefined,
+): FmzConnectedDropdownItem[] => {
+  // 1. Deduplicate by key — first occurrence wins.
   const pagesByKey = new Map<string, FmzAccessControlPage>();
-
   (principal?.accessiblePages ?? [])
     .filter(isVisibleConnectedPage)
-    .sort((left, right) => left.order - right.order)
     .forEach((page) => {
       const key = page.key.trim().toLowerCase();
       if (!pagesByKey.has(key)) pagesByKey.set(key, page);
     });
 
-  const pageItems: FmzConnectedDropdownItem[] = Array.from(pagesByKey.values()).map((page) => ({
+  // 2. Sort the already-deduplicated set.
+  const sortedPages = Array.from(pagesByKey.values()).sort((left, right) => left.order - right.order);
+
+  const pageItems: FmzConnectedDropdownItem[] = sortedPages.map((page) => ({
     id: page.key,
     label: page.label || page.name || page.key,
     href: normalizeFmzPath(page.path),
@@ -101,41 +144,40 @@ const buildConnectedDropdownItems = (principal: FmzAccessControlPrincipal | null
   ];
 };
 
-export function FmzConnectedHeader({ adminOffset = false, principal = null }: FmzConnectedHeaderProps) {
+// ─── Component ────────────────────────────────────────────────────────────────
+
+/**
+ * Tenant-only connected header.
+ *
+ * Contains brand mark, role label, and the connected dropdown (which includes
+ * the tenant notification bell and user menu).
+ *
+ * Admin users never reach this component — they are served `FmzAdminHeader`
+ * via `FmzAdminLayout`, which is fully self-contained.
+ */
+export function FmzConnectedHeader({ principal = null }: FmzConnectedHeaderProps) {
   const params = useParams<{ locale?: string }>();
 
-  const localizeHref = useMemo(() => {
-    return (href: string) => buildFmzLocalizedHref(params?.locale, href);
-  }, [params?.locale]);
+  const localizeHref = useMemo(
+    () => (href: string) => buildFmzLocalizedHref(params?.locale, href),
+    [params?.locale],
+  );
 
-  const connectedDropdownItems = useMemo(() => buildConnectedDropdownItems(principal), [principal]);
+  const connectedDropdownItems = useMemo(
+    () => buildConnectedDropdownItems(principal),
+    [principal],
+  );
   const roleLabel = useMemo(() => buildConnectedRoleLabel(principal), [principal]);
-
-  if (adminOffset) {
-    return (
-      <header className="sticky top-0 z-50 h-[72px] shrink-0 border-b border-fmz-border-light bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
-        <div className={fmzCn('grid h-full w-full grid-cols-[minmax(0,1fr)_auto] items-center', ADMIN_SIDEBAR_WIDTH_CLASS)}>
-          <Link
-            href={localizeHref(fmzPublicLayoutConfig.connectedDashboardPath)}
-            aria-label={fmzPublicLayoutConfig.appName}
-            className="flex h-full min-w-0 items-center px-[clamp(18px,4vw,48px)] no-underline lg:border-r lg:border-fmz-border-light"
-          >
-            <FmzBrandMark size="header" />
-          </Link>
-
-          <div className="flex min-w-0 justify-end px-[clamp(18px,4vw,48px)]">
-            <FmzConnectedUserIdentity />
-          </div>
-        </div>
-      </header>
-    );
-  }
 
   return (
     <header className="sticky top-0 z-50 h-[68px] shrink-0 border-b border-fmz-border-light bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/90">
       <div className="mx-auto flex h-full w-full max-w-[1360px] items-center justify-between gap-[18px] px-[clamp(20px,4vw,40px)]">
         <div className="flex min-w-0 items-center gap-3.5">
-          <Link href={localizeHref(fmzPublicLayoutConfig.connectedDashboardPath)} aria-label={fmzPublicLayoutConfig.appName} className="min-w-0 no-underline">
+          <Link
+            href={localizeHref(fmzPublicLayoutConfig.connectedDashboardPath)}
+            aria-label={fmzPublicLayoutConfig.appName}
+            className="min-w-0 no-underline"
+          >
             <FmzBrandMark size="header" />
           </Link>
           <span className="hidden h-[22px] w-px shrink-0 bg-fmz-border-light md:inline-block" />
@@ -144,14 +186,17 @@ export function FmzConnectedHeader({ adminOffset = false, principal = null }: Fm
           </span>
         </div>
 
-        <FmzConnectedDropdown
-          items={connectedDropdownItems}
-          localizeHref={localizeHref}
-          defaultUserName={fmzPublicLayoutConfig.defaultConnectedUserName}
-          defaultUserEmail={fmzPublicLayoutConfig.defaultConnectedUserEmail}
-          locale={params?.locale}
-          roleLabel={roleLabel}
-        />
+        {/* Actions area — reserved min-width prevents layout shift */}
+        <div className="flex min-w-[200px] items-center justify-end">
+          <FmzConnectedDropdown
+            items={connectedDropdownItems}
+            localizeHref={localizeHref}
+            defaultUserName={fmzPublicLayoutConfig.defaultConnectedUserName}
+            defaultUserEmail={fmzPublicLayoutConfig.defaultConnectedUserEmail}
+            locale={params?.locale}
+            roleLabel={roleLabel}
+          />
+        </div>
       </div>
     </header>
   );

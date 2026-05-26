@@ -9,5 +9,8 @@ export * from './FmzConnectedPageShell';
 export * from './FmzConnectedUserIdentity';
 export * from './FmzAdminSidebar';
 export * from './FmzAdminLayout';
+export * from './FmzAdminHeader';
+export * from './FmzAdminNotificationBell';
+export * from './FmzNeutralLoadingHeader';
 export * from './FmzFullPageLoading';
 export * from './FmzAdminContentShell';

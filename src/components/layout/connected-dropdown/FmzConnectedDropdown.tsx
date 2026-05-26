@@ -1,30 +1,37 @@
 'use client';
 
 import {
-  AlertTriangle,
   Bell,
   Calendar,
-  CheckCircle,
   ChevronDown,
   ChevronRight,
   CreditCard,
   FileSearch,
-  Loader2,
   Shield,
   ShieldAlert,
   ShieldCheck,
   UserCircle,
   XCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { fmzCn } from '../../../lib/fmz-classnames';
+import { isSafeInternalPath } from '../../../lib/fmz-safe-url';
 import { buildFmzConnectedUserInitials, buildFmzConnectedUserSummary } from '../connected-user/fmz-connected-user-storage';
 import { performFirmezaLogout } from '../../../services/auth/fmz-logout';
 import type { FmzConnectedDropdownItem } from './fmz-connected-dropdown.types';
 import type { FmzConnectedUserSummary } from '../connected-user/fmz-connected-user.types';
-import type { TenantNotification, TenantNotificationType } from '../../../features/tenant-portal/domain/fmz-tenant-notifications.types';
+import type { TenantNotificationType } from '../../../features/tenant-portal/domain/fmz-tenant-notifications.types';
 import { useTenantNotifications } from './use-tenant-notifications';
+import { NotificationBellDropdown } from '../notifications/NotificationBellDropdown';
+import type {
+  DropdownNotification,
+  NotificationDropdownState,
+  NotificationVisual,
+} from '../notifications/fmz-notification-bell-dropdown.types';
+
+// ─── Component props ──────────────────────────────────────────────────────────
 
 type FmzConnectedDropdownProps = {
   items: readonly FmzConnectedDropdownItem[];
@@ -35,23 +42,25 @@ type FmzConnectedDropdownProps = {
   roleLabel?: string;
 };
 
-const isFmzConnectedDropdownItemActive = (pathname: string | null, href: string): boolean => {
+// ─── Active route helper ──────────────────────────────────────────────────────
+
+const isFmzConnectedDropdownItemActive = (
+  pathname: string | null,
+  href: string,
+): boolean => {
   if (!pathname) return false;
   return pathname.endsWith(href) || pathname.includes(`${href}/`);
 };
 
-// ─── Notification icon mapping ────────────────────────────────────────────────
-// Maps backend notification types to icons. The frontend owns this mapping only.
+// ─── Tenant notification visual mapping ──────────────────────────────────────
+// Maps tenant backend notification types to icons.
 // All other notification data (title, message, actionUrl) comes from the backend.
 
-type NotificationIconTone = 'gold' | 'green' | 'blue' | 'navy' | 'red';
-
-type NotificationVisual = {
-  icon: typeof Bell;
-  tone: NotificationIconTone;
-};
-
-function resolveNotificationVisual(type: TenantNotificationType): NotificationVisual {
+/**
+ * Maps a known backend tenant notification type to a visual descriptor.
+ * Exported for unit tests — mirrors the pattern of resolveAdminNotificationVisual.
+ */
+export function resolveTenantNotificationVisual(type: TenantNotificationType): NotificationVisual {
   switch (type) {
     case 'boleto_available':
       return { icon: CreditCard, tone: 'gold' };
@@ -78,30 +87,6 @@ function resolveNotificationVisual(type: TenantNotificationType): NotificationVi
   }
 }
 
-const notificationIconToneClassNames: Record<NotificationIconTone, string> = {
-  gold: 'bg-[#FBF3DA] text-[#8A6B12]',
-  green: 'bg-[#E8F5EE] text-[#127A4F]',
-  blue: 'bg-[#E8EFFC] text-[#1F5BD6]',
-  navy: 'bg-fmz-page text-fmz-navy',
-  red: 'bg-[#FEF2F2] text-[#DC2626]',
-};
-
-function formatRelativeTime(isoString: string | null | undefined): string {
-  if (!isoString) return '';
-  try {
-    const diff = Date.now() - new Date(isoString).getTime();
-    const minutes = Math.floor(diff / 60_000);
-    if (minutes < 1) return 'agora';
-    if (minutes < 60) return `há ${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `há ${hours}h`;
-    const days = Math.floor(hours / 24);
-    return `há ${days} ${days === 1 ? 'dia' : 'dias'}`;
-  } catch {
-    return '';
-  }
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function FmzConnectedDropdown({
@@ -116,7 +101,7 @@ export function FmzConnectedDropdown({
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const [userSummary, setUserSummary] = useState<FmzConnectedUserSummary>(() => ({
@@ -125,6 +110,7 @@ export function FmzConnectedDropdown({
     initials: buildFmzConnectedUserInitials(defaultUserName),
   }));
 
+  // ── Tenant notification hook — tenant endpoints ONLY ──────────────────────
   const {
     unreadCount,
     notificationsState,
@@ -144,43 +130,34 @@ export function FmzConnectedDropdown({
     };
   }, []);
 
+  // Close both menus on outside click.
   useEffect(() => {
     const closeOnOutsideClick = (event: MouseEvent) => {
       if (!dropdownRef.current?.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
+        setIsUserMenuOpen(false);
         setIsNotificationsOpen(false);
       }
     };
-
     document.addEventListener('mousedown', closeOnOutsideClick);
     return () => document.removeEventListener('mousedown', closeOnOutsideClick);
   }, []);
 
-  const handleItemClick = (item: FmzConnectedDropdownItem) => {
-    setIsDropdownOpen(false);
-    setIsNotificationsOpen(false);
-    if (item.id === 'logout') {
-      performFirmezaLogout({ router, locale });
-      return;
-    }
-    router.push(localizeHref(item.href));
-  };
+  // ── Menu coordination ─────────────────────────────────────────────────────
 
-  const closeMenus = () => {
-    setIsDropdownOpen(false);
+  const closeAll = useCallback(() => {
+    setIsUserMenuOpen(false);
     setIsNotificationsOpen(false);
-  };
+  }, []);
 
-  const toggleUserMenu = () => {
+  const handleUserMenuToggle = useCallback(() => {
     setIsNotificationsOpen(false);
-    setIsDropdownOpen((current) => !current);
-  };
+    setIsUserMenuOpen((current) => !current);
+  }, []);
 
-  const toggleNotifications = useCallback(() => {
-    setIsDropdownOpen(false);
+  const handleNotificationToggle = useCallback(() => {
+    setIsUserMenuOpen(false);
     setIsNotificationsOpen((current) => {
       const willOpen = !current;
-      // Fetch the notification list the first time the panel opens.
       if (willOpen && notificationsState.status === 'idle') {
         void fetchNotifications();
       }
@@ -188,27 +165,47 @@ export function FmzConnectedDropdown({
     });
   }, [fetchNotifications, notificationsState.status]);
 
-  const handleNotificationClick = useCallback(async (notification: TenantNotification) => {
-    closeMenus();
+  const handleNotificationClose = useCallback(() => {
+    setIsNotificationsOpen(false);
+  }, []);
 
-    if (!notification.readAt) {
-      await handleMarkAsRead(notification.id);
+  // ── Notification click — optimistic mark-as-read + safe navigation ──────
+  // Navigates immediately; mark-as-read fires in the background.
+  // The user should never wait for a server round-trip to navigate.
+  const handleNotificationClick = useCallback(
+    (notification: DropdownNotification) => {
+      closeAll();
+      if (!notification.readAt) {
+        void handleMarkAsRead(notification.id);
+      }
+      // Guard: only navigate to relative paths — never to external URLs.
+      if (isSafeInternalPath(notification.actionUrl)) {
+        router.push(localizeHref(notification.actionUrl));
+      }
+    },
+    [handleMarkAsRead, closeAll, localizeHref, router],
+  );
+
+  const handleItemClick = (item: FmzConnectedDropdownItem) => {
+    closeAll();
+    if (item.id === 'logout') {
+      performFirmezaLogout({ router, locale });
+      return;
     }
+    router.push(localizeHref(item.href));
+  };
 
-    if (notification.actionUrl) {
-      router.push(localizeHref(notification.actionUrl));
-    }
-  }, [handleMarkAsRead, localizeHref, router]);
-
-  const handleMarkAllRead = useCallback(async () => {
-    await handleMarkAllAsRead();
-  }, [handleMarkAllAsRead]);
-
-  const hasUnreadNotifications = unreadCount > 0;
-  const notifications = notificationsState.status === 'ready' ? notificationsState.notifications : [];
+  // Bridge useTenantNotifications state → NotificationDropdownState
+  const notificationDropdownState: NotificationDropdownState =
+    notificationsState.status === 'ready'
+      ? { status: 'ready', notifications: notificationsState.notifications }
+      : notificationsState.status === 'error'
+        ? { status: 'error' }
+        : { status: notificationsState.status };
 
   return (
     <div ref={dropdownRef} className="relative flex items-center gap-2">
+      {/* Help link */}
       <button
         type="button"
         aria-label="Ajuda"
@@ -219,130 +216,55 @@ export function FmzConnectedDropdown({
         Ajuda
       </button>
 
-      {/* Notifications button */}
-      <div className="relative">
-        <button
-          type="button"
-          aria-label="Notificações"
-          aria-haspopup="menu"
-          aria-expanded={isNotificationsOpen}
-          onClick={toggleNotifications}
-          className={fmzCn(
-            'relative grid h-[38px] w-[38px] place-items-center rounded-[10px] border-[1.5px] border-fmz-border-light bg-white text-fmz-navy transition hover:-translate-y-0.5 hover:border-fmz-navy',
-            isNotificationsOpen && 'border-fmz-navy -translate-y-0.5',
-          )}
-        >
-          <Bell className="h-4 w-4" aria-hidden="true" />
-          {hasUnreadNotifications ? (
-            <span className="absolute right-2 top-2 h-[9px] w-[9px] rounded-full border-2 border-white bg-[#E63946] shadow-[0_0_0_1px_rgba(230,57,70,0.25)]" />
-          ) : null}
-        </button>
-
-        {/* Notifications panel */}
-        <div
-          role="menu"
-          className={fmzCn(
-            'pointer-events-none absolute right-0 top-[calc(100%+10px)] z-[200] w-[min(380px,calc(100vw-24px))] origin-top-right scale-[0.98] overflow-hidden rounded-[14px] border border-fmz-border-light bg-white opacity-0 shadow-[0_18px_48px_-12px_rgba(14,22,38,0.18),0_2px_6px_rgba(14,22,38,0.06)] transition duration-150',
-            isNotificationsOpen ? 'pointer-events-auto translate-y-0 scale-100 opacity-100' : '-translate-y-1.5',
-          )}
-        >
-          {/* Panel header */}
-          <div className="flex items-center justify-between border-b border-[#EDEFF4] px-4 py-3.5">
-            <span className="flex items-center gap-2 text-sm font-semibold tracking-[-0.005em] text-fmz-navy">
-              Notificações
-              {hasUnreadNotifications ? (
-                <span className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#E63946] px-1.5 text-[10px] font-bold text-white">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              ) : null}
-            </span>
-            {hasUnreadNotifications ? (
-              <button
-                type="button"
-                onClick={() => void handleMarkAllRead()}
-                className="rounded-md px-2 py-1 text-xs font-semibold text-fmz-text-muted transition hover:bg-fmz-page hover:text-fmz-navy"
-              >
-                Marcar todas como lidas
-              </button>
-            ) : null}
-          </div>
-
-          {/* Notification list */}
-          <div className="max-h-[440px] overflow-y-auto py-1.5">
-            {notificationsState.status === 'loading' ? (
-              <div className="flex items-center justify-center gap-2 py-8 text-[13px] text-fmz-text-muted">
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                Carregando notificações...
-              </div>
-            ) : notificationsState.status === 'error' ? (
-              <div className="flex flex-col items-center gap-2 py-8 text-center">
-                <AlertTriangle className="h-5 w-5 text-fmz-text-hint" aria-hidden="true" />
-                <p className="text-[13px] text-fmz-text-muted">Não foi possível carregar as notificações.</p>
-                <button
-                  type="button"
-                  onClick={() => void fetchNotifications()}
-                  className="text-[12.5px] font-semibold text-fmz-navy underline"
-                >
-                  Tentar novamente
-                </button>
-              </div>
-            ) : notifications.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-8 text-center">
-                <CheckCircle className="h-5 w-5 text-fmz-text-hint" aria-hidden="true" />
-                <p className="text-[13px] text-fmz-text-muted">Nenhuma notificação no momento.</p>
-              </div>
-            ) : (
-              notifications.map((notification) => {
-                const { icon, tone } = resolveNotificationVisual(notification.notificationType);
-                const isUnread = !notification.readAt;
-                const timeLabel = formatRelativeTime(notification.deliveredAt ?? notification.createdAt);
-
-                return (
-                  <NotificationItem
-                    key={notification.id}
-                    unread={isUnread}
-                    iconTone={tone}
-                    icon={icon}
-                    title={notification.title}
-                    time={timeLabel}
-                    description={notification.message}
-                    onClick={() => void handleNotificationClick(notification)}
-                  />
-                );
-              })
-            )}
-          </div>
-
-          {/* Panel footer */}
-          <div className="flex items-center justify-between border-t border-[#EDEFF4] bg-[#FAFBFC] px-4 py-3">
+      {/* Tenant notification bell — tenant endpoints only */}
+      <NotificationBellDropdown
+        isOpen={isNotificationsOpen}
+        onToggle={handleNotificationToggle}
+        onClose={handleNotificationClose}
+        unreadCount={unreadCount}
+        state={notificationDropdownState}
+        onFetchNotifications={fetchNotifications}
+        onMarkAllAsRead={handleMarkAllAsRead}
+        onNotificationClick={handleNotificationClick}
+        emptyMessage="Nenhuma notificação no momento."
+        resolveVisual={resolveTenantNotificationVisual}
+        triggerAriaLabel="Notificações"
+        footerSlot={
+          <div className="flex items-center justify-between px-4 py-3">
             <button
               type="button"
-              onClick={() => { closeMenus(); router.push(localizeHref('/connected/comingSoon')); }}
+              onClick={() => {
+                closeAll();
+                router.push(localizeHref('/connected/comingSoon'));
+              }}
               className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-fmz-navy transition hover:text-[#8A6B12]"
             >
               Ver todas as notificações <ChevronRight className="h-3 w-3" />
             </button>
             <button
               type="button"
-              onClick={() => { closeMenus(); router.push(localizeHref('/connected/comingSoon')); }}
+              onClick={() => {
+                closeAll();
+                router.push(localizeHref('/connected/comingSoon'));
+              }}
               className="text-xs text-fmz-text-hint transition hover:text-fmz-navy"
             >
               Preferências
             </button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* User menu button */}
       <div className="relative">
         <button
           type="button"
           aria-haspopup="menu"
-          aria-expanded={isDropdownOpen}
-          onClick={toggleUserMenu}
+          aria-expanded={isUserMenuOpen}
+          onClick={handleUserMenuToggle}
           className={fmzCn(
             'flex select-none items-center gap-[9px] rounded-full border-[1.5px] border-fmz-border-light bg-white py-1 pl-1 pr-3.5 transition hover:-translate-y-0.5 hover:border-fmz-navy hover:shadow-[0_6px_18px_rgba(14,22,38,0.08)]',
-            isDropdownOpen && 'border-fmz-navy -translate-y-0.5 shadow-[0_6px_18px_rgba(14,22,38,0.08)]',
+            isUserMenuOpen && 'border-fmz-navy -translate-y-0.5 shadow-[0_6px_18px_rgba(14,22,38,0.08)]',
           )}
         >
           <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full border-[1.5px] border-fmz-gold bg-fmz-navy text-[11px] font-bold tracking-[0.04em] text-fmz-gold shadow-[0_0_0_2px_rgba(232,182,32,0.2)]">
@@ -351,7 +273,13 @@ export function FmzConnectedDropdown({
           <span className="hidden max-w-[130px] truncate text-[13px] font-semibold tracking-[-0.005em] text-fmz-navy sm:inline">
             {userSummary.name}
           </span>
-          <ChevronDown className={fmzCn('h-3.5 w-3.5 text-fmz-text-hint transition', isDropdownOpen && 'rotate-180')} aria-hidden="true" />
+          <ChevronDown
+            className={fmzCn(
+              'h-3.5 w-3.5 text-fmz-text-hint transition',
+              isUserMenuOpen && 'rotate-180',
+            )}
+            aria-hidden="true"
+          />
         </button>
 
         {/* User menu panel */}
@@ -359,9 +287,10 @@ export function FmzConnectedDropdown({
           role="menu"
           className={fmzCn(
             'pointer-events-none absolute right-0 top-[calc(100%+10px)] z-[200] w-[268px] origin-top-right scale-[0.98] rounded-[14px] border border-fmz-border-light bg-white p-2 opacity-0 shadow-[0_18px_48px_-12px_rgba(14,22,38,0.18),0_2px_6px_rgba(14,22,38,0.06)] transition duration-150',
-            isDropdownOpen ? 'pointer-events-auto translate-y-0 scale-100 opacity-100' : '-translate-y-1.5',
+            isUserMenuOpen ? 'pointer-events-auto translate-y-0 scale-100 opacity-100' : '-translate-y-1.5',
           )}
         >
+          {/* User identity section */}
           <div className="mb-1.5 flex items-center gap-3 border-b border-[#EDEFF4] px-3 pb-3 pt-2.5">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-[1.5px] border-fmz-gold bg-fmz-navy text-xs font-bold tracking-[0.04em] text-fmz-gold shadow-[0_0_0_2px_rgba(232,182,32,0.2)]">
               {userSummary.initials}
@@ -376,7 +305,9 @@ export function FmzConnectedDropdown({
             </span>
           </div>
 
-          <div className="px-2 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-[0.1em] text-fmz-text-hint">Navegar</div>
+          <div className="px-2 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-[0.1em] text-fmz-text-hint">
+            Navegar
+          </div>
 
           {items.map((item, index) => {
             const Icon = item.icon;
@@ -407,7 +338,12 @@ export function FmzConnectedDropdown({
                     <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                  {!isDanger ? <ChevronRight className="h-3 w-3 shrink-0 text-fmz-text-hint transition group-hover:translate-x-0.5 group-hover:text-fmz-navy" aria-hidden="true" /> : null}
+                  {!isDanger ? (
+                    <ChevronRight
+                      className="h-3 w-3 shrink-0 text-fmz-text-hint transition group-hover:translate-x-0.5 group-hover:text-fmz-navy"
+                      aria-hidden="true"
+                    />
+                  ) : null}
                 </button>
               </div>
             );
@@ -415,40 +351,5 @@ export function FmzConnectedDropdown({
         </div>
       </div>
     </div>
-  );
-}
-
-// ─── NotificationItem sub-component ───────────────────────────────────────────
-
-type NotificationItemProps = {
-  unread?: boolean;
-  iconTone: NotificationIconTone;
-  icon: typeof Bell;
-  title: string;
-  time: string;
-  description: string;
-  onClick: () => void;
-};
-
-function NotificationItem({ unread = false, iconTone, icon: Icon, title, time, description, onClick }: NotificationItemProps) {
-  return (
-    <button
-      type="button"
-      role="menuitem"
-      onClick={onClick}
-      className="grid w-full grid-cols-[auto_32px_1fr] items-start gap-3 px-3 py-3 text-left transition hover:bg-fmz-page"
-    >
-      <span className={fmzCn('mt-3 h-2 w-2 rounded-full', unread ? 'bg-fmz-gold shadow-[0_0_0_3px_rgba(232,182,32,0.18)]' : 'bg-transparent')} />
-      <span className={fmzCn('mt-0.5 grid h-8 w-8 place-items-center rounded-[9px]', notificationIconToneClassNames[iconTone])}>
-        <Icon className="h-[15px] w-[15px]" aria-hidden="true" />
-      </span>
-      <span className="min-w-0">
-        <span className="mb-1 flex items-baseline justify-between gap-2 text-[13px] font-semibold leading-snug tracking-[-0.005em] text-fmz-navy">
-          <span className="truncate">{title}</span>
-          <span className="shrink-0 text-[11px] font-medium text-fmz-text-hint">{time}</span>
-        </span>
-        <span className="block text-[12.5px] leading-relaxed text-fmz-text-muted">{description}</span>
-      </span>
-    </button>
   );
 }

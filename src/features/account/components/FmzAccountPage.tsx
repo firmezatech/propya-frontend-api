@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { FmzConnectedPageShell } from '../../../components/layout';
@@ -13,6 +13,7 @@ import { getCurrentAccountUser } from '../services/fmz-current-account-api';
 
 import type { AccountFieldErrors, AccountPageUser, PasswordVisibilityState } from '../domain/account-page.types';
 import { formatCepInput, normalizeBirthdateForForm, getPasswordStrength, sanitizeUserForForm } from '../domain/account-formatters';
+import type { TenantUserData } from '../../tenant-portal/domain/fmz-tenant-profile.types';
 
 import { useTenantProfile } from '../hooks/use-tenant-profile';
 
@@ -26,40 +27,40 @@ import { PasswordCard } from './PasswordCard';
 import { KycDocumentsCard } from './KycDocumentsCard';
 import styles from './FmzAccountPage.module.css';
 
-import type { TenantUserData } from '../../tenant-portal/domain/fmz-tenant-profile.types';
-
 const EMPTY_PASSWORD_VISIBILITY: PasswordVisibilityState = { current: false, next: false, confirmation: false };
 
+// ─── Profile → form mapping ───────────────────────────────────────────────────
+
 /**
- * Converts a backend `TenantUserData` object into a partial `AccountPageUser`
- * patch that can be merged into the form state.
+ * Builds a complete AccountPageUser form state directly from the backend profile.
  *
  * Single responsibility: field-name mapping + format normalisation.
- * Returns only the fields the backend profile actually provides; callers spread
- * the result over existing state so no form field is silently erased.
+ * This is the ONLY permitted source for personal and address data.
+ * Wallet/CPF fields are supplemented separately and never override profile fields.
  */
-function buildProfilePatchFromBackend(profileUser: TenantUserData): Partial<AccountPageUser> {
-  const patch: Partial<AccountPageUser> = {};
-
-  if (profileUser.id)        patch._id       = profileUser.id;
-  if (profileUser.fullName)  patch.name      = profileUser.fullName;
-  if (profileUser.email)     patch.email     = profileUser.email;
-  if (profileUser.phone)     patch.phone     = profileUser.phone;
-  if (profileUser.birthdate) patch.birthdate = normalizeBirthdateForForm(profileUser.birthdate) || undefined;
-
+function buildUserDataFromProfile(profileUser: TenantUserData): AccountPageUser {
   const addr = profileUser.address;
-  if (addr.addressLine1) patch.addressLine1 = addr.addressLine1;
-  if (addr.addressLine2) patch.addressLine2 = addr.addressLine2;
-  if (addr.district)     patch.district     = addr.district;
-  if (addr.city)         patch.city         = addr.city;
-  if (addr.state)        patch.state        = addr.state;
-  if (addr.postalCode)   patch.postalCode   = formatCepInput(addr.postalCode);
-  if (addr.country)      patch.country      = addr.country;
-
-  return patch;
+  return {
+    _id: profileUser.id,
+    name: profileUser.fullName,
+    email: profileUser.email,
+    phone: profileUser.phone ?? undefined,
+    birthdate: normalizeBirthdateForForm(profileUser.birthdate) || undefined,
+    addressLine1: addr.addressLine1 ?? undefined,
+    addressLine2: addr.addressLine2 ?? undefined,
+    district: addr.district ?? undefined,
+    city: addr.city ?? undefined,
+    state: addr.state ?? undefined,
+    postalCode: addr.postalCode ? formatCepInput(addr.postalCode) : undefined,
+    country: addr.country ?? 'BR',
+    // Password fields are always blank on load
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  };
 }
 
-const buildLocalAccountError = (description: string): FmzNormalizedApiError => ({
+const buildSaveError = (description: string): FmzNormalizedApiError => ({
   code: FMZ_API_ERROR_CODES.UNKNOWN_ERROR,
   title: 'Não foi possível salvar',
   description,
@@ -67,27 +68,87 @@ const buildLocalAccountError = (description: string): FmzNormalizedApiError => (
   fieldErrors: {},
 });
 
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export function FmzAccountPage() {
-  const common = useTranslations('Common');
   const t = useTranslations('MyAccount');
   const toastTimerRef = useRef<number | null>(null);
 
-  // ── User form state ──────────────────────────────────────────────────────────
+  // ── Primary source of truth: GET /tenant/profile ───────────────────────────
+  const { profileState, uploadState, uploadKycDocument, refetchProfile } = useTenantProfile();
+
+  // Once the form is initialised from the first successful profile load, this
+  // ref stays true. Profile refetches (e.g. after KYC upload) do not re-init
+  // the form — they only refresh the KYC/completion section via profileState.
+  const profileInitializedRef = useRef(false);
+
+  // ── Form state ─────────────────────────────────────────────────────────────
   const [initialUserData, setInitialUserData] = useState<AccountPageUser | null>(null);
   const [userData, setUserData] = useState<AccountPageUser | null>(null);
-  const [isLoadingUserData, setIsLoadingUserData] = useState(true);
   const [apiError, setApiError] = useState<FmzNormalizedApiError | null>(null);
   const [fieldErrors, setFieldErrors] = useState<AccountFieldErrors>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [passwordVisibility, setPasswordVisibility] = useState<PasswordVisibilityState>(EMPTY_PASSWORD_VISIBILITY);
 
-  // ── Backend profile / KYC state (primary source of truth) ──────────────────
-  const { profileState, uploadState, uploadKycDocument } = useTenantProfile();
+  // ── Initialise form from profile (primary source, fires once) ─────────────
+  useEffect(() => {
+    if (profileState.status !== 'ready' || profileInitializedRef.current) return;
+    profileInitializedRef.current = true;
 
-  // Tracks whether we have already merged profile.user data into the form state.
-  // Guards against re-applying on subsequent renders (e.g. profile refetch).
-  const profileAppliedRef = useRef(false);
+    const fromProfile = buildUserDataFromProfile(profileState.data.profile.user);
+    setUserData(fromProfile);
+    setInitialUserData(fromProfile);
+  // Only re-run when the status token changes; object identity is irrelevant.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileState.status]);
+
+  // ── Supplement wallet/CPF data (secondary, non-blocking) ──────────────────
+  // getCurrentAccountUser() still provides wallet address + CPF that the
+  // profile endpoint does not include. Personal/address fields from this source
+  // are intentionally IGNORED — they must not override the authoritative profile.
+  useEffect(() => {
+    let isMounted = true;
+
+    getCurrentAccountUser()
+      .then((account) => {
+        if (!isMounted || !account) return;
+
+        const walletOnly: Partial<AccountPageUser> = {
+          wallet: account.wallet,
+          cpf: (account as AccountPageUser).cpf,
+          walletNumber: (account as AccountPageUser).walletNumber,
+          tokenBalance: (account as AccountPageUser).tokenBalance,
+          ownershipPercentage: (account as AccountPageUser).ownershipPercentage,
+        };
+
+        setUserData((current) => (current ? { ...current, ...walletOnly } : current));
+        setInitialUserData((current) => (current ? { ...current, ...walletOnly } : current));
+      })
+      .catch(() => { /* wallet supplement failure is silent */ });
+
+    return () => { isMounted = false; };
+  // Deliberately empty: runs once on mount, never repeats.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Toast timer cleanup ────────────────────────────────────────────────────
+  useEffect(() => () => {
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+  }, []);
+
+  // ── Derived state ──────────────────────────────────────────────────────────
+  // Loading: profile hasn't resolved yet and there's no userData to show.
+  // Error:   profile failed before the form was ever initialised.
+  // After initialisation both states are suppressed — profile refetches happen
+  // silently so the user doesn't lose their unsaved form edits.
+  const isPageLoading = !userData && profileState.status !== 'error';
+  const isPageError   = !userData && profileState.status === 'error';
+  const profileData   = profileState.status === 'ready' ? profileState.data.profile : null;
+  const profileErrorMessage = profileState.status === 'error' ? profileState.message : null;
+  const uploadError   = uploadState.status === 'error' ? uploadState.message : null;
+
+  // ── Form interactions ──────────────────────────────────────────────────────
 
   const passwordStrength = useMemo(
     () => getPasswordStrength(userData?.newPassword ?? ''),
@@ -111,20 +172,13 @@ export function FmzAccountPage() {
     setPasswordVisibility((current) => ({ ...current, [field]: !current[field] }));
   }, []);
 
-  const resetPasswordFields = useCallback(() => {
-    setUserData((current) => current ? { ...current, currentPassword: '', newPassword: '', confirmPassword: '' } : current);
+  const discardFormChanges = useCallback(() => {
+    setUserData(initialUserData);
     setFieldErrors({});
     setApiError(null);
     setPasswordVisibility(EMPTY_PASSWORD_VISIBILITY);
-  }, []);
-
-  const discardFormChanges = useCallback(() => {
-    setUserData(initialUserData ? sanitizeUserForForm(initialUserData) : initialUserData);
-    setFieldErrors({});
-    setApiError(null);
-    resetPasswordFields();
     showToast('Alterações descartadas.');
-  }, [initialUserData, resetPasswordFields, showToast]);
+  }, [initialUserData, showToast]);
 
   const validateForm = useCallback((): boolean => {
     const nextErrors: AccountFieldErrors = {};
@@ -135,11 +189,9 @@ export function FmzAccountPage() {
     if (isChangingPassword && !userData?.currentPassword?.trim()) {
       nextErrors.currentPassword = t('errorCurrentPasswordRequired');
     }
-
     if (isChangingPassword && userData?.newPassword !== userData?.confirmPassword) {
       nextErrors.confirmPassword = 'As senhas não coincidem.';
     }
-
     if (isChangingPassword && (userData?.newPassword?.length ?? 0) < 8) {
       nextErrors.confirmPassword = nextErrors.confirmPassword ?? 'A nova senha precisa ter pelo menos 8 caracteres.';
     }
@@ -161,68 +213,18 @@ export function FmzAccountPage() {
       return;
     }
 
-    const sanitizedUser = response.data?.user
+    const saved = response.data?.user
       ? sanitizeUserForForm(response.data.user)
       : sanitizeUserForForm(userData);
 
-    setUserData(sanitizedUser);
-    setInitialUserData(sanitizedUser);
+    setUserData(saved);
+    setInitialUserData(saved);
     setFieldErrors({});
     setPasswordVisibility(EMPTY_PASSWORD_VISIBILITY);
     showToast(response.message || successMessage);
   }, [showToast, userData, validateForm]);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchUserData = async () => {
-      setIsLoadingUserData(true);
-      const response = await getCurrentAccountUser();
-      if (!isMounted) return;
-
-      if (!response) {
-        setApiError(buildLocalAccountError(common('errorLoadingData')));
-        setUserData(null);
-        setInitialUserData(null);
-        setIsLoadingUserData(false);
-        return;
-      }
-
-      const sanitizedUser = sanitizeUserForForm(response);
-      setUserData(sanitizedUser);
-      setInitialUserData(sanitizedUser);
-      setApiError(null);
-      setIsLoadingUserData(false);
-    };
-
-    void fetchUserData();
-
-    return () => {
-      isMounted = false;
-      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-    };
-  }, [common]);
-
-  // ── Hydrate form with authoritative backend profile data ─────────────────────
-  // GET /tenant/profile is the primary source for personal data and address.
-  // Applied once when the profile first loads; the ref guard prevents re-application
-  // on subsequent renders even if profileState is a new object reference.
-  useEffect(() => {
-    if (profileState.status !== 'ready' || profileAppliedRef.current) return;
-    profileAppliedRef.current = true;
-
-    const profilePatch = buildProfilePatchFromBackend(profileState.data.profile.user);
-
-    setInitialUserData((current) => (current ? { ...current, ...profilePatch } : current));
-    setUserData((current) => (current ? { ...current, ...profilePatch } : current));
-  // profileState.status is the only meaningful change signal — object identity is irrelevant.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileState.status]);
-
-  // ── Derived profile data ─────────────────────────────────────────────────────
-  const profileData = profileState.status === 'ready' ? profileState.data.profile : null;
-  const isLoadingProfile = profileState.status === 'loading';
-  const uploadError = uploadState.status === 'error' ? uploadState.message : null;
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <FmzConnectedPageShell width="tenant" className={styles.page}>
@@ -233,7 +235,8 @@ export function FmzAccountPage() {
 
         <FmzFormAlert error={apiError} />
 
-        {isLoadingUserData || isLoadingProfile ? (
+        {/* Loading — profile hasn't resolved yet */}
+        {isPageLoading ? (
           <div className={styles.stateCard}>
             <div className={styles.loadingContent}>
               <span className={styles.loadingSpinner} />
@@ -242,15 +245,30 @@ export function FmzAccountPage() {
           </div>
         ) : null}
 
-        {!isLoadingUserData && !userData ? (
+        {/* Error — profile failed before form could be initialised */}
+        {isPageError ? (
           <div className={styles.stateCard}>
-            <p className={styles.emptyText}>Não encontramos dados suficientes da inquilina para carregar esta página.</p>
+            <div className="flex flex-col items-center gap-3 py-4 text-center">
+              <AlertTriangle className="h-6 w-6 text-fmz-text-hint" aria-hidden="true" />
+              <p className={styles.emptyText}>
+                {profileErrorMessage ?? 'Não foi possível carregar os dados do perfil.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => void refetchProfile()}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-fmz-navy px-4 py-2 text-[13px] font-semibold text-white transition hover:opacity-90"
+              >
+                <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+                Tentar novamente
+              </button>
+            </div>
           </div>
         ) : null}
 
-        {!isLoadingUserData && userData ? (
+        {/* Content — profile loaded, form is ready */}
+        {!isPageLoading && !isPageError && userData ? (
           <>
-            {/* KYC progress banner — driven by backend completion data */}
+            {/* KYC progress banner — always driven by the latest profile data */}
             {profileData ? (
               <AccountKycProgressBanner
                 completion={profileData.completion}
@@ -288,12 +306,23 @@ export function FmzAccountPage() {
               onSave={() => void handleSaveChanges('Senha atualizada com sucesso!')}
             />
 
-            {/* KYC documents card — driven by backend document list */}
+            {/* KYC documents — refreshed after uploads; shows isolated error on refetch failure */}
             {profileState.status === 'error' ? (
               <div className={styles.stateCard}>
-                <p className={styles.emptyText}>
-                  Não foi possível carregar os documentos KYC. Recarregue a página para tentar novamente.
-                </p>
+                <div className="flex flex-col items-center gap-3 py-4 text-center">
+                  <AlertTriangle className="h-5 w-5 text-fmz-text-hint" aria-hidden="true" />
+                  <p className={styles.emptyText}>
+                    Não foi possível atualizar os documentos KYC.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void refetchProfile()}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-fmz-navy px-4 py-2 text-[13px] font-semibold text-white transition hover:opacity-90"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+                    Tentar novamente
+                  </button>
+                </div>
               </div>
             ) : (
               <KycDocumentsCard

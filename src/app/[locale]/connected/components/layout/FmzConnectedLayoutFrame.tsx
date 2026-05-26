@@ -9,6 +9,7 @@ import FooterConn from '../FooterConn';
 import AuthenticatedRoute from '../AuthenticatedRoute';
 import { FmzAdminLayout } from '../../../../../components/layout/FmzAdminLayout';
 import { FmzFullPageLoading } from '../../../../../components/layout/FmzFullPageLoading';
+import { FmzNeutralLoadingHeader } from '../../../../../components/layout/FmzNeutralLoadingHeader';
 import { getCurrentAccessControlPrincipal } from '../../../../../features/access-control/services';
 import type { FmzAccessControlPrincipal } from '../../../../../features/access-control/domain';
 import { FMZ_AUTH_SESSION_CHANGED_EVENT } from '../../../../../services/auth/auth-storage';
@@ -25,9 +26,24 @@ const isConnectedLogoutPath = (pathname: string | null): boolean => {
   return pathname.endsWith(fmzPublicLayoutConfig.connectedLogoutPath);
 };
 
+// ─── Component ────────────────────────────────────────────────────────────────
+
+/**
+ * Top-level frame for all authenticated pages.
+ *
+ * Role-isolation invariants:
+ *   - While `isAccessLoading` is true, a neutral skeleton header is shown.
+ *     Neither the tenant header nor any admin control is rendered.
+ *   - Once resolved:
+ *       • Admin users: `FmzAdminLayout` renders its own header + sidebar.
+ *         `FmzConnectedLayoutFrame` renders NO header for admin users.
+ *       • Tenant users: `HeaderConn` (tenant header) is rendered.
+ *   - Tenant users never see admin UI; admin users never see tenant header.
+ */
 export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayoutFrameProps) {
   const pathname = usePathname();
-  const [currentPrincipal, setCurrentPrincipal] = useState<FmzAccessControlPrincipal | null>(null);
+  const [currentPrincipal, setCurrentPrincipal] =
+    useState<FmzAccessControlPrincipal | null>(null);
   const [isAccessLoading, setIsAccessLoading] = useState(true);
   const isLogoutPage = isConnectedLogoutPath(pathname);
 
@@ -60,36 +76,58 @@ export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayout
     return hasAdminAccessiblePage(currentPrincipal);
   }, [currentPrincipal, isLogoutPage]);
 
+  // ── Logout page — minimal wrapper, no header ──────────────────────────────
   if (isLogoutPage) {
-    return <div className="flex min-h-screen min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">{children}</div>;
+    return (
+      <div className="flex min-h-screen min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">
+        {children}
+      </div>
+    );
   }
 
-  return (
-    <div
-      className={fmzCn(
-        'flex min-h-screen min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary',
-        shouldRenderAdminLayout && 'h-[100dvh] overflow-hidden',
-      )}
-    >
-      <AuthenticatedRoute>
-        <HeaderConn adminOffset={isAccessLoading ? false : shouldRenderAdminLayout} principal={currentPrincipal} />
-        {isAccessLoading ? (
+  // ── Loading state ─────────────────────────────────────────────────────────
+  // Show a neutral skeleton header — no role-specific controls.
+  // FmzFullPageLoading covers the content area so users see a complete loading
+  // shell without any tenant or admin elements flickering.
+  if (isAccessLoading) {
+    return (
+      <div className="flex min-h-screen min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">
+        <AuthenticatedRoute>
+          <FmzNeutralLoadingHeader />
           <FmzFullPageLoading
             label="Preparando sua área logada..."
             description="Estamos carregando permissões, páginas liberadas e menu lateral antes de exibir o dashboard."
           />
-        ) : (
-          <>
-            <FmzRouteAccessGuard principal={currentPrincipal} isLoading={false}>
-              {shouldRenderAdminLayout ? (
-                <FmzAdminLayout initialPrincipal={currentPrincipal}>{children}</FmzAdminLayout>
-              ) : (
-                <div className="flex flex-1 flex-col">{children}</div>
-              )}
-            </FmzRouteAccessGuard>
-            {!shouldRenderAdminLayout && <FooterConn />}
-          </>
-        )}
+        </AuthenticatedRoute>
+      </div>
+    );
+  }
+
+  // ── Admin layout — fully self-contained ───────────────────────────────────
+  // FmzAdminLayout manages its own h-[100dvh], header, sidebar and content.
+  // This frame renders NO header for admin users.
+  if (shouldRenderAdminLayout) {
+    return (
+      <div className={fmzCn('bg-[#F7F8FA] text-fmz-text-primary')}>
+        <AuthenticatedRoute>
+          <FmzRouteAccessGuard principal={currentPrincipal} isLoading={false}>
+            <FmzAdminLayout initialPrincipal={currentPrincipal}>{children}</FmzAdminLayout>
+          </FmzRouteAccessGuard>
+        </AuthenticatedRoute>
+      </div>
+    );
+  }
+
+  // ── Tenant layout ─────────────────────────────────────────────────────────
+  // Full tenant header + content + footer.
+  return (
+    <div className="flex min-h-screen min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">
+      <AuthenticatedRoute>
+        <HeaderConn principal={currentPrincipal} />
+        <FmzRouteAccessGuard principal={currentPrincipal} isLoading={false}>
+          <div className="flex flex-1 flex-col">{children}</div>
+        </FmzRouteAccessGuard>
+        <FooterConn />
       </AuthenticatedRoute>
     </div>
   );

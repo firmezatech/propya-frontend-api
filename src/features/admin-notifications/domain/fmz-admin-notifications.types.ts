@@ -1,16 +1,16 @@
 // ─── Admin Notification Types ─────────────────────────────────────────────────
 // All notification content is owned by the backend.
 // The frontend maps types to icons and renders backend-provided text only.
+// Known backend types are explicitly listed — the string fallback exists only
+// for forward compatibility with future types, not as a primary contract.
 
 export type AdminNotificationType =
-  | 'kyc_document_submitted'
-  | 'kyc_document_needs_review'
-  | 'new_tenant_registered'
-  | 'contract_expiring_soon'
-  | 'rent_charge_overdue'
-  | 'rent_charge_paid'
-  | 'support_request_opened'
-  | string; // Allow forward-compatible extension
+  | 'admin_kyc_document_pending_review'
+  | 'admin_boleto_overdue'
+  | 'admin_payment_issue'
+  | 'admin_profile_requires_attention'
+  | 'admin_system_job_failed'
+  | string; // forward-compatible extension — known types must be listed above
 
 export type AdminNotificationStatus = 'delivered' | 'read' | string;
 
