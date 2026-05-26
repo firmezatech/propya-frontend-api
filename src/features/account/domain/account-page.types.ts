@@ -24,19 +24,6 @@ export type PasswordStrength = {
 
 export type AccountFieldErrors = Partial<Record<'currentPassword' | 'confirmPassword', string>>;
 
-export type AccountDocumentStatus = 'approved' | 'review' | 'pending';
-
-export type AccountDocument = {
-  key: string;
-  name: string;
-  meta: string;
-  status: AccountDocumentStatus;
-  icon: typeof IdCard;
-  toneClassName: string;
-  canResend?: boolean;
-  canUpload?: boolean;
-};
-
 export type AccountSidebarItem = {
   id: string;
   label: string;

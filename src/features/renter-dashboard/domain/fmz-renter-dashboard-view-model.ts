@@ -146,8 +146,51 @@ export function hasRenterDashboardData(dashboard: FmzTenantDashboard | null): bo
   );
 }
 
+// ─── Resolved next-goal shape ─────────────────────────────────────────────────
+// A unified view of the "next ownership milestone" regardless of which API
+// version supplied it. The caller never needs to know which source was used.
+
+type ResolvedNextGoal = {
+  readonly percentage: number | null;
+  readonly goalValue: number | null;
+  readonly amountNeeded: number | null;
+  readonly progressToGoalPercentage: number | null;
+  readonly estimatedMonthlyRentReduction: number | null;
+};
+
+/**
+ * Prefers `ownershipGoals.next` (new structure) over the legacy `nextGoal` field.
+ * `estimatedMonthlyRentReduction` is kept from the legacy field in both branches
+ * because the new structure does not yet expose it.
+ *
+ * Single responsibility: field-name mapping between two API versions.
+ */
+function resolveNextMilestone(dashboard: FmzTenantDashboard): ResolvedNextGoal {
+  const fromNewApi = dashboard.ownershipGoals?.next;
+  const fromLegacy = dashboard.nextGoal;
+
+  if (fromNewApi != null) {
+    return {
+      percentage: fromNewApi.targetPercentage,
+      goalValue: fromLegacy?.goalValue ?? null,
+      amountNeeded: fromNewApi.amountRemaining,
+      progressToGoalPercentage: fromNewApi.progressPercentage,
+      estimatedMonthlyRentReduction: fromLegacy?.estimatedMonthlyRentReduction ?? null,
+    };
+  }
+
+  return {
+    percentage: fromLegacy?.percentage ?? null,
+    goalValue: fromLegacy?.goalValue ?? null,
+    amountNeeded: fromLegacy?.amountNeeded ?? null,
+    progressToGoalPercentage: fromLegacy?.progressToGoalPercentage ?? null,
+    estimatedMonthlyRentReduction: fromLegacy?.estimatedMonthlyRentReduction ?? null,
+  };
+}
+
 export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): FmzRenterDashboardViewModel {
-  const { ownership, nextGoal, rentInsight, monthlySummary, boleto } = dashboard;
+  const { ownership, rentInsight, monthlySummary, boleto } = dashboard;
+  const nextMilestone = resolveNextMilestone(dashboard);
 
   const ownershipPercentage = normalizePercentage(ownership?.currentPercentage);
   const totalPropertyValue = ownership?.totalPropertyValue ?? 0;
@@ -167,15 +210,15 @@ export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): Fm
   const monthlySavings = rentInsight?.monthlySavingsAmount ?? 0;
   const yearlySavings = rentInsight?.annualSavingsAmount ?? 0;
 
-  const nextMilestonePercentage = nextGoal?.percentage != null
-    ? normalizePercentage(nextGoal.percentage)
+  const nextMilestonePercentage = nextMilestone.percentage != null
+    ? normalizePercentage(nextMilestone.percentage)
     : Math.max(DEFAULT_NEXT_MILESTONE_PERCENTAGE, Math.ceil(ownershipPercentage / 5) * 5);
-  const nextMilestoneTotal = nextGoal?.goalValue ?? (totalPropertyValue * (nextMilestonePercentage / 100));
-  const nextMilestoneRemaining = nextGoal?.amountNeeded ?? Math.max(nextMilestoneTotal - currentOwnedValue, 0);
-  const nextMilestoneProgressPercentage = nextGoal?.progressToGoalPercentage != null
-    ? normalizePercentage(nextGoal.progressToGoalPercentage)
+  const nextMilestoneTotal = nextMilestone.goalValue ?? (totalPropertyValue * (nextMilestonePercentage / 100));
+  const nextMilestoneRemaining = nextMilestone.amountNeeded ?? Math.max(nextMilestoneTotal - currentOwnedValue, 0);
+  const nextMilestoneProgressPercentage = nextMilestone.progressToGoalPercentage != null
+    ? normalizePercentage(nextMilestone.progressToGoalPercentage)
     : (nextMilestoneTotal > 0 ? normalizePercentage((currentOwnedValue / nextMilestoneTotal) * 100) : 0);
-  const estimatedNextReduction = nextGoal?.estimatedMonthlyRentReduction ?? 0;
+  const estimatedNextReduction = nextMilestone.estimatedMonthlyRentReduction ?? 0;
 
   const rentPaidPercentage = originalRentAmount > 0 ? normalizePercentage((currentRentAmount / originalRentAmount) * 100) : 0;
   const totalDueAmount = boleto?.amount ?? monthlySummary?.totalDueAmount ?? 0;

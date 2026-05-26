@@ -14,6 +14,7 @@ import type { FmzAccessControlPage, FmzAccessControlPrincipal } from '../../feat
 import type { FmzConnectedUserSummary } from './connected-user/fmz-connected-user.types';
 import { FmzAdminSidebar } from './FmzAdminSidebar';
 import { FmzAdminContentShell } from './FmzAdminContentShell';
+import { useAdminNotifications } from '../../features/admin-notifications/hooks/use-admin-notifications';
 
 export type FmzAdminLayoutProps = {
   children: ReactNode;
@@ -136,6 +137,14 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
     [currentPrincipal?.permissionKeys],
   );
 
+  const {
+    unreadCount: notificationUnreadCount,
+    notificationsState,
+    fetchNotifications,
+    handleMarkAsRead: handleNotificationMarkAsRead,
+    handleMarkAllAsRead: handleNotificationMarkAllAsRead,
+  } = useAdminNotifications();
+
   return (
     <div className={fmzAdminShellLayoutConfig.root}>
       <FmzAdminSidebar
@@ -145,6 +154,11 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
         effectivePermissionKeys={effectivePermissionKeys}
         navigationItems={navigationItems}
         onLogout={handleLogout}
+        notificationUnreadCount={notificationUnreadCount}
+        notificationsState={notificationsState}
+        onFetchNotifications={fetchNotifications}
+        onMarkNotificationAsRead={handleNotificationMarkAsRead}
+        onMarkAllNotificationsAsRead={handleNotificationMarkAllAsRead}
       />
       <div className={fmzAdminShellLayoutConfig.contentScroll}>
         <FmzAdminContentShell>{children}</FmzAdminContentShell>

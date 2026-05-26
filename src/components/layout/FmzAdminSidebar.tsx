@@ -7,6 +7,10 @@ import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
 import { fmzAdminSidebarLayoutConfig } from '../../config/fmz-admin-sidebar-layout-config';
 import { fmzCn } from '../../lib/fmz-classnames';
 import type { FmzConnectedUserSummary } from './connected-user/fmz-connected-user.types';
+import type { AdminNotificationsState } from '../../features/admin-notifications/hooks/use-admin-notifications';
+import { FmzAdminNotificationBell } from './FmzAdminNotificationBell';
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 export type FmzAdminSidebarProps = {
   locale?: string;
@@ -15,14 +19,24 @@ export type FmzAdminSidebarProps = {
   effectivePermissionKeys: Set<string>;
   navigationItems: readonly FmzAdminNavigationItem[];
   onLogout: () => void;
+  notificationUnreadCount?: number;
+  notificationsState?: AdminNotificationsState;
+  onFetchNotifications?: () => Promise<void>;
+  onMarkNotificationAsRead?: (id: string) => Promise<void>;
+  onMarkAllNotificationsAsRead?: () => Promise<void>;
 };
 
-const buildFmzLocalizedHref = (locale: string | undefined, href: string): string => `${locale ? `/${locale}` : ''}${href}`;
+const NOOP_ASYNC = async () => { /* no-op */ };
+
+const buildFmzLocalizedHref = (locale: string | undefined, href: string): string =>
+  `${locale ? `/${locale}` : ''}${href}`;
 
 const isAdminSidebarItemActive = (pathname: string | null, href: string): boolean => {
   if (!pathname) return false;
   return pathname.endsWith(href) || pathname.includes(`${href}/`);
 };
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function FmzAdminSidebar({
   locale,
@@ -31,11 +45,26 @@ export function FmzAdminSidebar({
   effectivePermissionKeys,
   navigationItems,
   onLogout,
+  notificationUnreadCount = 0,
+  notificationsState = { status: 'idle' },
+  onFetchNotifications = NOOP_ASYNC,
+  onMarkNotificationAsRead = NOOP_ASYNC,
+  onMarkAllNotificationsAsRead = NOOP_ASYNC,
 }: FmzAdminSidebarProps) {
-  const visibleItems = navigationItems.filter((item) => !item.requiredPermissionKey || effectivePermissionKeys.has(item.requiredPermissionKey.toLowerCase()));
+  const visibleItems = navigationItems.filter(
+    (item) => !item.requiredPermissionKey || effectivePermissionKeys.has(item.requiredPermissionKey.toLowerCase()),
+  );
 
   return (
     <aside className={fmzAdminSidebarLayoutConfig.sidebar}>
+      <FmzAdminNotificationBell
+        unreadCount={notificationUnreadCount}
+        notificationsState={notificationsState}
+        onFetchNotifications={onFetchNotifications}
+        onMarkAsRead={onMarkNotificationAsRead}
+        onMarkAllAsRead={onMarkAllNotificationsAsRead}
+      />
+
       <div className={fmzAdminSidebarLayoutConfig.navigationArea}>
         {visibleItems.length ? visibleItems.map((item) => (
           <FmzAdminSidebarLink key={item.id} item={item} locale={locale} pathname={pathname} />
@@ -57,7 +86,17 @@ export function FmzAdminSidebar({
   );
 }
 
-function FmzAdminSidebarLink({ item, locale, pathname }: { item: FmzAdminNavigationItem; locale?: string; pathname: string | null }) {
+// ─── Navigation link ──────────────────────────────────────────────────────────
+
+function FmzAdminSidebarLink({
+  item,
+  locale,
+  pathname,
+}: {
+  item: FmzAdminNavigationItem;
+  locale?: string;
+  pathname: string | null;
+}) {
   const Icon = item.icon;
   const isActive = isAdminSidebarItemActive(pathname, item.href);
 
@@ -84,7 +123,15 @@ function FmzAdminSidebarLink({ item, locale, pathname }: { item: FmzAdminNavigat
   );
 }
 
-function FmzAdminSidebarLogoutButton({ onLogout, compact = false }: { onLogout: () => void; compact?: boolean }) {
+// ─── Logout button ────────────────────────────────────────────────────────────
+
+function FmzAdminSidebarLogoutButton({
+  onLogout,
+  compact = false,
+}: {
+  onLogout: () => void;
+  compact?: boolean;
+}) {
   return (
     <button
       type="button"
@@ -98,7 +145,9 @@ function FmzAdminSidebarLogoutButton({ onLogout, compact = false }: { onLogout: 
       <span className={fmzAdminSidebarLayoutConfig.logoutIcon}>
         <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
       </span>
-      <span className={fmzCn('whitespace-nowrap', compact && 'sr-only')}>{fmzPublicLayoutConfig.connectedLogoutLabel}</span>
+      <span className={fmzCn('whitespace-nowrap', compact && 'sr-only')}>
+        {fmzPublicLayoutConfig.connectedLogoutLabel}
+      </span>
     </button>
   );
 }

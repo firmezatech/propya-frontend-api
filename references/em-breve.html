@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Em Breve — FirmezaToken</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#E8B620;
+  --gold-soft:#F5D26B;
+  --gold-tint:#FBF3DA;
+  --gold-deep:#8A6B12;
+
+  --navy:#0E1626;
+  --navy-2:#1C2740;
+  --ink:#2A344A;
+  --muted:#5A6478;
+  --hint:#8893A6;
+
+  --line:#E6E8EE;
+  --line-2:#EDEFF4;
+  --page:#F4F5F8;
+  --white:#FFFFFF;
+
+  --green:#127A4F;
+  --green-tint:#E8F5EE;
+
+  --shadow-sm:0 1px 2px rgba(14,22,38,.04), 0 1px 0 rgba(14,22,38,.02);
+  --shadow-md:0 2px 6px rgba(14,22,38,.05), 0 8px 24px -8px rgba(14,22,38,.08);
+  --radius:14px;
+  --radius-lg:20px;
+}
+html,body{height:100%}
+body{
+  font-family:'DM Sans', system-ui, sans-serif;
+  background:var(--page);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  font-size:15px;
+  line-height:1.5;
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+button,a,input,select{font-family:inherit;color:inherit}
+a{text-decoration:none}
+.mono{font-family:'JetBrains Mono', monospace;font-feature-settings:"tnum"}
+
+/* ── NAV ─────────────────────────────── */
+nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(20px,4vw,40px);
+  height:60px;
+  background:var(--white);
+  border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:100;
+}
+.nav-l{display:flex;align-items:center;gap:24px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--navy);
+  display:grid;place-items:center;
+}
+.logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--navy);letter-spacing:-.01em}
+.crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--hint)}
+.crumb a{color:var(--hint);font-weight:500;transition:color .15s}
+.crumb a:hover{color:var(--navy)}
+.crumb .here{color:var(--navy);font-weight:600}
+.nav-r{display:flex;align-items:center;gap:8px}
+.icon-btn{
+  width:34px;height:34px;border-radius:8px;
+  background:transparent;border:1px solid transparent;
+  display:grid;place-items:center;cursor:pointer;
+  color:var(--muted);transition:all .15s;
+}
+.icon-btn:hover{background:var(--page);color:var(--navy);border-color:var(--line)}
+.nav-user{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 12px 4px 4px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:var(--white);
+  cursor:pointer;transition:border-color .15s;
+}
+.nav-user:hover{border-color:#D0D4DE}
+.nav-av{
+  width:26px;height:26px;border-radius:50%;
+  background:var(--navy);color:var(--gold);
+  display:grid;place-items:center;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:10px;letter-spacing:.04em;
+}
+.nav-uname{font-size:13px;font-weight:500;color:var(--navy)}
+
+/* ── MAIN ─────────────────────────────── */
+main{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:clamp(40px,6vw,80px) clamp(20px,4vw,48px);
+}
+
+.coming-card{
+  position:relative;
+  background:var(--white);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:clamp(40px,5vw,64px) clamp(32px,5vw,72px);
+  max-width:540px;
+  width:100%;
+  text-align:center;
+  box-shadow:var(--shadow-md);
+  overflow:hidden;
+}
+
+/* Subtle radial glow */
+.coming-card::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(232,182,32,.18) 0%, transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(232,182,32,.06) 0%, transparent 40%);
+  pointer-events:none;
+}
+/* Grid texture */
+.coming-card::after{
+  content:'';position:absolute;inset:0;
+  background-image:
+    linear-gradient(to right, rgba(14,22,38,.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(14,22,38,.02) 1px, transparent 1px);
+  background-size:32px 32px;
+  pointer-events:none;
+  mask-image:radial-gradient(circle at 50% 0%, black 0%, transparent 65%);
+  -webkit-mask-image:radial-gradient(circle at 50% 0%, black 0%, transparent 65%);
+}
+.coming-card > *{position:relative;z-index:1}
+
+/* Icon */
+.coming-icon{
+  width:60px;height:60px;border-radius:16px;
+  background:var(--gold-tint);
+  border:1px solid #F0E2B0;
+  display:grid;place-items:center;
+  margin:0 auto 24px;
+  color:var(--gold-deep);
+}
+
+/* Eyebrow */
+.coming-eyebrow{
+  font-size:10px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--gold-deep);
+  display:inline-flex;align-items:center;gap:8px;
+  margin-bottom:14px;
+}
+.coming-eyebrow::before,
+.coming-eyebrow::after{
+  content:'';flex:1;height:1.5px;width:20px;
+  background:var(--gold);border-radius:1px;
+}
+
+/* Title */
+.coming-title{
+  font-family:'Syne',sans-serif;font-weight:700;
+  font-size:clamp(26px,3.5vw,34px);
+  letter-spacing:-.025em;line-height:1.1;
+  color:var(--navy);
+  margin-bottom:14px;
+}
+
+/* Description */
+.coming-desc{
+  font-size:15px;color:var(--muted);
+  line-height:1.65;
+  max-width:380px;
+  margin:0 auto 32px;
+}
+
+/* Status pill */
+.coming-status{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 16px;
+  background:var(--page);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12.5px;font-weight:600;color:var(--muted);
+  margin-bottom:28px;
+}
+.status-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--gold);
+  box-shadow:0 0 0 3px rgba(232,182,32,.2);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 0 3px rgba(232,182,32,.2)}
+  50%{box-shadow:0 0 0 5px rgba(232,182,32,.12)}
+}
+
+/* Divider */
+.coming-divider{
+  height:1px;background:var(--line-2);
+  margin:0 -8px 28px;
+}
+
+/* Back button */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 18px;border-radius:10px;
+  border:1px solid var(--line);background:var(--white);
+  font-size:13px;font-weight:600;color:var(--navy);
+  cursor:pointer;transition:all .15s;
+}
+.btn:hover{border-color:#D0D4DE;background:#FAFBFC}
+.btn-primary{
+  background:var(--navy);color:var(--white);border-color:var(--navy);
+}
+.btn-primary:hover{background:var(--navy-2);border-color:var(--navy-2)}
+
+.coming-actions{
+  display:flex;justify-content:center;gap:10px;flex-wrap:wrap;
+}
+
+/* ── FOOTER ───────────────────────────── */
+footer{
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;
+  padding:0 clamp(20px,4vw,40px);
+  height:52px;
+  border-top:1px solid var(--line);
+  background:var(--white);
+  font-size:12px;color:var(--hint);
+}
+.fsoc{display:flex;gap:16px}
+.fsoc a{font-size:12px;color:var(--hint);font-weight:500;transition:color .15s}
+.fsoc a:hover{color:var(--navy)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-l">
+    <a class="logo" href="#">
+      <div class="logo-mark">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8B620" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      </div>
+      <span class="logo-text">FirmezaToken</span>
+    </a>
+    <div class="crumb">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <span class="here">Em breve</span>
+    </div>
+  </div>
+  <div class="nav-r">
+    <button class="icon-btn" title="Notificações">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </button>
+    <div class="nav-user">
+      <div class="nav-av">FT</div>
+      <span class="nav-uname">Minha conta</span>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main>
+  <div class="coming-card">
+
+    <div class="coming-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <path d="M3 9h18"/>
+        <path d="M9 21V9"/>
+      </svg>
+    </div>
+
+    <div class="coming-eyebrow">Em desenvolvimento</div>
+
+    <h1 class="coming-title">Esta página ainda<br>não está disponível</h1>
+
+    <p class="coming-desc">
+      Estamos trabalhando para entregar esta funcionalidade em breve.
+      Quando estiver pronta, você será notificado automaticamente.
+    </p>
+
+    <div class="coming-status">
+      <span class="status-dot"></span>
+      Previsão de lançamento em breve
+    </div>
+
+    <div class="coming-divider"></div>
+
+    <div class="coming-actions">
+      <a href="#" class="btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Voltar ao início
+      </a>
+      <a href="#" class="btn btn-primary">
+        Acessar minha carteira
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <span>© FirmezaToken · A revolução imobiliária começou.</span>
+  <div class="fsoc">
+    <a href="#">TikTok</a>
+    <a href="#">Instagram</a>
+    <a href="#">LinkedIn</a>
+    <a href="#">YouTube</a>
+  </div>
+</footer>
+
+</body>
+</html>

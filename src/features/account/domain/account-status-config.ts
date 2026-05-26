@@ -1,5 +1,21 @@
-import { AlertCircle, Camera, CheckCircle, Clock, FileText, FileX, IdCard, UserRound, MapPin, Wallet, Lock, ShieldCheck } from 'lucide-react';
-import type { AccountDocument, AccountDocumentStatus, AccountSidebarItem } from './account-page.types';
+import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  FileX,
+  IdCard,
+  Lock,
+  MapPin,
+  RefreshCw,
+  ShieldCheck,
+  UserRound,
+  Wallet,
+  XCircle,
+} from 'lucide-react';
+import type { AccountSidebarItem } from './account-page.types';
+import type { TenantKycDocumentStatus } from '../../tenant-portal/domain/fmz-tenant-profile.types';
+
+// ─── Brazilian States ──────────────────────────────────────────────────────────
 
 export const BRAZILIAN_STATES = [
   { value: '', label: 'Selecione...' },
@@ -32,28 +48,38 @@ export const BRAZILIAN_STATES = [
   { value: 'TO', label: 'Tocantins — TO' },
 ] as const;
 
-type DocumentStatusVisual = {
+// ─── KYC Document Status Visual ───────────────────────────────────────────────
+// Maps every backend KYC status to UI presentation tokens.
+// These are purely visual — no business logic here.
+
+type KycDocumentStatusVisual = {
   label: string;
   badgeClass: string;
   rowClass: string;
   iconClass: string;
   icon: typeof CheckCircle;
+  canUpload: boolean;    // whether the upload button should be shown
+  canResubmit: boolean;  // whether the resubmit button should be shown
 };
 
-export const DOCUMENT_STATUS_VISUAL: Record<AccountDocumentStatus, DocumentStatusVisual> = {
-  approved: {
-    label: 'Aprovado',
+export const KYC_DOCUMENT_STATUS_VISUAL: Record<TenantKycDocumentStatus, KycDocumentStatusVisual> = {
+  verified: {
+    label: 'Verificado',
     badgeClass: 'badgeGreen',
     rowClass: 'docRowOk',
     iconClass: 'docIconOk',
     icon: CheckCircle,
+    canUpload: false,
+    canResubmit: false,
   },
-  review: {
+  under_review: {
     label: 'Em análise',
     badgeClass: 'badgeOrange',
     rowClass: 'docRowRev',
     iconClass: 'docIconRev',
     icon: Clock,
+    canUpload: false,
+    canResubmit: false,
   },
   pending: {
     label: 'Pendente',
@@ -61,45 +87,57 @@ export const DOCUMENT_STATUS_VISUAL: Record<AccountDocumentStatus, DocumentStatu
     rowClass: 'docRowPnd',
     iconClass: 'docIconPnd',
     icon: AlertCircle,
+    canUpload: true,
+    canResubmit: false,
+  },
+  rejected: {
+    label: 'Rejeitado',
+    badgeClass: 'badgeRed',
+    rowClass: 'docRowPnd',
+    iconClass: 'docIconPnd',
+    icon: XCircle,
+    canUpload: false,
+    canResubmit: true,
+  },
+  needs_resubmission: {
+    label: 'Reenviar documento',
+    badgeClass: 'badgeOrange',
+    rowClass: 'docRowRev',
+    iconClass: 'docIconRev',
+    icon: RefreshCw,
+    canUpload: false,
+    canResubmit: true,
   },
 };
 
-export const ACCOUNT_DOCUMENTS: AccountDocument[] = [
-  {
-    key: 'identity-document',
-    name: 'RG ou CNH (frente e verso)',
-    meta: 'Documento de identificação enviado para verificação',
-    status: 'approved',
-    icon: IdCard,
-    toneClassName: 'bgGreen',
-  },
-  {
-    key: 'selfie-document',
-    name: 'Selfie segurando o documento',
-    meta: 'Selfie enviada para validação de identidade',
-    status: 'approved',
-    icon: Camera,
-    toneClassName: 'bgGreen',
-  },
-  {
-    key: 'proof-of-address',
-    name: 'Comprovante de residência',
-    meta: 'Em análise pela equipe — pode levar até 48h',
-    status: 'review',
-    icon: FileText,
-    toneClassName: 'bgOrange',
-    canResend: true,
-  },
-  {
-    key: 'income-tax-document',
-    name: 'Declaração de Imposto de Renda',
-    meta: 'Não enviado · Necessário para transações acima de R$ 5.000/mês',
-    status: 'pending',
-    icon: FileX,
-    toneClassName: 'bgRed',
-    canUpload: true,
-  },
-];
+/**
+ * Returns the visual config for a KYC document status.
+ * Falls back to the `pending` style if the backend returns an unknown status.
+ * This fallback is purely for rendering safety — no business logic inferred.
+ */
+export function resolveKycDocumentStatusVisual(
+  status: string,
+): KycDocumentStatusVisual {
+  return KYC_DOCUMENT_STATUS_VISUAL[status as TenantKycDocumentStatus]
+    ?? KYC_DOCUMENT_STATUS_VISUAL.pending;
+}
+
+/**
+ * Returns the icon component associated with a document requirement key.
+ * Falls back to IdCard for unknown keys.
+ * Icon choice is purely presentational — the label and description
+ * come from the backend.
+ */
+export function resolveKycDocumentIcon(requirementKey: string): typeof IdCard {
+  if (requirementKey.includes('identity') || requirementKey.includes('rg') || requirementKey.includes('cnh')) return IdCard;
+  if (requirementKey.includes('selfie') || requirementKey.includes('camera')) return UserRound;
+  if (requirementKey.includes('address') || requirementKey.includes('residencia') || requirementKey.includes('comprovante')) return MapPin;
+  if (requirementKey.includes('income') || requirementKey.includes('imposto') || requirementKey.includes('ir')) return FileX;
+  return IdCard;
+}
+
+// ─── Sidebar Items ─────────────────────────────────────────────────────────────
+// Static — sidebar structure is a UX concern, not a backend concern.
 
 export const SIDEBAR_ITEMS: AccountSidebarItem[] = [
   { id: 'sec-dados', label: 'Dados pessoais', icon: UserRound },

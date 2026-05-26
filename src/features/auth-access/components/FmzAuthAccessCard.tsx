@@ -11,6 +11,7 @@ import { FmzFieldErrorMessage, FmzFormAlert } from '../../api-errors/components'
 import { FMZ_API_ERROR_CODES, type FmzFieldErrorMap, type FmzNormalizedApiError } from '../../api-errors/domain';
 import { getFmzAuthAccessConfig } from '../config/fmz-auth-access-config';
 import { buildFmzLoginSchema, buildFmzRegistrationSchema } from '../domain/fmz-auth-access-validation';
+import { getLoginWelcomeMessage } from '../domain/fmz-login-welcome';
 import { FmzBirthdateInput } from './FmzBirthdateInput';
 import { FmzEmailInput } from './FmzEmailInput';
 import { FmzPasswordInput } from './FmzPasswordInput';
@@ -62,6 +63,9 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const t = useTranslations('HomePage');
+  // Resolved once on mount — reads propya_has_visited from localStorage.
+  // First-time visitors see "Bem vindo"; returning visitors see "Bem vindo de volta".
+  const [loginWelcomeMessage] = useState(() => getLoginWelcomeMessage());
   const [message, setMessage] = useState('');
   const [apiError, setApiError] = useState<FmzNormalizedApiError | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FmzFieldErrorMap>({});
@@ -164,7 +168,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
     }
   };
 
-  const formTitle = isRegistering ? t('registerWelcome') : t('loginWelcome');
+  const formTitle = isRegistering ? t('registerWelcome') : loginWelcomeMessage;
   const formSubtitle = isRegistering ? t('alreadyHaveAccount') : t('notAccountYet');
   const formToggleLabel = isRegistering ? t('goToLogin') : t('registerFree');
   const submitLabel = isRegistering ? t('register') : t('loginPlatform');

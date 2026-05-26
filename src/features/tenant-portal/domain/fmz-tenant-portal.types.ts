@@ -12,6 +12,36 @@ export type FmzTenantMissingField = {
   recommendedSchemaSource?: string;
 };
 
+// ─── Ownership Goals (returned by GET /tenant/dashboard) ──────────────────────
+
+export type TenantOwnershipGoal = {
+  id: string;
+  goalKey: string;
+  title: string;
+  description: string;
+  targetPercentage: number;
+  targetTokenAmount: number;
+  tokensRemaining: number;
+  amountRemaining: number;
+  progressPercentage: number;
+  displayOrder: number;
+  rewardDescription: string | null;
+  // Optional enrichment fields provided by some backend versions
+  achieved?: boolean;
+  tokenBalance?: number | null;
+  ownershipBps?: number | null;
+  ownershipPercentage?: number | null;
+};
+
+export type TenantOwnershipGoalsSummary = {
+  available: TenantOwnershipGoal[];
+  all?: TenantOwnershipGoal[];
+  achieved: TenantOwnershipGoal[];
+  next: TenantOwnershipGoal | null;
+};
+
+// ─── Dashboard ─────────────────────────────────────────────────────────────────
+
 export type FmzTenantDashboard = {
   tenant?: FmzTenantProfile | null;
   competence?: {
@@ -21,6 +51,7 @@ export type FmzTenantDashboard = {
   property?: FmzTenantProperty | null;
   contract?: FmzTenantContract | null;
   ownership?: FmzTenantOwnership | null;
+  ownershipGoals?: TenantOwnershipGoalsSummary | null;
   nextGoal?: FmzTenantNextGoal | null;
   monthlySummary?: FmzTenantMonthlySummary | null;
   rentInsight?: FmzTenantRentInsight | null;
