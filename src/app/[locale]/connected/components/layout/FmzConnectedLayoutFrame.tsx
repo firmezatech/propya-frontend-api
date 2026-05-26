@@ -31,14 +31,28 @@ const isConnectedLogoutPath = (pathname: string | null): boolean => {
 /**
  * Top-level frame for all authenticated pages.
  *
- * Role-isolation invariants:
- *   - While `isAccessLoading` is true, a neutral skeleton header is shown.
- *     Neither the tenant header nor any admin control is rendered.
- *   - Once resolved:
- *       • Admin users: `FmzAdminLayout` renders its own header + sidebar.
- *         `FmzConnectedLayoutFrame` renders NO header for admin users.
- *       • Tenant users: `HeaderConn` (tenant header) is rendered.
- *   - Tenant users never see admin UI; admin users never see tenant header.
+ * Role-isolation invariants (NON-NEGOTIABLE):
+ *
+ *   1. While `isAccessLoading` is true, a neutral skeleton header is shown.
+ *      Neither the tenant header nor any admin control is rendered.
+ *      This is true on initial mount AND on session-change re-loads.
+ *
+ *   2. Once resolved:
+ *        • Admin users  → `FmzAdminLayout` (owns its own header + sidebar).
+ *                         This frame renders NO header for admin users.
+ *        • Tenant users → `HeaderConn` (tenant-only header).
+ *
+ *   3. Tenant users never see admin UI.
+ *      Admin users never see the tenant header, not even briefly.
+ *
+ *   4. Tenant notification hooks are mounted only inside the tenant layout.
+ *      Admin notification hooks are mounted only inside the admin layout.
+ *      No cross-role API calls are made.
+ *
+ * Loading shell:
+ *   `FmzNeutralLoadingHeader` (72 px skeleton) + `FmzFullPageLoading` (flex-1,
+ *   fills remaining viewport). The full-page loader does NOT use `min-h-[100dvh]`
+ *   in this context to avoid overflowing behind the header.
  */
 export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayoutFrameProps) {
   const pathname = usePathname();
@@ -76,36 +90,48 @@ export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayout
     return hasAdminAccessiblePage(currentPrincipal);
   }, [currentPrincipal, isLogoutPage]);
 
-  // ── Logout page — minimal wrapper, no header ──────────────────────────────
+  // ── Logout page — minimal wrapper, no header ────────────────────────────────
   if (isLogoutPage) {
     return (
-      <div className="flex min-h-screen min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">
+      <div className="flex min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">
         {children}
       </div>
     );
   }
 
-  // ── Loading state ─────────────────────────────────────────────────────────
-  // Show a neutral skeleton header — no role-specific controls.
-  // FmzFullPageLoading covers the content area so users see a complete loading
-  // shell without any tenant or admin elements flickering.
+  // ── Loading state ───────────────────────────────────────────────────────────
+  //
+  // Show a role-neutral skeleton: sticky header skeleton + centered spinner.
+  //
+  // Invariants enforced here:
+  //   - `FmzNeutralLoadingHeader` contains NO tenant-specific UI.
+  //   - `FmzNeutralLoadingHeader` contains NO admin-specific UI.
+  //   - `FmzFullPageLoading` fills the remaining viewport height (`flex-1
+  //     min-h-0`) so that header + loader = exactly 100dvh, no overflow.
+  //   - `AuthenticatedRoute` performs a synchronous session check (no loading
+  //     flash of its own). If unauthenticated, it renders null and redirects.
+  //
   if (isAccessLoading) {
     return (
-      <div className="flex min-h-screen min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">
+      <div className="flex min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">
         <AuthenticatedRoute>
           <FmzNeutralLoadingHeader />
           <FmzFullPageLoading
             label="Preparando sua área logada..."
             description="Estamos carregando permissões, páginas liberadas e menu lateral antes de exibir o dashboard."
+            className="flex-1 min-h-0"
           />
         </AuthenticatedRoute>
       </div>
     );
   }
 
-  // ── Admin layout — fully self-contained ───────────────────────────────────
-  // FmzAdminLayout manages its own h-[100dvh], header, sidebar and content.
-  // This frame renders NO header for admin users.
+  // ── Admin layout — fully self-contained ────────────────────────────────────
+  //
+  // `FmzAdminLayout` manages its own h-[100dvh], header, sidebar and content.
+  // This frame renders NO header or footer for admin users.
+  // Admin notification hooks are mounted exclusively inside `FmzAdminLayout`.
+  //
   if (shouldRenderAdminLayout) {
     return (
       <div className={fmzCn('bg-[#F7F8FA] text-fmz-text-primary')}>
@@ -118,10 +144,13 @@ export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayout
     );
   }
 
-  // ── Tenant layout ─────────────────────────────────────────────────────────
-  // Full tenant header + content + footer.
+  // ── Tenant layout ──────────────────────────────────────────────────────────
+  //
+  // Tenant notification hooks are mounted exclusively inside `FmzConnectedDropdown`
+  // which is rendered only by `HeaderConn` — never in the admin or loading branches.
+  //
   return (
-    <div className="flex min-h-screen min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">
+    <div className="flex min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">
       <AuthenticatedRoute>
         <HeaderConn principal={currentPrincipal} />
         <FmzRouteAccessGuard principal={currentPrincipal} isLoading={false}>

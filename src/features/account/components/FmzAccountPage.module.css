@@ -599,6 +599,16 @@
   font-size: 12px;
 }
 
+/* Non-interactive display button — shown as a label, not a control */
+.btnStatic {
+  cursor: default;
+  pointer-events: none;
+}
+
+.btnStaticSuccess {
+  color: var(--fmz-success);
+}
+
 /* ─────────────────────────────────────────────
    Locked display (wallet / CPF read-only fields)
 ───────────────────────────────────────────── */
@@ -758,29 +768,90 @@
 .docList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
-.docRow {
-  display: flex;
-  align-items: center;
-  gap: 13px;
+/*
+ * ── Document card (redesigned) ─────────────────────────────────────────────────
+ *
+ * Old layout: single flex row with icon + text + badge + button squeezed together.
+ * New layout: vertical stack — info row → actions row → upload area (optional).
+ *
+ * When the upload area is active for this card, the inner wrapper switches to a
+ * two-column grid (info/actions left | dropzone right) on screens ≥ 769 px.
+ */
+
+.docCard {
   border: 1px solid var(--fmz-border-light);
   border-radius: 12px;
   background: #fff;
   padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   transition: border-color 0.15s, background 0.15s;
 }
 
-.docRow:hover {
+.docCard:hover {
   border-color: #D0D4DE;
   background: #FAFBFC;
 }
 
-/* colored doc-row variants */
+/* colored card-border variants (status-driven) */
 .docRowOk  { border-color: var(--fmz-border-light); background: #fff; }
 .docRowRev { border-color: var(--fmz-border-light); background: #fff; }
 .docRowPnd { border-color: var(--fmz-border-light); background: #fff; }
+
+/*
+ * Two-column inner grid — applied when the upload dropzone is active for this card.
+ * Left column:  fixed-width info + actions panel.
+ * Right column: dropzone fills remaining space.
+ * Collapses to a single column below 768 px.
+ */
+.docCardGrid {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* Left panel: stacked info row + actions row */
+.docCardLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Right panel: dropzone — expands to fill column */
+.docCardRight {
+  min-width: 0;
+}
+
+/* Top row: icon + text block side by side */
+.docInfoRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+/*
+ * Text block: title + meta.
+ * flex: 1 + min-width: 0 ensures the text fills available space
+ * without ever being squeezed to near-zero by sibling flex children.
+ */
+.docTextBlock {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Actions row: badge + upload/resubmit button — wraps on narrow viewports */
+.docActionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
 
 .docIcon {
   width: 36px;
@@ -802,28 +873,19 @@
 .docIconRev { background: #EFF6FF; color: #1D4ED8; }
 .docIconPnd { background: var(--fmz-warning-bg);  color: var(--fmz-warning); }
 
-.docInfo {
-  flex: 1;
-  min-width: 0;
-}
-
 .docName {
   color: var(--fmz-navy);
   font-size: 13px;
   font-weight: 700;
-  margin-bottom: 1px;
+  line-height: 1.4;
+  word-break: break-word;   /* prevents single-word-per-line wrapping */
+  margin-bottom: 2px;
 }
 
 .docMeta {
   color: var(--fmz-text-hint);
   font-size: 11.5px;
-}
-
-.docActions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+  line-height: 1.55;
 }
 
 .badge {
@@ -854,7 +916,11 @@
   border-radius: 10px;
   background: #fff;
   padding: 28px 20px;
-  margin-top: 16px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   cursor: pointer;
   transition: background 0.18s, border-color 0.18s;
@@ -986,6 +1052,13 @@
   }
 }
 
+/* Collapse two-column upload grid to single column on tablets and below */
+@media (max-width: 768px) {
+  .docCardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 680px) {
   .grid2 {
     grid-template-columns: 1fr;
@@ -1015,14 +1088,9 @@
     width: 100%;
   }
 
-  .docRow {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .docActions {
+  /* Actions row spans full width on narrow screens */
+  .docActionsRow {
     width: 100%;
-    justify-content: flex-end;
   }
 
   .toast {

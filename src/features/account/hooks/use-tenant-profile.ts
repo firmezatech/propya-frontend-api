@@ -39,12 +39,22 @@ type UseTenantProfileReturn = {
  *   - Data fetching and upload orchestration live here.
  *   - Rendering lives in the components.
  *   - Business rules (completion %, KYC status) live in the backend.
+ *
+ * Error contract:
+ *   - `uploadKycDocument` THROWS on upload failure so the caller can
+ *     distinguish success from failure and show the correct toast.
+ *   - Profile refetch failures are handled internally (profileState → 'error')
+ *     and do NOT cause `uploadKycDocument` to throw — the document was already
+ *     sent; only the profile refresh failed.
+ *   - `refetchProfile` (alias of fetchProfile) never throws — errors are
+ *     communicated via profileState.
  */
 export function useTenantProfile(): UseTenantProfileReturn {
   const [profileState, setProfileState] = useState<ProfileState>({ status: 'loading' });
   const [uploadState, setUploadState] = useState<UploadState>({ status: 'idle' });
 
-  const fetchProfile = useCallback(async () => {
+  // refetchProfile never throws — errors are reflected in profileState.
+  const refetchProfile = useCallback(async () => {
     setProfileState({ status: 'loading' });
     try {
       const response = await getTenantProfile();
@@ -59,28 +69,37 @@ export function useTenantProfile(): UseTenantProfileReturn {
 
   const uploadKycDocument = useCallback(async (params: TenantKycDocumentUploadParams) => {
     setUploadState({ status: 'uploading' });
+
+    // ── Phase 1: Upload document ───────────────────────────────────────────────
+    // Throws on any failure so the caller can skip the success toast.
+    // Error state is set here — no need for the caller to set it separately.
     try {
       await uploadTenantKycDocument(params);
-      setUploadState({ status: 'success' });
-      // Refetch so the UI reflects the backend's resolved document status.
-      // The frontend must not manually set status = 'under_review'.
-      await fetchProfile();
     } catch (error) {
       const message = error instanceof Error
         ? error.message
         : 'Erro ao enviar o documento. Tente novamente.';
       setUploadState({ status: 'error', message });
+      // Rethrow — the caller MUST NOT show the success toast when this throws.
+      throw error;
     }
-  }, [fetchProfile]);
+
+    // ── Phase 2: Upload succeeded — update state and refresh profile ───────────
+    // refetchProfile() handles its own errors internally and never throws.
+    // If refetch fails: uploadState stays 'success' (document was sent);
+    // profileState becomes 'error' and the KYC section shows a retry button.
+    setUploadState({ status: 'success' });
+    await refetchProfile();
+  }, [refetchProfile]);
 
   useEffect(() => {
-    void fetchProfile();
-  }, [fetchProfile]);
+    void refetchProfile();
+  }, [refetchProfile]);
 
   return {
     profileState,
     uploadState,
-    refetchProfile: fetchProfile,
+    refetchProfile,
     uploadKycDocument,
   };
 }
