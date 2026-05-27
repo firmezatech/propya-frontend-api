@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Criar Conta — FirmezaToken</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#E8B620;
+  --gold-soft:#F5D26B;
+  --gold-tint:#FBF3DA;
+  --gold-deep:#8A6B12;
+
+  --navy:#0E1626;
+  --navy-2:#1C2740;
+  --ink:#2A344A;
+  --muted:#5A6478;
+  --hint:#8893A6;
+
+  --line:#E6E8EE;
+  --line-2:#EDEFF4;
+  --page:#F4F5F8;
+  --white:#FFFFFF;
+
+  --green:#127A4F;
+  --green-tint:#E8F5EE;
+  --red:#B23B2D;
+  --red-tint:#FBEDEB;
+  --blue:#1F5BD6;
+  --blue-tint:#E8EFFC;
+
+  --shadow-sm:0 1px 2px rgba(14,22,38,.04), 0 1px 0 rgba(14,22,38,.02);
+  --shadow-md:0 2px 6px rgba(14,22,38,.05), 0 8px 24px -8px rgba(14,22,38,.08);
+  --shadow-lg:0 4px 12px rgba(14,22,38,.06), 0 20px 48px -12px rgba(14,22,38,.14);
+  --radius:14px;
+  --radius-lg:20px;
+}
+html,body{height:100%}
+body{
+  font-family:'DM Sans',system-ui,sans-serif;
+  background:var(--page);color:var(--ink);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  font-size:15px;line-height:1.5;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+button,a,input,select{font-family:inherit;color:inherit}
+a{text-decoration:none}
+.mono{font-family:'JetBrains Mono',monospace;font-feature-settings:"tnum"}
+
+/* ── NAV ─────────────────────────────────── */
+nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(20px,4vw,40px);
+  height:60px;background:var(--white);
+  border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--navy);display:grid;place-items:center;
+}
+.logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--navy);letter-spacing:-.01em}
+.nav-r{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.nav-r a{color:var(--navy);font-weight:600;transition:color .15s}
+.nav-r a:hover{color:var(--gold-deep)}
+
+/* ── LAYOUT ──────────────────────────────── */
+.root{
+  display:grid;
+  grid-template-columns:1fr minmax(0,480px) 1fr;
+  min-height:calc(100vh - 60px);
+  align-items:start;
+}
+.side-panel{
+  background:var(--navy);
+  min-height:calc(100vh - 60px);
+  padding:clamp(40px,5vw,64px) clamp(28px,3vw,48px);
+  position:sticky;top:60px;
+  display:flex;flex-direction:column;
+  justify-content:space-between;
+  overflow:hidden;
+}
+.side-panel::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 110% -10%, rgba(232,182,32,.25) 0%, transparent 50%),
+    radial-gradient(ellipse at -10% 110%, rgba(232,182,32,.12) 0%, transparent 50%);
+  pointer-events:none;
+}
+.side-panel > *{position:relative;z-index:1}
+.side-geo{
+  position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;
+}
+.side-geo svg{position:absolute;bottom:-60px;right:-60px;opacity:.06}
+.sp-tag{
+  font-size:11px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--gold);
+  display:inline-flex;align-items:center;gap:8px;
+  margin-bottom:40px;
+}
+.sp-tag::before{content:'';width:16px;height:1.5px;background:var(--gold);border-radius:1px}
+.sp-headline{
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:clamp(26px,2.8vw,38px);
+  line-height:1.08;letter-spacing:-.03em;
+  color:var(--white);
+  margin-bottom:20px;
+}
+.sp-headline em{color:var(--gold);font-style:normal}
+.sp-sub{
+  font-size:14px;color:rgba(255,255,255,.55);
+  line-height:1.65;max-width:340px;
+  margin-bottom:40px;
+}
+.sp-features{display:flex;flex-direction:column;gap:14px}
+.spf{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;
+  border-radius:12px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.07);
+  transition:background .2s;
+}
+.spf:hover{background:rgba(255,255,255,.08)}
+.spf-ico{
+  width:34px;height:34px;border-radius:9px;
+  background:rgba(232,182,32,.15);color:var(--gold);
+  display:grid;place-items:center;flex-shrink:0;
+}
+.spf-ico svg{width:15px;height:15px}
+.spf-body h4{font-size:13px;font-weight:600;color:var(--white);letter-spacing:-.005em;margin-bottom:1px}
+.spf-body p{font-size:11.5px;color:rgba(255,255,255,.45);line-height:1.4}
+.sp-foot{
+  margin-top:40px;
+  padding-top:24px;
+  border-top:1px solid rgba(255,255,255,.1);
+}
+.trust-row{display:flex;align-items:center;gap:10px}
+.trust-ico{
+  width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);
+  display:grid;place-items:center;font-family:'Syne',sans-serif;
+  font-weight:700;font-size:10px;letter-spacing:.04em;
+}
+.trust-ico.gold{background:rgba(232,182,32,.2);color:var(--gold-soft)}
+.trust-ico:nth-child(n+2){margin-left:-10px}
+.trust-txt{font-size:12px;color:rgba(255,255,255,.45);margin-left:6px}
+.trust-txt strong{color:rgba(255,255,255,.75)}
+
+/* ── FORM PANEL ──────────────────────────── */
+.form-col{
+  padding:clamp(32px,4vw,56px) clamp(20px,3vw,36px);
+  display:flex;flex-direction:column;gap:0;
+}
+
+/* ── STEPPER ─────────────────────────────── */
+.stepper{
+  display:flex;align-items:center;gap:0;
+  margin-bottom:36px;
+}
+.step{
+  display:flex;align-items:center;gap:8px;flex:1;
+}
+.step:last-child{flex:0}
+.step-circle{
+  width:28px;height:28px;border-radius:50%;
+  display:grid;place-items:center;flex-shrink:0;
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
+  border:2px solid var(--line);
+  color:var(--hint);background:var(--white);
+  transition:all .3s;
+}
+.step.done .step-circle{
+  background:var(--green);border-color:var(--green);color:var(--white);
+}
+.step.active .step-circle{
+  background:var(--navy);border-color:var(--navy);color:var(--white);
+}
+.step-label{
+  font-size:11px;font-weight:600;color:var(--hint);
+  white-space:nowrap;letter-spacing:.02em;
+  transition:color .3s;
+}
+.step.active .step-label{color:var(--navy)}
+.step.done .step-label{color:var(--green)}
+.step-line{
+  flex:1;height:1.5px;background:var(--line);
+  margin:0 8px;border-radius:1px;
+  position:relative;overflow:hidden;
+}
+.step-line-fill{
+  position:absolute;top:0;left:0;height:100%;width:0%;
+  background:var(--green);
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+  border-radius:1px;
+}
+
+/* ── FORM HEAD ───────────────────────────── */
+.fh{margin-bottom:28px}
+.fh-sup{
+  font-size:11px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--gold-deep);
+  display:inline-flex;align-items:center;gap:8px;
+  margin-bottom:8px;
+}
+.fh-sup::before{content:'';width:14px;height:1.5px;background:var(--gold);border-radius:1px}
+.fh-title{
+  font-family:'Syne',sans-serif;font-weight:700;
+  font-size:clamp(22px,3vw,28px);
+  letter-spacing:-.025em;line-height:1.1;
+  color:var(--navy);margin-bottom:6px;
+}
+.fh-sub{font-size:13.5px;color:var(--muted);line-height:1.5}
+
+/* ── FORM FIELDS ─────────────────────────── */
+.step-body{display:none;animation:fadeUp .3s ease}
+.step-body.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.f{display:flex;flex-direction:column;gap:6px;margin-bottom:2px}
+.f.s2{grid-column:1/-1}
+label{
+  font-size:10.5px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);
+  display:flex;align-items:center;gap:4px;
+}
+label .req{color:var(--red);margin-left:2px}
+.iw{position:relative}
+.iw .il{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;color:var(--hint);pointer-events:none;
+}
+.iw .ir{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;color:var(--hint);cursor:pointer;
+  background:none;border:none;padding:0;
+  transition:color .15s;display:grid;place-items:center;
+}
+.iw .ir:hover{color:var(--navy)}
+input[type=text],
+input[type=email],
+input[type=tel],
+input[type=password]{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:14px;font-family:inherit;
+  color:var(--navy);background:var(--white);
+  transition:all .15s;outline:none;
+}
+.iw input{padding-left:38px}
+.iw.hr input{padding-right:40px}
+input:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(232,182,32,.18);
+}
+input.valid{border-color:var(--green);box-shadow:0 0 0 3px rgba(18,122,79,.12)}
+input.invalid{border-color:var(--red);box-shadow:0 0 0 3px rgba(178,59,45,.1)}
+input::placeholder{color:var(--hint)}
+.hint{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11.5px;color:var(--muted);min-height:16px;
+}
+.hint svg{width:11px;height:11px;flex-shrink:0}
+.hint.ok{color:var(--green)}
+.hint.err{color:var(--red)}
+
+/* Password strength */
+.pbars{display:flex;gap:3px;margin-top:4px}
+.pbar{flex:1;height:3px;border-radius:999px;background:var(--line);transition:background .25s}
+.pbar-hint{font-size:11.5px;color:var(--muted);margin-top:4px;min-height:16px;transition:color .25s}
+
+/* CPF field */
+.cpf-note{
+  display:flex;align-items:center;gap:6px;
+  padding:10px 12px;
+  background:var(--blue-tint);border:1px solid rgba(31,91,214,.15);
+  border-radius:9px;margin-top:6px;
+  font-size:12px;color:var(--blue);
+}
+.cpf-note svg{width:12px;height:12px;flex-shrink:0}
+
+/* Terms */
+.terms-row{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:14px 16px;
+  background:var(--page);border:1px solid var(--line);
+  border-radius:10px;margin-top:16px;
+  cursor:pointer;
+}
+.terms-row input[type=checkbox]{
+  width:16px;height:16px;flex-shrink:0;margin-top:2px;
+  accent-color:var(--navy);cursor:pointer;
+  border-radius:4px;
+}
+.terms-row span{font-size:12.5px;color:var(--muted);line-height:1.5}
+.terms-row span a{color:var(--navy);font-weight:600;border-bottom:1px solid var(--line)}
+.terms-row span a:hover{border-color:var(--navy)}
+
+/* Divider */
+.divider{
+  display:flex;align-items:center;gap:12px;
+  font-size:11.5px;color:var(--hint);
+  margin:20px 0;font-weight:500;letter-spacing:.04em;
+}
+.divider::before,.divider::after{
+  content:'';flex:1;height:1px;background:var(--line);
+}
+
+/* Success step */
+.success-wrap{text-align:center;padding:20px 0}
+.s-ico{
+  width:72px;height:72px;border-radius:50%;
+  background:var(--green-tint);color:var(--green);
+  display:grid;place-items:center;margin:0 auto 20px;
+  animation:popIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.s-ico svg{width:30px;height:30px}
+.s-title{
+  font-family:'Syne',sans-serif;font-weight:700;
+  font-size:24px;color:var(--navy);letter-spacing:-.025em;
+  margin-bottom:8px;
+}
+.s-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:28px}
+.s-items{
+  display:flex;flex-direction:column;gap:10px;
+  text-align:left;margin-bottom:28px;
+}
+.s-item{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 14px;
+  border:1px solid var(--line);border-radius:10px;
+  background:var(--white);
+}
+.s-item-ico{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--gold-tint);color:var(--gold-deep);
+  display:grid;place-items:center;flex-shrink:0;
+}
+.s-item-ico svg{width:13px;height:13px}
+.s-item-body{flex:1;min-width:0}
+.s-item-body strong{display:block;font-size:12.5px;color:var(--navy);font-weight:600;margin-bottom:1px}
+.s-item-body span{font-size:11.5px;color:var(--muted)}
+
+/* ── BUTTONS ─────────────────────────────── */
+.btn-row{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;margin-top:24px;flex-wrap:wrap;
+}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:12px 22px;border-radius:10px;
+  font-family:inherit;font-size:14px;font-weight:600;
+  letter-spacing:.005em;
+  cursor:pointer;border:1px solid transparent;
+  transition:all .15s;white-space:nowrap;
+}
+.btn svg{width:14px;height:14px}
+.btn:active{transform:scale(.98)}
+.btn-ghost{
+  background:var(--white);border-color:var(--line);color:var(--navy);
+}
+.btn-ghost:hover{background:#FAFBFC;border-color:#D0D4DE}
+.btn-primary{
+  background:var(--navy);color:var(--white);border-color:var(--navy);
+}
+.btn-primary:hover{background:var(--navy-2);border-color:var(--navy-2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(14,22,38,.18)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-full{width:100%}
+.btn-gold{
+  background:var(--gold);color:var(--navy);border-color:var(--gold);
+}
+.btn-gold:hover{background:var(--gold-soft);border-color:var(--gold-soft);transform:translateY(-1px);box-shadow:0 6px 20px rgba(232,182,32,.35)}
+
+/* ── FOOTER ──────────────────────────────── */
+footer{
+  border-top:1px solid var(--line);
+  background:var(--white);
+  padding:16px clamp(20px,4vw,40px);
+  display:flex;align-items:center;justify-content:space-between;
+  gap:16px;font-size:12px;color:var(--hint);
+}
+.fsoc{display:flex;gap:18px}
+.fsoc a{color:var(--hint);transition:color .15s}
+.fsoc a:hover{color:var(--navy)}
+
+/* ── RESPONSIVE ──────────────────────────── */
+@media (max-width:1100px){
+  .root{grid-template-columns:1fr minmax(0,520px)}
+  .right-pad{display:none}
+}
+@media (max-width:780px){
+  .root{grid-template-columns:1fr}
+  .side-panel{display:none}
+  .form-col{padding:28px 20px 48px}
+}
+@media (max-width:520px){
+  .fg{grid-template-columns:1fr}
+  .stepper .step-label{display:none}
+  .btn-row{flex-direction:column-reverse}
+  .btn-row .btn{width:100%;justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3L3 8.5V15.5L12 21L21 15.5V8.5L12 3Z" stroke="#E8B620" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M12 3V21M3 8.5L21 15.5M21 8.5L3 15.5" stroke="#E8B620" stroke-width="1" stroke-opacity=".35"/>
+      </svg>
+    </div>
+    <span class="logo-text">FirmezaToken</span>
+  </div>
+  <div class="nav-r">
+    <span>Já tem uma conta?</span>
+    <a href="#">Entrar</a>
+  </div>
+</nav>
+
+<div class="root">
+
+  <!-- LEFT SIDE PANEL -->
+  <aside class="side-panel">
+    <div class="side-geo">
+      <svg width="500" height="500" viewBox="0 0 500 500" fill="none">
+        <path d="M250 50L450 175V325L250 450L50 325V175L250 50Z" stroke="white" stroke-width="1"/>
+        <path d="M250 50L250 450M50 175L450 325M450 175L50 325" stroke="white" stroke-width=".5"/>
+        <path d="M250 150L350 212.5V337.5L250 400L150 337.5V212.5L250 150Z" stroke="white" stroke-width="1"/>
+      </svg>
+    </div>
+    <div>
+      <div class="sp-tag">Plataforma de Tokenização</div>
+      <h1 class="sp-headline">Invista em<br>imóveis com<br><em>inteligência</em></h1>
+      <p class="sp-sub">A FirmezaToken democratiza o acesso ao mercado imobiliário por meio de tokens digitais seguros, transparentes e acessíveis a partir de R$ 100.</p>
+      <div class="sp-features">
+        <div class="spf">
+          <div class="spf-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="spf-body">
+            <h4>Segurança blockchain</h4>
+            <p>Ativos registrados em blockchain pública e auditável</p>
+          </div>
+        </div>
+        <div class="spf">
+          <div class="spf-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div class="spf-body">
+            <h4>Renda passiva real</h4>
+            <p>Receba aluguéis proporcionais à sua participação</p>
+          </div>
+        </div>
+        <div class="spf">
+          <div class="spf-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          </div>
+          <div class="spf-body">
+            <h4>Liquidez facilitada</h4>
+            <p>Negocie seus tokens a qualquer hora no marketplace</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sp-foot">
+      <div class="trust-row">
+        <div class="trust-ico gold">MA</div>
+        <div class="trust-ico" style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.6)">RB</div>
+        <div class="trust-ico" style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.6)">CL</div>
+        <div class="trust-ico" style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.6)">+</div>
+        <span class="trust-txt"><strong>+4.800 investidores</strong> já na plataforma</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- FORM COLUMN -->
+  <main class="form-col">
+
+    <!-- STEPPER -->
+    <div class="stepper" id="stepper">
+      <div class="step active" id="st1">
+        <div class="step-circle" id="sc1">1</div>
+        <span class="step-label">Acesso</span>
+      </div>
+      <div class="step-line"><div class="step-line-fill" id="sl1"></div></div>
+      <div class="step" id="st2">
+        <div class="step-circle" id="sc2">2</div>
+        <span class="step-label">Identidade</span>
+      </div>
+      <div class="step-line"><div class="step-line-fill" id="sl2"></div></div>
+      <div class="step" id="st3">
+        <div class="step-circle" id="sc3">3</div>
+        <span class="step-label">Confirmação</span>
+      </div>
+    </div>
+
+    <!-- ── STEP 1: Acesso ── -->
+    <div class="step-body active" id="body1">
+      <div class="fh">
+        <div class="fh-sup">Passo 1 de 3</div>
+        <h2 class="fh-title">Crie seu acesso</h2>
+        <p class="fh-sub">Comece com e-mail, senha forte e um telefone para verificação em duas etapas.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px;">
+
+        <!-- Email -->
+        <div class="f">
+          <label for="email">E-mail <span class="req">*</span></label>
+          <div class="iw">
+            <svg class="il" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input type="email" id="email" placeholder="seu@email.com" autocomplete="email" oninput="validateEmail(this)">
+          </div>
+          <span class="hint" id="email-hint"></span>
+        </div>
+
+        <!-- Senha -->
+        <div class="f">
+          <label for="senha">Senha <span class="req">*</span></label>
+          <div class="iw hr">
+            <svg class="il" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="senha" placeholder="Crie uma senha forte" autocomplete="new-password" oninput="updateStrength(this.value)">
+            <button class="ir" type="button" onclick="tp('senha')" aria-label="Mostrar senha">
+              <svg id="eye-senha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <div class="pbars">
+            <div class="pbar" id="pb1"></div>
+            <div class="pbar" id="pb2"></div>
+            <div class="pbar" id="pb3"></div>
+            <div class="pbar" id="pb4"></div>
+          </div>
+          <div class="pbar-hint" id="ph-senha">Use letras maiúsculas, números e símbolos</div>
+        </div>
+
+        <!-- Confirmar senha -->
+        <div class="f">
+          <label for="senha2">Confirmar senha <span class="req">*</span></label>
+          <div class="iw hr">
+            <svg class="il" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="senha2" placeholder="Repita a senha" autocomplete="new-password" oninput="checkMatch()">
+            <button class="ir" type="button" onclick="tp('senha2')" aria-label="Mostrar senha">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <span class="hint" id="match-hint"></span>
+        </div>
+
+        <!-- Telefone -->
+        <div class="f">
+          <label for="phone">Telefone <span class="req">*</span></label>
+          <div class="iw">
+            <svg class="il" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.35 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.69 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.36 6.36l.74-.74a2 2 0 0 1 2.11-.45c.91.33 1.85.56 2.81.69A2 2 0 0 1 22 16.92z"/></svg>
+            <input type="tel" id="phone" placeholder="+55 11 91234-5678" autocomplete="tel">
+          </div>
+          <span class="hint">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            Usado para verificação em duas etapas
+          </span>
+        </div>
+
+        <!-- Terms -->
+        <label class="terms-row" for="terms">
+          <input type="checkbox" id="terms" onchange="checkStep1()">
+          <span>Li e concordo com os <a href="#" onclick="return false">Termos de Uso</a> e a <a href="#" onclick="return false">Política de Privacidade</a> da FirmezaToken</span>
+        </label>
+      </div>
+
+      <div class="btn-row">
+        <span style="font-size:12px;color:var(--hint)">* campos obrigatórios</span>
+        <button class="btn btn-primary" id="btn-next1" onclick="goToStep(2)" disabled>
+          Continuar
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: Identidade ── -->
+    <div class="step-body" id="body2">
+      <div class="fh">
+        <div class="fh-sup">Passo 2 de 3</div>
+        <h2 class="fh-title">Seus dados pessoais</h2>
+        <p class="fh-sub">Informe seu CPF e nome completo para confirmar sua identidade e habilitar todas as funcionalidades.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px;">
+
+        <!-- Nome completo -->
+        <div class="f">
+          <label for="nome">Nome completo <span class="req">*</span></label>
+          <div class="iw">
+            <svg class="il" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" id="nome" placeholder="Como aparece no documento" autocomplete="name" oninput="checkStep2()">
+          </div>
+        </div>
+
+        <!-- Data de nascimento -->
+        <div class="f">
+          <label for="nascimento">Data de nascimento <span class="req">*</span></label>
+          <div class="iw">
+            <svg class="il" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <input type="text" id="nascimento" placeholder="DD/MM/AAAA" maxlength="10" oninput="maskDate(this);checkStep2()">
+          </div>
+        </div>
+
+        <!-- CPF -->
+        <div class="f">
+          <label for="cpf">CPF <span class="req">*</span></label>
+          <div class="iw">
+            <svg class="il" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <input type="text" id="cpf" placeholder="000.000.000-00" maxlength="14" class="mono" oninput="maskCPF(this);validateCPF(this);checkStep2()">
+          </div>
+          <span class="hint" id="cpf-hint"></span>
+          <div class="cpf-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Seu CPF é criptografado e nunca compartilhado com terceiros
+          </div>
+        </div>
+
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="goToStep(1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          Voltar
+        </button>
+        <button class="btn btn-primary" id="btn-next2" onclick="goToStep(3)" disabled>
+          Continuar
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: Confirmação ── -->
+    <div class="step-body" id="body3">
+      <div class="fh">
+        <div class="fh-sup">Passo 3 de 3</div>
+        <h2 class="fh-title">Confirme seus dados</h2>
+        <p class="fh-sub">Revise as informações antes de criar sua conta.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:4px;">
+        <div class="s-item">
+          <div class="s-item-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div class="s-item-body">
+            <strong>E-mail</strong>
+            <span id="rev-email">—</span>
+          </div>
+        </div>
+        <div class="s-item">
+          <div class="s-item-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.35 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.69 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.36 6.36l.74-.74a2 2 0 0 1 2.11-.45c.91.33 1.85.56 2.81.69A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <div class="s-item-body">
+            <strong>Telefone</strong>
+            <span id="rev-phone">—</span>
+          </div>
+        </div>
+        <div class="s-item">
+          <div class="s-item-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="s-item-body">
+            <strong>Nome</strong>
+            <span id="rev-nome">—</span>
+          </div>
+        </div>
+        <div class="s-item">
+          <div class="s-item-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div class="s-item-body">
+            <strong>Data de nascimento</strong>
+            <span id="rev-nasc">—</span>
+          </div>
+        </div>
+        <div class="s-item">
+          <div class="s-item-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+          <div class="s-item-body">
+            <strong>CPF</strong>
+            <span id="rev-cpf" class="mono">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="goToStep(2)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          Editar dados
+        </button>
+        <button class="btn btn-primary" onclick="submitForm()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          Criar conta
+        </button>
+      </div>
+    </div>
+
+    <!-- ── SUCCESS ── -->
+    <div class="step-body" id="body4">
+      <div class="success-wrap">
+        <div class="s-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <h2 class="s-title">Conta criada!</h2>
+        <p class="s-sub">Bem-vindo à FirmezaToken. Enviamos um e-mail de confirmação para <strong id="suc-email">você</strong>. Verifique sua caixa de entrada para ativar a conta.</p>
+        <div class="s-items">
+          <div class="s-item">
+            <div class="s-item-ico" style="background:var(--green-tint);color:var(--green)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+            <div class="s-item-body">
+              <strong>Confirmação de e-mail</strong>
+              <span>Clique no link enviado para ativar</span>
+            </div>
+          </div>
+          <div class="s-item">
+            <div class="s-item-ico" style="background:var(--gold-tint);color:var(--gold-deep)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="s-item-body">
+              <strong>Complete seu perfil</strong>
+              <span>Adicione endereço e documentos KYC</span>
+            </div>
+          </div>
+          <div class="s-item">
+            <div class="s-item-ico" style="background:var(--blue-tint);color:var(--blue)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            </div>
+            <div class="s-item-body">
+              <strong>Comece a investir</strong>
+              <span>Explore imóveis disponíveis na plataforma</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="window.location.href='#'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Ir para o Dashboard
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="right-pad"></div>
+</div>
+
+<footer>
+  <span>© FirmezaToken · A revolução imobiliária começou.</span>
+  <div class="fsoc">
+    <a href="#">TikTok</a>
+    <a href="#">Instagram</a>
+    <a href="#">LinkedIn</a>
+    <a href="#">YouTube</a>
+  </div>
+</footer>
+
+<script>
+/* ── helpers ── */
+let currentStep = 1;
+
+function tp(id){
+  const e = document.getElementById(id);
+  e.type = e.type === 'password' ? 'text' : 'password';
+}
+
+/* ── stepper ── */
+function goToStep(n){
+  // hide current
+  document.getElementById('body'+currentStep).classList.remove('active');
+  // mark done / update stepper
+  const prev = currentStep;
+  currentStep = n;
+
+  for(let i=1;i<=3;i++){
+    const st = document.getElementById('st'+i);
+    const sc = document.getElementById('sc'+i);
+    st.classList.remove('active','done');
+    if(i < n){ st.classList.add('done'); sc.innerHTML = svgCheck(); }
+    else if(i === n){ st.classList.add('active'); sc.textContent = i; }
+    else { sc.textContent = i; }
+    const sl = document.getElementById('sl'+i);
+    if(sl) sl.style.width = i < n ? '100%' : '0%';
+  }
+  // show new
+  const nb = document.getElementById('body'+n);
+  nb.classList.add('active');
+
+  if(n===3) populateReview();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function svgCheck(){
+  return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+}
+
+/* ── step 1 validation ── */
+let emailOk=false, senhaOk=false, matchOk=false;
+
+function validateEmail(el){
+  const v = el.value.trim();
+  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  const hint = document.getElementById('email-hint');
+  emailOk = ok;
+  if(!v){ el.classList.remove('valid','invalid'); hint.innerHTML=''; }
+  else if(ok){ el.classList.add('valid'); el.classList.remove('invalid'); hint.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> E-mail válido`; hint.className='hint ok'; }
+  else{ el.classList.add('invalid'); el.classList.remove('valid'); hint.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Insira um e-mail válido`; hint.className='hint err'; }
+  checkStep1();
+}
+
+function updateStrength(v){
+  let s=0;
+  if(v.length>=8)s++;
+  if(/[A-Z]/.test(v))s++;
+  if(/[0-9]/.test(v))s++;
+  if(/[^A-Za-z0-9]/.test(v))s++;
+  const cols=['','#B23B2D','#E8B620','#8A6B12','#127A4F'];
+  const lbls=['Use letras maiúsculas, números e símbolos','Senha fraca — adicione complexidade','Razoável — pode melhorar','Boa senha','Senha forte ✓'];
+  for(let i=1;i<=4;i++){
+    document.getElementById('pb'+i).style.background = i<=s ? cols[s] : '';
+  }
+  const ph = document.getElementById('ph-senha');
+  ph.textContent = v.length===0 ? lbls[0] : lbls[s];
+  ph.style.color = s>0 ? cols[s] : '';
+  senhaOk = s>=3;
+  checkMatch();
+  checkStep1();
+}
+
+function checkMatch(){
+  const s1=document.getElementById('senha').value;
+  const s2=document.getElementById('senha2').value;
+  const hint=document.getElementById('match-hint');
+  const el=document.getElementById('senha2');
+  if(!s2){ el.classList.remove('valid','invalid'); hint.innerHTML=''; matchOk=false; checkStep1(); return; }
+  matchOk = s1===s2;
+  if(matchOk){ el.classList.add('valid'); el.classList.remove('invalid'); hint.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Senhas conferem`; hint.className='hint ok'; }
+  else{ el.classList.add('invalid'); el.classList.remove('valid'); hint.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg> As senhas não coincidem`; hint.className='hint err'; }
+  checkStep1();
+}
+
+function checkStep1(){
+  const phone = document.getElementById('phone').value.replace(/\D/g,'').length>=10;
+  const terms = document.getElementById('terms').checked;
+  const ok = emailOk && senhaOk && matchOk && phone && terms;
+  document.getElementById('btn-next1').disabled = !ok;
+}
+
+/* ── step 2 validation ── */
+function maskDate(el){
+  let v=el.value.replace(/\D/g,'');
+  if(v.length>2) v=v.slice(0,2)+'/'+v.slice(2);
+  if(v.length>5) v=v.slice(0,5)+'/'+v.slice(5);
+  el.value=v.slice(0,10);
+}
+
+function maskCPF(el){
+  let v=el.value.replace(/\D/g,'');
+  if(v.length>3) v=v.slice(0,3)+'.'+v.slice(3);
+  if(v.length>7) v=v.slice(0,7)+'.'+v.slice(7);
+  if(v.length>11) v=v.slice(0,11)+'-'+v.slice(11);
+  el.value=v.slice(0,14);
+}
+
+function validateCPF(el){
+  const digits=el.value.replace(/\D/g,'');
+  const hint=document.getElementById('cpf-hint');
+  if(digits.length===0){ el.classList.remove('valid','invalid'); hint.innerHTML=''; return; }
+  if(digits.length<11){ el.classList.remove('valid'); el.classList.add('invalid'); hint.innerHTML=''; return; }
+  const ok=cpfValid(digits);
+  if(ok){ el.classList.add('valid'); el.classList.remove('invalid'); hint.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> CPF válido`; hint.className='hint ok'; }
+  else{ el.classList.add('invalid'); el.classList.remove('valid'); hint.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg> CPF inválido`; hint.className='hint err'; }
+}
+
+function cpfValid(c){
+  if(/^(\d)\1+$/.test(c)) return false;
+  let s=0;
+  for(let i=0;i<9;i++) s+=parseInt(c[i])*(10-i);
+  let r=s%11<2?0:11-s%11;
+  if(r!==parseInt(c[9])) return false;
+  s=0;
+  for(let i=0;i<10;i++) s+=parseInt(c[i])*(11-i);
+  r=s%11<2?0:11-s%11;
+  return r===parseInt(c[10]);
+}
+
+function checkStep2(){
+  const nome=document.getElementById('nome').value.trim().split(' ').length>=2;
+  const nasc=document.getElementById('nascimento').value.length===10;
+  const cpf=cpfValid(document.getElementById('cpf').value.replace(/\D/g,''));
+  document.getElementById('btn-next2').disabled=!(nome&&nasc&&cpf);
+}
+
+/* ── step 3 review ── */
+function populateReview(){
+  document.getElementById('rev-email').textContent=document.getElementById('email').value;
+  document.getElementById('rev-phone').textContent=document.getElementById('phone').value;
+  document.getElementById('rev-nome').textContent=document.getElementById('nome').value;
+  document.getElementById('rev-nasc').textContent=document.getElementById('nascimento').value;
+  document.getElementById('rev-cpf').textContent=document.getElementById('cpf').value;
+}
+
+function submitForm(){
+  // Simulate submission
+  const email=document.getElementById('email').value;
+  document.getElementById('suc-email').textContent=email;
+
+  // Update stepper to all done
+  for(let i=1;i<=3;i++){
+    const st=document.getElementById('st'+i);
+    const sc=document.getElementById('sc'+i);
+    st.classList.remove('active');
+    st.classList.add('done');
+    sc.innerHTML=svgCheck();
+    const sl=document.getElementById('sl'+i);
+    if(sl) sl.style.width='100%';
+  }
+
+  document.getElementById('body3').classList.remove('active');
+  document.getElementById('body4').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ── Phone mask ── */
+(function(){
+  const el=document.getElementById('phone');
+  if(!el) return;
+  const FORMATS={'55':'+## ## #####-####','1':'+# (###) ###-####','351':'+### ### ### ###','54':'+## ## ####-####','34':'+## ### ### ###','44':'+## #### ######','49':'+## ### ########','33':'+## # ## ## ## ##','81':'+## ## #### ####','52':'+## ### ### ####'};
+  const CODES=Object.keys(FORMATS).sort((a,b)=>b.length-a.length);
+  const DEFAULT_FMT='+### ### ### ### ####';
+  function detectFormat(d){ for(const c of CODES){ if(d.startsWith(c)) return {code:c,fmt:FORMATS[c]}; } return {code:'',fmt:DEFAULT_FMT}; }
+  function applyMask(raw){
+    let d=raw.replace(/\D/g,'');
+    if(!d.length) return '';
+    if(!CODES.some(c=>d.startsWith(c))){ if(d.length>=10&&d.length<=11) d='55'+d; }
+    const {fmt}=detectFormat(d);
+    let out='',di=0;
+    for(const ch of fmt){ if(di>=d.length) break; if(ch==='#'){ out+=d[di++]; } else { out+=ch; } }
+    return out;
+  }
+  el.addEventListener('input',function(){ const b=el.value; const m=applyMask(b); if(m!==b){ const pos=el.selectionEnd; el.value=m; try{el.setSelectionRange(Math.min(pos,m.length),Math.min(pos,m.length));}catch(_){} } checkStep1(); });
+  el.addEventListener('focus',()=>{ if(!el.value) el.value='+'; });
+  el.value=applyMask(el.value);
+})();
+</script>
+
+</body>
+</html>
