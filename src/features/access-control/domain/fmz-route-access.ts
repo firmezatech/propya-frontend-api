@@ -23,9 +23,17 @@ const matchDynamicPath = (allowedPath: string, currentPath: string): boolean => 
   return allowedSegments.every((segment, index) => isWildcardSegment(segment) || segment === currentSegments[index]);
 };
 
+const CONNECTED_SYSTEM_BYPASS_PATHS = [
+  fmzPublicLayoutConfig.connectedLogoutPath,
+  '/connected/tokensToPurchasePix',
+] as const;
+
 export const isFmzConnectedSystemBypassPath = (pathname: string | null | undefined): boolean => {
   const currentPath = normalizeFmzPath(pathname);
-  return currentPath === normalizeFmzPath(fmzPublicLayoutConfig.connectedLogoutPath);
+  return CONNECTED_SYSTEM_BYPASS_PATHS.some((path) => {
+    const normalizedPath = normalizeFmzPath(path);
+    return currentPath === normalizedPath || currentPath.startsWith(`${normalizedPath}/`);
+  });
 };
 
 export const canAccessFmzPath = (

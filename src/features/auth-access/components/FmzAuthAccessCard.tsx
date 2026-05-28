@@ -17,7 +17,7 @@ import {
 import { z } from 'zod';
 import { Link, useRouter } from '../../../i18n/navigation';
 import { login, type LoginType } from '../../../services/login-fmz-api';
-import { FmzFullPageLoading } from '../../../components/layout';
+import { FmzAuthHeader, FmzFullPageLoading } from '../../../components/layout';
 import { FMZ_API_ERROR_CODES, type FmzFieldErrorMap, type FmzNormalizedApiError } from '../../api-errors/domain';
 import { buildFmzLoginSchema } from '../domain/fmz-auth-access-validation';
 
@@ -150,28 +150,14 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
     <div className={`fmz-login-shell ${className}`}>
       <LoginStyles />
 
-      <nav className="nav" aria-label="Navegação do login">
-        <div className="nav-l">
-          <div className="logo">
-            <div className="logo-mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path d="M12 3L3 8.5V15.5L12 21L21 15.5V8.5L12 3Z" stroke="#0E1626" strokeWidth="2.2" strokeLinejoin="round" />
-                <path d="M12 3V21M3 8.5L21 15.5M21 8.5L3 15.5" stroke="#0E1626" strokeWidth="1.1" strokeOpacity=".4" />
-              </svg>
-            </div>
-            <span className="logo-text">FirmezaToken</span>
-          </div>
-          <span className="logo-divider" />
-          <span className="logo-context"><strong>Entrar</strong></span>
-        </div>
-        <div className="nav-r">
-          <span className="nv-q">Ainda não tem conta?</span>
-          <Link href="/register" className="nv-link">
-            <UserPlus aria-hidden="true" />
-            Criar conta
-          </Link>
-        </div>
-      </nav>
+      <FmzAuthHeader
+        ariaLabel="Navegação do login"
+        contextLabel="Entrar"
+        helperText="Ainda não tem conta?"
+        actionHref="/register"
+        actionLabel="Criar conta"
+        actionIcon={<UserPlus aria-hidden="true" />}
+      />
 
       <div className="shell">
         <aside className="side">

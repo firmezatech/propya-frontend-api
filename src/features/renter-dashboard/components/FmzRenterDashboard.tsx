@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, CreditCard, DollarSign, FileText, Home, LayoutGrid, MessageCircle, Plus, Target, TrendingUp, Wrench } from 'lucide-react';
 import type { FmzTenantDashboard } from '../../../features/tenant-portal/domain/fmz-tenant-portal.types';
@@ -10,6 +10,7 @@ import type { FmzTenantPaymentHistoryItem } from '../../../features/tenant-porta
 import { buildRenterDashboardViewModel, hasRenterDashboardData } from '../domain/fmz-renter-dashboard-view-model';
 import { FmzRenterDashboardPaymentHistoryCard } from './FmzRenterDashboardPaymentHistoryCard';
 import { FmzRenterDashboardRentSimulatorCard } from './FmzRenterDashboardRentSimulatorCard';
+import { buildFmzLocalizedHref } from '../../../lib/fmz-localize-href';
 import styles from './FmzRenterDashboard.module.css';
 
 type FmzRenterDashboardProps = {
@@ -160,6 +161,8 @@ export function FmzRenterDashboard({
   const viewModel = useMemo(() => buildRenterDashboardViewModel(dashboard), [dashboard]);
 
   const router = useRouter();
+  const params = useParams<{ locale?: string }>();
+  const buyTokensHref = buildFmzLocalizedHref(params?.locale, BUY_TOKENS_PATH);
   const [hasAnimated, setHasAnimated] = useState(false);
   const [currentGoalIndex, setCurrentGoalIndex] = useState(0);
 
@@ -323,7 +326,7 @@ export function FmzRenterDashboard({
             </div>
           )}
 
-          <Link href={BUY_TOKENS_PATH} className={styles.btnCta}>
+          <Link href={buyTokensHref} className={styles.btnCta}>
             <Plus size={14} /> Comprar mais tokens
           </Link>
         </div>

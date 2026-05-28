@@ -19,6 +19,7 @@ import {
   User,
 } from 'lucide-react';
 import { useRouter } from '../../../i18n/navigation';
+import { FmzAuthHeader } from '../../../components/layout';
 import { registerUser } from './register-api';
 import {
   computePasswordStrength,
@@ -181,25 +182,13 @@ export function RegisterPage() {
     <div className="firmeza-register-shell">
       <RegisterStyles />
 
-      <nav className="nav" aria-label="Navegação do cadastro">
-        <div className="nav-l">
-          <div className="logo">
-            <div className="logo-mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path d="M12 3L3 8.5V15.5L12 21L21 15.5V8.5L12 3Z" stroke="#0E1626" strokeWidth="2.2" strokeLinejoin="round" />
-                <path d="M12 3V21M3 8.5L21 15.5M21 8.5L3 15.5" stroke="#0E1626" strokeWidth="1.1" strokeOpacity=".4" />
-              </svg>
-            </div>
-            <span className="logo-text">FirmezaToken</span>
-          </div>
-          <span className="logo-divider" />
-          <span className="logo-context"><strong>Criar conta</strong></span>
-        </div>
-        <div className="nav-r">
-          <span className="nv-q">Já tem uma conta?</span>
-          <a href="/" className="nv-link">Entrar</a>
-        </div>
-      </nav>
+      <FmzAuthHeader
+        ariaLabel="Navegação do cadastro"
+        contextLabel="Criar conta"
+        helperText="Já tem uma conta?"
+        actionHref="/"
+        actionLabel="Entrar"
+      />
 
       <div className="shell">
         <aside className="side">

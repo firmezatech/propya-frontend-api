@@ -14,3 +14,4 @@ export * from './FmzAdminNotificationBell';
 export * from './FmzNeutralLoadingHeader';
 export * from './FmzFullPageLoading';
 export * from './FmzAdminContentShell';
+export { FmzAuthHeader } from './FmzAuthHeader';
