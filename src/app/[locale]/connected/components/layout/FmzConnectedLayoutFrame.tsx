@@ -9,7 +9,6 @@ import FooterConn from '../FooterConn';
 import AuthenticatedRoute from '../AuthenticatedRoute';
 import { FmzAdminLayout } from '../../../../../components/layout/FmzAdminLayout';
 import { FmzFullPageLoading } from '../../../../../components/layout/FmzFullPageLoading';
-import { FmzNeutralLoadingHeader } from '../../../../../components/layout/FmzNeutralLoadingHeader';
 import { getCurrentAccessControlPrincipal } from '../../../../../features/access-control/services';
 import type { FmzAccessControlPrincipal } from '../../../../../features/access-control/domain';
 import { FMZ_AUTH_SESSION_CHANGED_EVENT } from '../../../../../services/auth/auth-storage';
@@ -33,7 +32,7 @@ const isConnectedLogoutPath = (pathname: string | null): boolean => {
  *
  * Role-isolation invariants (NON-NEGOTIABLE):
  *
- *   1. While `isAccessLoading` is true, a neutral skeleton header is shown.
+ *   1. While `isAccessLoading` is true, the shared full-page loading screen is shown.
  *      Neither the tenant header nor any admin control is rendered.
  *      This is true on initial mount AND on session-change re-loads.
  *
@@ -50,9 +49,8 @@ const isConnectedLogoutPath = (pathname: string | null): boolean => {
  *      No cross-role API calls are made.
  *
  * Loading shell:
- *   `FmzNeutralLoadingHeader` (72 px skeleton) + `FmzFullPageLoading` (flex-1,
- *   fills remaining viewport). The full-page loader does NOT use `min-h-[100dvh]`
- *   in this context to avoid overflowing behind the header.
+ *   `FmzFullPageLoading` owns the whole viewport and uses the branded loading
+ *   experience shared by login redirects and connected pages.
  */
 export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayoutFrameProps) {
   const pathname = usePathname();
@@ -101,25 +99,17 @@ export default function FmzConnectedLayoutFrame({ children }: FmzConnectedLayout
 
   // ── Loading state ───────────────────────────────────────────────────────────
   //
-  // Show a role-neutral skeleton: sticky header skeleton + centered spinner.
-  //
-  // Invariants enforced here:
-  //   - `FmzNeutralLoadingHeader` contains NO tenant-specific UI.
-  //   - `FmzNeutralLoadingHeader` contains NO admin-specific UI.
-  //   - `FmzFullPageLoading` fills the remaining viewport height (`flex-1
-  //     min-h-0`) so that header + loader = exactly 100dvh, no overflow.
-  //   - `AuthenticatedRoute` performs a synchronous session check (no loading
-  //     flash of its own). If unauthenticated, it renders null and redirects.
+  // Show the unified full-page loading experience used across the app.
+  // `AuthenticatedRoute` performs a synchronous session check. If unauthenticated,
+  // it renders null and redirects.
   //
   if (isAccessLoading) {
     return (
       <div className="flex min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">
         <AuthenticatedRoute>
-          <FmzNeutralLoadingHeader />
           <FmzFullPageLoading
-            label="Preparando sua área logada..."
-            description="Estamos carregando permissões, páginas liberadas e menu lateral antes de exibir o dashboard."
-            className="flex-1 min-h-0"
+            label="Sincronizando o seu painel, token a token."
+            description="Estamos carregando sua sessão, permissões, páginas liberadas e menu lateral antes de abrir a área logada."
           />
         </AuthenticatedRoute>
       </div>
