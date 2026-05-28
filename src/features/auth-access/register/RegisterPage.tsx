@@ -1,15 +1,16 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import {
-  AlertTriangle,
   Calendar,
   Check,
   ChevronLeft,
   ChevronRight,
   CreditCard,
-  DollarSign,
   Eye,
+  EyeOff,
+  Home,
+  Info,
   Lock,
   Mail,
   Phone,
@@ -31,142 +32,79 @@ import {
 import type { RegisterAllErrors, RegisterFormData } from './register.types';
 
 const INITIAL_FORM_DATA: RegisterFormData = {
-  accountType: 'investor',
   email: '',
   password: '',
   passwordConfirmation: '',
   phone: '',
-  acceptedTerms: false,
-  acceptedPrivacyPolicy: false,
-  fullName: '',
+  phoneCountry: 'BR',
   birthdate: '',
   cpf: '',
+  fullName: '',
+  registrationIntent: 'coOwner',
+  acceptedTerms: false,
+  acceptedPrivacyPolicy: false,
 };
 
-const MailIcon = () => <Mail className="il" aria-hidden="true" />;
-const LockIcon = () => <Lock className="il" aria-hidden="true" />;
-const PhoneIcon = () => <Phone className="il" aria-hidden="true" />;
-const UserIcon = () => <User className="il" aria-hidden="true" />;
-const CalendarIcon = () => <Calendar className="il" aria-hidden="true" />;
-const CpfIcon = () => <CreditCard className="il" aria-hidden="true" />;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function RegisterStyles() {
   return (
     <style>{`
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 .firmeza-register-shell *, .firmeza-register-shell *::before, .firmeza-register-shell *::after{box-sizing:border-box;margin:0;padding:0}
-.firmeza-register-shell{--gold:#E8B620;--gold-soft:#F5D26B;--gold-tint:#FBF3DA;--gold-deep:#8A6B12;--navy:#0E1626;--navy-2:#1C2740;--ink:#2A344A;--muted:#5A6478;--hint:#8893A6;--line:#E6E8EE;--line-2:#EDEFF4;--page:#F4F5F8;--white:#FFFFFF;--green:#127A4F;--green-tint:#E8F5EE;--red:#B23B2D;--red-tint:#FBEDEB;--blue:#1F5BD6;--blue-tint:#E8EFFC;--shadow-sm:0 1px 2px rgba(14,22,38,.04),0 1px 0 rgba(14,22,38,.02);--shadow-md:0 2px 6px rgba(14,22,38,.05),0 8px 24px -8px rgba(14,22,38,.08);--shadow-lg:0 4px 12px rgba(14,22,38,.06),0 20px 48px -12px rgba(14,22,38,.14);--radius:14px;--radius-lg:20px;font-family:'DM Sans',system-ui,sans-serif;background:var(--page);color:var(--ink);font-size:15px;line-height:1.5;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-.firmeza-register-shell button,.firmeza-register-shell a,.firmeza-register-shell input{font-family:inherit;color:inherit}.firmeza-register-shell a{text-decoration:none}.firmeza-register-shell .mono{font-family:'JetBrains Mono',monospace;font-feature-settings:'tnum'}
-.firmeza-register-shell nav{display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,4vw,40px);height:60px;background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:100}.firmeza-register-shell .logo{display:flex;align-items:center;gap:10px}.firmeza-register-shell .logo-mark{width:30px;height:30px;border-radius:8px;background:var(--navy);display:grid;place-items:center}.firmeza-register-shell .logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--navy);letter-spacing:-.01em}.firmeza-register-shell .nav-r{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}.firmeza-register-shell .nav-r button{color:var(--navy);font-weight:600;transition:color .15s;background:transparent;border:0;cursor:pointer}.firmeza-register-shell .nav-r button:hover{color:var(--gold-deep)}
-.firmeza-register-shell .root{display:grid;grid-template-columns:1fr minmax(0,480px) 1fr;min-height:calc(100vh - 60px);align-items:start}.firmeza-register-shell .side-panel{background:var(--navy);min-height:calc(100vh - 60px);padding:clamp(40px,5vw,64px) clamp(28px,3vw,48px);position:sticky;top:60px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}.firmeza-register-shell .side-panel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 110% -10%,rgba(232,182,32,.25) 0%,transparent 50%),radial-gradient(ellipse at -10% 110%,rgba(232,182,32,.12) 0%,transparent 50%);pointer-events:none}.firmeza-register-shell .side-panel>*{position:relative;z-index:1}.firmeza-register-shell .side-geo{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}.firmeza-register-shell .side-geo svg{position:absolute;bottom:-60px;right:-60px;opacity:.06}.firmeza-register-shell .sp-tag{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);display:inline-flex;align-items:center;gap:8px;margin-bottom:40px}.firmeza-register-shell .sp-tag::before{content:'';width:16px;height:1.5px;background:var(--gold);border-radius:1px}.firmeza-register-shell .sp-headline{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(26px,2.8vw,38px);line-height:1.08;letter-spacing:-.03em;color:var(--white);margin-bottom:20px}.firmeza-register-shell .sp-headline em{color:var(--gold);font-style:normal}.firmeza-register-shell .sp-sub{font-size:14px;color:rgba(255,255,255,.55);line-height:1.65;max-width:340px;margin-bottom:40px}.firmeza-register-shell .sp-features{display:flex;flex-direction:column;gap:14px}.firmeza-register-shell .spf{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);transition:background .2s}.firmeza-register-shell .spf:hover{background:rgba(255,255,255,.08)}.firmeza-register-shell .spf-ico{width:34px;height:34px;border-radius:9px;background:rgba(232,182,32,.15);color:var(--gold);display:grid;place-items:center;flex-shrink:0}.firmeza-register-shell .spf-ico svg{width:15px;height:15px}.firmeza-register-shell .spf-body h4{font-size:13px;font-weight:600;color:var(--white);letter-spacing:-.005em;margin-bottom:1px}.firmeza-register-shell .spf-body p{font-size:11.5px;color:rgba(255,255,255,.45);line-height:1.4}.firmeza-register-shell .sp-foot{margin-top:40px;padding-top:24px;border-top:1px solid rgba(255,255,255,.1)}.firmeza-register-shell .trust-row{display:flex;align-items:center;gap:10px}.firmeza-register-shell .trust-ico{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);display:grid;place-items:center;font-family:'Syne',sans-serif;font-weight:700;font-size:10px;letter-spacing:.04em}.firmeza-register-shell .trust-ico.gold{background:rgba(232,182,32,.2);color:var(--gold-soft)}.firmeza-register-shell .trust-ico:nth-child(n+2){margin-left:-10px}.firmeza-register-shell .trust-txt{font-size:12px;color:rgba(255,255,255,.45);margin-left:6px}.firmeza-register-shell .trust-txt strong{color:rgba(255,255,255,.75)}
-.firmeza-register-shell .form-col{padding:clamp(32px,4vw,56px) clamp(20px,3vw,36px);display:flex;flex-direction:column;gap:0}.firmeza-register-shell .stepper{display:flex;align-items:center;gap:0;margin-bottom:36px}.firmeza-register-shell .step{display:flex;align-items:center;gap:8px;flex:1}.firmeza-register-shell .step:last-child{flex:0}.firmeza-register-shell .step-circle{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;border:2px solid var(--line);color:var(--hint);background:var(--white);transition:all .3s}.firmeza-register-shell .step.done .step-circle{background:var(--green);border-color:var(--green);color:var(--white)}.firmeza-register-shell .step.active .step-circle{background:var(--navy);border-color:var(--navy);color:var(--white)}.firmeza-register-shell .step-label{font-size:11px;font-weight:600;color:var(--hint);white-space:nowrap;letter-spacing:.02em;transition:color .3s}.firmeza-register-shell .step.active .step-label{color:var(--navy)}.firmeza-register-shell .step.done .step-label{color:var(--green)}.firmeza-register-shell .step-line{flex:1;height:1.5px;background:var(--line);margin:0 8px;border-radius:1px;position:relative;overflow:hidden}.firmeza-register-shell .step-line-fill{position:absolute;top:0;left:0;height:100%;width:0%;background:var(--green);transition:width .5s cubic-bezier(.4,0,.2,1);border-radius:1px}.firmeza-register-shell .fh{margin-bottom:28px}.firmeza-register-shell .fh-sup{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-deep);display:inline-flex;align-items:center;gap:8px;margin-bottom:8px}.firmeza-register-shell .fh-sup::before{content:'';width:14px;height:1.5px;background:var(--gold);border-radius:1px}.firmeza-register-shell .fh-title{font-family:'Syne',sans-serif;font-weight:700;font-size:clamp(22px,3vw,28px);letter-spacing:-.025em;line-height:1.1;color:var(--navy);margin-bottom:6px}.firmeza-register-shell .fh-sub{font-size:13.5px;color:var(--muted);line-height:1.5}.firmeza-register-shell .step-body{display:none;animation:fadeUp .3s ease}.firmeza-register-shell .step-body.active{display:block}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.firmeza-register-shell .f{display:flex;flex-direction:column;gap:6px;margin-bottom:2px}.firmeza-register-shell label{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:4px}.firmeza-register-shell label .req{color:var(--red);margin-left:2px}.firmeza-register-shell .iw{position:relative}.firmeza-register-shell .iw .il{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--hint);pointer-events:none}.firmeza-register-shell .iw .ir{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--hint);cursor:pointer;background:none;border:none;padding:0;transition:color .15s;display:grid;place-items:center}.firmeza-register-shell .iw .ir:hover{color:var(--navy)}.firmeza-register-shell input[type=text],.firmeza-register-shell input[type=email],.firmeza-register-shell input[type=tel],.firmeza-register-shell input[type=password]{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14px;font-family:inherit;color:var(--navy);background:var(--white);transition:all .15s;outline:none}.firmeza-register-shell .iw input{padding-left:38px}.firmeza-register-shell .iw.hr input{padding-right:40px}.firmeza-register-shell input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,182,32,.18)}.firmeza-register-shell input.valid{border-color:var(--green);box-shadow:0 0 0 3px rgba(18,122,79,.12)}.firmeza-register-shell input.invalid{border-color:var(--red);box-shadow:0 0 0 3px rgba(178,59,45,.1)}.firmeza-register-shell input::placeholder{color:var(--hint)}.firmeza-register-shell .hint{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);min-height:16px}.firmeza-register-shell .hint svg{width:11px;height:11px;flex-shrink:0}.firmeza-register-shell .hint.ok{color:var(--green)}.firmeza-register-shell .hint.err{color:var(--red)}.firmeza-register-shell .pbars{display:flex;gap:3px;margin-top:4px}.firmeza-register-shell .pbar{flex:1;height:3px;border-radius:999px;background:var(--line);transition:background .25s}.firmeza-register-shell .pbar-hint{font-size:11.5px;color:var(--muted);margin-top:4px;min-height:16px;transition:color .25s}.firmeza-register-shell .cpf-note{display:flex;align-items:center;gap:6px;padding:10px 12px;background:var(--blue-tint);border:1px solid rgba(31,91,214,.15);border-radius:9px;margin-top:6px;font-size:12px;color:var(--blue)}.firmeza-register-shell .cpf-note svg{width:12px;height:12px;flex-shrink:0}.firmeza-register-shell .terms-row{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;background:var(--page);border:1px solid var(--line);border-radius:10px;margin-top:16px;cursor:pointer}.firmeza-register-shell .terms-row input[type=checkbox]{width:16px;height:16px;flex-shrink:0;margin-top:2px;accent-color:var(--navy);cursor:pointer;border-radius:4px}.firmeza-register-shell .terms-row span{font-size:12.5px;color:var(--muted);line-height:1.5}.firmeza-register-shell .terms-row span a{color:var(--navy);font-weight:600;border-bottom:1px solid var(--line)}.firmeza-register-shell .terms-row span a:hover{border-color:var(--navy)}
-.firmeza-register-shell .s-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--white)}.firmeza-register-shell .s-item-ico{width:30px;height:30px;border-radius:8px;background:var(--gold-tint);color:var(--gold-deep);display:grid;place-items:center;flex-shrink:0}.firmeza-register-shell .s-item-ico svg{width:13px;height:13px}.firmeza-register-shell .s-item-body{flex:1;min-width:0}.firmeza-register-shell .s-item-body strong{display:block;font-size:12.5px;color:var(--navy);font-weight:600;margin-bottom:1px}.firmeza-register-shell .s-item-body span{font-size:11.5px;color:var(--muted)}.firmeza-register-shell .success-wrap{text-align:center;padding:20px 0}.firmeza-register-shell .s-ico{width:72px;height:72px;border-radius:50%;background:var(--green-tint);color:var(--green);display:grid;place-items:center;margin:0 auto 20px;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)}@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}.firmeza-register-shell .s-ico svg{width:30px;height:30px}.firmeza-register-shell .s-title{font-family:'Syne',sans-serif;font-weight:700;font-size:24px;color:var(--navy);letter-spacing:-.025em;margin-bottom:8px}.firmeza-register-shell .s-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:28px}.firmeza-register-shell .s-items{display:flex;flex-direction:column;gap:10px;text-align:left;margin-bottom:28px}.firmeza-register-shell .alert{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:10px;background:var(--red-tint);border:1px solid rgba(178,59,45,.18);color:var(--red);font-size:12px;margin-bottom:16px}.firmeza-register-shell .alert strong{display:block;color:var(--red);font-size:12.5px;margin-bottom:2px}
-.firmeza-register-shell .btn-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:24px;flex-wrap:wrap}.firmeza-register-shell .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 22px;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;letter-spacing:.005em;cursor:pointer;border:1px solid transparent;transition:all .15s;white-space:nowrap}.firmeza-register-shell .btn svg{width:14px;height:14px}.firmeza-register-shell .btn:active{transform:scale(.98)}.firmeza-register-shell .btn-ghost{background:var(--white);border-color:var(--line);color:var(--navy)}.firmeza-register-shell .btn-ghost:hover{background:#FAFBFC;border-color:#D0D4DE}.firmeza-register-shell .btn-primary{background:var(--navy);color:var(--white);border-color:var(--navy)}.firmeza-register-shell .btn-primary:hover{background:var(--navy-2);border-color:var(--navy-2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(14,22,38,.18)}.firmeza-register-shell .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}.firmeza-register-shell .btn-full{width:100%}.firmeza-register-shell .btn-gold{background:var(--gold);color:var(--navy);border-color:var(--gold)}.firmeza-register-shell .btn-gold:hover{background:var(--gold-soft);border-color:var(--gold-soft);transform:translateY(-1px);box-shadow:0 6px 20px rgba(232,182,32,.35)}
-.firmeza-register-shell footer{border-top:1px solid var(--line);background:var(--white);padding:16px clamp(20px,4vw,40px);display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:12px;color:var(--hint)}.firmeza-register-shell .fsoc{display:flex;gap:18px}.firmeza-register-shell .fsoc a{color:var(--hint);transition:color .15s}.firmeza-register-shell .fsoc a:hover{color:var(--navy)}
-.firmeza-register-shell .right-pad{display:block}.firmeza-register-shell .field-stack{display:flex;flex-direction:column;gap:16px}.firmeza-register-shell .error-text{font-size:11.5px;color:var(--red);display:flex;align-items:center;gap:5px}.firmeza-register-shell .error-text svg{width:11px;height:11px}.firmeza-register-shell .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:1100px){.firmeza-register-shell .root{grid-template-columns:1fr minmax(0,520px)}.firmeza-register-shell .right-pad{display:none}}@media(max-width:780px){.firmeza-register-shell .root{grid-template-columns:1fr}.firmeza-register-shell .side-panel{display:none}.firmeza-register-shell .form-col{padding:28px 20px 48px}}@media(max-width:520px){.firmeza-register-shell .stepper .step-label{display:none}.firmeza-register-shell .btn-row{flex-direction:column-reverse}.firmeza-register-shell .btn-row .btn{width:100%;justify-content:center}.firmeza-register-shell footer{flex-direction:column;align-items:flex-start}}@media(prefers-reduced-motion:reduce){.firmeza-register-shell *{animation:none!important;transition:none!important}}
+.firmeza-register-shell{--gold:#E8B620;--gold-soft:#F5D26B;--gold-tint:#FBF3DA;--gold-deep:#8A6B12;--navy:#1A1612;--navy-2:#2A2419;--ink:#2A2419;--muted:#6B6357;--hint:#9A9385;--line:#EAE5DC;--page:#F7F3EA;--cream:#FBF7EE;--cream-2:#F4EEDF;--white:#FFFFFF;--green:#127A4F;--green-tint:#E8F5EE;--red:#B23B2D;--red-tint:#FBEDEB;--blue:#1F5BD6;--blue-tint:#E8EFFC;font-family:'Inter',system-ui,sans-serif;background:var(--page);color:var(--ink);font-size:15px;line-height:1.5;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}.firmeza-register-shell button,.firmeza-register-shell a,.firmeza-register-shell input{font-family:inherit;color:inherit}.firmeza-register-shell a{text-decoration:none}.firmeza-register-shell .mono{font-family:'JetBrains Mono',monospace;font-feature-settings:'tnum'}
+.firmeza-register-shell .nav{height:68px;padding:0 clamp(20px,4vw,40px);display:flex;align-items:center;justify-content:space-between;gap:18px;background:rgba(255,255,255,.92);backdrop-filter:saturate(140%) blur(10px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:100}.firmeza-register-shell .nav-l{display:flex;align-items:center;gap:14px;min-width:0}.firmeza-register-shell .logo{display:flex;align-items:center;gap:11px;min-width:0}.firmeza-register-shell .logo-mark{width:38px;height:38px;border-radius:10px;background:var(--gold);display:grid;place-items:center;flex-shrink:0;box-shadow:0 6px 14px rgba(232,182,32,.32),inset 0 -2px 0 rgba(14,22,38,.06)}.firmeza-register-shell .logo-mark svg{width:20px;height:20px}.firmeza-register-shell .logo-text{font-weight:700;font-size:16.5px;color:var(--navy);letter-spacing:-.02em;white-space:nowrap}.firmeza-register-shell .logo-divider{width:1px;height:22px;background:var(--line);margin:0 4px;flex-shrink:0}.firmeza-register-shell .logo-context{font-size:12.5px;color:var(--muted);font-weight:500;white-space:nowrap;display:flex;align-items:center;gap:7px}.firmeza-register-shell .logo-context::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 3px rgba(232,182,32,.22)}.firmeza-register-shell .logo-context strong{color:var(--navy);font-weight:600}.firmeza-register-shell .nav-r{display:flex;align-items:center;gap:14px;font-size:13px;color:var(--muted)}.firmeza-register-shell .nv-link{font-size:13px;color:var(--navy);font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--white);transition:border-color .15s,transform .15s,box-shadow .15s}.firmeza-register-shell .nv-link:hover{border-color:var(--navy);transform:translateY(-1px);box-shadow:0 6px 18px rgba(14,22,38,.08)}.firmeza-register-shell .nv-link svg{width:13px;height:13px;color:var(--gold-deep)}
+.firmeza-register-shell .shell{display:grid;grid-template-columns:minmax(420px,1fr) minmax(0,560px);min-height:calc(100vh - 68px);align-items:stretch}.firmeza-register-shell .side{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--cream) 0%,var(--cream-2) 100%);padding:clamp(40px,5vw,72px) clamp(32px,4vw,56px) clamp(32px,4vw,48px);display:flex;flex-direction:column;justify-content:space-between;min-height:calc(100vh - 68px);border-right:1px solid var(--line)}.firmeza-register-shell .side::before{content:'';position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(to right,rgba(26,22,18,.04) 1px,transparent 1px),linear-gradient(to bottom,rgba(26,22,18,.04) 1px,transparent 1px);background-size:42px 42px;mask-image:radial-gradient(circle at 30% 40%,black 0%,transparent 80%)}.firmeza-register-shell .side::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 50% at 110% -10%,rgba(232,182,32,.22) 0%,transparent 60%),radial-gradient(50% 50% at -10% 110%,rgba(232,182,32,.10) 0%,transparent 60%)}.firmeza-register-shell .side>*{position:relative;z-index:1}.firmeza-register-shell .eyebrow-dark{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:28px}.firmeza-register-shell .eyebrow-dark::before{content:'';width:18px;height:1.5px;background:var(--gold);border-radius:1px}.firmeza-register-shell .side h1{font-weight:800;font-size:clamp(30px,3.4vw,44px);line-height:1.05;letter-spacing:-.035em;color:var(--navy);margin-bottom:20px;max-width:480px}.firmeza-register-shell .side h1 em{font-style:normal;background:linear-gradient(135deg,var(--gold-deep) 0%,var(--gold) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}.firmeza-register-shell .lede{font-size:14.5px;line-height:1.6;color:var(--muted);max-width:420px;margin-bottom:36px}.firmeza-register-shell .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:36px;max-width:480px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.5);backdrop-filter:blur(8px)}.firmeza-register-shell .kpi{padding:14px 18px;border-right:1px solid var(--line)}.firmeza-register-shell .kpi:last-child{border-right:none}.firmeza-register-shell .kpi-v{font-weight:700;font-size:22px;color:var(--navy);letter-spacing:-.03em;line-height:1;margin-bottom:4px}.firmeza-register-shell .kpi-k{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.firmeza-register-shell .feats{display:flex;flex-direction:column;gap:10px;max-width:480px}.firmeza-register-shell .feat{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.55);border:1px solid var(--line)}.firmeza-register-shell .feat-ico{width:36px;height:36px;border-radius:10px;flex-shrink:0;background:var(--gold-tint);color:var(--gold-deep);display:grid;place-items:center;border:1px solid rgba(232,182,32,.30)}.firmeza-register-shell .feat-ico svg{width:16px;height:16px}.firmeza-register-shell .feat h4{font-size:13.5px;font-weight:600;color:var(--navy);letter-spacing:-.01em;margin-bottom:2px}.firmeza-register-shell .feat p{font-size:12px;color:var(--muted);line-height:1.45}.firmeza-register-shell .side-foot{margin-top:36px;padding-top:24px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;max-width:480px;font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.02em}.firmeza-register-shell .side-foot svg{width:13px;height:13px;color:var(--gold-deep)}
+.firmeza-register-shell .form-col{background:var(--white);display:flex;flex-direction:column;padding:clamp(36px,4vw,56px) clamp(24px,4vw,56px) clamp(24px,3vw,40px);position:relative}.firmeza-register-shell .form-inner{width:100%;max-width:440px;margin:0 auto;display:flex;flex-direction:column;flex:1}.firmeza-register-shell .stepper{display:flex;align-items:center;gap:0;margin-bottom:36px;padding:6px;background:var(--page);border:1px solid var(--line);border-radius:14px}.firmeza-register-shell .step{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:600;color:var(--hint);white-space:nowrap}.firmeza-register-shell .step-n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;font-size:10.5px;font-weight:700;background:var(--white);border:1.5px solid var(--line);color:var(--hint)}.firmeza-register-shell .step.done{color:var(--green)}.firmeza-register-shell .step.done .step-n{background:var(--green);border-color:var(--green);color:var(--white)}.firmeza-register-shell .step.active{background:var(--white);color:var(--navy);box-shadow:0 1px 2px rgba(14,22,38,.04)}.firmeza-register-shell .step.active .step-n{background:var(--navy);border-color:var(--navy);color:var(--gold)}.firmeza-register-shell .fh{margin-bottom:28px}.firmeza-register-shell .fh-eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:12px}.firmeza-register-shell .e-ico{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:5px;background:var(--gold-tint);color:var(--gold-deep)}.firmeza-register-shell .e-ico svg{width:10px;height:10px}.firmeza-register-shell .fh h2{font-weight:700;font-size:clamp(24px,3vw,30px);letter-spacing:-.035em;line-height:1.1;color:var(--navy);margin-bottom:6px}.firmeza-register-shell .sub{font-size:13.5px;color:var(--muted);line-height:1.55;max-width:380px}.firmeza-register-shell .step-body{display:none;animation:fadeUp .3s ease}.firmeza-register-shell .step-body.active{display:block}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.firmeza-register-shell .stack{display:flex;flex-direction:column;gap:14px}.firmeza-register-shell .f{display:flex;flex-direction:column;gap:6px}.firmeza-register-shell label{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:4px}.firmeza-register-shell label .req{color:var(--red);margin-left:2px}.firmeza-register-shell .iw{position:relative}.firmeza-register-shell .iw .il{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--hint);pointer-events:none;transition:color .2s}.firmeza-register-shell .iw .ir{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;color:var(--hint);cursor:pointer;background:none;border:none;padding:0;border-radius:7px;display:grid;place-items:center}.firmeza-register-shell .iw .ir svg{width:14px;height:14px}.firmeza-register-shell input[type=text],.firmeza-register-shell input[type=email],.firmeza-register-shell input[type=tel],.firmeza-register-shell input[type=password]{width:100%;border:1.5px solid var(--line);border-radius:11px;padding:13px 14px;font-size:14.5px;color:var(--navy);background:var(--white);transition:all .15s;outline:none}.firmeza-register-shell .iw input{padding-left:38px}.firmeza-register-shell .iw.hr input{padding-right:42px}.firmeza-register-shell input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,182,32,.20)}.firmeza-register-shell input.valid{border-color:var(--green);box-shadow:0 0 0 3px rgba(18,122,79,.12)}.firmeza-register-shell input.invalid{border-color:var(--red);box-shadow:0 0 0 3px rgba(178,59,45,.12)}.firmeza-register-shell input::placeholder{color:var(--hint)}.firmeza-register-shell .hint{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);min-height:16px;line-height:1.3}.firmeza-register-shell .hint svg{width:11px;height:11px;flex-shrink:0}.firmeza-register-shell .hint.ok{color:var(--green)}.firmeza-register-shell .hint.err{color:var(--red)}.firmeza-register-shell .pbars{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:6px}.firmeza-register-shell .pbar{height:3px;border-radius:999px;background:var(--line);transition:background .25s}.firmeza-register-shell .pbar-hint{font-size:11.5px;color:var(--muted);margin-top:6px;min-height:16px;display:inline-flex;align-items:center;gap:5px}.firmeza-register-shell .note{display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:var(--blue-tint);border:1px solid rgba(31,91,214,.15);border-radius:10px;font-size:12.5px;color:var(--blue);line-height:1.45}.firmeza-register-shell .note.gold{background:var(--gold-tint);border-color:rgba(232,182,32,.30);color:var(--gold-deep)}.firmeza-register-shell .note svg{width:14px;height:14px;flex-shrink:0;margin-top:1px}.firmeza-register-shell .terms-row{display:flex;align-items:flex-start;gap:11px;padding:14px 16px;background:var(--page);border:1px solid var(--line);border-radius:11px;cursor:pointer;transition:border-color .15s,background .15s;text-transform:none;letter-spacing:0}.firmeza-register-shell .terms-row input[type=checkbox]{width:17px;height:17px;flex-shrink:0;margin-top:1px;accent-color:var(--navy);cursor:pointer}.firmeza-register-shell .terms-row span{font-size:12.5px;color:var(--muted);line-height:1.5;font-weight:400}.firmeza-register-shell .terms-row span a{color:var(--navy);font-weight:600;border-bottom:1px solid var(--line)}.firmeza-register-shell .review{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}.firmeza-register-shell .rv{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:var(--white)}.firmeza-register-shell .rv-ico{width:32px;height:32px;border-radius:9px;background:var(--page);color:var(--navy);display:grid;place-items:center;flex-shrink:0}.firmeza-register-shell .rv-ico svg{width:14px;height:14px}.firmeza-register-shell .rv-body{flex:1;min-width:0}.firmeza-register-shell .rv-k{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}.firmeza-register-shell .rv-v{font-size:13.5px;color:var(--navy);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.firmeza-register-shell .rv-edit{font-size:11.5px;font-weight:600;color:var(--gold-deep);cursor:pointer;background:none;border:none;padding:6px 10px;border-radius:7px}.firmeza-register-shell .btn-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:28px;flex-wrap:wrap}.firmeza-register-shell .req-note{font-size:11.5px;color:var(--hint);display:inline-flex;align-items:center;gap:4px}.firmeza-register-shell .req-note::before{content:'*';color:var(--red);font-weight:700}.firmeza-register-shell .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;border-radius:11px;font-size:13.5px;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:all .15s;white-space:nowrap}.firmeza-register-shell .btn svg{width:14px;height:14px}.firmeza-register-shell .btn:active{transform:scale(.98)}.firmeza-register-shell .btn-ghost{background:var(--white);border-color:var(--line);color:var(--navy)}.firmeza-register-shell .btn-ghost:hover{background:#FAFBFC;border-color:#D0D4DE}.firmeza-register-shell .btn-primary{background:var(--navy);color:var(--white);border-color:var(--navy)}.firmeza-register-shell .btn-primary:hover{background:var(--navy-2);border-color:var(--navy-2);transform:translateY(-1px);box-shadow:0 8px 22px rgba(14,22,38,.22)}.firmeza-register-shell .btn-primary:disabled,.firmeza-register-shell .btn-gold:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}.firmeza-register-shell .btn-gold{background:var(--gold);color:var(--navy);border-color:var(--gold)}.firmeza-register-shell .btn-gold:hover{background:var(--gold-soft);border-color:var(--gold-soft);transform:translateY(-1px);box-shadow:0 8px 22px rgba(232,182,32,.40)}.firmeza-register-shell .btn-full{width:100%}.firmeza-register-shell .alt-login{margin-top:22px;padding-top:22px;border-top:1px dashed var(--line);text-align:center;font-size:12.5px;color:var(--muted)}.firmeza-register-shell .alt-login a{color:var(--navy);font-weight:600;border-bottom:1px solid var(--line)}.firmeza-register-shell .success-wrap{text-align:center;padding:8px 0}.firmeza-register-shell .s-ico{width:84px;height:84px;border-radius:50%;background:var(--green-tint);color:var(--green);display:grid;place-items:center;margin:0 auto 22px;position:relative}.firmeza-register-shell .s-ico svg{width:34px;height:34px}.firmeza-register-shell .s-title{font-weight:700;font-size:26px;color:var(--navy);letter-spacing:-.035em;margin-bottom:8px}.firmeza-register-shell .s-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:28px}.firmeza-register-shell .s-sub strong{color:var(--navy);font-weight:600}.firmeza-register-shell .s-items{display:flex;flex-direction:column;gap:10px;text-align:left;margin-bottom:28px}.firmeza-register-shell .error-box{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:11px;background:var(--red-tint);color:var(--red);font-size:12.5px;line-height:1.45;border:1px solid rgba(178,59,45,.18);margin-top:14px}.firmeza-register-shell .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:var(--white);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.firmeza-register-shell footer{border-top:1px solid var(--line);background:var(--white);padding:16px clamp(20px,4vw,40px);display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:12px;color:var(--hint)}.firmeza-register-shell .fsoc{display:flex;gap:18px}.firmeza-register-shell .fsoc a{color:var(--hint);transition:color .15s}.firmeza-register-shell .fsoc a:hover{color:var(--navy)}
+@media (max-width:1100px){.firmeza-register-shell .shell{grid-template-columns:1fr}.firmeza-register-shell .side{min-height:auto;padding:48px clamp(20px,5vw,40px) 56px}.firmeza-register-shell .form-col{padding:36px 20px 48px}.firmeza-register-shell .kpi-row,.firmeza-register-shell .feats,.firmeza-register-shell .side-foot{max-width:none}}@media (max-width:880px){.firmeza-register-shell .logo-divider,.firmeza-register-shell .logo-context{display:none}}@media (max-width:560px){.firmeza-register-shell .stepper{padding:4px}.firmeza-register-shell .step{padding:7px 6px;font-size:11px}.firmeza-register-shell .step-label-txt{display:none}.firmeza-register-shell .btn-row{flex-direction:column-reverse}.firmeza-register-shell .btn-row .btn{width:100%}.firmeza-register-shell .req-note{align-self:flex-start}.firmeza-register-shell .kpi-row{grid-template-columns:1fr 1fr}.firmeza-register-shell .kpi:nth-child(3){display:none}.firmeza-register-shell footer{flex-direction:column;align-items:flex-start}}@media (prefers-reduced-motion:reduce){.firmeza-register-shell *{animation:none!important;transition:none!important}}
 `}</style>
   );
 }
 
-function Logo() {
-  return (
-    <div className="logo">
-      <div className="logo-mark">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 3L3 8.5V15.5L12 21L21 15.5V8.5L12 3Z" stroke="#E8B620" strokeWidth="2" strokeLinejoin="round" />
-          <path d="M12 3V21M3 8.5L21 15.5M21 8.5L3 15.5" stroke="#E8B620" strokeWidth="1" strokeOpacity=".35" />
-        </svg>
-      </div>
-      <span className="logo-text">FirmezaToken</span>
-    </div>
-  );
+function classNames(...values: Array<string | false | undefined>) {
+  return values.filter(Boolean).join(' ');
 }
 
-function SidePanel() {
-  return (
-    <aside className="side-panel">
-      <div className="side-geo">
-        <svg width="500" height="500" viewBox="0 0 500 500" fill="none" aria-hidden="true">
-          <path d="M250 50L450 175V325L250 450L50 325V175L250 50Z" stroke="white" strokeWidth="1" />
-          <path d="M250 50L250 450M50 175L450 325M450 175L50 325" stroke="white" strokeWidth=".5" />
-          <path d="M250 150L350 212.5V337.5L250 400L150 337.5V212.5L250 150Z" stroke="white" strokeWidth="1" />
-        </svg>
-      </div>
-      <div>
-        <div className="sp-tag">Plataforma de Tokenização</div>
-        <h1 className="sp-headline">Invista em<br />imóveis com<br /><em>inteligência</em></h1>
-        <p className="sp-sub">A FirmezaToken democratiza o acesso ao mercado imobiliário por meio de tokens digitais seguros, transparentes e acessíveis a partir de R$ 100.</p>
-        <div className="sp-features">
-          <Feature icon={<Shield />} title="Segurança blockchain" text="Ativos registrados em blockchain pública e auditável" />
-          <Feature icon={<DollarSign />} title="Renda passiva real" text="Receba aluguéis proporcionais à sua participação" />
-          <Feature icon={<TrendingUp />} title="Liquidez facilitada" text="Negocie seus tokens a qualquer hora no marketplace" />
-        </div>
-      </div>
-      <div className="sp-foot">
-        <div className="trust-row">
-          <div className="trust-ico gold">MA</div>
-          <div className="trust-ico">RB</div>
-          <div className="trust-ico">CL</div>
-          <div className="trust-ico">+</div>
-          <span className="trust-txt"><strong>+4.800 investidores</strong> já na plataforma</span>
-        </div>
-      </div>
-    </aside>
-  );
+function getStepClass(step: number, currentStep: number) {
+  if (currentStep > step) return 'step done';
+  if (currentStep === step) return 'step active';
+  return 'step';
 }
 
-function Feature({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
-  return (
-    <div className="spf">
-      <div className="spf-ico">{icon}</div>
-      <div className="spf-body">
-        <h4>{title}</h4>
-        <p>{text}</p>
-      </div>
-    </div>
-  );
+function getStepNumber(step: number, currentStep: number) {
+  return currentStep > step ? <Check size={12} aria-hidden="true" /> : step;
 }
 
-function Stepper({ step }: { step: number }) {
-  return (
-    <div className="stepper" aria-label="Etapas do cadastro">
-      {[['Acesso', 1], ['Identidade', 2], ['Confirmação', 3]].map(([label, n], index) => {
-        const num = Number(n);
-        const done = num < step || step === 4;
-        const active = num === step;
-        return (
-          <div key={label} style={{ display: 'contents' }}>
-            <div className={`step ${done ? 'done' : ''} ${active ? 'active' : ''}`}>
-              <div className="step-circle">{done ? <Check size={12} strokeWidth={3} /> : num}</div>
-              <span className="step-label">{label}</span>
-            </div>
-            {index < 2 && <div className="step-line"><div className="step-line-fill" style={{ width: done ? '100%' : '0%' }} /></div>}
-          </div>
-        );
-      })}
-    </div>
-  );
+function formatPhone(value: string): string {
+  let digits = value.replace(/\D/g, '');
+  if (!digits) return '';
+  if (!digits.startsWith('55') && digits.length >= 10 && digits.length <= 11) digits = `55${digits}`;
+  if (digits.startsWith('55')) {
+    const country = digits.slice(0, 2);
+    const ddd = digits.slice(2, 4);
+    const first = digits.length > 12 ? digits.slice(4, 9) : digits.slice(4, 8);
+    const second = digits.length > 12 ? digits.slice(9, 13) : digits.slice(8, 12);
+    return ['+', country, ddd, first && `${first}${second ? `-${second}` : ''}`].filter(Boolean).join(' ');
+  }
+  return `+${digits.slice(0, 15)}`;
 }
 
-function PasswordBars({ password }: { password: string }) {
-  const score = computePasswordStrength(password);
-  const colors = ['', '#B23B2D', '#E8B620', '#8A6B12', '#127A4F'];
-  const labels = ['Use letras maiúsculas, números e símbolos', 'Senha fraca — adicione complexidade', 'Razoável — pode melhorar', 'Boa senha', 'Senha forte ✓'];
-  return (
-    <>
-      <div className="pbars" aria-hidden="true">
-        {[1, 2, 3, 4].map((n) => <div key={n} className="pbar" style={{ background: score >= n ? colors[score] : undefined }} />)}
-      </div>
-      <div className="pbar-hint" style={{ color: score > 0 ? colors[score] : undefined }}>{password ? labels[score] : labels[0]}</div>
-    </>
-  );
-}
-
-function ErrorText({ children }: { children?: string }) {
+function FieldError({ children }: { children?: string }) {
   if (!children) return null;
-  return <span className="error-text"><AlertTriangle />{children}</span>;
+  return <span className="hint err"><Info aria-hidden="true" /> {children}</span>;
+}
+
+function ReviewItem({ icon, title, value, onEdit, mono }: { icon: ReactNode; title: string; value: string; onEdit?: () => void; mono?: boolean }) {
+  return (
+    <div className="rv">
+      <div className="rv-ico">{icon}</div>
+      <div className="rv-body">
+        <div className="rv-k">{title}</div>
+        <div className={classNames('rv-v', mono && 'mono')}>{value || '—'}</div>
+      </div>
+      {onEdit ? <button className="rv-edit" type="button" onClick={onEdit}>Editar</button> : null}
+    </div>
+  );
 }
 
 export function RegisterPage() {
@@ -174,214 +112,273 @@ export function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<RegisterFormData>(INITIAL_FORM_DATA);
   const [errors, setErrors] = useState<RegisterAllErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [successEmail, setSuccessEmail] = useState('você');
 
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim());
-  const passwordScore = computePasswordStrength(formData.password);
-  const passwordOk = passwordScore >= 3;
-  const matchOk = Boolean(formData.passwordConfirmation) && formData.password === formData.passwordConfirmation;
-  const phoneOk = formData.phone.replace(/\D/g, '').length >= 10;
-  const step1Ready = emailOk && passwordOk && matchOk && phoneOk && formData.acceptedTerms;
-  const step2Ready = formData.fullName.trim().split(/\s+/).length >= 2 && formData.birthdate.length === 10 && validateCpf(formData.cpf);
+  const passwordStrength = useMemo(() => computePasswordStrength(formData.password), [formData.password]);
+  const step1Errors = useMemo(() => validateStep1(formData), [formData]);
+  const step2Errors = useMemo(() => validateStep2(formData), [formData]);
+  const step1Ready = !hasErrors(step1Errors);
+  const step2Ready = !hasErrors(step2Errors);
+  const isEmailValid = EMAIL_PATTERN.test(formData.email.trim());
+  const isCpfValid = validateCpf(formData.cpf);
+  const passwordsMatch = Boolean(formData.passwordConfirmation) && formData.password === formData.passwordConfirmation;
 
-  const inputClass = (valid: boolean, invalid: boolean) => valid ? 'valid' : invalid ? 'invalid' : '';
-
-  const updateField = <K extends keyof RegisterFormData>(key: K, value: RegisterFormData[K]) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-    setErrors((prev) => ({ ...prev, [key]: undefined, general: undefined }));
+  const updateField = <K extends keyof RegisterFormData>(field: K, value: RegisterFormData[K]) => {
+    setFormData((current) => ({ ...current, [field]: value }));
+    setErrors((current) => ({ ...current, [field]: undefined, general: undefined }));
   };
 
   const updateTerms = (checked: boolean) => {
-    setFormData((prev) => ({ ...prev, acceptedTerms: checked, acceptedPrivacyPolicy: checked }));
-    setErrors((prev) => ({ ...prev, terms: undefined, general: undefined }));
+    setFormData((current) => ({ ...current, acceptedTerms: checked, acceptedPrivacyPolicy: checked }));
+    setErrors((current) => ({ ...current, terms: undefined, general: undefined }));
+  };
+
+  const goToStep = (step: number) => {
+    setCurrentStep(step);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const nextStep1 = () => {
-    const validationErrors = validateStep1(formData);
-    if (hasErrors(validationErrors)) {
-      setErrors(validationErrors);
-      return;
-    }
-    setErrors({});
-    setCurrentStep(2);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const nextErrors = validateStep1(formData);
+    setErrors((current) => ({ ...current, ...nextErrors }));
+    if (!hasErrors(nextErrors)) goToStep(2);
   };
 
   const nextStep2 = () => {
-    const validationErrors = validateStep2(formData);
-    if (hasErrors(validationErrors)) {
-      setErrors(validationErrors);
-      return;
-    }
-    setErrors({});
-    setCurrentStep(3);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const previous = () => {
-    setErrors({});
-    setCurrentStep((prev) => Math.max(1, prev - 1));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const nextErrors = validateStep2(formData);
+    setErrors((current) => ({ ...current, ...nextErrors }));
+    if (!hasErrors(nextErrors)) goToStep(3);
   };
 
   const handleSubmit = async () => {
-    if (isSubmitting) return;
+    const allErrors = { ...validateStep1(formData), ...validateStep2(formData) };
+    setErrors(allErrors);
+    if (hasErrors(allErrors)) return;
+
     setIsSubmitting(true);
-    setErrors({});
-    try {
-      const result = await registerUser(formData);
-      if (!result.success) {
-        setErrors({ general: result.error.description ?? result.error.title });
-        return;
-      }
-      setSuccessEmail(formData.email || 'você');
-      setCurrentStep(4);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      if (result.access?.accessToken) {
-        setTimeout(() => router.replace(result.access?.defaultRoute ?? '/connected/dashboard'), 2500);
-      }
-    } finally {
-      setIsSubmitting(false);
+    const result = await registerUser(formData);
+    setIsSubmitting(false);
+
+    if (!result.success) {
+      setErrors({
+        ...result.error.fieldErrors,
+        general: result.error.description || result.error.title || 'Não foi possível criar sua conta agora.',
+      });
+      return;
     }
+
+    setSuccessEmail(formData.email.trim() || 'você');
+    goToStep(4);
   };
 
-  const maskedCpf = useMemo(() => formData.cpf.replace(/\d(?=\d{2})/g, '•'), [formData.cpf]);
+  const passwordLabels = ['Use letras maiúsculas, números e símbolos', 'Senha fraca — adicione complexidade', 'Razoável — pode melhorar', 'Boa senha', 'Senha forte'];
+  const passwordColors = ['', '#B23B2D', '#E8B620', '#8A6B12', '#127A4F'];
 
   return (
     <div className="firmeza-register-shell">
       <RegisterStyles />
-      <nav>
-        <Logo />
+
+      <nav className="nav" aria-label="Navegação do cadastro">
+        <div className="nav-l">
+          <div className="logo">
+            <div className="logo-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M12 3L3 8.5V15.5L12 21L21 15.5V8.5L12 3Z" stroke="#0E1626" strokeWidth="2.2" strokeLinejoin="round" />
+                <path d="M12 3V21M3 8.5L21 15.5M21 8.5L3 15.5" stroke="#0E1626" strokeWidth="1.1" strokeOpacity=".4" />
+              </svg>
+            </div>
+            <span className="logo-text">FirmezaToken</span>
+          </div>
+          <span className="logo-divider" />
+          <span className="logo-context"><strong>Criar conta</strong></span>
+        </div>
         <div className="nav-r">
-          <span>Já tem uma conta?</span>
-          <button type="button" onClick={() => router.push('/')}>Entrar</button>
+          <span className="nv-q">Já tem uma conta?</span>
+          <a href="/" className="nv-link">Entrar</a>
         </div>
       </nav>
 
-      <div className="root">
-        <SidePanel />
+      <div className="shell">
+        <aside className="side">
+          <div>
+            <span className="eyebrow-dark">Plataforma de Tokenização</span>
+            <h1>Sua casa, sua<br />parte, sua<br /><em>liberdade</em>.</h1>
+            <p className="lede">Compre frações tokenizadas do imóvel onde mora ou invista a partir de R$ 100. Reduza seu aluguel a cada token e construa patrimônio no seu ritmo.</p>
+
+            <div className="kpi-row" aria-label="Indicadores da plataforma">
+              <div className="kpi"><div className="kpi-v">4.800+</div><div className="kpi-k">Investidores</div></div>
+              <div className="kpi"><div className="kpi-v">R$ 48M</div><div className="kpi-k">Tokenizado</div></div>
+              <div className="kpi"><div className="kpi-v">12+</div><div className="kpi-k">Imóveis</div></div>
+            </div>
+
+            <div className="feats">
+              <div className="feat"><div className="feat-ico"><Shield aria-hidden="true" /></div><div><h4>Segurança em blockchain</h4><p>Cada token é um registro auditável da sua fração do imóvel.</p></div></div>
+              <div className="feat"><div className="feat-ico"><TrendingUp aria-hidden="true" /></div><div><h4>Aluguel que diminui</h4><p>A cada token, sua mensalidade cai proporcionalmente à posse.</p></div></div>
+              <div className="feat"><div className="feat-ico"><Home aria-hidden="true" /></div><div><h4>Caminho para a casa própria</h4><p>Construa patrimônio token a token até alcançar 100% do imóvel.</p></div></div>
+            </div>
+          </div>
+
+          <div className="side-foot"><Lock aria-hidden="true" /> Criptografia ponta-a-ponta · LGPD</div>
+        </aside>
 
         <main className="form-col">
-          <Stepper step={currentStep} />
-
-          {errors.general && (
-            <div className="alert" role="alert">
-              <AlertTriangle size={16} />
-              <div><strong>Revise os dados informados</strong>{errors.general}</div>
-            </div>
-          )}
-
-          <section className={`step-body ${currentStep === 1 ? 'active' : ''}`}>
-            <div className="fh">
-              <div className="fh-sup">Passo 1 de 3</div>
-              <h2 className="fh-title">Crie seu acesso</h2>
-              <p className="fh-sub">Comece com e-mail, senha forte e um telefone para verificação em duas etapas.</p>
+          <div className="form-inner">
+            <div className="stepper" aria-label="Etapas do cadastro">
+              {[1, 2, 3].map((step) => (
+                <div key={step} className={getStepClass(step, currentStep)}>
+                  <span className="step-n">{getStepNumber(step, currentStep)}</span>
+                  <span className="step-label-txt">{step === 1 ? 'Acesso' : step === 2 ? 'Identidade' : 'Confirmar'}</span>
+                </div>
+              ))}
             </div>
 
-            <div className="field-stack">
-              <div className="f">
-                <label htmlFor="email">E-mail <span className="req">*</span></label>
-                <div className="iw"><MailIcon /><input id="email" type="email" placeholder="seu@email.com" autoComplete="email" className={inputClass(emailOk, Boolean(formData.email) && !emailOk)} value={formData.email} onChange={(e) => updateField('email', e.target.value)} /></div>
-                {formData.email && emailOk ? <span className="hint ok"><Check /> E-mail válido</span> : <ErrorText>{errors.email}</ErrorText>}
+            <section className={classNames('step-body', currentStep === 1 && 'active')}>
+              <div className="fh">
+                <span className="fh-eyebrow"><span className="e-ico"><Lock aria-hidden="true" /></span>Passo 1 de 3</span>
+                <h2>Crie seu acesso</h2>
+                <p className="sub">E-mail, senha forte e telefone para verificação em duas etapas. Leva menos de 1 minuto.</p>
               </div>
 
-              <div className="f">
-                <label htmlFor="senha">Senha <span className="req">*</span></label>
-                <div className="iw hr"><LockIcon /><input id="senha" type={showPassword ? 'text' : 'password'} placeholder="Crie uma senha forte" autoComplete="new-password" className={inputClass(passwordOk, Boolean(formData.password) && !passwordOk)} value={formData.password} onChange={(e) => updateField('password', e.target.value)} /><button className="ir" type="button" onClick={() => setShowPassword((v) => !v)} aria-label="Mostrar senha"><Eye /></button></div>
-                <PasswordBars password={formData.password} />
-                <ErrorText>{errors.password}</ErrorText>
+              <div className="stack">
+                <div className="f">
+                  <label htmlFor="email">E-mail <span className="req">*</span></label>
+                  <div className="iw">
+                    <Mail className="il" aria-hidden="true" />
+                    <input id="email" type="email" placeholder="seu@email.com" autoComplete="email" value={formData.email} onChange={(event) => updateField('email', event.target.value)} className={classNames(formData.email && isEmailValid && 'valid', formData.email && !isEmailValid && 'invalid')} />
+                  </div>
+                  {formData.email && isEmailValid ? <span className="hint ok"><Check aria-hidden="true" /> E-mail válido</span> : <FieldError>{errors.email}</FieldError>}
+                </div>
+
+                <div className="f">
+                  <label htmlFor="senha">Senha <span className="req">*</span></label>
+                  <div className="iw hr">
+                    <Lock className="il" aria-hidden="true" />
+                    <input id="senha" type={showPassword ? 'text' : 'password'} placeholder="Mínimo 8 caracteres" autoComplete="new-password" value={formData.password} onChange={(event) => updateField('password', event.target.value)} />
+                    <button className="ir" type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>{showPassword ? <EyeOff /> : <Eye />}</button>
+                  </div>
+                  <div className="pbars" aria-hidden="true">
+                    {[1, 2, 3, 4].map((bar) => <div key={bar} className="pbar" style={{ background: bar <= passwordStrength ? passwordColors[passwordStrength] : undefined }} />)}
+                  </div>
+                  <div className="pbar-hint" style={{ color: passwordColors[passwordStrength] || undefined }}>{passwordStrength === 4 ? <Check size={11} aria-hidden="true" /> : null}{passwordLabels[passwordStrength]}</div>
+                  <FieldError>{errors.password}</FieldError>
+                </div>
+
+                <div className="f">
+                  <label htmlFor="senha2">Confirmar senha <span className="req">*</span></label>
+                  <div className="iw hr">
+                    <Lock className="il" aria-hidden="true" />
+                    <input id="senha2" type={showPasswordConfirmation ? 'text' : 'password'} placeholder="Repita a senha" autoComplete="new-password" value={formData.passwordConfirmation} onChange={(event) => updateField('passwordConfirmation', event.target.value)} className={classNames(formData.passwordConfirmation && passwordsMatch && 'valid', formData.passwordConfirmation && !passwordsMatch && 'invalid')} />
+                    <button className="ir" type="button" onClick={() => setShowPasswordConfirmation((value) => !value)} aria-label={showPasswordConfirmation ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}>{showPasswordConfirmation ? <EyeOff /> : <Eye />}</button>
+                  </div>
+                  {formData.passwordConfirmation && passwordsMatch ? <span className="hint ok"><Check aria-hidden="true" /> Senhas conferem</span> : <FieldError>{errors.passwordConfirmation}</FieldError>}
+                </div>
+
+                <div className="f">
+                  <label htmlFor="phone">Telefone <span className="req">*</span></label>
+                  <div className="iw">
+                    <Phone className="il" aria-hidden="true" />
+                    <input id="phone" type="tel" placeholder="+55 11 91234-5678" autoComplete="tel" value={formData.phone} onChange={(event) => updateField('phone', formatPhone(event.target.value))} />
+                  </div>
+                  <span className="hint"><Info aria-hidden="true" /> Usado apenas para verificação em duas etapas</span>
+                  <FieldError>{errors.phone}</FieldError>
+                </div>
+
+                <label className="terms-row" htmlFor="terms">
+                  <input id="terms" type="checkbox" checked={formData.acceptedTerms && formData.acceptedPrivacyPolicy} onChange={(event) => updateTerms(event.target.checked)} />
+                  <span>Li e concordo com os <a href="/terms" target="_blank" rel="noopener noreferrer">Termos de Uso</a> e a <a href="/privacy" target="_blank" rel="noopener noreferrer">Política de Privacidade</a> da FirmezaToken.</span>
+                </label>
+                <FieldError>{errors.terms}</FieldError>
               </div>
 
-              <div className="f">
-                <label htmlFor="senha2">Confirmar senha <span className="req">*</span></label>
-                <div className="iw hr"><LockIcon /><input id="senha2" type={showPasswordConfirmation ? 'text' : 'password'} placeholder="Repita a senha" autoComplete="new-password" className={inputClass(matchOk, Boolean(formData.passwordConfirmation) && !matchOk)} value={formData.passwordConfirmation} onChange={(e) => updateField('passwordConfirmation', e.target.value)} /><button className="ir" type="button" onClick={() => setShowPasswordConfirmation((v) => !v)} aria-label="Mostrar senha"><Eye /></button></div>
-                {formData.passwordConfirmation && matchOk ? <span className="hint ok"><Check /> Senhas conferem</span> : <ErrorText>{errors.passwordConfirmation}</ErrorText>}
+              <div className="btn-row">
+                <span className="req-note">campos obrigatórios</span>
+                <button className="btn btn-primary" type="button" onClick={nextStep1} disabled={!step1Ready}>Continuar <ChevronRight aria-hidden="true" /></button>
+              </div>
+            </section>
+
+            <section className={classNames('step-body', currentStep === 2 && 'active')}>
+              <div className="fh">
+                <span className="fh-eyebrow"><span className="e-ico"><User aria-hidden="true" /></span>Passo 2 de 3</span>
+                <h2>Seus dados pessoais</h2>
+                <p className="sub">CPF, nome completo e data de nascimento — exatamente como aparecem no seu documento.</p>
               </div>
 
-              <div className="f">
-                <label htmlFor="phone">Telefone <span className="req">*</span></label>
-                <div className="iw"><PhoneIcon /><input id="phone" type="tel" placeholder="+55 11 91234-5678" autoComplete="tel" value={formData.phone} onChange={(e) => updateField('phone', e.target.value)} /></div>
-                <span className="hint"><AlertTriangle /> Usado para verificação em duas etapas</span>
-                <ErrorText>{errors.phone}</ErrorText>
+              <div className="stack">
+                <div className="f">
+                  <label htmlFor="nome">Nome completo <span className="req">*</span></label>
+                  <div className="iw"><User className="il" aria-hidden="true" /><input id="nome" type="text" placeholder="Como aparece no documento" autoComplete="name" value={formData.fullName} onChange={(event) => updateField('fullName', event.target.value)} /></div>
+                  <FieldError>{errors.fullName}</FieldError>
+                </div>
+
+                <div className="f">
+                  <label htmlFor="nascimento">Data de nascimento <span className="req">*</span></label>
+                  <div className="iw"><Calendar className="il" aria-hidden="true" /><input id="nascimento" type="text" placeholder="DD/MM/AAAA" maxLength={10} className="mono" value={formData.birthdate} onChange={(event) => updateField('birthdate', maskBirthdate(event.target.value))} /></div>
+                  <FieldError>{errors.birthdate}</FieldError>
+                </div>
+
+                <div className="f">
+                  <label htmlFor="cpf">CPF <span className="req">*</span></label>
+                  <div className="iw"><CreditCard className="il" aria-hidden="true" /><input id="cpf" type="text" placeholder="000.000.000-00" maxLength={14} className={classNames('mono', formData.cpf.length === 14 && isCpfValid && 'valid', formData.cpf.length === 14 && !isCpfValid && 'invalid')} value={formData.cpf} onChange={(event) => updateField('cpf', maskCpf(event.target.value))} /></div>
+                  {formData.cpf.length === 14 && isCpfValid ? <span className="hint ok"><Check aria-hidden="true" /> CPF válido</span> : <FieldError>{errors.cpf}</FieldError>}
+                </div>
+
+                <div className="note gold"><Shield aria-hidden="true" /><span>Seus dados são criptografados, usados apenas para validação de identidade (KYC) e nunca compartilhados com terceiros.</span></div>
               </div>
 
-              <label className="terms-row" htmlFor="terms">
-                <input id="terms" type="checkbox" checked={formData.acceptedTerms} onChange={(e) => updateTerms(e.target.checked)} />
-                <span>Li e concordo com os <a href="/terms" target="_blank" rel="noopener noreferrer">Termos de Uso</a> e a <a href="/privacy" target="_blank" rel="noopener noreferrer">Política de Privacidade</a> da FirmezaToken</span>
-              </label>
-              <ErrorText>{errors.terms}</ErrorText>
-            </div>
-
-            <div className="btn-row">
-              <span style={{ fontSize: 12, color: 'var(--hint)' }}>* campos obrigatórios</span>
-              <button className="btn btn-primary" type="button" onClick={nextStep1} disabled={!step1Ready}>Continuar <ChevronRight /></button>
-            </div>
-          </section>
-
-          <section className={`step-body ${currentStep === 2 ? 'active' : ''}`}>
-            <div className="fh">
-              <div className="fh-sup">Passo 2 de 3</div>
-              <h2 className="fh-title">Seus dados pessoais</h2>
-              <p className="fh-sub">Informe seu CPF e nome completo para confirmar sua identidade e habilitar todas as funcionalidades.</p>
-            </div>
-
-            <div className="field-stack">
-              <div className="f"><label htmlFor="nome">Nome completo <span className="req">*</span></label><div className="iw"><UserIcon /><input id="nome" type="text" placeholder="Como aparece no documento" autoComplete="name" value={formData.fullName} onChange={(e) => updateField('fullName', e.target.value)} /></div><ErrorText>{errors.fullName}</ErrorText></div>
-              <div className="f"><label htmlFor="nascimento">Data de nascimento <span className="req">*</span></label><div className="iw"><CalendarIcon /><input id="nascimento" type="text" placeholder="DD/MM/AAAA" maxLength={10} value={formData.birthdate} onChange={(e) => updateField('birthdate', maskBirthdate(e.target.value))} /></div><ErrorText>{errors.birthdate}</ErrorText></div>
-              <div className="f"><label htmlFor="cpf">CPF <span className="req">*</span></label><div className="iw"><CpfIcon /><input id="cpf" type="text" placeholder="000.000.000-00" maxLength={14} className={`mono ${inputClass(validateCpf(formData.cpf), Boolean(formData.cpf) && formData.cpf.length === 14 && !validateCpf(formData.cpf))}`} value={formData.cpf} onChange={(e) => updateField('cpf', maskCpf(e.target.value))} /></div>{formData.cpf.length === 14 && validateCpf(formData.cpf) ? <span className="hint ok"><Check /> CPF válido</span> : <ErrorText>{errors.cpf}</ErrorText>}<div className="cpf-note"><Shield />Seu CPF é criptografado e nunca compartilhado com terceiros</div></div>
-            </div>
-
-            <div className="btn-row">
-              <button className="btn btn-ghost" type="button" onClick={previous}><ChevronLeft /> Voltar</button>
-              <button className="btn btn-primary" type="button" onClick={nextStep2} disabled={!step2Ready}>Continuar <ChevronRight /></button>
-            </div>
-          </section>
-
-          <section className={`step-body ${currentStep === 3 ? 'active' : ''}`}>
-            <div className="fh"><div className="fh-sup">Passo 3 de 3</div><h2 className="fh-title">Confirme seus dados</h2><p className="fh-sub">Revise as informações antes de criar sua conta.</p></div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 4 }}>
-              <ReviewItem icon={<Mail />} title="E-mail" value={formData.email || '—'} />
-              <ReviewItem icon={<Phone />} title="Telefone" value={formData.phone || '—'} />
-              <ReviewItem icon={<User />} title="Nome" value={formData.fullName || '—'} />
-              <ReviewItem icon={<Calendar />} title="Data de nascimento" value={formData.birthdate || '—'} />
-              <ReviewItem icon={<CreditCard />} title="CPF" value={maskedCpf || '—'} mono />
-            </div>
-            <div className="btn-row">
-              <button className="btn btn-ghost" type="button" onClick={previous} disabled={isSubmitting}><ChevronLeft /> Editar dados</button>
-              <button className="btn btn-primary" type="button" onClick={handleSubmit} disabled={isSubmitting}>{isSubmitting ? <><span className="spinner" /> Criando conta...</> : <><Check /> Criar conta</>}</button>
-            </div>
-          </section>
-
-          <section className={`step-body ${currentStep === 4 ? 'active' : ''}`}>
-            <div className="success-wrap">
-              <div className="s-ico"><Check /></div>
-              <h2 className="s-title">Conta criada!</h2>
-              <p className="s-sub">Bem-vindo à FirmezaToken. Enviamos um e-mail de confirmação para <strong>{successEmail}</strong>. Verifique sua caixa de entrada para ativar a conta.</p>
-              <div className="s-items">
-                <ReviewItem icon={<Check />} title="Confirmação de e-mail" value="Clique no link enviado para ativar" green />
-                <ReviewItem icon={<User />} title="Complete seu perfil" value="Adicione endereço e documentos KYC" />
-                <ReviewItem icon={<TrendingUp />} title="Comece a investir" value="Explore imóveis disponíveis na plataforma" blue />
+              <div className="btn-row">
+                <button className="btn btn-ghost" type="button" onClick={() => goToStep(1)}><ChevronLeft aria-hidden="true" /> Voltar</button>
+                <button className="btn btn-primary" type="button" onClick={nextStep2} disabled={!step2Ready}>Continuar <ChevronRight aria-hidden="true" /></button>
               </div>
-              <button className="btn btn-gold btn-full" type="button" onClick={() => router.replace('/connected/dashboard')}>Ir para o Dashboard</button>
-            </div>
-          </section>
+            </section>
+
+            <section className={classNames('step-body', currentStep === 3 && 'active')}>
+              <div className="fh">
+                <span className="fh-eyebrow"><span className="e-ico"><Check aria-hidden="true" /></span>Passo 3 de 3</span>
+                <h2>Confirme seus dados</h2>
+                <p className="sub">Revise as informações antes de criar sua conta. Você poderá editar tudo no seu perfil depois.</p>
+              </div>
+
+              <div className="review">
+                <ReviewItem icon={<Mail />} title="E-mail" value={formData.email} onEdit={() => goToStep(1)} />
+                <ReviewItem icon={<Phone />} title="Telefone" value={formData.phone} onEdit={() => goToStep(1)} />
+                <ReviewItem icon={<User />} title="Nome completo" value={formData.fullName} onEdit={() => goToStep(2)} />
+                <ReviewItem icon={<Calendar />} title="Data de nascimento" value={formData.birthdate} onEdit={() => goToStep(2)} mono />
+                <ReviewItem icon={<CreditCard />} title="CPF" value={formData.cpf} onEdit={() => goToStep(2)} mono />
+              </div>
+
+              <div className="note" style={{ marginTop: 14 }}><Info aria-hidden="true" /><span>Ao criar sua conta, o cadastro será enviado para o backend em <strong>POST /register</strong> com sua intenção inicial como <strong>coOwner</strong>.</span></div>
+              {errors.general ? <div className="error-box"><Info aria-hidden="true" /> {errors.general}</div> : null}
+
+              <div className="btn-row">
+                <button className="btn btn-ghost" type="button" onClick={() => goToStep(2)} disabled={isSubmitting}><ChevronLeft aria-hidden="true" /> Editar dados</button>
+                <button className="btn btn-gold" type="button" onClick={handleSubmit} disabled={isSubmitting}>{isSubmitting ? <><span className="spinner" /> Criando conta...</> : <>Criar conta <ChevronRight aria-hidden="true" /></>}</button>
+              </div>
+            </section>
+
+            <section className={classNames('step-body', currentStep === 4 && 'active')}>
+              <div className="success-wrap">
+                <div className="s-ico"><Check aria-hidden="true" /></div>
+                <h2 className="s-title">Sua conta está criada</h2>
+                <p className="s-sub">Bem-vindo à FirmezaToken. Enviamos um e-mail de confirmação para <strong>{successEmail}</strong>. Verifique sua caixa de entrada para ativar a conta.</p>
+                <div className="s-items">
+                  <ReviewItem icon={<Check />} title="Confirme seu e-mail" value="Clique no link enviado para ativar sua conta e começar a usar a plataforma" />
+                </div>
+                <button className="btn btn-gold btn-full" type="button" onClick={() => router.replace('/connected/dashboard')}>Ir para o dashboard</button>
+              </div>
+            </section>
+
+            {currentStep !== 4 ? <div className="alt-login">Está com problemas? <a href="/">Fale com a gente</a></div> : null}
+          </div>
         </main>
-        <div className="right-pad" />
       </div>
 
-      <footer><span>© FirmezaToken · A revolução imobiliária começou.</span><div className="fsoc"><a href="#">TikTok</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">YouTube</a></div></footer>
-    </div>
-  );
-}
-
-function ReviewItem({ icon, title, value, mono, green, blue }: { icon: React.ReactNode; title: string; value: string; mono?: boolean; green?: boolean; blue?: boolean }) {
-  return (
-    <div className="s-item">
-      <div className="s-item-ico" style={green ? { background: 'var(--green-tint)', color: 'var(--green)' } : blue ? { background: 'var(--blue-tint)', color: 'var(--blue)' } : undefined}>{icon}</div>
-      <div className="s-item-body"><strong>{title}</strong><span className={mono ? 'mono' : undefined}>{value}</span></div>
+      <footer>
+        <span>© FirmezaToken · A revolução imobiliária começou.</span>
+        <div className="fsoc"><a href="#">TikTok</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">YouTube</a></div>
+      </footer>
     </div>
   );
 }

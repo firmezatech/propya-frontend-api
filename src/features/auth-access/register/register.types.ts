@@ -1,53 +1,52 @@
-// ─── Account type ─────────────────────────────────────────────────────────────
+// ─── Registration intent ─────────────────────────────────────────────────────
 
-/** The only two user-selectable account types. Admin is never exposed here. */
-export type AccountType = 'tenant' | 'investor';
+export type RegistrationIntent = 'tenant' | 'coOwner';
+export type LegacyAccountType = 'tenant' | 'investor';
 
 // ─── Form data (accumulated across steps) ─────────────────────────────────────
 
 export type RegisterFormData = {
-  // Pre-step / Step 1
-  accountType: AccountType;
   email: string;
   password: string;
   passwordConfirmation: string;
   phone: string;
+  phoneCountry?: 'BR';
   acceptedTerms: boolean;
   acceptedPrivacyPolicy: boolean;
-
-  // Step 2
   fullName: string;
-  birthdate: string; // display format: DD/MM/AAAA
-  cpf: string;       // display format: 000.000.000-00
+  birthdate: string; // display/backend format: DD/MM/AAAA
+  cpf: string; // display/backend format: 000.000.000-00
+  registrationIntent?: RegistrationIntent;
+  /** Legacy field kept for backward-compatible tests and older callers. */
+  accountType?: LegacyAccountType;
 };
 
 // ─── API payload ──────────────────────────────────────────────────────────────
 
 export type RegisterApiPayload = {
+  fullName: string;
   email: string;
+  phone: string;
+  phoneCountry?: 'BR';
+  birthdate: string;
   password: string;
   passwordConfirmation: string;
-  phone: string;
-  fullName: string;
-  birthdate: string;        // ISO: YYYY-MM-DD
-  cpf: string;              // with mask: 000.000.000-00
+  cpf: string;
+  registrationIntent?: RegistrationIntent;
   acceptedTerms: true;
   acceptedPrivacyPolicy: true;
-  accountType: AccountType;
 };
 
 // ─── API response ─────────────────────────────────────────────────────────────
 
 export type RegisterApiUser = {
   id: string;
-  firstName: string;
-  lastName: string;
   fullName: string;
   email: string;
   phone: string;
-  phoneE164?: string;
+  phoneCountry?: string;
   birthdate: string;
-  accountType: AccountType;
+  registrationIntent?: RegistrationIntent;
   role: string;
 };
 
@@ -75,12 +74,12 @@ export type RegisterApiResult = RegisterApiSuccess | RegisterApiFailure;
 // ─── Validation error maps ────────────────────────────────────────────────────
 
 export type RegisterStep1Errors = {
-  accountType?: string;
   email?: string;
   password?: string;
   passwordConfirmation?: string;
   phone?: string;
   terms?: string;
+  accountType?: string;
 };
 
 export type RegisterStep2Errors = {
@@ -89,6 +88,7 @@ export type RegisterStep2Errors = {
   cpf?: string;
 };
 
-export type RegisterAllErrors = RegisterStep1Errors & RegisterStep2Errors & {
-  general?: string;
-};
+export type RegisterAllErrors = RegisterStep1Errors &
+  RegisterStep2Errors & {
+    general?: string;
+  };

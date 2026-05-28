@@ -1,45 +1,26 @@
 /**
- * Registration API — single-responsibility module for the POST /auth/register call.
- *
- * What this module owns:
- *   - Payload assembly from validated form data
- *   - HTTP request + response normalization
- *   - Optional auto-login: stores the auth session when the backend returns an
- *     access token (mirrors login.ts behaviour for a seamless post-registration UX)
- *
- * What this module must NOT own:
- *   - Input validation (register.validation.ts)
- *   - UI state (RegisterPage.tsx)
- *   - Routing decisions (RegisterPage.tsx)
+ * Registration API — owns only payload assembly, HTTP call and response
+ * normalization for the public registration page.
  */
 
 import { firmezaApiClient } from '../../../services/firmeza-api-client';
 import { setFirmezaAuthenticatedUserSession } from '../../../services/auth/auth-storage';
 import { normalizeFmzApiError } from '../../api-errors/domain';
-import { birthdateBRToISO } from './register.validation';
-import type { RegisterApiResult, RegisterFormData } from './register.types';
+import type { RegisterApiPayload, RegisterApiResult, RegisterFormData, RegistrationIntent } from './register.types';
 
-// ─── Payload assembly ─────────────────────────────────────────────────────────
-
-/**
- * Assembles the backend-ready payload from validated form data.
- * Converts birthdate from display format (DD/MM/AAAA) to ISO (YYYY-MM-DD).
- * CPF is sent with mask as the backend expects it (000.000.000-00).
- */
-const buildRegisterPayload = (data: RegisterFormData) => ({
+const buildRegisterPayload = (data: RegisterFormData): RegisterApiPayload => ({
+  fullName: data.fullName.trim(),
   email: data.email.trim(),
+  phone: data.phone.trim(),
+  phoneCountry: data.phoneCountry || 'BR',
+  birthdate: data.birthdate,
   password: data.password,
   passwordConfirmation: data.passwordConfirmation,
-  phone: data.phone.trim(),
-  fullName: data.fullName.trim(),
-  birthdate: birthdateBRToISO(data.birthdate),
   cpf: data.cpf,
-  acceptedTerms: true as const,
-  acceptedPrivacyPolicy: true as const,
-  accountType: data.accountType,
+  registrationIntent: data.registrationIntent || 'coOwner',
+  acceptedTerms: true,
+  acceptedPrivacyPolicy: true,
 });
-
-// ─── Response normalization ───────────────────────────────────────────────────
 
 const recordOf = (value: unknown): Record<string, unknown> =>
   value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
@@ -49,23 +30,10 @@ const getString = (value: unknown, fallback = ''): string =>
 
 const getBoolean = (value: unknown): boolean => Boolean(value);
 
-// ─── API call ─────────────────────────────────────────────────────────────────
-
-/**
- * Calls POST /auth/register with the assembled payload.
- *
- * On success:
- *   - If the backend returns an accessToken, stores the auth session so the
- *     user is immediately logged in without a separate login step.
- *
- * On failure:
- *   - Returns a normalized error discriminant compatible with the rest of the
- *     FMZ error handling infrastructure.
- */
 export async function registerUser(data: RegisterFormData): Promise<RegisterApiResult> {
   try {
     const payload = buildRegisterPayload(data);
-    const response = await firmezaApiClient.post('/auth/register', payload);
+    const response = await firmezaApiClient.post('/register', payload);
 
     const body = recordOf(response.data);
     const user = recordOf(body.user ?? body.data ?? body);
@@ -75,11 +43,10 @@ export async function registerUser(data: RegisterFormData): Promise<RegisterApiR
     const defaultRoute = getString(access.defaultRoute ?? access.default_route, '/connected/dashboard');
     const onboardingStatus = getString(access.onboardingStatus ?? access.onboarding_status, 'incomplete');
 
-    // Auto-login: store session when backend provides a token.
     if (accessToken) {
       setFirmezaAuthenticatedUserSession({
         accessToken,
-        name: getString(user.fullName ?? user.name),
+        name: getString(user.fullName ?? user.full_name ?? user.name),
         email: getString(user.email),
       });
     }
@@ -89,14 +56,13 @@ export async function registerUser(data: RegisterFormData): Promise<RegisterApiR
       message: getString(body.message ?? body.msg, 'Cadastro realizado com sucesso.'),
       user: {
         id: getString(user.id ?? user._id),
-        firstName: getString(user.firstName ?? user.first_name),
-        lastName: getString(user.lastName ?? user.last_name),
         fullName: getString(user.fullName ?? user.full_name ?? user.name),
         email: getString(user.email),
         phone: getString(user.phone),
-        phoneE164: getString(user.phoneE164 ?? user.phone_e164) || undefined,
+        phoneCountry: getString(user.phoneCountry ?? user.phone_country) || undefined,
         birthdate: getString(user.birthdate),
-        accountType: (getString(user.accountType ?? user.account_type) as 'tenant' | 'investor') || data.accountType,
+        registrationIntent:
+          (getString(user.registrationIntent ?? user.registration_intent) as RegistrationIntent) || data.registrationIntent || 'coOwner',
         role: getString(user.role),
       },
       access: {

@@ -215,7 +215,7 @@ export function validateStep1(data: Pick<RegisterFormData,
 >): RegisterStep1Errors {
   const errors: RegisterStep1Errors = {};
 
-  if (!data.accountType) {
+  if ('accountType' in data && !data.accountType) {
     errors.accountType = 'Selecione o tipo de conta.';
   }
 
