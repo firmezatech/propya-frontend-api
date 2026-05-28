@@ -58,7 +58,7 @@ export function normalizeTokenPurchasePayment(payload: unknown): FmzTokenPurchas
 
 export async function createTenantTokenPixPayment(cart: FmzTokenPurchaseCart): Promise<FmzTokenPurchasePayment> {
   const endpoint = cart.rentChargeId
-    ? `/tenant/rent-charges/${encodeURIComponent(cart.rentChargeId)}/pix`
+    ? `/tenant/rent-charges/${encodeURIComponent(cart.rentChargeId)}/payments`
     : TOKEN_PIX_ENDPOINT;
 
   const response = await authenticatedFirmezaFetch(endpoint, {
@@ -89,7 +89,7 @@ export async function getTenantTokenPaymentStatus(payment: FmzTokenPurchasePayme
   const paymentId = payment.paymentTransactionId || payment.id;
 
   if (payment.rentChargeId) {
-    const response = await authenticatedFirmezaFetch(`/tenant/rent-charges/${encodeURIComponent(payment.rentChargeId)}/payment`);
+    const response = await authenticatedFirmezaFetch(`/tenant/rent-charges/${encodeURIComponent(payment.rentChargeId)}/payments`);
     const responseBody = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error('Não foi possível consultar o status do PIX.');
     return normalizeTokenPurchasePayment(responseBody);
@@ -97,7 +97,7 @@ export async function getTenantTokenPaymentStatus(payment: FmzTokenPurchasePayme
 
   if (!paymentId) return payment;
 
-  const response = await authenticatedFirmezaFetch(`${TOKEN_PAYMENT_STATUS_ENDPOINT}/${encodeURIComponent(paymentId)}/payment`);
+  const response = await authenticatedFirmezaFetch(`${TOKEN_PAYMENT_STATUS_ENDPOINT}/${encodeURIComponent(paymentId)}/payments`);
   const responseBody = await response.json().catch(() => ({}));
 
   if (!response.ok) {
