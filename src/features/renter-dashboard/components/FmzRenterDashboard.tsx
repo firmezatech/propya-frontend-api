@@ -57,6 +57,7 @@ const LINE_ICON: Record<string, typeof CreditCard> = {
 };
 
 const COMING_SOON_PATH = '/connected/comingSoon';
+const BUY_TOKENS_PATH = '/connected/tokensToPurchasePix';
 const TENANT_SUPPORT_BUTTONS_HREF = COMING_SOON_PATH;
 
 const quickActions: QuickAction[] = [
@@ -322,7 +323,7 @@ export function FmzRenterDashboard({
             </div>
           )}
 
-          <Link href={COMING_SOON_PATH} className={styles.btnCta}>
+          <Link href={BUY_TOKENS_PATH} className={styles.btnCta}>
             <Plus size={14} /> Comprar mais tokens
           </Link>
         </div>
