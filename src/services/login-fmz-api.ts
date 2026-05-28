@@ -6,6 +6,7 @@ import type { FmzAccessControlPage } from '../features/access-control/domain';
 export type LoginType = {
   email: string;
   password: string;
+  rememberMe?: boolean;
 };
 
 export type UserType = {
@@ -216,7 +217,7 @@ export async function login(user: LoginType): Promise<LoginResponse> {
 
     const normalizedPayload = normalizeLoginPayload(response.data, user.email);
 
-    setFirmezaAuthenticatedUserSession(normalizedPayload);
+    setFirmezaAuthenticatedUserSession(normalizedPayload, { rememberMe: user.rememberMe ?? true });
 
     return {
       success: true,
