@@ -4,6 +4,44 @@ import type {
   TenantKycDocumentUploadParams,
 } from '../domain/fmz-tenant-profile.types';
 
+// ─── Profile response normalizer ──────────────────────────────────────────────
+// The backend may return the profile nested in different envelope shapes.
+// This function extracts the canonical { profile: { user, completion, kyc } }
+// structure without throwing — real API errors surface as HTTP errors before
+// this point; missing fields are surfaced as a clear TypeError downstream.
+
+type UnknownRecord = Record<string, unknown>;
+
+const rec = (v: unknown): UnknownRecord => (v && typeof v === 'object' && !Array.isArray(v) ? v as UnknownRecord : {});
+
+function normalizeProfileResponse(raw: unknown): TenantProfileResponse {
+  // Unwrap common envelope layers: { data: ... }, { success, data: ... }
+  let payload = rec(raw);
+  if ('data' in payload && payload.data && typeof payload.data === 'object') {
+    payload = rec(payload.data);
+  }
+
+  // Extract the profile block from whichever key holds it
+  const profileBlock =
+    rec(payload.profile) ??
+    rec((payload as UnknownRecord).tenant_profile) ??
+    rec((payload as UnknownRecord).tenantProfile);
+
+  // If the block already has the expected sub-keys, return it
+  if (profileBlock.user || profileBlock.completion || profileBlock.kyc) {
+    return { profile: profileBlock } as TenantProfileResponse;
+  }
+
+  // Last resort: treat the payload itself as the profile block
+  // (e.g. backend returns { user, completion, kyc } directly)
+  if (payload.user || payload.completion || payload.kyc) {
+    return { profile: payload } as TenantProfileResponse;
+  }
+
+  // Pass through as-is and let TypeScript/runtime surface the mismatch
+  return raw as TenantProfileResponse;
+}
+
 // ─── Profile ──────────────────────────────────────────────────────────────────
 
 /**
@@ -15,7 +53,7 @@ import type {
  */
 export async function getTenantProfile(): Promise<TenantProfileResponse> {
   const { data } = await firmezaApiClient.get('/tenant/profile');
-  return data as TenantProfileResponse;
+  return normalizeProfileResponse(data);
 }
 
 // ─── KYC Document Upload ──────────────────────────────────────────────────────

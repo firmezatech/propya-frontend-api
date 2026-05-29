@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { FmzConnectedPageShell } from '../../../../components/layout';
+import { FmzConnectedPageShell, FmzWalletSkeleton } from '../../../../components/layout';
 import {
   getCurrentTenantDashboard,
   getCurrentTenantPaymentHistory,
@@ -379,10 +379,7 @@ export function FmzWalletPage() {
       </Link>
 
       {isLoading ? (
-        <div className={styles.empty}>
-          <span className={styles.spinner} />
-          <p className={styles.emptyDesc}>Carregando carteira...</p>
-        </div>
+        <FmzWalletSkeleton />
       ) : errorMessage ? (
         <div className={styles.empty}>
           <p className={styles.emptyTitle}>Erro ao carregar</p>

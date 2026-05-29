@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ChevronDown, CreditCard, Download, FileText, ReceiptText, Search, Target, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { FmzConnectedPageShell } from '../../../../components/layout';
+import { FmzConnectedPageShell, FmzPaymentHistorySkeleton } from '../../../../components/layout';
 import { getCurrentTenantDashboard, getCurrentTenantPaymentHistory } from '../../services';
 import type { FmzTenantDashboard, FmzTenantPaymentHistoryItem } from '../../domain';
 import styles from './FmzPaymentHistoryPage.module.css';
@@ -266,10 +266,7 @@ export function FmzPaymentHistoryPage() {
       </Link>
 
       {isLoading ? (
-        <div style={{ padding: '48px 0', textAlign: 'center' }}>
-          <span className={styles.spinner} />
-          <p className={styles.emptyDesc}>Carregando histórico...</p>
-        </div>
+        <FmzPaymentHistorySkeleton />
       ) : errorMessage ? (
         <div className={styles.empty}>
           <p className={styles.emptyTitle}>Erro ao carregar</p>

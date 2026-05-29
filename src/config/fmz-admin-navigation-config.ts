@@ -76,8 +76,8 @@ export const fmzAdminNavigationConfig = {
     {
       id: 'admin.contract.upload',
       pageKey: 'admin.contract.upload',
-      label: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_CONTRACTS_LABEL', 'Contratos'),
-      href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_CONTRACTS_PATH', '/connected/contracts'),
+      label: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_CONTRACTS_LABEL', 'Gestão de Contratos'),
+      href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_CONTRACTS_PATH', '/connected/contracts-management'),
       requiredPermissionKey: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_CONTRACTS_PERMISSION', 'admin.contracts.manage'),
       icon: FileText,
     },

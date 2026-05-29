@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Check, ChevronRight, Copy, Download, FileText, List, MessageCircle, QrCode, ReceiptText, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { FmzConnectedPageShell } from '../../../../components/layout';
+import { FmzConnectedPageShell, FmzInvoiceSkeleton } from '../../../../components/layout';
 import { getCurrentTenantDashboard } from '../../services';
 import type { FmzTenantDashboard } from '../../domain';
 import styles from './FmzInvoicePage.module.css';
@@ -324,10 +324,7 @@ export function FmzInvoicePage() {
 
       <div className={styles.page}>
         {isLoading ? (
-          <div className={styles.empty}>
-            <span className={styles.spinner} />
-            <p className={styles.emptyDesc}>Carregando boleto...</p>
-          </div>
+          <FmzInvoiceSkeleton />
         ) : errorMessage ? (
           <>
             <div className={styles.pageHead}>

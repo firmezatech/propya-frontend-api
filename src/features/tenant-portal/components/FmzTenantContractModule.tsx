@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { FmzConnectedPageShell } from '../../../components/layout';
+import { FmzConnectedPageShell, FmzContractSkeleton } from '../../../components/layout';
 import { getCurrentTenantContract } from '../services/fmz-tenant-contract-api';
 import type { FmzTenantContractPageData } from '../domain/fmz-tenant-contract.types';
 import { FmzTenantContractPage } from './FmzTenantContractPage';
@@ -21,15 +21,6 @@ function resolveContractDocumentUrl(contractPage: FmzTenantContractPageData | nu
     optionalString(contractRecord.signed_document_url) ??
     optionalString(contractRecord.document_url) ??
     optionalString(contractRecord.file_url)
-  );
-}
-
-function ContractLoadingState() {
-  return (
-    <div className="rounded-2xl border border-fmz-border-light bg-white p-8 text-center text-sm text-fmz-text-muted">
-      <span className="mx-auto mb-3 block h-5 w-5 animate-spin rounded-full border-2 border-fmz-border-light border-t-fmz-navy" />
-      Carregando contrato...
-    </div>
   );
 }
 
@@ -86,7 +77,7 @@ export function FmzTenantContractModule() {
   return (
     <FmzConnectedPageShell width="tenant">
       {isLoading ? (
-        <ContractLoadingState />
+        <FmzContractSkeleton />
       ) : errorMessage ? (
         <ContractErrorState message={errorMessage} />
       ) : !contractPage ? (
