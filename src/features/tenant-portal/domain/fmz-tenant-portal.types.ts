@@ -147,6 +147,7 @@ export type FmzTenantOwnership = {
   tokenUnitValue?: number | null;
   amountRemainingToFullOwnership?: number | null;
   ownershipBps?: number | null;
+  propertyTokenizationId?: string | null;
 };
 
 export type FmzTenantNextGoal = {

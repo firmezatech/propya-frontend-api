@@ -162,7 +162,16 @@ export function FmzRenterDashboard({
 
   const router = useRouter();
   const params = useParams<{ locale?: string }>();
-  const buyTokensHref = buildFmzLocalizedHref(params?.locale, BUY_TOKENS_PATH);
+  const tokenizationId = dashboard.ownership?.propertyTokenizationId ?? null;
+  const propertyId     = dashboard.property?.id ?? null;
+  const buyTokensQuery = [
+    tokenizationId && `propertyTokenizationId=${encodeURIComponent(String(tokenizationId))}`,
+    propertyId     && `propertyId=${encodeURIComponent(String(propertyId))}`,
+  ].filter(Boolean).join('&');
+  const buyTokensHref = buildFmzLocalizedHref(
+    params?.locale,
+    buyTokensQuery ? `${BUY_TOKENS_PATH}?${buyTokensQuery}` : BUY_TOKENS_PATH,
+  );
   const [hasAnimated, setHasAnimated] = useState(false);
   const [currentGoalIndex, setCurrentGoalIndex] = useState(0);
 
