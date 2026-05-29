@@ -19,7 +19,7 @@ const emptyState: RenterDashboardState = {
   paymentHistory: [],
 };
 
-export function RenterDashboardModule({ propertyId }: { propertyId: string | null }) {
+export function FmzRenterDashboardModule({ propertyId }: { propertyId: string | null }) {
   const requestSequenceRef = useRef(0);
   const [state, setState] = useState<RenterDashboardState>(emptyState);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,9 +64,9 @@ export function RenterDashboardModule({ propertyId }: { propertyId: string | nul
     void loadRenterDashboard();
   }, [propertyId]);
 
-  if (isLoading) return <DashboardLoadingState />;
+  if (isLoading) return <FmzDashboardLoadingState />;
   if (showEmptyHome) return <FmzConnectedEmptyHome />;
-  if (error) return <DashboardErrorState message={error} />;
+  if (error) return <FmzDashboardErrorState message={error} />;
 
   if (!hasRenterDashboardData(state.dashboard)) {
     return <FmzConnectedEmptyHome />;

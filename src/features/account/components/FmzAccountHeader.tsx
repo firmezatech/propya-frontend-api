@@ -1,6 +1,6 @@
 import styles from './FmzAccountPage.module.css';
 
-export function AccountHeader() {
+export function FmzAccountHeader() {
   return (
     <div className={styles.pageHeaderRow}>
       <div>

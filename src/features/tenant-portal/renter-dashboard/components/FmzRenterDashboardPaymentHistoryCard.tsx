@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import type { FmzTenantPaymentHistoryItem } from '../../domain';
-import { formatDateBR } from '../../../lib/fmz-date';
+import { formatDateBR } from '../../../../lib/fmz-date';
 import styles from './FmzRenterDashboard.module.css';
 
 type Props = {

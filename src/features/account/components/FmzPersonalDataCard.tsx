@@ -16,7 +16,7 @@ type PersonalDataCardProps = {
   onSave: () => void;
 };
 
-export function PersonalDataCard({ userData, isSaving, onFieldChange, onCancel, onSave }: PersonalDataCardProps) {
+export function FmzPersonalDataCard({ userData, isSaving, onFieldChange, onCancel, onSave }: PersonalDataCardProps) {
   const t = useTranslations('MyAccount');
 
   const handlePhoneChange = (nationalNumber: string, countryCode: FmzPhoneCountryCode) => {

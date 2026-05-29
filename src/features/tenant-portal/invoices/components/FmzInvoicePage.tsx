@@ -4,11 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Check, ChevronRight, Copy, Download, FileText, List, MessageCircle, QrCode, ReceiptText, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { FmzConnectedPageShell } from '../../../components/layout';
+import { FmzConnectedPageShell } from '../../../../components/layout';
 import { getCurrentTenantDashboard } from '../../services';
 import type { FmzTenantDashboard } from '../../domain';
 import styles from './FmzInvoicePage.module.css';
-import { formatDateBR } from '../../../lib/fmz-date';
+import { formatDateBR } from '../../../../lib/fmz-date';
 
 const moneyFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 

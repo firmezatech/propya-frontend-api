@@ -10,9 +10,9 @@ import type { FmzAccessControlPrincipal } from "../../access-control/domain";
 import { getFirmezaAccessToken } from "../../../services/auth/auth-storage";
 import { isFirmezaApiError } from "../../../services/firmeza-api-client";
 import { getTenantDashboardPropertyIdFromUrl } from "../domain/fmz-dashboard-client-state";
-import { FmzRenterDashboardModule } from "../tenant-portal/renter-dashboard/components";
-import { FmzDashboardErrorState, FmzDashboardLoadingState } from "../tenant-portal/components/FmzDashboardFeedback";
-import { FmzConnectedEmptyHome } from "../tenant-portal/components/FmzConnectedEmptyHome";
+import { FmzRenterDashboardModule } from "../../tenant-portal/renter-dashboard/components";
+import { FmzDashboardErrorState, FmzDashboardLoadingState } from "../../tenant-portal/components/FmzDashboardFeedback";
+import { FmzConnectedEmptyHome } from "../../tenant-portal/components/FmzConnectedEmptyHome";
 import FmzDashboardAdmin from "./FmzDashboardAdmin";
 
 const PROPERTY_ID = 1;

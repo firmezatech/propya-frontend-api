@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { SECTION_IDS, SIDEBAR_ITEMS } from '../domain/fmz-account-status-config';
 import styles from './FmzAccountPage.module.css';
 
-export function AccountSidebar() {
+export function FmzAccountSidebar() {
   const router = useRouter();
   const [activeId, setActiveId] = useState<string>(SECTION_IDS[0]);
 

@@ -12,7 +12,7 @@ import {
   Wallet,
   XCircle,
 } from 'lucide-react';
-import type { AccountSidebarItem } from './account-page.types';
+import type { AccountSidebarItem } from './fmz-account-page.types';
 import type { TenantKycDocumentStatus } from '../../tenant-portal/domain/fmz-tenant-profile.types';
 
 // ─── Brazilian States ──────────────────────────────────────────────────────────

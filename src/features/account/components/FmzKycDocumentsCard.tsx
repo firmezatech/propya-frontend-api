@@ -86,7 +86,7 @@ type KycDocumentsCardProps = {
  *   Only one upload can be in progress at a time; buttons are disabled while
  *   `isUploading` is true.
  */
-export function KycDocumentsCard({
+export function FmzKycDocumentsCard({
   documents,
   onUpload,
   onToast,

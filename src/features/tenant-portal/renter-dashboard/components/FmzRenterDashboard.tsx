@@ -10,7 +10,7 @@ import type { FmzTenantPaymentHistoryItem } from '../../domain';
 import { buildRenterDashboardViewModel, hasRenterDashboardData } from '../domain/fmz-renter-dashboard-view-model';
 import { FmzRenterDashboardPaymentHistoryCard } from './FmzRenterDashboardPaymentHistoryCard';
 import { FmzRenterDashboardRentSimulatorCard } from './FmzRenterDashboardRentSimulatorCard';
-import { buildFmzLocalizedHref } from '../../../lib/fmz-localize-href';
+import { buildFmzLocalizedHref } from '../../../../lib/fmz-localize-href';
 import styles from './FmzRenterDashboard.module.css';
 
 type FmzRenterDashboardProps = {

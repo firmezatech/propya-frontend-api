@@ -11,7 +11,7 @@ type AccountSectionCardProps = {
   footer?: ReactNode;
 };
 
-export function AccountSectionCard({ id, icon, iconClassName, title, subtitle, children, footer }: AccountSectionCardProps) {
+export function FmzAccountSectionCard({ id, icon, iconClassName, title, subtitle, children, footer }: AccountSectionCardProps) {
   return (
     <section id={id} className={styles.card}>
       <div className={styles.cardHead}>

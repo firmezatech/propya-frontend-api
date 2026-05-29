@@ -1,5 +1,5 @@
 import { formatBirthdateInput } from '../../../lib/fmz-phone-country-format';
-import type { AccountPageUser, PasswordBarKey, PasswordStrength } from './account-page.types';
+import type { AccountPageUser, PasswordBarKey, PasswordStrength } from './fmz-account-page.types';
 import type { UserType } from './fmz-user.types';
 
 export const normalizeBirthdateForForm = (value: string | null | undefined): string => {

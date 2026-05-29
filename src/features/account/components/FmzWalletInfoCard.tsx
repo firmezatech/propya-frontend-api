@@ -9,7 +9,7 @@ type WalletInfoCardProps = {
   userData: AccountPageUser;
 };
 
-export function WalletInfoCard({ userData }: WalletInfoCardProps) {
+export function FmzWalletInfoCard({ userData }: WalletInfoCardProps) {
   return (
     <FmzAccountSectionCard
       id="sec-financeiro"

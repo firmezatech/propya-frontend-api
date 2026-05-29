@@ -1,6 +1,6 @@
 import React from "react";
 
-export function DashboardLoadingState() {
+export function FmzDashboardLoadingState() {
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="text-center">
@@ -11,7 +11,7 @@ export function DashboardLoadingState() {
   );
 }
 
-export function DashboardErrorState({ message }: { message: string }) {
+export function FmzDashboardErrorState({ message }: { message: string }) {
   return (
     <div className="flex h-64 items-center justify-center">
       <div className="text-center">

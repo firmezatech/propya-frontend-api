@@ -15,7 +15,7 @@ type AddressCardProps = {
   onCepSearch: () => void;
 };
 
-export function AddressCard({ userData, isSaving, onFieldChange, onCancel, onSave, onCepSearch }: AddressCardProps) {
+export function FmzAddressCard({ userData, isSaving, onFieldChange, onCancel, onSave, onCepSearch }: AddressCardProps) {
   const footer = (
     <>
       <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={onCancel}>Cancelar</button>

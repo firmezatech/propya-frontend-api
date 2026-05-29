@@ -1,6 +1,6 @@
 import type { FmzTenantDashboard, FmzTenantMonthlySummary } from '../../domain/fmz-tenant-portal.types';
 import type { FmzRenterDashboardViewModel } from './fmz-renter-dashboard.types';
-import { formatDateBR } from '../../../lib/fmz-date';
+import { formatDateBR } from '../../../../lib/fmz-date';
 
 const DEFAULT_RENTER_NAME = 'Diana';
 const DEFAULT_REFERENCE_MONTH = 'Dezembro 2025';

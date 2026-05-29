@@ -1,4 +1,4 @@
-import { fmzInstagramFallbackPosts, fmzInstagramFeedConfig } from '../config';
+import { fmzInstagramFallbackPosts, fmzInstagramFeedConfig } from '../fmz-instagram-feed.config';
 import type { FmzInstagramFeedResponse } from '../domain/fmz-instagram-feed.types';
 
 const fallbackFeed: FmzInstagramFeedResponse = {

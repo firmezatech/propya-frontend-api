@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { FmzConnectedPageShell } from '../../../components/layout';
+import { FmzConnectedPageShell } from '../../../../components/layout';
 import {
   getCurrentTenantDashboard,
   getCurrentTenantPaymentHistory,

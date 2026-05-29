@@ -114,7 +114,7 @@ function buildBannerLabel(
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function AccountKycProgressBanner({ completion, kycStatus }: AccountKycProgressBannerProps) {
+export function FmzAccountKycProgressBanner({ completion, kycStatus }: AccountKycProgressBannerProps) {
   const isComplete = kycStatus === 'verified' && completion.percentage >= 100;
   const chips = buildKycChipsFromCompletion(completion);
   const bannerLabel = buildBannerLabel(completion, kycStatus);

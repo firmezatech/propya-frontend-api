@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight, Heart, Instagram, MessageCircle } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { fmzCn } from '../../../lib/fmz-classnames';
-import { fmzInstagramFeedConfig } from '../config';
+import { fmzInstagramFeedConfig } from '../fmz-instagram-feed.config';
 import type { FmzInstagramFeedResponse, FmzInstagramPost } from '../domain/fmz-instagram-feed.types';
 import { fetchFmzInstagramFeed } from '../services/fmz-instagram-feed-client';
 

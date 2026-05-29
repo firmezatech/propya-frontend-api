@@ -31,7 +31,7 @@ const extractNationalNumber = (phone: string, countryCode: FmzPhoneCountryCode):
   return formatFmzPhoneNationalNumber(withoutDialCode, countryCode);
 };
 
-export function AccountPhoneInput({ phone, phoneCountry, onPhoneChange }: AccountPhoneInputProps) {
+export function FmzAccountPhoneInput({ phone, phoneCountry, onPhoneChange }: AccountPhoneInputProps) {
   const enabledCountries = useMemo(() => getEnabledFmzPhoneCountries(), []);
   const activeCode = resolveCountryCode(phoneCountry);
   const activeCountry = getFmzPhoneCountry(activeCode);

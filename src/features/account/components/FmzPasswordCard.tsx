@@ -31,7 +31,7 @@ function PasswordStrengthBars({ strength }: { strength: PasswordStrength }) {
   );
 }
 
-export function PasswordCard({ userData, isSaving, fieldErrors, passwordStrength, passwordVisibility, onFieldChange, onToggleVisibility, onSave }: PasswordCardProps) {
+export function FmzPasswordCard({ userData, isSaving, fieldErrors, passwordStrength, passwordVisibility, onFieldChange, onToggleVisibility, onSave }: PasswordCardProps) {
   const t = useTranslations('MyAccount');
 
   const footer = (

@@ -23,7 +23,7 @@
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { FmzFmzKycDocumentsCard } from '../features/account/components/FmzKycDocumentsCard';
+import { FmzKycDocumentsCard } from '../features/account/components/FmzKycDocumentsCard';
 import type { TenantKycDocument, TenantKycDocumentUploadParams } from '../features/tenant-portal/domain/fmz-tenant-profile.types';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────

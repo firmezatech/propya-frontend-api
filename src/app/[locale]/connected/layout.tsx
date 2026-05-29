@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { FmzConnectedLayoutFrame } from '../../../../components/layout';
+import { FmzConnectedLayoutFrame } from '../../../components/layout';
 
 interface ConnectedLayoutProps {
   children: ReactNode;

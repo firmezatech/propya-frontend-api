@@ -1,4 +1,4 @@
-import { authenticatedFirmezaFetch } from '../../../services/firmeza-api-client';
+import { authenticatedFirmezaFetch } from '../../../../services/firmeza-api-client';
 import type { FmzTokenPurchaseBackendResponse, FmzTokenPurchaseCart, FmzTokenPurchasePayment } from '../domain/fmz-token-purchase.types';
 
 const TOKEN_PIX_ENDPOINT = process.env.NEXT_PUBLIC_TENANT_TOKEN_PIX_ENDPOINT || '/tenant/token-purchases/pix';

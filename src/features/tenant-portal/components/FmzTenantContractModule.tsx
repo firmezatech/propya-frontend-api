@@ -53,7 +53,7 @@ function ContractEmptyState() {
   );
 }
 
-export function TenantContractModule() {
+export function FmzTenantContractModule() {
   const searchParams = useSearchParams();
   const propertyId = searchParams.get('propertyId');
   const requestSequenceRef = useRef(0);
