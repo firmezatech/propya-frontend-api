@@ -214,7 +214,7 @@ export function FmzTenantTokenPurchasePage() {
   const router = useRouter();
   const { seed, loading: seedLoading } = useDashboardSeed();
 
-  const [quantity, setQuantity] = useState(5);
+  const [quantity, setQuantity] = useState(1000);
   const [method, setMethod] = useState<FmzTokenPurchasePaymentMethod>('pix');
 
   const quoteState = useTokenPurchaseQuote({
@@ -227,8 +227,8 @@ export function FmzTenantTokenPurchasePage() {
   const quote = quoteState.status === 'ok' ? quoteState.quote : null;
 
   // Use quote bounds once loaded; fall back to safe defaults during initial load.
-  const minQty   = quote?.minQuantity ?? 1;
-  const maxQty   = quote?.maxQuantity ?? 1000;
+  const minQty   = quote?.minQuantity ?? 1000;
+  const maxQty   = quote?.maxQuantity ?? 10000;
   const stepSize = 1;
 
   const impact = quote
@@ -266,7 +266,7 @@ export function FmzTenantTokenPurchasePage() {
     router.push(localizedHref('/connected/tokens-to-purchase-pix/confirm'));
   }, [quote, method, seed, router]);
 
-  const presets = [1, 5, 10, 25, 50];
+  const presets = [1000, 2500, 5000, 10000];
 
   if (!seed.propertyTokenizationId && !seedLoading) {
     return (
@@ -465,7 +465,7 @@ export function FmzTenantTokenPurchasePage() {
               <strong className={styles.ctaTotal}>{fmt.money(quote.total)}</strong>
               <span className={styles.ctaMeta}>
                 {fmt.int(quantity)} tokens
-                {quote.processingFee > 0 && ` · taxa ${fmt.money(quote.processingFee)}`}
+                {quote.processingFeeAmount > 0 && ` · taxa ${fmt.money(quote.processingFeeAmount)} (${quote.processingFeePercent}%)`}
               </span>
             </>
           ) : (
@@ -788,8 +788,8 @@ export function FmzTenantTokenPurchasePixPage() {
           </div>
           <div className={styles.amountRight}>
             <b>{fmt.int(cart.quantity)} tokens</b>
-            {cart.quote.processingFee > 0 && (
-              <><br />Taxa {fmt.money(cart.quote.processingFee)} inclusa</>
+            {cart.quote.processingFeeAmount > 0 && (
+              <><br />Taxa {fmt.money(cart.quote.processingFeeAmount)} ({cart.quote.processingFeePercent}%) inclusa</>
             )}
           </div>
         </div>

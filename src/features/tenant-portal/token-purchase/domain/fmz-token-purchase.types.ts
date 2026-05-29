@@ -15,7 +15,8 @@ export interface FmzTokenPurchaseQuote {
   quantity: number;
   unitPrice: number;
   subtotal: number;
-  processingFee: number;
+  processingFeePercent: number;
+  processingFeeAmount: number;
   total: number;
   /** Ready-to-render price breakdown lines. The UI maps over this array. */
   breakdown: Array<{ label: string; amount: number }>;
