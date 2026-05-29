@@ -60,6 +60,7 @@ export function calculateImpactProjection({
 export function buildTokenPurchaseCart({
   quote,
   method,
+  idempotencyKey,
   propertyId,
   currentTokens,
   totalTokens,
@@ -69,7 +70,8 @@ export function buildTokenPurchaseCart({
 }: {
   quote: FmzTokenPurchaseQuote;
   method: FmzTokenPurchasePaymentMethod;
-  propertyId?: number | null;
+  idempotencyKey: string;
+  propertyId?: string | null;
   currentTokens?: number;
   totalTokens?: number;
   currentRent?: number;
@@ -91,6 +93,7 @@ export function buildTokenPurchaseCart({
     method,
     quote,
     ...impact,
+    idempotencyKey,
     createdAt: Date.now(),
     propertyId: propertyId ?? null,
   };

@@ -36,6 +36,7 @@ import type {
 } from '../domain/fmz-token-purchase.types';
 import {
   createTokenPurchasePayment,
+  fetchTokenPurchaseStatus,
   getBoletoLinhaDigitavel,
   getPixCopyPasteCode,
   getPixQrCodeImageSrc,
@@ -90,7 +91,7 @@ function Stepper({ active }: { active: 1 | 2 | 3 }) {
 function BackButton({ fallback = '/connected/dashboard' }: { fallback?: string }) {
   const router = useRouter();
   return (
-    <button type="button" className={styles.back} onClick={() => router.back()}>
+    <button type="button" className={styles.back} onClick={() => router.push(localizedHref(fallback))}>
       <ArrowLeft size={14} /> Voltar
     </button>
   );
@@ -100,7 +101,7 @@ function BackButton({ fallback = '/connected/dashboard' }: { fallback?: string }
 
 interface CartSeed {
   propertyTokenizationId: string | null;
-  propertyId: number | null;
+  propertyId: string | null;
   currentTokens: number;
   totalTokens: number;
   currentRent: number;
@@ -128,10 +129,7 @@ function useDashboardSeed(): { seed: CartSeed; loading: boolean } {
       searchParams.get('propertyTokenizationId')
       ?? (dashboard?.ownership as Record<string, unknown> | undefined | null)?.['propertyTokenizationId'] as string | null
       ?? null,
-    propertyId:
-      searchParams.get('propertyId') != null
-        ? Number(searchParams.get('propertyId'))
-        : dashboard?.property?.id != null ? Number(dashboard.property.id) : null,
+    propertyId: searchParams.get('propertyId') ?? (dashboard?.property?.id != null ? String(dashboard.property.id) : null),
     currentTokens: Number(dashboard?.ownership?.tokenBalance ?? 0),
     totalTokens:   Number(dashboard?.ownership?.totalSupply  ?? 0),
     currentRent:   Number(
@@ -206,6 +204,59 @@ function useTokenPurchaseQuote({
   return state;
 }
 
+// ── Payment status polling hook ────────────────────────────────────────────────
+
+const PAYMENT_POLL_INTERVAL_MS = 5_000;
+
+const isPaymentConfirmed = (paymentStatus?: string | null, tokenOrderStatus?: string | null): boolean =>
+  ['paid', 'authorized'].includes(String(paymentStatus ?? '')) ||
+  ['settlement_pending', 'completed'].includes(String(tokenOrderStatus ?? ''));
+
+function usePaymentStatusPolling({
+  paymentTransactionId,
+  enabled,
+  onConfirmed,
+}: {
+  paymentTransactionId: string | null;
+  enabled: boolean;
+  onConfirmed: () => void;
+}) {
+  const [lastCheckedAt, setLastCheckedAt] = useState<Date | null>(null);
+
+  useEffect(() => {
+    if (!enabled || !paymentTransactionId) return;
+
+    const controller = new AbortController();
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const poll = async () => {
+      try {
+        const status = await fetchTokenPurchaseStatus(paymentTransactionId, controller.signal);
+        if (controller.signal.aborted) return;
+
+        setLastCheckedAt(new Date());
+
+        if (isPaymentConfirmed(status.paymentStatus, status.tokenOrderStatus)) {
+          onConfirmed();
+          return;
+        }
+      } catch {
+        if (controller.signal.aborted) return;
+      }
+      timeoutId = setTimeout(poll, PAYMENT_POLL_INTERVAL_MS);
+    };
+
+    timeoutId = setTimeout(poll, PAYMENT_POLL_INTERVAL_MS);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
+  }, [paymentTransactionId, enabled, onConfirmed]);
+
+  return { lastCheckedAt };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Page 1 — Token selection
 // ─────────────────────────────────────────────────────────────────────────────
@@ -255,6 +306,7 @@ export function FmzTenantTokenPurchasePage() {
     const cart = buildTokenPurchaseCart({
       quote,
       method,
+      idempotencyKey: crypto.randomUUID(),
       propertyId:    seed.propertyId,
       currentTokens: seed.currentTokens,
       totalTokens:   seed.totalTokens,
@@ -678,6 +730,7 @@ export function FmzTenantTokenPurchasePixPage() {
           propertyTokenizationId: cart!.propertyTokenizationId,
           quantity:               cart!.quantity,
           paymentMethod:          cart!.method,
+          idempotencyKey:         cart!.idempotencyKey,
           propertyId:             cart!.propertyId,
         });
         if (!mounted) return;
@@ -706,10 +759,17 @@ export function FmzTenantTokenPurchasePixPage() {
   }, [payment]);
 
   // ── Status polling ───────────────────────────────────────────────────────
-  // Note: status updates arrive primarily via webhook. Polling is a UI safety
-  // net — it will not find updates before the webhook fires, but handles the
-  // case where the user keeps the tab open after the webhook has been processed.
-  // No polling endpoint exists yet; once added, replace the no-op here.
+  const paymentTransactionId = payment?.paymentTransactionId ?? null;
+  const onConfirmed = useCallback(() => {
+    clearTokenPurchaseCart();
+    router.push(localizedHref('/connected/tokens-to-purchase-pix/success'));
+  }, [router]);
+
+  const { lastCheckedAt } = usePaymentStatusPolling({
+    paymentTransactionId,
+    enabled: !!payment && !creating && !errorMsg,
+    onConfirmed,
+  });
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   const minutes = String(Math.floor(remainingSecs / 60)).padStart(2, '0');
@@ -765,6 +825,7 @@ export function FmzTenantTokenPurchasePixPage() {
                 propertyTokenizationId: cart.propertyTokenizationId,
                 quantity:               cart.quantity,
                 paymentMethod:          cart.method,
+                idempotencyKey:         cart.idempotencyKey,
                 propertyId:             cart.propertyId,
               }).then((p) => {
                 setPayment(p);
@@ -829,6 +890,9 @@ export function FmzTenantTokenPurchasePixPage() {
               <span>
                 <b>Verificando automaticamente.</b> Quando o Asaas confirmar o pagamento, você
                 será direcionada para a tela de conclusão.
+                {lastCheckedAt && (
+                  <> · Última verificação: {lastCheckedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</>
+                )}
               </span>
             </div>
           </>
@@ -863,7 +927,10 @@ export function FmzTenantTokenPurchasePixPage() {
             <div className={styles.awaiting}>
               <span className={styles.pulse} />
               <span>
-                <b>Aguardando compensação.</b> A confirmação chega via webhook em até 3 dias úteis.
+                <b>Aguardando compensação.</b> A confirmação chega em até 3 dias úteis.
+                {lastCheckedAt && (
+                  <> · Última verificação: {lastCheckedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</>
+                )}
               </span>
             </div>
           </>

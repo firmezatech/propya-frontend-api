@@ -49,8 +49,9 @@ export interface FmzTokenPurchaseCart {
   newOwnedValue: number;
   propertyValue: number;
   toMilestone: number;
+  idempotencyKey: string;
   createdAt: number;
-  propertyId?: number | null;
+  propertyId?: string | null;
 }
 
 // ── Payment ────────────────────────────────────────────────────────────────────
@@ -91,6 +92,36 @@ export interface FmzTokenPurchasePayment {
   pix?: FmzTokenPurchasePaymentPix | null;
   boleto?: FmzTokenPurchasePaymentBoleto | null;
   raw?: unknown;
+}
+
+// ── Payment status (polling) ───────────────────────────────────────────────────
+
+export interface FmzTokenPurchaseStatusResponse {
+  success: boolean;
+  paymentTransactionId?: string | null;
+  paymentStatus?: string | null;
+  tokenOrderStatus?: string | null;
+  paymentMethod?: string | null;
+  amount?: number | null;
+  currency?: string | null;
+  dueAt?: string | null;
+  paidAt?: string | null;
+  pix?: {
+    qrCode?: string | null;
+    qrCodeImageUrl?: string | null;
+    copyPaste?: string | null;
+    txid?: string | null;
+    dueAt?: string | null;
+    status?: string | null;
+  } | null;
+  boleto?: {
+    linhaDigitavel?: string | null;
+    barcode?: string | null;
+    boletoUrl?: string | null;
+    pdfUrl?: string | null;
+    dueAt?: string | null;
+    status?: string | null;
+  } | null;
 }
 
 // ── Backend response envelope ──────────────────────────────────────────────────

@@ -5,6 +5,7 @@ import type {
   FmzTokenPurchasePaymentMethod,
   FmzTokenPurchaseQuote,
   FmzTokenPurchaseQuoteBackendResponse,
+  FmzTokenPurchaseStatusResponse,
 } from '../domain/fmz-token-purchase.types';
 
 // ── Quote ──────────────────────────────────────────────────────────────────────
@@ -68,12 +69,14 @@ export async function createTokenPurchasePayment({
   propertyTokenizationId,
   quantity,
   paymentMethod,
+  idempotencyKey,
   propertyId,
 }: {
   propertyTokenizationId: string;
   quantity: number;
   paymentMethod: FmzTokenPurchasePaymentMethod;
-  propertyId?: number | null;
+  idempotencyKey: string;
+  propertyId?: string | null;
 }): Promise<FmzTokenPurchasePayment> {
   const response = await authenticatedFirmezaFetch('/tenant/token-purchases/payments', {
     method: 'POST',
@@ -81,6 +84,7 @@ export async function createTokenPurchasePayment({
       propertyTokenizationId,
       quantity,
       paymentMethod,
+      idempotencyKey,
       ...(propertyId != null ? { propertyId } : {}),
     }),
   });
@@ -98,6 +102,19 @@ export async function createTokenPurchasePayment({
   }
 
   return body.payment;
+}
+
+// ── Payment status polling ─────────────────────────────────────────────────────
+
+export async function fetchTokenPurchaseStatus(
+  paymentTransactionId: string,
+  signal?: AbortSignal,
+): Promise<FmzTokenPurchaseStatusResponse> {
+  const response = await authenticatedFirmezaFetch(
+    `/tenant/token-purchases/payments/${encodeURIComponent(paymentTransactionId)}`,
+    { signal },
+  );
+  return (await response.json().catch(() => ({ success: false }))) as FmzTokenPurchaseStatusResponse;
 }
 
 // ── Internal helpers ───────────────────────────────────────────────────────────

@@ -395,9 +395,22 @@ export function FmzWalletPage() {
               <Link href="/connected/coming-soon" className={styles.btn}>
                 <Download size={15} /> Extrato
               </Link>
-              <Link href="/connected/coming-soon" className={`${styles.btn} ${styles.btnPrimary}`}>
-                <Plus size={15} /> Comprar tokens
-              </Link>
+              {(() => {
+                const tokenizationId = dashboard?.ownership?.propertyTokenizationId ?? null;
+                const propId = dashboard?.property?.id != null ? String(dashboard.property.id) : null;
+                const params = [
+                  tokenizationId && `propertyTokenizationId=${encodeURIComponent(tokenizationId)}`,
+                  propId && `propertyId=${encodeURIComponent(propId)}`,
+                ].filter(Boolean).join('&');
+                const buyHref = params
+                  ? `/connected/tokens-to-purchase-pix?${params}`
+                  : '/connected/tokens-to-purchase-pix';
+                return (
+                  <Link href={buyHref} className={`${styles.btn} ${styles.btnPrimary}`}>
+                    <Plus size={15} /> Comprar tokens
+                  </Link>
+                );
+              })()}
             </div>
           </div>
 
