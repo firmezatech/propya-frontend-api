@@ -9,7 +9,7 @@
  *   - New `TenantOwnershipGoal` optional fields are accepted by the type
  */
 
-import { buildRenterDashboardViewModel } from '../features/renter-dashboard/domain/fmz-renter-dashboard-view-model';
+import { buildRenterDashboardViewModel } from '../features/tenant-portal/renter-dashboard/domain/fmz-renter-dashboard-view-model';
 import type { FmzTenantDashboard } from '../features/tenant-portal/domain/fmz-tenant-portal.types';
 import type { TenantOwnershipGoal } from '../features/tenant-portal/domain/fmz-tenant-portal.types';
 

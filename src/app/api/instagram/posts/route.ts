@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fmzInstagramFallbackPosts, fmzInstagramFeedConfig } from '../../../../features/instagram-feed/config';
+import { fmzInstagramFallbackPosts, fmzInstagramFeedConfig } from '../../../../features/instagram-feed/fmz-instagram-feed.config';
 import type { FmzInstagramFeedResponse, FmzInstagramPost } from '../../../../features/instagram-feed/domain/fmz-instagram-feed.types';
 
 export const dynamic = 'force-dynamic';

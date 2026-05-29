@@ -8,7 +8,7 @@ import {
   getEnabledFmzPhoneCountries,
   getFmzPhoneCountry,
   type FmzPhoneCountryCode,
-} from '../../../services/phone-country-format';
+} from '../../../lib/fmz-phone-country-format';
 import { FmzSelect, FmzTextInput } from '../../../components/design-system';
 import { FmzFieldErrorMessage } from '../../api-errors/components';
 

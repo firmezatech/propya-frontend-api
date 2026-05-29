@@ -6,10 +6,10 @@ import { useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { FmzBrandMark } from '../../../components/layout';
 import { FmzButton } from '../../../components/design-system';
-import { FmzPasswordInput } from '../../auth-access/components/FmzPasswordInput';
+import { FmzPasswordInput } from './FmzPasswordInput';
 import { FmzFormAlert } from '../../api-errors/components';
 import { FMZ_API_ERROR_CODES, type FmzFieldErrorMap, type FmzNormalizedApiError } from '../../api-errors/domain';
-import { resetPassword } from '../../../services/login-fmz-api';
+import { resetPassword } from '../services/fmz-password-reset-api';
 import { buildFmzResetPasswordSchema } from '../domain/fmz-password-reset-validation';
 
 const zodPathToField: Record<string, keyof FmzFieldErrorMap> = Object.freeze({

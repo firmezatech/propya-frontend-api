@@ -25,7 +25,7 @@ const matchDynamicPath = (allowedPath: string, currentPath: string): boolean => 
 
 const CONNECTED_SYSTEM_BYPASS_PATHS = [
   fmzPublicLayoutConfig.connectedLogoutPath,
-  '/connected/tokensToPurchasePix',
+  '/connected/tokens-to-purchase-pix',
 ] as const;
 
 export const isFmzConnectedSystemBypassPath = (pathname: string | null | undefined): boolean => {

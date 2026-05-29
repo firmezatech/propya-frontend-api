@@ -25,7 +25,7 @@ import type { FmzConnectedUserSummary } from './connected-user/fmz-connected-use
 import { FmzAdminSidebar } from './FmzAdminSidebar';
 import { FmzAdminContentShell } from './FmzAdminContentShell';
 import { FmzAdminHeader } from './FmzAdminHeader';
-import { useAdminNotifications } from '../../features/admin-notifications/hooks/use-admin-notifications';
+import { useFmzAdminNotifications } from '../../features/admin-notifications/hooks/fmz-admin-notifications';
 
 export type FmzAdminLayoutProps = {
   children: ReactNode;
@@ -122,7 +122,7 @@ function applyPrincipalToUserState(
  * does not need to know about admin-specific overflow strategy.
  *
  * Data flow:
- *   useAdminNotifications() → FmzAdminHeader → FmzAdminNotificationBell
+ *   useFmzAdminNotifications() → FmzAdminHeader → FmzAdminNotificationBell
  *   principal            → FmzAdminSidebar (navigation items + permissions)
  */
 export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLayoutProps) {
@@ -202,7 +202,7 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
     fetchNotifications,
     handleMarkAsRead: handleNotificationMarkAsRead,
     handleMarkAllAsRead: handleNotificationMarkAllAsRead,
-  } = useAdminNotifications();
+  } = useFmzAdminNotifications();
 
   return (
     // The admin layout owns its own full-viewport height and overflow strategy.

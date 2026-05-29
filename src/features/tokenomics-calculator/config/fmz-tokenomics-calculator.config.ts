@@ -5,5 +5,5 @@ const readPublicEnv = (key: string, fallback: string): string => {
 
 export const fmzTokenomicsCalculatorConfig = {
   calculatePath: readPublicEnv('NEXT_PUBLIC_FMZ_TOKENOMICS_CALCULATE_PATH', '/tokenomics/calculate'),
-  pagePath: readPublicEnv('NEXT_PUBLIC_FMZ_TOKENOMICS_CALCULATOR_PATH', '/connected/invoicesAdmin/tokenomicsCalculator'),
+  pagePath: readPublicEnv('NEXT_PUBLIC_FMZ_TOKENOMICS_CALCULATOR_PATH', '/connected/invoicesAdmin/tokenomics-calculator'),
 } as const;

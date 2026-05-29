@@ -1,10 +1,6 @@
 import { Activity, Building2, FileText, Home, LucideIcon, ReceiptText, ShieldCheck, SlidersHorizontal, UserRound, Wrench } from 'lucide-react';
 import { fmzPublicLayoutConfig } from './fmz-public-layout-config';
-
-const getPublicEnvValue = (key: string, fallback: string): string => {
-  const value = process.env[key];
-  return value && value.trim().length > 0 ? value.trim() : fallback;
-};
+import { getPublicEnvValue } from '../lib/fmz-env';
 
 export type FmzAdminNavigationItem = {
   id: string;
@@ -97,7 +93,7 @@ export const fmzAdminNavigationConfig = {
       id: 'admin.tenant_settings',
       pageKey: 'admin.tenant_settings',
       label: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TENANT_SETTINGS_LABEL', 'Parâmetros'),
-      href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TENANT_SETTINGS_PATH', '/connected/tenantSettings'),
+      href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TENANT_SETTINGS_PATH', '/connected/tenant-settings'),
       requiredPermissionKey: 'admin.tenant_settings.view',
       icon: SlidersHorizontal,
     },

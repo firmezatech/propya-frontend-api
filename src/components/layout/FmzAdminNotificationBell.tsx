@@ -23,8 +23,8 @@ import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isSafeInternalPath } from '../../lib/fmz-safe-url';
 import type { AdminNotificationType } from '../../features/admin-notifications/domain/fmz-admin-notifications.types';
-import type { AdminNotificationsState } from '../../features/admin-notifications/hooks/use-admin-notifications';
-import { NotificationBellDropdown } from './notifications/NotificationBellDropdown';
+import type { AdminNotificationsState } from '../../features/admin-notifications/hooks/fmz-admin-notifications';
+import { FmzNotificationBellDropdown } from './notifications/FmzNotificationBellDropdown';
 import type {
   DropdownNotification,
   NotificationDropdownState,
@@ -134,7 +134,7 @@ export function FmzAdminNotificationBell({
   const dropdownState = bridgeToDropdownState(notificationsState);
 
   return (
-    <NotificationBellDropdown
+    <FmzNotificationBellDropdown
       isOpen={isOpen}
       onToggle={handleToggle}
       onClose={closePanel}

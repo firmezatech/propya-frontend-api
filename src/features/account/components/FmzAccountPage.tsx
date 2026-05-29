@@ -8,23 +8,23 @@ import { FmzConnectedPageShell } from '../../../components/layout';
 import { FmzFormAlert } from '../../api-errors/components';
 import { FMZ_API_ERROR_CODES } from '../../api-errors/domain';
 import type { FmzNormalizedApiError } from '../../api-errors/domain';
-import { updateUser } from '../../../services/login-fmz-api';
+import { updateUser } from '../services/fmz-user-api';
 import { getCurrentAccountUser } from '../services/fmz-current-account-api';
 
-import type { AccountFieldErrors, AccountPageUser, PasswordVisibilityState } from '../domain/account-page.types';
-import { formatCepInput, normalizeBirthdateForForm, getPasswordStrength, sanitizeUserForForm } from '../domain/account-formatters';
+import type { AccountFieldErrors, AccountPageUser, PasswordVisibilityState } from '../domain/fmz-account-page.types';
+import { formatCepInput, normalizeBirthdateForForm, getPasswordStrength, sanitizeUserForForm } from '../domain/fmz-account-formatters';
 import type { TenantUserData } from '../../tenant-portal/domain/fmz-tenant-profile.types';
 
-import { useTenantProfile } from '../hooks/use-tenant-profile';
+import { useFmzTenantProfile } from '../hooks/fmz-tenant-profile';
 
-import { AccountSidebar } from './AccountSidebar';
-import { AccountHeader } from './AccountHeader';
-import { AccountKycProgressBanner } from './AccountKycProgressBanner';
-import { PersonalDataCard } from './PersonalDataCard';
-import { AddressCard } from './AddressCard';
-import { WalletInfoCard } from './WalletInfoCard';
-import { PasswordCard } from './PasswordCard';
-import { KycDocumentsCard } from './KycDocumentsCard';
+import { FmzAccountSidebar } from './FmzAccountSidebar';
+import { FmzAccountHeader } from './FmzAccountHeader';
+import { FmzAccountKycProgressBanner } from './FmzAccountKycProgressBanner';
+import { FmzPersonalDataCard } from './FmzPersonalDataCard';
+import { FmzAddressCard } from './FmzAddressCard';
+import { FmzWalletInfoCard } from './FmzWalletInfoCard';
+import { FmzPasswordCard } from './FmzPasswordCard';
+import { FmzKycDocumentsCard } from './FmzKycDocumentsCard';
 import styles from './FmzAccountPage.module.css';
 
 const EMPTY_PASSWORD_VISIBILITY: PasswordVisibilityState = { current: false, next: false, confirmation: false };
@@ -75,7 +75,7 @@ export function FmzAccountPage() {
   const toastTimerRef = useRef<number | null>(null);
 
   // ── Primary source of truth: GET /tenant/profile ───────────────────────────
-  const { profileState, uploadState, uploadKycDocument, refetchProfile } = useTenantProfile();
+  const { profileState, uploadState, uploadKycDocument, refetchProfile } = useFmzTenantProfile();
 
   // Once the form is initialised from the first successful profile load, this
   // ref stays true. Profile refetches (e.g. after KYC upload) do not re-init
@@ -228,10 +228,10 @@ export function FmzAccountPage() {
 
   return (
     <FmzConnectedPageShell width="tenant" className={styles.page}>
-      <AccountSidebar />
+      <FmzAccountSidebar />
 
       <main className={styles.main}>
-        <AccountHeader />
+        <FmzAccountHeader />
 
         <FmzFormAlert error={apiError} />
 
@@ -270,13 +270,13 @@ export function FmzAccountPage() {
           <>
             {/* KYC progress banner — always driven by the latest profile data */}
             {profileData ? (
-              <AccountKycProgressBanner
+              <FmzAccountKycProgressBanner
                 completion={profileData.completion}
                 kycStatus={profileData.kyc.status}
               />
             ) : null}
 
-            <PersonalDataCard
+            <FmzPersonalDataCard
               userData={userData}
               isSaving={isSaving}
               onFieldChange={updateUserField}
@@ -284,7 +284,7 @@ export function FmzAccountPage() {
               onSave={() => void handleSaveChanges('Dados pessoais salvos!')}
             />
 
-            <AddressCard
+            <FmzAddressCard
               userData={userData}
               isSaving={isSaving}
               onFieldChange={updateUserField}
@@ -293,9 +293,9 @@ export function FmzAccountPage() {
               onCepSearch={() => showToast('Buscando CEP...')}
             />
 
-            <WalletInfoCard userData={userData} />
+            <FmzWalletInfoCard userData={userData} />
 
-            <PasswordCard
+            <FmzPasswordCard
               userData={userData}
               isSaving={isSaving}
               fieldErrors={fieldErrors}
@@ -325,7 +325,7 @@ export function FmzAccountPage() {
                 </div>
               </div>
             ) : (
-              <KycDocumentsCard
+              <FmzKycDocumentsCard
                 documents={profileData?.kyc.documents ?? []}
                 onUpload={uploadKycDocument}
                 onToast={showToast}

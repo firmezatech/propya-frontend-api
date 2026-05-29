@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { z } from 'zod';
 import { Link, useRouter } from '../../../i18n/navigation';
-import { login, type LoginType } from '../../../services/login-fmz-api';
+import { login, type LoginType } from '../services/fmz-login-api';
 import { FmzAuthHeader, FmzFullPageLoading } from '../../../components/layout';
 import { FMZ_API_ERROR_CODES, type FmzFieldErrorMap, type FmzNormalizedApiError } from '../../api-errors/domain';
 import { buildFmzLoginSchema } from '../domain/fmz-auth-access-validation';

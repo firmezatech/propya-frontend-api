@@ -15,3 +15,5 @@ export * from './FmzNeutralLoadingHeader';
 export * from './FmzFullPageLoading';
 export * from './FmzAdminContentShell';
 export { FmzAuthHeader } from './FmzAuthHeader';
+export { FmzAuthenticatedRoute } from './FmzAuthenticatedRoute';
+export { FmzConnectedLayoutFrame } from './FmzConnectedLayoutFrame';

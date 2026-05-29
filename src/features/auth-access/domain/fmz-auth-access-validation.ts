@@ -1,6 +1,6 @@
 import { z } from 'zod';
+import { isValidFmzEmail } from '../../../lib/fmz-validators';
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const BIRTHDATE_PATTERN = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
 
 const parseBrazilianBirthdate = (birthdate: string): Date | null => {
@@ -23,7 +23,7 @@ const getMinimumBirthdate = (minimumAge: number): Date => {
   return minimumBirthdate;
 };
 
-export const isValidFmzEmail = (email: string): boolean => EMAIL_PATTERN.test(email.trim());
+export { isValidFmzEmail };
 
 export const isValidAdultBirthdate = (birthdate: string, minimumAge: number): boolean => {
   const parsedBirthdate = parseBrazilianBirthdate(birthdate);

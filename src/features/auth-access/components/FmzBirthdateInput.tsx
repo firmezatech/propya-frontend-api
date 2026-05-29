@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { formatBirthdateInput } from '../../../services/phone-country-format';
+import { formatBirthdateInput } from '../../../lib/fmz-phone-country-format';
 import { FmzTextInput } from '../../../components/design-system';
 import { FmzFieldErrorMessage } from '../../api-errors/components';
 

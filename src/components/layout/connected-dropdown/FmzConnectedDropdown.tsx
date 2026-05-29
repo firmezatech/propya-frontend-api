@@ -23,8 +23,8 @@ import { performFirmezaLogout } from '../../../services/auth/fmz-logout';
 import type { FmzConnectedDropdownItem } from './fmz-connected-dropdown.types';
 import type { FmzConnectedUserSummary } from '../connected-user/fmz-connected-user.types';
 import type { TenantNotificationType } from '../../../features/tenant-portal/domain/fmz-tenant-notifications.types';
-import { useTenantNotifications } from './use-tenant-notifications';
-import { NotificationBellDropdown } from '../notifications/NotificationBellDropdown';
+import { useFmzTenantNotifications } from '../../../features/tenant-portal/hooks/fmz-tenant-notifications';
+import { FmzNotificationBellDropdown } from '../notifications/FmzNotificationBellDropdown';
 import type {
   DropdownNotification,
   NotificationDropdownState,
@@ -117,7 +117,7 @@ export function FmzConnectedDropdown({
     fetchNotifications,
     handleMarkAsRead,
     handleMarkAllAsRead,
-  } = useTenantNotifications();
+  } = useFmzTenantNotifications();
 
   useEffect(() => {
     setUserSummary(buildFmzConnectedUserSummary());
@@ -195,7 +195,7 @@ export function FmzConnectedDropdown({
     router.push(localizeHref(item.href));
   };
 
-  // Bridge useTenantNotifications state → NotificationDropdownState
+  // Bridge useFmzTenantNotifications state → NotificationDropdownState
   const notificationDropdownState: NotificationDropdownState =
     notificationsState.status === 'ready'
       ? { status: 'ready', notifications: notificationsState.notifications }
@@ -209,7 +209,7 @@ export function FmzConnectedDropdown({
       <button
         type="button"
         aria-label="Ajuda"
-        onClick={() => router.push(localizeHref('/connected/comingSoon'))}
+        onClick={() => router.push(localizeHref('/connected/coming-soon'))}
         className="hidden items-center gap-1.5 rounded-lg bg-transparent px-3 py-2 text-[13px] font-medium text-fmz-text-muted transition hover:bg-fmz-page hover:text-fmz-navy sm:inline-flex"
       >
         <Shield className="h-3.5 w-3.5" aria-hidden="true" />
@@ -217,7 +217,7 @@ export function FmzConnectedDropdown({
       </button>
 
       {/* Tenant notification bell — tenant endpoints only */}
-      <NotificationBellDropdown
+      <FmzNotificationBellDropdown
         isOpen={isNotificationsOpen}
         onToggle={handleNotificationToggle}
         onClose={handleNotificationClose}
@@ -235,7 +235,7 @@ export function FmzConnectedDropdown({
               type="button"
               onClick={() => {
                 closeAll();
-                router.push(localizeHref('/connected/comingSoon'));
+                router.push(localizeHref('/connected/coming-soon'));
               }}
               className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-fmz-navy transition hover:text-[#8A6B12]"
             >
@@ -245,7 +245,7 @@ export function FmzConnectedDropdown({
               type="button"
               onClick={() => {
                 closeAll();
-                router.push(localizeHref('/connected/comingSoon'));
+                router.push(localizeHref('/connected/coming-soon'));
               }}
               className="text-xs text-fmz-text-hint transition hover:text-fmz-navy"
             >

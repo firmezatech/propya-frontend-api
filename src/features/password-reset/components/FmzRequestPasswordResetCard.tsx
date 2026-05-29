@@ -5,11 +5,10 @@ import { useRouter } from '../../../i18n/navigation';
 import { z } from 'zod';
 import { FmzBrandMark } from '../../../components/layout';
 import { FmzButton } from '../../../components/design-system';
-import { FmzEmailInput } from '../../auth-access/components/FmzEmailInput';
+import { FmzEmailInput } from './FmzEmailInput';
 import { FmzFormAlert } from '../../api-errors/components';
 import { FMZ_API_ERROR_CODES, type FmzFieldErrorMap, type FmzNormalizedApiError } from '../../api-errors/domain';
-import { getFmzAuthAccessConfig } from '../../auth-access/config/fmz-auth-access-config';
-import { requestPasswordReset } from '../../../services/login-fmz-api';
+import { getFmzPasswordResetConfig, requestPasswordReset } from '../services/fmz-password-reset-api';
 import { buildFmzRequestPasswordResetSchema } from '../domain/fmz-password-reset-validation';
 
 const buildValidationError = (error: z.ZodError): { fieldErrors: FmzFieldErrorMap; alertError: FmzNormalizedApiError } => {
@@ -29,7 +28,7 @@ const buildValidationError = (error: z.ZodError): { fieldErrors: FmzFieldErrorMa
 
 export function FmzRequestPasswordResetCard() {
   const router = useRouter();
-  const authAccessConfig = useMemo(() => getFmzAuthAccessConfig(), []);
+  const authAccessConfig = useMemo(() => getFmzPasswordResetConfig(), []);
   const [apiError, setApiError] = useState<FmzNormalizedApiError | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FmzFieldErrorMap>({});
   const [message, setMessage] = useState('');

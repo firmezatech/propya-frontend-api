@@ -1,7 +1,4 @@
-const readPublicEnvValue = (key: string, fallback: string): string => {
-  const value = process.env[key];
-  return value && value.trim().length > 0 ? value.trim() : fallback;
-};
+import { getPublicEnvValue as readPublicEnvValue } from '../../lib/fmz-env';
 
 export const FMZ_AUTH_SESSION_CHANGED_EVENT = 'fmzAuthSessionChanged';
 

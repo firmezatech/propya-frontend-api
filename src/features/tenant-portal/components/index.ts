@@ -1,2 +1,2 @@
 export * from './FmzTenantPortalPage';
-export * from './TenantContractModule';
+export * from './FmzTenantContractModule';

@@ -545,7 +545,7 @@ function TenantOwnershipHeroCard({ contractPage }: { contractPage: FmzTenantCont
         ) : (
           <span>Tokens acumulados ao longo do contrato</span>
         )}
-        <a href="/connected/comingSoon" className={styles.ownFootLink}>
+        <a href="/connected/coming-soon" className={styles.ownFootLink}>
           Comprar tokens <ArrowRight className="h-3 w-3" />
         </a>
       </div>
@@ -583,7 +583,7 @@ export function FmzTenantContractPage({ contractPage, contractDocumentUrl }: Fmz
           </div>
         </div>
         <div className={styles.pageHeadRight}>
-          <a href="/connected/comingSoon" className={styles.btnPrimary}>
+          <a href="/connected/coming-soon" className={styles.btnPrimary}>
             <Plus className="h-4 w-4" /> Comprar tokens
           </a>
         </div>

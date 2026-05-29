@@ -1,7 +1,8 @@
 import { fmzPublicLayoutConfig } from '../../../config/fmz-public-layout-config';
 import { getCurrentAccessControlPrincipal } from '../../access-control/services';
 import { getCurrentTenantDashboard } from '../../tenant-portal/services';
-import { getUserByWallet, type UserType } from '../../../services/login-fmz-api';
+import { getUserByWallet } from './fmz-user-api';
+import type { UserType } from '../domain/fmz-user.types';
 
 type StoredAccountSnapshot = Pick<UserType, 'name' | 'email' | 'wallet'> & { profile?: number };
 type UnknownRecord = Record<string, unknown>;

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { RegisterPage } from '../../../features/auth-access/register/RegisterPage';
+import { FmzRegisterPage } from '../../../features/auth-access/register/FmzRegisterPage';
 
 export const metadata: Metadata = {
   title: 'Criar conta | Propya',
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function RegisterRoute() {
-  return <RegisterPage />;
+  return <FmzRegisterPage />;
 }

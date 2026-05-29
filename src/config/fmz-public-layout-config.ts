@@ -1,11 +1,8 @@
+import { getPublicEnvValue } from '../lib/fmz-env';
+
 export type FmzSocialLink = {
   label: string;
   href: string;
-};
-
-const getPublicEnvValue = (key: string, fallback: string): string => {
-  const value = process.env[key];
-  return value && value.trim().length > 0 ? value.trim() : fallback;
 };
 
 const buildSocialLink = (label: string, envKey: string, fallbackHref: string): FmzSocialLink => ({
@@ -20,14 +17,14 @@ export const fmzPublicLayoutConfig = {
   connectedDashboardPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_DASHBOARD_PATH', '/connected/dashboard'),
   connectedAccountPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ACCOUNT_PATH', '/connected/account'),
   connectedLogoutPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_LOGOUT_PATH', '/connected/logout'),
-  connectedAdminRolesPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_ROLES_PATH', '/connected/adminRoles'),
+  connectedAdminRolesPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_ROLES_PATH', '/connected/admin-roles'),
   connectedDashboardLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_DASHBOARD_LABEL', 'Início'),
   connectedAccountLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ACCOUNT_LABEL', 'Minha Conta'),
   connectedLogoutLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_LOGOUT_LABEL', 'Sair da conta'),
   connectedAdminRolesLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_ROLES_LABEL', 'Roles'),
-  connectedAdminUsersPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_USERS_PATH', '/connected/adminUserList'),
-  connectedAdminPropertiesPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_PROPERTIES_PATH', '/connected/propertyManagement'),
-  connectedAdminTenantSettingsPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TENANT_SETTINGS_PATH', '/connected/tenantSettings'),
+  connectedAdminUsersPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_USERS_PATH', '/connected/admin-user-list'),
+  connectedAdminPropertiesPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_PROPERTIES_PATH', '/connected/property-management'),
+  connectedAdminTenantSettingsPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TENANT_SETTINGS_PATH', '/connected/tenant-settings'),
   connectedAdminUsersLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_USERS_LABEL', 'Usuários'),
   connectedAdminPropertiesLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_PROPERTIES_LABEL', 'Imóveis'),
   defaultConnectedUserName: getPublicEnvValue('NEXT_PUBLIC_FMZ_DEFAULT_CONNECTED_USER_NAME', 'Firmeza Token'),

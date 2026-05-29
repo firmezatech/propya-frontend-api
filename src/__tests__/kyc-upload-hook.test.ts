@@ -1,5 +1,5 @@
 /**
- * Tests: useTenantProfile — upload error contract
+ * Tests: useFmzTenantProfile — upload error contract
  *
  * Verifies:
  *   - uploadKycDocument rethrows on API failure
@@ -25,7 +25,7 @@ jest.mock('../features/tenant-portal/services/fmz-tenant-profile-api', () => ({
   uploadTenantKycDocument: (...args: unknown[]) => mockUploadTenantKycDocument(...args),
 }));
 
-import { useTenantProfile } from '../features/account/hooks/use-tenant-profile';
+import { useFmzTenantProfile } from '../features/account/hooks/fmz-tenant-profile';
 import type { TenantKycDocumentUploadParams } from '../features/tenant-portal/domain/fmz-tenant-profile.types';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -91,15 +91,15 @@ beforeEach(() => {
 
 // ─── Initial load ─────────────────────────────────────────────────────────────
 
-describe('useTenantProfile — initial profile load', () => {
+describe('useFmzTenantProfile — initial profile load', () => {
 
   it('starts in loading state', () => {
-    const { result } = renderHook(() => useTenantProfile());
+    const { result } = renderHook(() => useFmzTenantProfile());
     expect(result.current.profileState.status).toBe('loading');
   });
 
   it('transitions to ready after successful profile fetch', async () => {
-    const { result } = renderHook(() => useTenantProfile());
+    const { result } = renderHook(() => useFmzTenantProfile());
     await waitFor(() => {
       expect(result.current.profileState.status).toBe('ready');
     });
@@ -107,7 +107,7 @@ describe('useTenantProfile — initial profile load', () => {
 
   it('transitions to error after failed profile fetch', async () => {
     mockGetTenantProfile.mockRejectedValue(new Error('Network error'));
-    const { result } = renderHook(() => useTenantProfile());
+    const { result } = renderHook(() => useFmzTenantProfile());
     await waitFor(() => {
       expect(result.current.profileState.status).toBe('error');
     });
@@ -120,7 +120,7 @@ describe('useTenantProfile — initial profile load', () => {
 
 // ─── Upload success ───────────────────────────────────────────────────────────
 
-describe('useTenantProfile — upload success', () => {
+describe('useFmzTenantProfile — upload success', () => {
 
   it('sets uploadState to "uploading" while upload is in progress', async () => {
     let resolveUpload!: () => void;
@@ -128,7 +128,7 @@ describe('useTenantProfile — upload success', () => {
       () => new Promise<void>((resolve) => { resolveUpload = resolve; }),
     );
 
-    const { result } = renderHook(() => useTenantProfile());
+    const { result } = renderHook(() => useFmzTenantProfile());
     await waitFor(() => expect(result.current.profileState.status).toBe('ready'));
 
     let uploadPromise: Promise<void>;
@@ -150,7 +150,7 @@ describe('useTenantProfile — upload success', () => {
   it('sets uploadState to "success" after upload resolves', async () => {
     mockUploadTenantKycDocument.mockResolvedValue(undefined);
 
-    const { result } = renderHook(() => useTenantProfile());
+    const { result } = renderHook(() => useFmzTenantProfile());
     await waitFor(() => expect(result.current.profileState.status).toBe('ready'));
 
     await act(async () => {
@@ -163,7 +163,7 @@ describe('useTenantProfile — upload success', () => {
   it('does NOT throw on upload success', async () => {
     mockUploadTenantKycDocument.mockResolvedValue(undefined);
 
-    const { result } = renderHook(() => useTenantProfile());
+    const { result } = renderHook(() => useFmzTenantProfile());
     await waitFor(() => expect(result.current.profileState.status).toBe('ready'));
 
     await expect(
@@ -176,7 +176,7 @@ describe('useTenantProfile — upload success', () => {
   it('calls profile refetch (getTenantProfile) after successful upload', async () => {
     mockUploadTenantKycDocument.mockResolvedValue(undefined);
 
-    const { result } = renderHook(() => useTenantProfile());
+    const { result } = renderHook(() => useFmzTenantProfile());
     await waitFor(() => expect(result.current.profileState.status).toBe('ready'));
 
     // Reset so we can count calls after the upload
@@ -193,13 +193,13 @@ describe('useTenantProfile — upload success', () => {
 
 // ─── Upload failure ───────────────────────────────────────────────────────────
 
-describe('useTenantProfile — upload failure', () => {
+describe('useFmzTenantProfile — upload failure', () => {
 
   it('RETHROWS the error from uploadTenantKycDocument', async () => {
     const uploadError = new Error('Arquivo inválido. Envie PDF, JPG ou PNG.');
     mockUploadTenantKycDocument.mockRejectedValue(uploadError);
 
-    const { result } = renderHook(() => useTenantProfile());
+    const { result } = renderHook(() => useFmzTenantProfile());
     await waitFor(() => expect(result.current.profileState.status).toBe('ready'));
 
     await expect(
@@ -212,7 +212,7 @@ describe('useTenantProfile — upload failure', () => {
   it('sets uploadState to "error" with the backend message on failure', async () => {
     mockUploadTenantKycDocument.mockRejectedValue(new Error('Formato de arquivo não suportado.'));
 
-    const { result } = renderHook(() => useTenantProfile());
+    const { result } = renderHook(() => useFmzTenantProfile());
     await waitFor(() => expect(result.current.profileState.status).toBe('ready'));
 
     await act(async () => {
@@ -232,7 +232,7 @@ describe('useTenantProfile — upload failure', () => {
   it('uses a generic fallback message when the thrown error is not an Error instance', async () => {
     mockUploadTenantKycDocument.mockRejectedValue('string error');
 
-    const { result } = renderHook(() => useTenantProfile());
+    const { result } = renderHook(() => useFmzTenantProfile());
     await waitFor(() => expect(result.current.profileState.status).toBe('ready'));
 
     await act(async () => {
@@ -252,7 +252,7 @@ describe('useTenantProfile — upload failure', () => {
   it('does NOT call getTenantProfile (profile refetch) when upload fails', async () => {
     mockUploadTenantKycDocument.mockRejectedValue(new Error('Upload failed'));
 
-    const { result } = renderHook(() => useTenantProfile());
+    const { result } = renderHook(() => useFmzTenantProfile());
     await waitFor(() => expect(result.current.profileState.status).toBe('ready'));
 
     const callCountBefore = mockGetTenantProfile.mock.calls.length;
@@ -273,7 +273,7 @@ describe('useTenantProfile — upload failure', () => {
 
 // ─── Refetch failure after successful upload ───────────────────────────────────
 
-describe('useTenantProfile — profile refetch failure after successful upload', () => {
+describe('useFmzTenantProfile — profile refetch failure after successful upload', () => {
 
   it('does NOT throw from uploadKycDocument when profile refetch fails', async () => {
     mockUploadTenantKycDocument.mockResolvedValue(undefined);
@@ -282,7 +282,7 @@ describe('useTenantProfile — profile refetch failure after successful upload',
       .mockResolvedValueOnce(PROFILE_RESPONSE)
       .mockRejectedValueOnce(new Error('Refetch network error'));
 
-    const { result } = renderHook(() => useTenantProfile());
+    const { result } = renderHook(() => useFmzTenantProfile());
     await waitFor(() => expect(result.current.profileState.status).toBe('ready'));
 
     // uploadKycDocument must NOT throw even though profile refetch fails
@@ -299,7 +299,7 @@ describe('useTenantProfile — profile refetch failure after successful upload',
       .mockResolvedValueOnce(PROFILE_RESPONSE)
       .mockRejectedValueOnce(new Error('Refetch failed'));
 
-    const { result } = renderHook(() => useTenantProfile());
+    const { result } = renderHook(() => useFmzTenantProfile());
     await waitFor(() => expect(result.current.profileState.status).toBe('ready'));
 
     await act(async () => {
@@ -316,7 +316,7 @@ describe('useTenantProfile — profile refetch failure after successful upload',
       .mockResolvedValueOnce(PROFILE_RESPONSE)
       .mockRejectedValueOnce(new Error('Server unavailable'));
 
-    const { result } = renderHook(() => useTenantProfile());
+    const { result } = renderHook(() => useFmzTenantProfile());
     await waitFor(() => expect(result.current.profileState.status).toBe('ready'));
 
     await act(async () => {

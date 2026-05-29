@@ -32,8 +32,8 @@ import {
   validateCpf,
   validateStep1,
   validateStep2,
-} from '../features/auth-access/register/register.validation';
-import type { RegisterFormData } from '../features/auth-access/register/register.types';
+} from '../features/auth-access/register/fmz-register-validation';
+import type { RegisterFormData } from '../features/auth-access/register/fmz-register.types';
 
 // ─── maskCpf ──────────────────────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 /**
- * Tests: NotificationBellDropdown — shared component logic
+ * Tests: FmzNotificationBellDropdown — shared component logic
  *
  * Tests focus on:
  *   - formatRelativeTime utility
@@ -10,7 +10,7 @@
  *   - DropdownNotification shape satisfies AdminNotification and TenantNotification
  */
 
-import { formatRelativeTime } from '../components/layout/notifications/NotificationBellDropdown';
+import { formatRelativeTime } from '../components/layout/notifications/FmzNotificationBellDropdown';
 import { isSafeInternalPath } from '../lib/fmz-safe-url';
 import { resolveAdminNotificationVisual } from '../components/layout/FmzAdminNotificationBell';
 import { resolveTenantNotificationVisual } from '../components/layout/connected-dropdown/FmzConnectedDropdown';
@@ -334,7 +334,7 @@ describe('Stable header layout — dimension contracts', () => {
     // Contract: the bell button always occupies h-[38px] w-[38px] space.
     // Verified by asserting the CSS class strings are present in the component source.
     const bellButtonClasses = 'h-[38px] w-[38px] shrink-0';
-    // The bell button in NotificationBellDropdown uses these classes.
+    // The bell button in FmzNotificationBellDropdown uses these classes.
     // This documents the invariant so regressions are caught at review time.
     expect(bellButtonClasses).toContain('h-[38px]');
     expect(bellButtonClasses).toContain('w-[38px]');

@@ -9,7 +9,7 @@
  */
 
 import type { TenantKycDocument, TenantKycDocumentStatus, TenantProfileCompletion } from '../features/tenant-portal/domain/fmz-tenant-profile.types';
-import { resolveKycDocumentStatusVisual } from '../features/account/domain/account-status-config';
+import { resolveKycDocumentStatusVisual } from '../features/account/domain/fmz-account-status-config';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 

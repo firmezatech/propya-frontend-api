@@ -1,5 +1,5 @@
 /**
- * Tests: KycDocumentsCard — component rendering
+ * Tests: FmzKycDocumentsCard — component rendering
  *
  * Verifies:
  *   - Document title and description render as readable text
@@ -23,7 +23,7 @@
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { KycDocumentsCard } from '../features/account/components/KycDocumentsCard';
+import { FmzFmzKycDocumentsCard } from '../features/account/components/FmzKycDocumentsCard';
 import type { TenantKycDocument, TenantKycDocumentUploadParams } from '../features/tenant-portal/domain/fmz-tenant-profile.types';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -60,48 +60,48 @@ beforeEach(() => {
 
 // ─── Title and description rendering ─────────────────────────────────────────
 
-describe('KycDocumentsCard — text rendering', () => {
+describe('FmzKycDocumentsCard — text rendering', () => {
 
   it('renders the document label as a single readable text node', () => {
-    render(<KycDocumentsCard {...defaultProps} />);
+    render(<FmzKycDocumentsCard {...defaultProps} />);
     // getByText throws if the full string is not found → proves no word-by-word wrapping in DOM
     screen.getByText('Documento de identidade');
   });
 
   it('falls back to the description field when status produces no meta override', () => {
     const doc = makeDoc({ status: 'pending', fileName: null });
-    render(<KycDocumentsCard {...defaultProps} documents={[doc]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[doc]} />);
     screen.getByText('RG, CNH ou documento oficial com foto');
   });
 
   it('shows fileName as meta text when a file has been submitted', () => {
     const doc = makeDoc({ status: 'pending', fileName: 'meu_rg.pdf' });
-    render(<KycDocumentsCard {...defaultProps} documents={[doc]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[doc]} />);
     screen.getByText('meu_rg.pdf');
   });
 
   it('shows rejection reason for rejected documents', () => {
     const doc = makeDoc({ status: 'rejected', rejectionReason: 'Documento ilegível' });
-    render(<KycDocumentsCard {...defaultProps} documents={[doc]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[doc]} />);
     screen.getByText('Rejeitado: Documento ilegível');
   });
 
   it('shows resubmission reason for needs_resubmission documents', () => {
     const doc = makeDoc({ status: 'needs_resubmission', rejectionReason: 'Foto cortada' });
-    render(<KycDocumentsCard {...defaultProps} documents={[doc]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[doc]} />);
     screen.getByText('Reenvio necessário: Foto cortada');
   });
 
   it('shows "approved on" meta text for verified documents with reviewedAt', () => {
     const doc = makeDoc({ status: 'verified', reviewedAt: '2024-03-15' });
-    render(<KycDocumentsCard {...defaultProps} documents={[doc]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[doc]} />);
     // formatDateBR formats as DD/MM/YYYY
     screen.getByText('Aprovado em 15/03/2024');
   });
 
   it('shows "submitted / under review" meta for under_review documents with submittedAt', () => {
     const doc = makeDoc({ status: 'under_review', submittedAt: '2024-03-10T12:00:00Z' });
-    render(<KycDocumentsCard {...defaultProps} documents={[doc]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[doc]} />);
     // Contains "aguardando análise" regardless of the date portion
     expect(screen.getAllByText(/aguardando análise/).length).toBeGreaterThan(0);
   });
@@ -110,30 +110,30 @@ describe('KycDocumentsCard — text rendering', () => {
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
-describe('KycDocumentsCard — status badge', () => {
+describe('FmzKycDocumentsCard — status badge', () => {
 
   it('shows "Pendente" badge for pending documents', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'pending' })]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'pending' })]} />);
     screen.getByText('Pendente');
   });
 
   it('shows "Em análise" badge for under_review documents', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'under_review' })]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'under_review' })]} />);
     screen.getByText('Em análise');
   });
 
   it('shows "Verificado" badge for verified documents', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'verified' })]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'verified' })]} />);
     screen.getByText('Verificado');
   });
 
   it('shows "Rejeitado" badge for rejected documents', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'rejected' })]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'rejected' })]} />);
     screen.getByText('Rejeitado');
   });
 
   it('shows "Reenviar documento" badge for needs_resubmission documents', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'needs_resubmission' })]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'needs_resubmission' })]} />);
     screen.getByText('Reenviar documento');
   });
 
@@ -141,31 +141,31 @@ describe('KycDocumentsCard — status badge', () => {
 
 // ─── Upload button visibility ─────────────────────────────────────────────────
 
-describe('KycDocumentsCard — upload button visibility', () => {
+describe('FmzKycDocumentsCard — upload button visibility', () => {
 
   it('shows "Enviar agora" button for pending documents', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'pending' })]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'pending' })]} />);
     screen.getByRole('button', { name: /Enviar agora/i });
   });
 
   it('shows "Reenviar" button for rejected documents', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'rejected' })]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'rejected' })]} />);
     screen.getByRole('button', { name: /Reenviar/i });
   });
 
   it('shows "Reenviar" button for needs_resubmission documents', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'needs_resubmission' })]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'needs_resubmission' })]} />);
     screen.getByRole('button', { name: /Reenviar/i });
   });
 
   it('does NOT show upload/resubmit buttons for verified documents', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'verified' })]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'verified' })]} />);
     expect(screen.queryByRole('button', { name: /Enviar agora/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /Reenviar/i })).toBeNull();
   });
 
   it('does NOT show upload/resubmit buttons for under_review documents', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'under_review' })]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'under_review' })]} />);
     expect(screen.queryByRole('button', { name: /Enviar agora/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /Reenviar/i })).toBeNull();
   });
@@ -174,21 +174,21 @@ describe('KycDocumentsCard — upload button visibility', () => {
 
 // ─── Upload area toggle ───────────────────────────────────────────────────────
 
-describe('KycDocumentsCard — upload area interaction', () => {
+describe('FmzKycDocumentsCard — upload area interaction', () => {
 
   it('upload dropzone is hidden by default', () => {
-    render(<KycDocumentsCard {...defaultProps} />);
+    render(<FmzKycDocumentsCard {...defaultProps} />);
     expect(screen.queryByText(/Arraste o arquivo ou clique para selecionar/i)).toBeNull();
   });
 
   it('upload dropzone appears after clicking "Enviar agora"', () => {
-    render(<KycDocumentsCard {...defaultProps} />);
+    render(<FmzKycDocumentsCard {...defaultProps} />);
     fireEvent.click(screen.getByRole('button', { name: /Enviar agora/i }));
     screen.getByText(/Arraste o arquivo ou clique para selecionar/i);
   });
 
   it('"Selecionar arquivo" button text is present in the dropzone after opening', () => {
-    render(<KycDocumentsCard {...defaultProps} />);
+    render(<FmzKycDocumentsCard {...defaultProps} />);
     fireEvent.click(screen.getByRole('button', { name: /Enviar agora/i }));
     // getAllByText because the uploadBox container (role=button) and the inner <button>
     // both carry this text in their accessible content.
@@ -196,7 +196,7 @@ describe('KycDocumentsCard — upload area interaction', () => {
   });
 
   it('hidden file input is always present (single-input design)', () => {
-    render(<KycDocumentsCard {...defaultProps} />);
+    render(<FmzKycDocumentsCard {...defaultProps} />);
     const input = document.querySelector('input[type="file"]');
     expect(input).not.toBeNull();
   });
@@ -205,12 +205,12 @@ describe('KycDocumentsCard — upload area interaction', () => {
 
 // ─── Toast gating ─────────────────────────────────────────────────────────────
 
-describe('KycDocumentsCard — toast behavior', () => {
+describe('FmzKycDocumentsCard — toast behavior', () => {
 
   it('calls onToast with success message when upload resolves', async () => {
     const onToast = jest.fn();
     const onUpload = jest.fn().mockResolvedValue(undefined);
-    render(<KycDocumentsCard {...defaultProps} onUpload={onUpload} onToast={onToast} />);
+    render(<FmzKycDocumentsCard {...defaultProps} onUpload={onUpload} onToast={onToast} />);
 
     fireEvent.click(screen.getByRole('button', { name: /Enviar agora/i }));
 
@@ -227,7 +227,7 @@ describe('KycDocumentsCard — toast behavior', () => {
   it('does NOT call onToast when upload rejects', async () => {
     const onToast = jest.fn();
     const onUpload = jest.fn().mockRejectedValue(new Error('Arquivo inválido'));
-    render(<KycDocumentsCard {...defaultProps} onUpload={onUpload} onToast={onToast} />);
+    render(<FmzKycDocumentsCard {...defaultProps} onUpload={onUpload} onToast={onToast} />);
 
     fireEvent.click(screen.getByRole('button', { name: /Enviar agora/i }));
 
@@ -243,7 +243,7 @@ describe('KycDocumentsCard — toast behavior', () => {
 
   it('closes the upload area after a successful upload', async () => {
     const onUpload = jest.fn().mockResolvedValue(undefined);
-    render(<KycDocumentsCard {...defaultProps} onUpload={onUpload} />);
+    render(<FmzKycDocumentsCard {...defaultProps} onUpload={onUpload} />);
 
     fireEvent.click(screen.getByRole('button', { name: /Enviar agora/i }));
     screen.getByText(/Arraste o arquivo ou clique para selecionar/i);
@@ -260,7 +260,7 @@ describe('KycDocumentsCard — toast behavior', () => {
 
   it('keeps the upload area open after a failed upload (allow retry)', async () => {
     const onUpload = jest.fn().mockRejectedValue(new Error('Arquivo inválido'));
-    render(<KycDocumentsCard {...defaultProps} onUpload={onUpload} />);
+    render(<FmzKycDocumentsCard {...defaultProps} onUpload={onUpload} />);
 
     fireEvent.click(screen.getByRole('button', { name: /Enviar agora/i }));
 
@@ -279,18 +279,18 @@ describe('KycDocumentsCard — toast behavior', () => {
 
 // ─── Error banner ─────────────────────────────────────────────────────────────
 
-describe('KycDocumentsCard — error banner', () => {
+describe('FmzKycDocumentsCard — error banner', () => {
 
   it('renders upload error banner when uploadError prop is non-null', () => {
     render(
-      <KycDocumentsCard {...defaultProps} uploadError="Formato de arquivo não suportado." />,
+      <FmzKycDocumentsCard {...defaultProps} uploadError="Formato de arquivo não suportado." />,
     );
     screen.getByText('Erro ao enviar');
     screen.getByText('Formato de arquivo não suportado.');
   });
 
   it('does not render error banner when uploadError is null', () => {
-    render(<KycDocumentsCard {...defaultProps} uploadError={null} />);
+    render(<FmzKycDocumentsCard {...defaultProps} uploadError={null} />);
     expect(screen.queryByText('Erro ao enviar')).toBeNull();
   });
 
@@ -298,10 +298,10 @@ describe('KycDocumentsCard — error banner', () => {
 
 // ─── Pending count banner ─────────────────────────────────────────────────────
 
-describe('KycDocumentsCard — pending count banner', () => {
+describe('FmzKycDocumentsCard — pending count banner', () => {
 
   it('renders pending count banner when there are actionable documents', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'pending' })]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[makeDoc({ status: 'pending' })]} />);
     screen.getByText('Verificação incompleta');
     // Full alert sentence is unique — avoids matching the footer counter.
     screen.getByText(/1 documento pendente\. Complete o envio/);
@@ -309,7 +309,7 @@ describe('KycDocumentsCard — pending count banner', () => {
 
   it('renders plural text for multiple pending-action documents', () => {
     render(
-      <KycDocumentsCard
+      <FmzKycDocumentsCard
         {...defaultProps}
         documents={[
           makeDoc({ status: 'pending', requirementKey: 'doc-1' }),
@@ -323,7 +323,7 @@ describe('KycDocumentsCard — pending count banner', () => {
 
   it('does NOT render pending banner when all documents are verified or under_review', () => {
     render(
-      <KycDocumentsCard
+      <FmzKycDocumentsCard
         {...defaultProps}
         documents={[makeDoc({ status: 'verified' })]}
       />,
@@ -335,15 +335,15 @@ describe('KycDocumentsCard — pending count banner', () => {
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
-describe('KycDocumentsCard — empty state', () => {
+describe('FmzKycDocumentsCard — empty state', () => {
 
   it('renders empty state message when documents array is empty', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={[]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[]} />);
     screen.getByText('Nenhum documento solicitado no momento.');
   });
 
   it('does not render any document cards when documents array is empty', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={[]} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={[]} />);
     expect(screen.queryByText('Documento de identidade')).toBeNull();
   });
 
@@ -351,7 +351,7 @@ describe('KycDocumentsCard — empty state', () => {
 
 // ─── Multiple documents ───────────────────────────────────────────────────────
 
-describe('KycDocumentsCard — multiple documents', () => {
+describe('FmzKycDocumentsCard — multiple documents', () => {
 
   const multiDocs: TenantKycDocument[] = [
     makeDoc({ requirementKey: 'identity', label: 'Documento de identidade', status: 'pending' }),
@@ -360,27 +360,27 @@ describe('KycDocumentsCard — multiple documents', () => {
   ];
 
   it('renders all document labels', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={multiDocs} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={multiDocs} />);
     screen.getByText('Documento de identidade');
     screen.getByText('Selfie com documento');
     screen.getByText('Comprovante de endereço');
   });
 
   it('renders one badge per document', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={multiDocs} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={multiDocs} />);
     screen.getByText('Pendente');
     screen.getByText('Verificado');
     screen.getByText('Em análise');
   });
 
   it('upload button only appears for the pending document', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={multiDocs} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={multiDocs} />);
     const uploadButtons = screen.getAllByRole('button', { name: /Enviar agora/i });
     expect(uploadButtons).toHaveLength(1);
   });
 
   it('clicking the upload button opens dropzone for only one card', () => {
-    render(<KycDocumentsCard {...defaultProps} documents={multiDocs} />);
+    render(<FmzKycDocumentsCard {...defaultProps} documents={multiDocs} />);
     fireEvent.click(screen.getByRole('button', { name: /Enviar agora/i }));
     // Only one dropzone must appear
     const dropzones = screen.getAllByText(/Arraste o arquivo ou clique para selecionar/i);

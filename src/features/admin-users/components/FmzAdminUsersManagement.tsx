@@ -20,7 +20,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
-import { formatBirthdateInput } from '../../../services/phone-country-format';
+import { formatBirthdateInput } from '../../../lib/fmz-phone-country-format';
 import { FmzFormAlert } from '../../api-errors/components';
 import { FmzAdminPagination, useFmzAdminPagination, type FmzAdminPaginationMeta } from '../../admin-pagination';
 import { normalizeFmzApiError, type FmzNormalizedApiError } from '../../api-errors/domain';
