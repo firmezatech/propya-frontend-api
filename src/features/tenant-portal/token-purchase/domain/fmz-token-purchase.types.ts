@@ -1,12 +1,41 @@
 export type FmzTokenPurchasePaymentMethod = 'pix' | 'boleto';
 
-export interface FmzTokenPurchaseCart {
-  tokens: number;
-  method: FmzTokenPurchasePaymentMethod;
+// ── Quote ──────────────────────────────────────────────────────────────────────
+// Returned by GET /tenant/token-purchases/quote.
+// All monetary values are pre-computed server-side — the UI renders them directly.
+
+export interface FmzTokenPurchaseQuote {
+  propertyTokenizationId: string;
+  tokenSymbol: string | null;
+  tokenName: string | null;
+  currency: string;
+  availableSupply: number;
+  minQuantity: number;
+  maxQuantity: number;
+  quantity: number;
+  unitPrice: number;
   subtotal: number;
-  fee: number;
-  feeRate: number;
+  processingFee: number;
   total: number;
+  /** Ready-to-render price breakdown lines. The UI maps over this array. */
+  breakdown: Array<{ label: string; amount: number }>;
+  issuedAt: string;
+  expiresAt: string;
+  expiresInSeconds: number;
+}
+
+// ── Cart ───────────────────────────────────────────────────────────────────────
+// Persisted to sessionStorage between the three purchase steps.
+// Financial values come exclusively from `quote` — the cart must never
+// re-calculate prices client-side.
+
+export interface FmzTokenPurchaseCart {
+  propertyTokenizationId: string;
+  quantity: number;
+  method: FmzTokenPurchasePaymentMethod;
+  /** Server-computed quote. All amounts displayed in the UI originate here. */
+  quote: FmzTokenPurchaseQuote;
+  // Impact projections — computed client-side from dashboard data for display only.
   currentTokens: number;
   totalTokens: number;
   currentPercentage: number;
@@ -21,35 +50,60 @@ export interface FmzTokenPurchaseCart {
   toMilestone: number;
   createdAt: number;
   propertyId?: number | null;
-  rentChargeId?: string | null;
+}
+
+// ── Payment ────────────────────────────────────────────────────────────────────
+// Returned by POST /tenant/token-purchases/payments.
+// Matches the backend `formatTokenPurchasePaymentResponse` shape.
+
+export interface FmzTokenPurchasePaymentPix {
+  txid?: string | null;
+  copyPasteCode?: string | null;
+  qrCode?: string | null;
+  qrCodeImageUrl?: string | null;
+  dueAt?: string | null;
+  status?: string | null;
+}
+
+export interface FmzTokenPurchasePaymentBoleto {
+  providerBoletoId?: string | null;
+  nossoNumero?: string | null;
+  linhaDigitavel?: string | null;
+  copyPasteCode?: string | null;
+  barcode?: string | null;
+  boletoUrl?: string | null;
+  pdfUrl?: string | null;
+  downloadUrl?: string | null;
+  dueAt?: string | null;
+  status?: string | null;
 }
 
 export interface FmzTokenPurchasePayment {
-  id?: string | null;
+  tokenOrderId?: string | null;
   paymentTransactionId?: string | null;
-  rentChargeId?: string | null;
   status?: string | null;
   paymentProvider?: string | null;
+  paymentMethod?: string | null;
   externalReference?: string | null;
-  expiresAt?: string | null;
   dueAt?: string | null;
-  amount?: number | null;
-  pixQrCode?: string | null;
-  pixQrCodeImage?: string | null;
-  pixCopyPaste?: string | null;
-  encodedImage?: string | null;
-  payload?: string | null;
-  invoiceUrl?: string | null;
-  boletoUrl?: string | null;
-  pdfUrl?: string | null;
+  totalAmount?: number | null;
+  pix?: FmzTokenPurchasePaymentPix | null;
+  boleto?: FmzTokenPurchasePaymentBoleto | null;
   raw?: unknown;
 }
 
-export interface FmzTokenPurchaseBackendResponse {
+// ── Backend response envelope ──────────────────────────────────────────────────
+
+export interface FmzTokenPurchaseQuoteBackendResponse {
   success?: boolean;
-  data?: unknown;
-  payment?: unknown;
-  pix?: unknown;
-  boleto?: unknown;
+  quote?: FmzTokenPurchaseQuote;
   message?: string;
+  errors?: unknown;
+}
+
+export interface FmzTokenPurchasePaymentBackendResponse {
+  success?: boolean;
+  payment?: FmzTokenPurchasePayment;
+  message?: string;
+  errors?: unknown;
 }

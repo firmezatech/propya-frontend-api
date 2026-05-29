@@ -1,108 +1,146 @@
 import { authenticatedFirmezaFetch } from '../../../../services/firmeza-api-client';
-import type { FmzTokenPurchaseBackendResponse, FmzTokenPurchaseCart, FmzTokenPurchasePayment } from '../domain/fmz-token-purchase.types';
+import type {
+  FmzTokenPurchasePayment,
+  FmzTokenPurchasePaymentBackendResponse,
+  FmzTokenPurchasePaymentMethod,
+  FmzTokenPurchaseQuote,
+  FmzTokenPurchaseQuoteBackendResponse,
+} from '../domain/fmz-token-purchase.types';
 
-const TOKEN_PIX_ENDPOINT = process.env.NEXT_PUBLIC_TENANT_TOKEN_PIX_ENDPOINT || '/tenant/token-purchases/pix';
-const TOKEN_PAYMENT_STATUS_ENDPOINT = process.env.NEXT_PUBLIC_TENANT_TOKEN_PAYMENT_STATUS_ENDPOINT || '/tenant/token-purchases';
+// ── Quote ──────────────────────────────────────────────────────────────────────
 
-function toNumber(value: unknown): number | null {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
+/**
+ * Fetches a server-computed price quote for a prospective token purchase.
+ * No DB writes — safe to call on every quantity change (use with debounce).
+ *
+ * The returned quote contains all monetary values pre-computed server-side.
+ * The UI must display these values directly — no client-side price calculations.
+ *
+ * @throws {Error} if the tokenizationId is missing, the tokenization is
+ *                 inactive, or the quantity exceeds available supply.
+ */
+export async function fetchTokenPurchaseQuote({
+  propertyTokenizationId,
+  quantity,
+  paymentMethod,
+}: {
+  propertyTokenizationId: string;
+  quantity: number;
+  paymentMethod: FmzTokenPurchasePaymentMethod;
+}): Promise<FmzTokenPurchaseQuote> {
+  const params = new URLSearchParams({
+    propertyTokenizationId,
+    quantity: String(quantity),
+    paymentMethod,
+  });
 
-function pickString(record: Record<string, unknown>, keys: string[]): string | null {
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === 'string' && value.trim()) return value;
+  const response = await authenticatedFirmezaFetch(
+    `/tenant/token-purchases/quote?${params.toString()}`,
+  );
+
+  const body = (await response.json().catch(() => ({}))) as FmzTokenPurchaseQuoteBackendResponse;
+
+  if (!response.ok) {
+    throw new Error(
+      extractErrorMessage(body) ?? `Não foi possível obter a cotação (HTTP ${response.status}).`,
+    );
   }
-  return null;
-}
 
-function pickNestedRecord(payload: unknown): Record<string, unknown> {
-  if (!payload || typeof payload !== 'object') return {};
-  const record = payload as Record<string, unknown>;
-  const candidates = [record.data, record.payment, record.pix, record.boleto, record.charge, record.paymentDetails];
-
-  for (const candidate of candidates) {
-    if (candidate && typeof candidate === 'object') {
-      return { ...record, ...(candidate as Record<string, unknown>) };
-    }
+  if (!body.quote) {
+    throw new Error('Resposta da cotação inválida — campo quote ausente.');
   }
 
-  return record;
+  return body.quote;
 }
 
-export function normalizeTokenPurchasePayment(payload: unknown): FmzTokenPurchasePayment {
-  const record = pickNestedRecord(payload);
+// ── Payment ────────────────────────────────────────────────────────────────────
 
-  return {
-    id: pickString(record, ['id', 'paymentId', 'chargeId']),
-    paymentTransactionId: pickString(record, ['paymentTransactionId', 'payment_transaction_id', 'transactionId', 'id']),
-    rentChargeId: pickString(record, ['rentChargeId', 'rent_charge_id']),
-    status: pickString(record, ['status', 'paymentStatus']),
-    paymentProvider: pickString(record, ['paymentProvider', 'provider']),
-    externalReference: pickString(record, ['externalReference', 'external_reference']),
-    expiresAt: pickString(record, ['expiresAt', 'expirationDate', 'dueAt']),
-    dueAt: pickString(record, ['dueAt', 'dueDate']),
-    amount: toNumber(record.amount ?? record.value ?? record.totalAmount),
-    pixQrCode: pickString(record, ['pixQrCode', 'qrCode', 'pix_qr_code']),
-    pixQrCodeImage: pickString(record, ['pixQrCodeImage', 'qrCodeImage', 'encodedImage', 'pix_qr_code_image']),
-    pixCopyPaste: pickString(record, ['pixCopyPaste', 'copyPaste', 'copyPasteCode', 'pixPayload', 'payload', 'pix_copy_paste']),
-    encodedImage: pickString(record, ['encodedImage', 'qrCodeBase64', 'pixQrCodeBase64']),
-    payload: pickString(record, ['payload', 'pixPayload', 'copyPasteCode']),
-    invoiceUrl: pickString(record, ['invoiceUrl', 'bankSlipUrl']),
-    boletoUrl: pickString(record, ['boletoUrl', 'boleto_url']),
-    pdfUrl: pickString(record, ['pdfUrl', 'pdf_url']),
-    raw: payload,
-  };
-}
-
-export async function createTenantTokenPixPayment(cart: FmzTokenPurchaseCart): Promise<FmzTokenPurchasePayment> {
-  const endpoint = cart.rentChargeId
-    ? `/tenant/rent-charges/${encodeURIComponent(cart.rentChargeId)}/payments`
-    : TOKEN_PIX_ENDPOINT;
-
-  const response = await authenticatedFirmezaFetch(endpoint, {
+/**
+ * Creates a token purchase payment (PIX or Boleto) via the backend.
+ * The backend fetches the authoritative token price and processing fee from its
+ * own tables — this function intentionally does NOT send any monetary values.
+ *
+ * On success, returns the payment object with nested `pix` or `boleto` details.
+ *
+ * @throws {Error} if the backend rejects the request or the Asaas call fails.
+ */
+export async function createTokenPurchasePayment({
+  propertyTokenizationId,
+  quantity,
+  paymentMethod,
+  propertyId,
+}: {
+  propertyTokenizationId: string;
+  quantity: number;
+  paymentMethod: FmzTokenPurchasePaymentMethod;
+  propertyId?: number | null;
+}): Promise<FmzTokenPurchasePayment> {
+  const response = await authenticatedFirmezaFetch('/tenant/token-purchases/payments', {
     method: 'POST',
     body: JSON.stringify({
-      propertyId: cart.propertyId ?? undefined,
-      rentChargeId: cart.rentChargeId ?? undefined,
-      tokens: cart.tokens,
-      tokenAmount: cart.tokens,
-      paymentMethod: 'pix',
-      subtotalAmount: cart.subtotal,
-      feeAmount: cart.fee,
-      feeRate: cart.feeRate,
-      totalAmount: cart.total,
+      propertyTokenizationId,
+      quantity,
+      paymentMethod,
+      ...(propertyId != null ? { propertyId } : {}),
     }),
   });
 
-  const responseBody = (await response.json().catch(() => ({}))) as FmzTokenPurchaseBackendResponse;
+  const body = (await response.json().catch(() => ({}))) as FmzTokenPurchasePaymentBackendResponse;
 
   if (!response.ok) {
-    throw new Error(responseBody.message || 'Não foi possível gerar o PIX no backend.');
+    throw new Error(
+      extractErrorMessage(body) ?? `Não foi possível criar o pagamento (HTTP ${response.status}).`,
+    );
   }
 
-  return normalizeTokenPurchasePayment(responseBody);
+  if (!body.payment) {
+    throw new Error('Resposta de pagamento inválida — campo payment ausente.');
+  }
+
+  return body.payment;
 }
 
-export async function getTenantTokenPaymentStatus(payment: FmzTokenPurchasePayment): Promise<FmzTokenPurchasePayment> {
-  const paymentId = payment.paymentTransactionId || payment.id;
+// ── Internal helpers ───────────────────────────────────────────────────────────
 
-  if (payment.rentChargeId) {
-    const response = await authenticatedFirmezaFetch(`/tenant/rent-charges/${encodeURIComponent(payment.rentChargeId)}/payments`);
-    const responseBody = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error('Não foi possível consultar o status do PIX.');
-    return normalizeTokenPurchasePayment(responseBody);
+function extractErrorMessage(body: unknown): string | null {
+  if (!body || typeof body !== 'object') return null;
+  const record = body as Record<string, unknown>;
+  if (typeof record.message === 'string' && record.message.trim()) return record.message;
+
+  const errors = record.errors;
+  if (Array.isArray(errors) && errors.length > 0) {
+    const first = errors[0] as Record<string, unknown>;
+    if (typeof first.message === 'string') return first.message;
+  }
+  if (errors && typeof errors === 'object') {
+    const values = Object.values(errors as Record<string, unknown>);
+    const first = values[0];
+    if (typeof first === 'string') return first;
   }
 
-  if (!paymentId) return payment;
+  return null;
+}
 
-  const response = await authenticatedFirmezaFetch(`${TOKEN_PAYMENT_STATUS_ENDPOINT}/${encodeURIComponent(paymentId)}/payments`);
-  const responseBody = await response.json().catch(() => ({}));
+// ── Payment display helpers ────────────────────────────────────────────────────
 
-  if (!response.ok) {
-    throw new Error('Não foi possível consultar o status do PIX.');
-  }
+export function getPixCopyPasteCode(payment: FmzTokenPurchasePayment | null): string {
+  return payment?.pix?.copyPasteCode ?? payment?.pix?.qrCode ?? '';
+}
 
-  return normalizeTokenPurchasePayment(responseBody);
+export function getPixQrCodeImageSrc(payment: FmzTokenPurchasePayment | null): string | null {
+  const raw = payment?.pix?.qrCodeImageUrl ?? null;
+  if (!raw) return null;
+  if (raw.startsWith('data:image') || raw.startsWith('http')) return raw;
+  if (raw.length > 120) return `data:image/png;base64,${raw}`;
+  return null;
+}
+
+export function getBoletoLinhaDigitavel(payment: FmzTokenPurchasePayment | null): string {
+  return payment?.boleto?.linhaDigitavel ?? payment?.boleto?.copyPasteCode ?? '';
+}
+
+export function statusIsPaid(status?: string | null): boolean {
+  return ['paid', 'received', 'confirmed', 'authorized', 'confirmed_onchain', 'completed'].includes(
+    String(status ?? '').toLowerCase(),
+  );
 }
