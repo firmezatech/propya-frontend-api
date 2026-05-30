@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
 import { FmzInvoicePage } from '../../../../features/tenant-portal/invoices/components/FmzInvoicePage';
-import { FmzPageLoadingShell } from '../../../../components/layout/FmzPageLoadingShell';
+import { FmzInvoiceSkeleton } from '../../../../components/layout';
 
 export default function TenantIssueInvoicePage() {
   return (
-    <Suspense fallback={<FmzPageLoadingShell />}>
+    <Suspense fallback={<FmzInvoiceSkeleton />}>
       <FmzInvoicePage />
     </Suspense>
   );

@@ -11,7 +11,8 @@ import { getFirmezaAccessToken } from "../../../services/auth/auth-storage";
 import { isFirmezaApiError } from "../../../services/firmeza-api-client";
 import { getTenantDashboardPropertyIdFromUrl } from "../domain/fmz-dashboard-client-state";
 import { FmzRenterDashboardModule } from "../../tenant-portal/renter-dashboard/components";
-import { FmzDashboardErrorState, FmzDashboardLoadingState } from "../../tenant-portal/components/FmzDashboardFeedback";
+import { FmzDashboardErrorState } from "../../tenant-portal/components/FmzDashboardFeedback";
+import { FmzRenterDashboardSkeleton } from "../../../components/layout";
 import { FmzConnectedEmptyHome } from "../../tenant-portal/components/FmzConnectedEmptyHome";
 import FmzDashboardAdmin from "./FmzDashboardAdmin";
 
@@ -63,7 +64,7 @@ export function FmzDashboardModule() {
     void loadAccess();
   }, [loadAccess]);
 
-  if (isLoadingAccess) return <FmzDashboardLoadingState />;
+  if (isLoadingAccess) return <FmzRenterDashboardSkeleton />;
   if (error) return <FmzDashboardErrorState message={error} />;
   if (dashboardKind === "admin") return <FmzDashboardAdmin />;
   if (dashboardKind === "renter") return <FmzRenterDashboardModule propertyId={tenantDashboardPropertyId} />;

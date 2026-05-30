@@ -1,0 +1,160 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Boleto payment page — adapted from references/Pagamento Boleto.html
+   Uses the project's Inter font and gold/navy identity. Mobile-first, no
+   horizontal overflow, touch-friendly CTAs.
+   ───────────────────────────────────────────────────────────────────────────── */
+.page{
+  --b-gold:#E8B620;
+  --b-gold-soft:#F5D26B;
+  --b-gold-tint:#FBF3DA;
+  --b-gold-deep:#8A6B12;
+  --b-navy:#0E1626;
+  --b-navy-2:#1C2740;
+  --b-ink:#2A344A;
+  --b-muted:#5A6478;
+  --b-hint:#8893A6;
+  --b-line:#E6E8EE;
+  --b-line-2:#EDEFF4;
+  --b-page:#F4F5F8;
+  --b-white:#FFFFFF;
+  --b-green:#127A4F;
+  --b-green-tint:#E8F5EE;
+  --b-blue:#1F5BD6;
+  --b-blue-tint:#E8EFFC;
+  --b-radius:14px;
+  --b-radius-lg:20px;
+  width:100%;
+  max-width:680px;
+  margin:0 auto;
+  padding:clamp(24px,4vw,40px) clamp(16px,4vw,32px) 80px;
+  color:var(--b-ink);
+  font-family:var(--font-inter),Inter,system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.5;
+}
+.page *{font-family:inherit}
+.mono{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+
+.back{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;padding:0;font-size:13px;color:var(--b-muted);font-weight:500;cursor:pointer;margin-bottom:16px;transition:color .15s}
+.back:hover{color:var(--b-navy)}
+
+/* Steps */
+.steps{display:flex;align-items:center;gap:10px;margin-bottom:22px;overflow-x:auto}
+.step{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;font-size:12px;font-weight:700;color:var(--b-hint)}
+.dot{width:22px;height:22px;border-radius:50%;background:var(--b-white);border:1.5px solid var(--b-line);display:grid;place-items:center;font-size:11px;color:var(--b-hint)}
+.stepActive{color:var(--b-navy)}
+.stepActive .dot{background:var(--b-navy);border-color:var(--b-navy);color:var(--b-gold)}
+.stepDone{color:var(--b-green)}
+.stepDone .dot{background:var(--b-green);border-color:var(--b-green);color:#fff}
+.bar{flex:0 0 28px;height:1.5px;background:var(--b-line);border-radius:1px}
+
+/* Page header */
+.ph{text-align:center;margin-bottom:22px}
+.phSup{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--b-gold-deep);margin-bottom:10px;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+.phSup:before,.phSup:after{content:'';width:14px;height:1.5px;background:var(--b-gold);border-radius:1px}
+.phTitle{font-weight:800;font-size:clamp(24px,3vw,30px);letter-spacing:-.025em;line-height:1.1;color:var(--b-navy);margin:0}
+.phSub{font-size:13.5px;color:var(--b-muted);margin:8px auto 0;max-width:520px}
+
+/* Main card */
+.payCard{
+  background:var(--b-white);border:1px solid var(--b-line);
+  border-radius:var(--b-radius-lg);
+  box-shadow:0 4px 12px rgba(14,22,38,.06),0 24px 60px -20px rgba(14,22,38,.18);
+  padding:clamp(20px,4vw,32px);
+  position:relative;overflow:hidden;
+}
+.payCard:before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--b-navy) 0%,var(--b-gold) 100%)}
+
+/* Amount header */
+.amountRow{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:22px;padding-bottom:18px;border-bottom:1px dashed var(--b-line);flex-wrap:wrap}
+.amountK{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--b-muted)}
+.amountV{font-weight:900;font-size:28px;color:var(--b-navy);letter-spacing:-.025em;line-height:1.05;margin-top:4px;font-variant-numeric:tabular-nums}
+.amountRight{text-align:right;font-size:12px;color:var(--b-muted)}
+.amountRight b{color:var(--b-navy);font-weight:700}
+
+/* Loading / generating */
+.genFrame{width:100%;height:200px;margin:8px auto 0;border-radius:14px;background:var(--b-white);border:1.5px solid var(--b-line-2);display:grid;place-items:center}
+.spinner{width:48px;height:48px;border-radius:50%;border:3px solid var(--b-line);border-top-color:var(--b-gold);animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.statusText{text-align:center;margin-top:22px;font-size:14px;font-weight:600;color:var(--b-navy)}
+.subStatus{text-align:center;margin-top:6px;font-size:12.5px;color:var(--b-muted);min-height:18px}
+
+/* Boleto card */
+.boletoCard{margin:8px auto 0;background:var(--b-white);border:1.5px solid var(--b-line);border-radius:14px;overflow:hidden}
+.bcTop{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px dashed var(--b-line);font-size:12px;color:var(--b-muted);background:linear-gradient(180deg,var(--b-page) 0%,var(--b-white) 100%);flex-wrap:wrap}
+.bcTopL{display:inline-flex;align-items:center;gap:9px}
+.bank{width:30px;height:30px;border-radius:8px;background:var(--b-navy);color:var(--b-gold);display:grid;place-items:center;font-weight:800;font-size:11px;letter-spacing:.04em}
+.bankInfo{display:flex;flex-direction:column;gap:2px;line-height:1.2}
+.bankInfo b{color:var(--b-navy);font-weight:600;font-size:13px}
+.bankInfo span{font-size:11px}
+.bcDue{display:inline-flex;align-items:center;gap:8px;background:var(--b-gold-tint);color:var(--b-gold-deep);font-weight:700;padding:6px 11px;border-radius:99px;font-size:11.5px}
+
+.barcodeWrap{padding:24px 22px 18px}
+.barcodeSvg{width:100%;height:84px;display:block}
+.bcLabel{margin-top:10px;text-align:center;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--b-hint);font-weight:600}
+
+.bcLine{padding:14px 18px 18px;border-top:1px dashed var(--b-line);background:#FBFCFD}
+.bcLineLabel{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--b-muted);margin-bottom:8px}
+.copyBlock{display:flex;align-items:stretch;border:1.5px solid var(--b-line);border-radius:10px;overflow:hidden;background:var(--b-white)}
+.copyInput{flex:1;min-width:0;padding:13px 14px;font-size:13px;color:var(--b-navy);font-weight:500;background:transparent;border:0;outline:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.copyBtn{display:inline-flex;align-items:center;gap:6px;padding:0 14px;font-size:12.5px;font-weight:600;color:var(--b-navy);background:var(--b-page);border:0;border-left:1.5px solid var(--b-line);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap}
+.copyBtn:hover{background:var(--b-gold-tint);color:var(--b-gold-deep)}
+.copyBtn.copied{color:var(--b-green);background:var(--b-green-tint)}
+
+/* Action row */
+.actionRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.navRow{margin-top:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;border-radius:11px;font-size:13.5px;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:all .15s;white-space:nowrap;text-decoration:none;min-height:46px}
+.btn:active{transform:scale(.98)}
+.btnPrimary{background:var(--b-gold);color:var(--b-navy);border-color:var(--b-gold)}
+.btnPrimary:hover{background:var(--b-gold-soft);border-color:var(--b-gold-soft);transform:translateY(-1px);box-shadow:0 8px 22px rgba(232,182,32,.4)}
+.btnPrimary.copied{background:var(--b-green-tint);border-color:var(--b-green-tint);color:var(--b-green)}
+.btnGhost{background:var(--b-white);border-color:var(--b-line);color:var(--b-navy)}
+.btnGhost:hover{background:#FAFBFC;border-color:#D0D4DE;transform:translateY(-1px)}
+.btnGhost[aria-disabled="true"]{opacity:.45;pointer-events:none}
+
+/* Awaiting / tip */
+.awaiting{margin-top:18px;padding:14px;border-radius:10px;background:var(--b-gold-tint);border:1px solid rgba(232,182,32,.30);display:flex;align-items:flex-start;gap:12px;font-size:13px;color:var(--b-gold-deep);line-height:1.5}
+.pulse{position:relative;width:10px;height:10px;border-radius:50%;background:var(--b-gold);flex:0 0 auto;margin-top:5px}
+.pulse:before{content:'';position:absolute;inset:-3px;border-radius:50%;border:2px solid var(--b-gold);opacity:.6;animation:pulse 1.4s infinite ease-out}
+@keyframes pulse{0%{transform:scale(.7);opacity:.6}100%{transform:scale(2.2);opacity:0}}
+.awaiting b{color:var(--b-navy);font-weight:700}
+.paid{background:var(--b-green-tint);border-color:rgba(18,122,79,.25);color:#0F5C3D}
+.paid .pulse{background:var(--b-green)}
+.paid .pulse:before{border-color:var(--b-green)}
+.paid b{color:var(--b-green)}
+
+.tip{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--b-blue-tint);display:flex;align-items:center;gap:11px;font-size:12.5px;color:#163E96;line-height:1.45}
+.tip svg{color:var(--b-blue);flex-shrink:0}
+.tipLink{color:var(--b-blue);font-weight:600;border-bottom:1px solid rgba(31,91,214,.3);cursor:pointer;background:none;border-top:0;border-left:0;border-right:0;padding:0;font-size:inherit}
+.tipLink:hover{border-bottom-color:var(--b-blue)}
+
+/* Details card */
+.detCard{margin-top:18px;background:var(--b-white);border:1px solid var(--b-line);border-radius:var(--b-radius);padding:18px 22px;box-shadow:0 1px 2px rgba(14,22,38,.04)}
+.detRow{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:8px 0;gap:14px}
+.detRow+.detRow{border-top:1px solid var(--b-line-2)}
+.detRow .k{color:var(--b-muted)}
+.detRow .v{color:var(--b-navy);font-weight:500;font-size:12.5px;text-align:right;word-break:break-word;font-variant-numeric:tabular-nums}
+
+/* Status badge */
+.statusBadge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-size:11.5px;font-weight:700;background:var(--b-gold-tint);color:var(--b-gold-deep)}
+.statusBadgePaid{background:var(--b-green-tint);color:var(--b-green)}
+
+/* Error / empty state */
+.alert{border:1px solid var(--fmz-error-border,#F5C4BF);background:var(--fmz-error-bg,#FEF5F4);color:var(--fmz-error,#D94F3D);border-radius:14px;padding:18px;font-size:13.5px;font-weight:600;text-align:center}
+.alert p{margin:0 0 14px;line-height:1.5}
+.retryBtn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--b-line);background:var(--b-white);color:var(--b-navy);font-size:13px;font-weight:700;padding:10px 16px;border-radius:10px;cursor:pointer}
+.retryBtn:hover{background:var(--b-page)}
+
+.footerNote{text-align:center;font-size:12px;color:var(--b-hint);margin-top:24px}
+
+@media (max-width:560px){
+  .actionRow{grid-template-columns:1fr}
+  .payCard{padding:24px 20px}
+  .amountV{font-size:24px}
+  .copyInput{font-size:11.5px}
+  .barcodeSvg{height:64px}
+}
+@media (prefers-reduced-motion:reduce){
+  .page *{animation:none!important;transition:none!important}
+}

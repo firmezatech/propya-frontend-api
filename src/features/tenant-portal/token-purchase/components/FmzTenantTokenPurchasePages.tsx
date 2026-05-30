@@ -9,7 +9,6 @@ import {
   Building2,
   Check,
   Copy,
-  Download,
   Home,
   Landmark,
   Loader2,
@@ -26,7 +25,9 @@ import {
   calculateImpactProjection,
   clearTokenPurchaseCart,
   readTokenPurchaseCart,
+  readTokenPurchasePayment,
   writeTokenPurchaseCart,
+  writeTokenPurchasePayment,
 } from '../domain/fmz-token-purchase-cart';
 import type {
   FmzTokenPurchaseCart,
@@ -38,7 +39,6 @@ import type {
 import {
   createTokenPurchasePayment,
   fetchTokenPurchaseStatus,
-  getBoletoLinhaDigitavel,
   getPixCopyPasteCode,
   getPixExpiration,
   getPixQrCodeImageSrc,
@@ -770,7 +770,11 @@ export function FmzTenantTokenPurchaseConfirmPage() {
 // Page 3 — Payment (handles both PIX and Boleto)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const PAYMENT_SESSION_KEY = 'firmeza:tenant-token-purchase-payment';
+function boletoPaymentHref(paymentTransactionId: string): string {
+  return localizedHref(
+    `/connected/tokens-to-purchase-pix/payments/${encodeURIComponent(paymentTransactionId)}/boleto`,
+  );
+}
 
 export function FmzTenantTokenPurchasePixPage() {
   const router  = useRouter();
@@ -798,8 +802,13 @@ export function FmzTenantTokenPurchasePixPage() {
           propertyId:             cart!.propertyId,
         });
         if (!mounted) return;
+        writeTokenPurchasePayment(created);
+        // Boleto has its own dedicated page; PIX stays inline on this screen.
+        if (cart!.method === 'boleto' && created.paymentTransactionId) {
+          router.replace(boletoPaymentHref(created.paymentTransactionId));
+          return;
+        }
         setPayment(created);
-        window.sessionStorage.setItem(PAYMENT_SESSION_KEY, JSON.stringify(created));
       } catch (error: unknown) {
         if (!mounted) return;
         setErrorMsg(error instanceof Error ? error.message : 'Erro ao gerar a cobrança.');
@@ -810,7 +819,7 @@ export function FmzTenantTokenPurchasePixPage() {
 
     void create();
     return () => { mounted = false; };
-  }, [cart]);
+  }, [cart, router]);
 
   // ── Countdown timer ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -849,9 +858,9 @@ export function FmzTenantTokenPurchasePixPage() {
   const pixCode       = getPixCopyPasteCode(payment);
   const qrImgSrc      = getPixQrCodeImageSrc(payment);
   const pixExpiration = getPixExpiration(payment);
-  const boletoCode     = getBoletoLinhaDigitavel(payment);
-  const boletoDownload = payment?.boleto?.downloadUrl ?? payment?.boleto?.boletoUrl ?? null;
 
+  // This screen renders the PIX experience only — boleto is redirected to its own
+  // dedicated page right after the payment is created (see the create effect above).
   const method = cart?.method ?? 'pix';
 
   const copyToClipboard = useCallback(async (text: string) => {
@@ -900,8 +909,12 @@ export function FmzTenantTokenPurchasePixPage() {
                 idempotencyKey:         cart.idempotencyKey,
                 propertyId:             cart.propertyId,
               }).then((p) => {
+                writeTokenPurchasePayment(p);
+                if (cart.method === 'boleto' && p.paymentTransactionId) {
+                  router.replace(boletoPaymentHref(p.paymentTransactionId));
+                  return;
+                }
                 setPayment(p);
-                window.sessionStorage.setItem(PAYMENT_SESSION_KEY, JSON.stringify(p));
               }).catch((e: unknown) => {
                 setErrorMsg(e instanceof Error ? e.message : 'Erro ao gerar a cobrança.');
               }).finally(() => setCreating(false));
@@ -975,43 +988,8 @@ export function FmzTenantTokenPurchasePixPage() {
           </>
         )}
 
-        {/* ── Boleto content ── */}
-        {!creating && !errorMsg && method === 'boleto' && (
-          <>
-            <p className={styles.statusText}>Boleto gerado com sucesso</p>
-            {boletoCode && (
-              <div className={styles.copyBlock}>
-                <span className={styles.copyCode}>{boletoCode}</span>
-                <button
-                  type="button"
-                  className={styles.copyBtn}
-                  onClick={() => void copyToClipboard(boletoCode)}
-                >
-                  <Copy size={14} /> {isCopied ? 'Copiado!' : 'Copiar linha digitável'}
-                </button>
-              </div>
-            )}
-            {boletoDownload && (
-              <a href={boletoDownload} target="_blank" rel="noopener noreferrer" className={styles.downloadBtn}>
-                <Download size={14} /> Baixar boleto em PDF
-              </a>
-            )}
-            {payment?.boleto?.dueAt && (
-              <p className={styles.subStatus}>
-                Vencimento: {new Date(payment.boleto.dueAt).toLocaleDateString('pt-BR')}
-              </p>
-            )}
-            <div className={styles.awaiting}>
-              <span className={styles.pulse} />
-              <span>
-                <b>Aguardando compensação.</b> A confirmação chega em até 3 dias úteis.
-                {lastCheckedAt && (
-                  <> · Última verificação: {lastCheckedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</>
-                )}
-              </span>
-            </div>
-          </>
-        )}
+        {/* Boleto is handled on its own dedicated page (redirect happens after
+            creation), so this screen only ever renders the PIX flow above. */}
       </section>
 
       {/* ── Payment metadata ── */}
@@ -1047,12 +1025,7 @@ export function FmzTenantTokenPurchaseSuccessPage() {
   useEffect(() => {
     const storedCart = readTokenPurchaseCart();
     setCart(storedCart);
-    try {
-      const raw = window.sessionStorage.getItem(PAYMENT_SESSION_KEY);
-      setPayment(raw ? (JSON.parse(raw) as FmzTokenPurchasePayment) : null);
-    } catch {
-      setPayment(null);
-    }
+    setPayment(readTokenPurchasePayment());
     // Clear cart so a page refresh doesn't re-enter the purchase flow.
     clearTokenPurchaseCart();
   }, []);

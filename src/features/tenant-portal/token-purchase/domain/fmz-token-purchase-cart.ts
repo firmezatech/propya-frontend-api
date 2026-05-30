@@ -1,10 +1,12 @@
 import type {
   FmzTokenPurchaseCart,
+  FmzTokenPurchasePayment,
   FmzTokenPurchasePaymentMethod,
   FmzTokenPurchaseQuote,
 } from './fmz-token-purchase.types';
 
 export const FMZ_TOKEN_PURCHASE_CART_KEY = 'firmeza:tenant-token-purchase-cart';
+export const FMZ_TOKEN_PURCHASE_PAYMENT_KEY = 'firmeza:tenant-token-purchase-payment';
 
 // ── Impact projection helpers ──────────────────────────────────────────────────
 // These calculate display-only projections (ownership %, rent savings, etc.)
@@ -123,4 +125,24 @@ export function writeTokenPurchaseCart(cart: FmzTokenPurchaseCart): void {
 export function clearTokenPurchaseCart(): void {
   if (typeof window === 'undefined') return;
   window.sessionStorage.removeItem(FMZ_TOKEN_PURCHASE_CART_KEY);
+}
+
+// ── Created-payment session storage ──────────────────────────────────────────
+// The payment object returned by POST /tenant/token-purchases/payments is stashed
+// so downstream pages (boleto page, success page) can render immediately while
+// the authoritative details are (re)fetched by paymentTransactionId.
+
+export function writeTokenPurchasePayment(payment: FmzTokenPurchasePayment): void {
+  if (typeof window === 'undefined') return;
+  window.sessionStorage.setItem(FMZ_TOKEN_PURCHASE_PAYMENT_KEY, JSON.stringify(payment));
+}
+
+export function readTokenPurchasePayment(): FmzTokenPurchasePayment | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(FMZ_TOKEN_PURCHASE_PAYMENT_KEY);
+    return raw ? (JSON.parse(raw) as FmzTokenPurchasePayment) : null;
+  } catch {
+    return null;
+  }
 }

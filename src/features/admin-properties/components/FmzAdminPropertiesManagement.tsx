@@ -14,6 +14,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
+import { FmzAdminListSkeleton } from '../../../components/layout';
 import { FmzFormAlert } from '../../api-errors/components';
 import { FmzAdminPagination, useFmzAdminPagination } from '../../admin-pagination';
 import { normalizeFmzApiError, type FmzNormalizedApiError } from '../../api-errors/domain';
@@ -402,7 +403,7 @@ export function FmzAdminPropertiesManagement() {
           </div>
 
           {loading ? (
-            <div className="flex min-h-[260px] items-center justify-center rounded-xl border-[1.5px] border-[#E8EAF0] bg-white text-[#5A6478]"><Loader2 className="mr-2 animate-spin" size={18} /> Carregando imóveis...</div>
+            <FmzAdminListSkeleton />
           ) : filteredProperties.length ? (
             <>
             <div className="flex flex-col gap-2.5">

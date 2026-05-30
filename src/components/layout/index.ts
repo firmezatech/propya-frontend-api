@@ -23,4 +23,7 @@ export {
   FmzInvoiceSkeleton,
   FmzWalletSkeleton,
   FmzContractSkeleton,
+  FmzRenterDashboardSkeleton,
+  FmzAdminListSkeleton,
+  FmzAdminFormSkeleton,
 } from './FmzContentSkeleton';

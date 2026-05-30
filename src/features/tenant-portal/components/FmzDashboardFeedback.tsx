@@ -1,16 +1,3 @@
-import React from "react";
-
-export function FmzDashboardLoadingState() {
-  return (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="text-center">
-        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-fmz-border-light border-t-fmz-navy" />
-        <p className="text-sm text-fmz-text-muted">Carregando...</p>
-      </div>
-    </div>
-  );
-}
-
 export function FmzDashboardErrorState({ message }: { message: string }) {
   return (
     <div className="flex h-64 items-center justify-center">

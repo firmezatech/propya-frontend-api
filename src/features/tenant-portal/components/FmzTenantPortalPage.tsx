@@ -3,7 +3,12 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Copy, Download, House, ReceiptText, WalletCards } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FmzConnectedPageShell } from '../../../components/layout';
+import {
+  FmzConnectedPageShell,
+  FmzInvoiceSkeleton,
+  FmzPaymentHistorySkeleton,
+  FmzWalletSkeleton,
+} from '../../../components/layout';
 import { getCurrentTenantDashboard, getCurrentTenantPaymentHistory, getCurrentTenantWallets } from '../services';
 import type { FmzTenantDashboard, FmzTenantPaymentHistoryItem, FmzTenantWallet } from '../domain';
 
@@ -316,10 +321,13 @@ export function FmzTenantPortalPage({ kind }: FmzTenantPortalPageProps) {
       </div>
 
       {isLoading ? (
-        <div className="rounded-2xl border border-fmz-border-light bg-white p-8 text-center text-sm text-fmz-text-muted">
-          <span className="mx-auto mb-3 block h-5 w-5 animate-spin rounded-full border-2 border-fmz-border-light border-t-fmz-navy" />
-          Carregando dados da rota do backend...
-        </div>
+        kind === 'invoice' ? (
+          <FmzInvoiceSkeleton />
+        ) : kind === 'paymentHistory' ? (
+          <FmzPaymentHistorySkeleton />
+        ) : (
+          <FmzWalletSkeleton />
+        )
       ) : errorMessage ? (
         <EmptyState title="Erro ao carregar" description={errorMessage} />
       ) : kind === 'invoice' ? (

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Loader2, Pencil, Plus, X } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
+import { FmzAdminFormSkeleton } from '../../../components/layout';
 import { FmzFieldErrorMessage, FmzFormAlert } from '../../api-errors/components';
 import { normalizeFmzApiError, type FmzNormalizedApiError } from '../../api-errors/domain';
 import {
@@ -750,11 +751,7 @@ export function FmzAdminTenantSettings() {
   ];
 
   if (loading) {
-    return (
-      <div className="flex min-h-[300px] items-center justify-center">
-        <Loader2 className="h-7 w-7 animate-spin text-[#9AA3B0]" />
-      </div>
-    );
+    return <FmzAdminFormSkeleton />;
   }
 
   if (loadError) {

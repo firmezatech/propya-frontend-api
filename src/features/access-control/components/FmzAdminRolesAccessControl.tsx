@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Check, ChevronDown, ChevronRight, FileText, Info, Loader2, Plus, Trash2 } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
+import { FmzAdminListSkeleton } from '../../../components/layout';
 import { FmzFormAlert } from '../../api-errors/components';
 import { normalizeFmzApiError, type FmzNormalizedApiError } from '../../api-errors/domain/fmz-api-error-normalizer';
 import type { FmzAccessControlCatalog, FmzAccessControlPermission, FmzAccessControlRole } from '../domain';
@@ -117,7 +118,7 @@ export function FmzAdminRolesAccessControl() {
       <div className="w-full">
         <div className="min-w-0">
           <FmzFormAlert error={error} />
-          {loading ? <Loading /> : view === 'list' ? (
+          {loading ? <FmzAdminListSkeleton /> : view === 'list' ? (
             <RoleList roles={roles} permissionByKey={permissionByKey} onCreate={openCreate} onEdit={openEdit} />
           ) : (
             <div className="animate-[fmzFadeIn_.25s_ease]">
@@ -136,7 +137,6 @@ export function FmzAdminRolesAccessControl() {
   );
 }
 
-function Loading() { return <div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-[#E8EAF0] bg-white"><span className="flex items-center gap-3 text-sm text-[#5A6478]"><Loader2 className="h-5 w-5 animate-spin" />Carregando controle de acesso...</span></div>; }
 function RoleList({ roles, permissionByKey, onCreate, onEdit }: { roles: FmzAccessControlRole[]; permissionByKey: Map<string, FmzAccessControlPermission>; onCreate: () => void; onEdit: (role: FmzAccessControlRole) => void }) {
   return <div className="animate-[fmzFadeIn_.25s_ease]"><div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"><div><p className="mb-1 text-[10px] font-bold uppercase tracking-[.1em] text-[#9AA3B0]">Controle de Acesso</p><h1 className="text-[clamp(24px,4vw,34px)] font-extrabold tracking-[-.025em]">Tipos de Acesso (Roles)</h1><p className="mt-1 max-w-2xl text-[13px] leading-6 text-[#5A6478]">Defina quais tipos de usuários existem no sistema e quais ações cada role pode executar.</p></div><button onClick={onCreate} className="inline-flex w-full items-center justify-center gap-2 rounded-[9px] bg-[#0D1321] px-6 py-3 text-[13px] font-bold uppercase tracking-[.04em] text-white transition hover:-translate-y-0.5 hover:bg-[#162030] sm:w-auto"><Plus className="h-3.5 w-3.5" />Criar novo tipo</button></div><div className="flex flex-col gap-3">{roles.length ? roles.map((role) => { const labels = role.permissionKeys.map((key) => permissionByKey.get(key)?.label ?? key); return <button key={roleKey(role)} onClick={() => onEdit(role)} className="group flex w-full items-center gap-4 rounded-xl border border-[#E8EAF0] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-transparent hover:shadow-[0_8px_28px_rgba(13,19,33,.10)] sm:p-5"><span className="h-12 w-3 shrink-0 rounded" style={{ background: role.color }} /><span className="min-w-0 flex-1"><span className="flex flex-wrap items-center gap-2 text-[15px] font-bold">{role.name}{role.isProtected && <span className="rounded-full bg-[#FFF9E6] px-2 py-0.5 text-[10px] text-[#C8A020]">Protegida</span>}</span><span className="mt-0.5 block text-[12.5px] text-[#5A6478]">{role.description || 'Sem descrição'}</span><span className="mt-2 flex flex-wrap gap-1.5">{labels.length ? labels.slice(0, 4).map((label) => <span key={label} className="rounded-md border border-[#E8EAF0] bg-[#F7F8FA] px-2.5 py-0.5 text-[10.5px] text-[#5A6478]">{label}</span>) : <span className="text-xs italic text-[#9AA3B0]">Nenhum acesso definido</span>}{labels.length > 4 && <span className="rounded-md bg-[#0D1321] px-2.5 py-0.5 text-[10.5px] text-white">+{labels.length - 4} mais</span>}</span></span><ChevronRight className="h-5 w-5 shrink-0 text-[#9AA3B0] transition group-hover:translate-x-0.5 group-hover:text-[#0D1321]" /></button>; }) : <div className="rounded-2xl border border-dashed border-[#D0D4DE] bg-white px-6 py-16 text-center"><div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border-2 border-dashed border-[#D0D4DE] bg-[#F7F8FA]"><Plus className="h-6 w-6 text-[#9AA3B0]" /></div><h2 className="text-base font-bold">Nenhum tipo de acesso criado</h2><p className="mx-auto mt-1 max-w-sm text-[13px] leading-6 text-[#5A6478]">Crie o primeiro tipo para começar a organizar quem pode fazer o quê no sistema.</p><button onClick={onCreate} className="mt-5 inline-flex items-center gap-2 rounded-[9px] bg-[#0D1321] px-6 py-3 text-[13px] font-bold uppercase text-white"><Plus className="h-3.5 w-3.5" />Criar agora</button></div>}</div></div>;
 }

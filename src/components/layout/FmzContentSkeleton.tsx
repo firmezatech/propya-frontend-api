@@ -188,3 +188,178 @@ export function FmzContractSkeleton() {
     </div>
   );
 }
+
+// ── Renter (tenant) dashboard skeleton ──────────────────────────────────────────
+// Mirrors the real FmzRenterDashboard layout: page title, hero (journey + goal
+// cards), content grid (bill card + simulator/history stack), and quick actions.
+// Mobile-first — every multi-column grid collapses to a single column on small
+// screens, matching the dashboard's own breakpoints (no horizontal overflow).
+
+const SKELETON_CARD = 'rounded-2xl border border-fmz-border-light bg-white';
+
+export function FmzRenterDashboardSkeleton() {
+  return (
+    <div className="space-y-6 py-2" aria-label="Carregando painel" aria-busy="true">
+      {/* Page title */}
+      <SkBox height="h-8" width="w-56" />
+
+      {/* Hero: journey card + goal card */}
+      <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-[1.55fr_1fr]">
+        {/* Journey card */}
+        <div className={`${SKELETON_CARD} p-6 space-y-5`}>
+          <SkBox height="h-3" width="w-40" />
+          <SkBox height="h-6" width="w-3/4" />
+          <SkBox height="h-3" width="w-full" />
+          <SkBox height="h-3" width="w-2/3" />
+          {/* Timeline track with milestone dots */}
+          <div className="pt-6 space-y-3">
+            <SkBox height="h-2.5" width="w-full" className="rounded-full" />
+            <div className="flex items-center justify-between">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkBox key={i} height="h-2.5" width="w-10" />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Goal / next milestone card */}
+        <div className={`${SKELETON_CARD} p-6 space-y-4`}>
+          <SkBox height="h-3" width="w-28" />
+          <SkBox height="h-3" width="w-24" />
+          <SkBox height="h-9" width="w-40" />
+          <SkBox height="h-3" width="w-full" />
+          <div className="space-y-2 pt-2">
+            <SkBox height="h-2.5" width="w-full" className="rounded-full" />
+            <div className="flex justify-between">
+              <SkBox height="h-2.5" width="w-28" />
+              <SkBox height="h-2.5" width="w-12" />
+            </div>
+          </div>
+          <SkBox height="h-11" width="w-full" className="rounded-xl" />
+        </div>
+      </div>
+
+      {/* Content grid: bill card + right stack (simulator + history) */}
+      <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-[0.85fr_1.15fr] items-start">
+        {/* Bill card */}
+        <div className={`${SKELETON_CARD} p-6 space-y-4`}>
+          <div className="flex items-center justify-between">
+            <SkBox height="h-4" width="w-32" />
+            <SkBox height="h-3" width="w-16" />
+          </div>
+          <SkBox height="h-9" width="w-44" />
+          <div className="flex items-center justify-between">
+            <SkBox height="h-6" width="w-28" className="rounded-full" />
+            <SkBox height="h-3" width="w-20" />
+          </div>
+          {/* Bill lines */}
+          <div className="space-y-3 pt-1">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <SkBox height="h-3" width="w-32" />
+                <SkBox height="h-3" width="w-16" />
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-between border-t border-fmz-border-light pt-4">
+            <SkBox height="h-3" width="w-24" />
+            <SkBox height="h-5" width="w-24" />
+          </div>
+          <SkBox height="h-11" width="w-full" className="rounded-xl" />
+        </div>
+
+        {/* Right stack */}
+        <div className="flex flex-col gap-[18px]">
+          {/* Rent simulator card */}
+          <div className={`${SKELETON_CARD} p-6 space-y-4`}>
+            <SkBox height="h-4" width="w-40" />
+            <div className="grid grid-cols-3 gap-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <SkBox key={i} height="h-9" width="w-full" className="rounded-lg" />
+              ))}
+            </div>
+            <SkBox height="h-24" width="w-full" className="rounded-xl" />
+          </div>
+
+          {/* Payment history card */}
+          <div className={`${SKELETON_CARD} overflow-hidden`}>
+            <div className="border-b border-fmz-border-light px-5 py-4">
+              <SkBox height="h-4" width="w-36" />
+            </div>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 border-b border-fmz-border-light px-5 py-4 last:border-0">
+                <SkBox height="h-9" width="w-9" className="rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <SkBox height="h-3" width="w-32" />
+                  <SkBox height="h-3" width="w-20" />
+                </div>
+                <SkBox height="h-4" width="w-20" className="shrink-0" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Quick actions */}
+      <div className="grid grid-cols-1 gap-[14px] md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className={`${SKELETON_CARD} p-5 flex items-center gap-4`}>
+            <SkBox height="h-10" width="w-10" className="rounded-xl shrink-0" />
+            <div className="flex-1 space-y-2">
+              <SkBox height="h-3.5" width="w-28" />
+              <SkBox height="h-3" width="w-36" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Admin list skeleton ─────────────────────────────────────────────────────────
+// Generic stacked-rows placeholder for admin list pages (users, properties,
+// access-control roles). Each row mirrors the real "avatar + title/subtitle +
+// status chip" layout. Mobile-first: rows are full-width and never overflow.
+
+export function FmzAdminListSkeleton({ rows = 6 }: { rows?: number }) {
+  return (
+    <div className="space-y-2.5" aria-label="Carregando lista" aria-busy="true">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 rounded-xl border border-fmz-border-light bg-white p-4">
+          <SkBox height="h-10" width="w-10" className="rounded-full shrink-0" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <SkBox height="h-3.5" width="w-40" className="max-w-full" />
+            <SkBox height="h-3" width="w-56" className="max-w-full" />
+          </div>
+          <SkBox height="h-6" width="w-20" className="rounded-full shrink-0" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Admin form skeleton ─────────────────────────────────────────────────────────
+// Placeholder for admin settings/form pages: a header plus a responsive grid of
+// labelled field cards. Stacks to a single column on small screens.
+
+export function FmzAdminFormSkeleton() {
+  return (
+    <div className="space-y-6" aria-label="Carregando configurações" aria-busy="true">
+      <div className="space-y-2">
+        <SkBox height="h-3" width="w-24" />
+        <SkBox height="h-7" width="w-64" className="max-w-full" />
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className={`${SKELETON_CARD} p-5 space-y-3`}>
+            <div className="flex items-center gap-3">
+              <SkBox height="h-9" width="w-9" className="rounded-xl shrink-0" />
+              <SkBox height="h-4" width="w-28" />
+            </div>
+            <SkBox height="h-10" width="w-full" className="rounded-lg" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FmzConnectedEmptyHome } from "../../components/FmzConnectedEmptyHome";
-import { FmzDashboardErrorState, FmzDashboardLoadingState } from "../../components/FmzDashboardFeedback";
+import { FmzDashboardErrorState } from "../../components/FmzDashboardFeedback";
+import { FmzRenterDashboardSkeleton } from "../../../../components/layout";
 import { getDashboardErrorMessage, isMetadataNotAvailableError } from "../../domain/fmz-dashboard-module-errors";
 import { getTenantDashboard, getCurrentTenantPaymentHistory } from "../../services";
 import type { FmzTenantDashboard } from "../../domain/fmz-tenant-portal.types";
@@ -64,7 +65,7 @@ export function FmzRenterDashboardModule({ propertyId }: { propertyId: string | 
     void loadRenterDashboard();
   }, [propertyId]);
 
-  if (isLoading) return <FmzDashboardLoadingState />;
+  if (isLoading) return <FmzRenterDashboardSkeleton />;
   if (showEmptyHome) return <FmzConnectedEmptyHome />;
   if (error) return <FmzDashboardErrorState message={error} />;
 

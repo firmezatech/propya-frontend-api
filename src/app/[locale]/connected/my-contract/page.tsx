@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
 import { FmzTenantContractModule } from '../../../../features/tenant-portal/components';
-import { FmzPageLoadingShell } from '../../../../components/layout/FmzPageLoadingShell';
+import { FmzContractSkeleton } from '../../../../components/layout';
 
 export default function MyContractPage() {
   return (
-    <Suspense fallback={<FmzPageLoadingShell />}>
+    <Suspense fallback={<FmzContractSkeleton />}>
       <FmzTenantContractModule />
     </Suspense>
   );

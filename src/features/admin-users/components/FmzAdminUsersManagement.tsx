@@ -20,6 +20,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
+import { FmzAdminListSkeleton } from '../../../components/layout';
 import { formatBirthdateInput } from '../../../lib/fmz-phone-country-format';
 import { FmzFormAlert } from '../../api-errors/components';
 import { FmzAdminPagination, useFmzAdminPagination, type FmzAdminPaginationMeta } from '../../admin-pagination';
@@ -357,9 +358,6 @@ export function FmzAdminUsersManagement() {
   );
 }
 
-function Loading() {
-  return <div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-[#E8EAF0] bg-white"><span className="flex items-center gap-3 text-sm text-[#5A6478]"><Loader2 className="h-5 w-5 animate-spin" />Carregando usuários...</span></div>;
-}
 
 function EditHeader({ isEditing, userName, onBack }: { isEditing: boolean; userName: string; onBack: () => void }) {
   return (
@@ -408,7 +406,7 @@ function UserList({ users, roles, query, onQuery, onCreate, onEdit, pagination, 
 
       <div className="relative mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
         {isInitialLoading ? (
-          <Loading />
+          <FmzAdminListSkeleton />
         ) : (
           <div className={fmzCn('flex flex-col gap-3 transition-opacity', loading && 'opacity-60')}>
             {users.length ? users.map((user) => (
