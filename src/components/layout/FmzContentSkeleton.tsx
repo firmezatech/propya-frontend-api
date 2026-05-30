@@ -193,7 +193,10 @@ export function FmzContractSkeleton() {
 // Mirrors the real FmzRenterDashboard layout: page title, hero (journey + goal
 // cards), content grid (bill card + simulator/history stack), and quick actions.
 // Mobile-first — every multi-column grid collapses to a single column on small
-// screens, matching the dashboard's own breakpoints (no horizontal overflow).
+// screens. The hero and content grids switch to two columns at min-width:1081px
+// (via min-[1081px]:) to mirror the real dashboard's @media (max-width:1080px)
+// collapse exactly — avoiding a ~56px band where Tailwind's lg (1024px) would
+// disagree with the dashboard layout.
 
 const SKELETON_CARD = 'rounded-2xl border border-fmz-border-light bg-white';
 
@@ -204,7 +207,7 @@ export function FmzRenterDashboardSkeleton() {
       <SkBox height="h-8" width="w-56" />
 
       {/* Hero: journey card + goal card */}
-      <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-[1.55fr_1fr]">
+      <div className="grid grid-cols-1 gap-[18px] min-[1081px]:grid-cols-[1.55fr_1fr]">
         {/* Journey card */}
         <div className={`${SKELETON_CARD} p-6 space-y-5`}>
           <SkBox height="h-3" width="w-40" />
@@ -240,7 +243,7 @@ export function FmzRenterDashboardSkeleton() {
       </div>
 
       {/* Content grid: bill card + right stack (simulator + history) */}
-      <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-[0.85fr_1.15fr] items-start">
+      <div className="grid grid-cols-1 gap-[18px] min-[1081px]:grid-cols-[0.85fr_1.15fr] items-start">
         {/* Bill card */}
         <div className={`${SKELETON_CARD} p-6 space-y-4`}>
           <div className="flex items-center justify-between">
@@ -313,6 +316,78 @@ export function FmzRenterDashboardSkeleton() {
         ))}
       </div>
     </div>
+  );
+}
+
+// ── Token purchase step skeleton ────────────────────────────────────────────────
+// Shared Suspense fallback for the tokens-to-purchase-pix/* flow (choose, confirm,
+// pix, success, boleto). Mirrors the common chrome of those pages: back link, the
+// three-step progress indicator, page header (eyebrow + title + subtitle) and a
+// two-column card body. The body collapses to a single column at the same 880px
+// breakpoint the real purchase pages use (.buyCols / .confirmGrid @media 880px),
+// so there is no layout swap band between fallback and mounted content.
+
+export function FmzTokenPurchaseSkeleton() {
+  return (
+    <main
+      className="mx-auto w-full max-w-[1180px] px-5 py-6 sm:px-8 md:px-12 md:py-10"
+      aria-label="Carregando compra de tokens"
+      aria-busy="true"
+    >
+      {/* Back link */}
+      <SkBox height="h-3" width="w-24" className="mb-4" />
+
+      {/* Three-step progress indicator */}
+      <div className="mb-6 flex items-center gap-2.5 overflow-x-auto">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-2.5">
+            {i > 0 && <SkBox height="h-px" width="w-7" className="rounded-none shrink-0" />}
+            <div className="flex items-center gap-2 shrink-0">
+              <SkBox height="h-[22px]" width="w-[22px]" className="rounded-full" />
+              <SkBox height="h-3" width="w-16" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Header */}
+      <div className="mb-6 space-y-2">
+        <SkBox height="h-3" width="w-28" />
+        <SkBox height="h-9" width="w-72" className="max-w-full" />
+        <SkBox height="h-3.5" width="w-96" className="max-w-full" />
+      </div>
+
+      {/* Two-column card body */}
+      <div className="grid grid-cols-1 gap-[18px] min-[881px]:grid-cols-[1.05fr_1fr] items-start">
+        {/* Left (primary) card */}
+        <div className={`${SKELETON_CARD} p-7 space-y-5`}>
+          <SkBox height="h-3" width="w-40" />
+          <SkBox height="h-14" width="w-full" className="rounded-xl" />
+          <SkBox height="h-3" width="w-2/3" />
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkBox key={i} height="h-10" width="w-full" className="rounded-lg" />
+            ))}
+          </div>
+          <SkBox height="h-2" width="w-full" className="rounded-full" />
+        </div>
+
+        {/* Right (summary) card */}
+        <div className={`${SKELETON_CARD} p-7 space-y-4`}>
+          <SkBox height="h-3" width="w-36" />
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between gap-4 border-b border-fmz-border-light pb-3 last:border-0">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <SkBox height="h-9" width="w-9" className="rounded-lg shrink-0" />
+                <SkBox height="h-3" width="w-28" />
+              </div>
+              <SkBox height="h-4" width="w-16" className="shrink-0" />
+            </div>
+          ))}
+          <SkBox height="h-11" width="w-full" className="rounded-xl" />
+        </div>
+      </div>
+    </main>
   );
 }
 

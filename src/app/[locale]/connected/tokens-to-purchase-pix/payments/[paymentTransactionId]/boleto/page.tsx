@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
 import { FmzTenantBoletoPaymentPage } from '../../../../../../../features/tenant-portal/token-purchase/components/FmzTenantBoletoPaymentPage';
-import { FmzPageLoadingShell } from '../../../../../../../components/layout/FmzPageLoadingShell';
+import { FmzTokenPurchaseSkeleton } from '../../../../../../../components/layout';
 
 export default function TokenPurchaseBoletoPaymentPage() {
   return (
-    <Suspense fallback={<FmzPageLoadingShell />}>
+    <Suspense fallback={<FmzTokenPurchaseSkeleton />}>
       <FmzTenantBoletoPaymentPage />
     </Suspense>
   );

@@ -17,13 +17,13 @@ export * from './FmzAdminContentShell';
 export { FmzAuthHeader } from './FmzAuthHeader';
 export { FmzAuthenticatedRoute } from './FmzAuthenticatedRoute';
 export { FmzConnectedLayoutFrame } from './FmzConnectedLayoutFrame';
-export { FmzPageLoadingShell } from './FmzPageLoadingShell';
 export {
   FmzPaymentHistorySkeleton,
   FmzInvoiceSkeleton,
   FmzWalletSkeleton,
   FmzContractSkeleton,
   FmzRenterDashboardSkeleton,
+  FmzTokenPurchaseSkeleton,
   FmzAdminListSkeleton,
   FmzAdminFormSkeleton,
 } from './FmzContentSkeleton';
