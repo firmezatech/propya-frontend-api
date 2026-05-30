@@ -48,6 +48,11 @@ import {
 import { fetchTokenPurchaseQuote } from '../services/fmz-token-purchase-api';
 import { getCurrentTenantDashboard } from '../../services';
 import type { FmzTenantDashboard } from '../../domain';
+import {
+  firstFiniteNumber,
+  firstFiniteNumberOrUndefined,
+  toFiniteNumber,
+} from '../../../../lib/fmz-number';
 
 // ── Formatters ─────────────────────────────────────────────────────────────────
 
@@ -112,6 +117,9 @@ interface CartSeed {
   propertyValue: number;
   propertyLabel: string;
   tokenSymbol: string;
+  /** Next ownership goal (from dashboard), used for the goal pill near the title. */
+  nextGoalPercentage: number | null;
+  nextGoalTokensRemaining: number | null;
 }
 
 function useDashboardSeed(): { seed: CartSeed; loading: boolean } {
@@ -135,18 +143,35 @@ function useDashboardSeed(): { seed: CartSeed; loading: boolean } {
       ?? (dashboard?.ownership as Record<string, unknown> | undefined | null)?.['propertyTokenizationId'] as string | null
       ?? null,
     propertyId: searchParams.get('propertyId') ?? (dashboard?.property?.id != null ? String(dashboard.property.id) : null),
-    currentTokens: Number(dashboard?.ownership?.tokenBalance ?? 0),
-    totalTokens:   Number(dashboard?.ownership?.totalSupply  ?? 0),
-    currentRent:   Number(
-      (dashboard?.contract as Record<string, unknown> | undefined | null)?.['currentRentAmount']
-      ?? (dashboard as Record<string, unknown> | undefined | null)?.['monthlySummary']
-      ?? 0,
+    currentTokens: toFiniteNumber(dashboard?.ownership?.tokenBalance),
+    totalTokens:   toFiniteNumber(dashboard?.ownership?.totalSupply),
+    // Discounted (current) rent — prefer rentInsight, then monthlySummary, then contract.
+    // Each candidate is a number field; firstFiniteNumber skips nulls/objects safely.
+    currentRent:   firstFiniteNumber(
+      dashboard?.rentInsight?.currentRentAmount,
+      dashboard?.rentInsight?.discountedRentAmount,
+      dashboard?.monthlySummary?.discountedRentAmount,
+      dashboard?.monthlySummary?.rentWithDiscountAmount,
+      dashboard?.monthlySummary?.totalDueAmount,
+      dashboard?.contract?.currentRentAmount,
     ),
-    fullRent:      Number(
-      (dashboard?.contract as Record<string, unknown> | undefined | null)?.['baseMonthlyRent']
-      ?? 0,
+    // Full (pre-discount) rent — the adjusted base rent the discount is applied to.
+    fullRent:      firstFiniteNumber(
+      dashboard?.rentInsight?.adjustedBaseRentAmount,
+      dashboard?.rentInsight?.originalRentAmount,
+      dashboard?.monthlySummary?.adjustedBaseRentAmount,
+      dashboard?.monthlySummary?.originalRentAmount,
+      dashboard?.contract?.baseMonthlyRent,
+      dashboard?.contract?.originalBaseRent,
     ),
-    propertyValue: Number(dashboard?.ownership?.totalPropertyValue ?? dashboard?.property?.appraisedValue ?? 0),
+    propertyValue: firstFiniteNumber(dashboard?.ownership?.totalPropertyValue, dashboard?.property?.appraisedValue),
+    nextGoalPercentage:
+      firstFiniteNumberOrUndefined(
+        dashboard?.ownershipGoals?.next?.targetPercentage,
+        dashboard?.nextGoal?.percentage,
+      ) ?? null,
+    nextGoalTokensRemaining:
+      firstFiniteNumberOrUndefined(dashboard?.ownershipGoals?.next?.tokensRemaining) ?? null,
     propertyLabel:
       searchParams.get('propertyLabel')
       ?? dashboard?.property?.name
@@ -301,6 +326,7 @@ export function FmzTenantTokenPurchasePage() {
   const totalTokens = seed.totalTokens > 0 ? seed.totalTokens : 100000;
   const currentTokens = seed.currentTokens > 0 ? seed.currentTokens : 7200;
   const currentPct = totalTokens > 0 ? (currentTokens / totalTokens) * 100 : 0;
+  const deltaPct = totalTokens > 0 ? (quantity / totalTokens) * 100 : 0;
   const availableTokens = Math.max(totalTokens - currentTokens, 0);
   const remainingAfterSelection = Math.max(availableTokens - quantity, 0);
   const ownedWidth = totalTokens > 0 ? Math.min(100, (currentTokens / totalTokens) * 100) : 0;
@@ -316,6 +342,26 @@ export function FmzTenantTokenPurchasePage() {
         propertyValue:    seed.propertyValue,
       })
     : null;
+
+  // Backend-authoritative rent/ownership projection. When present it wins over the
+  // dashboard-derived `impact`; otherwise we fall back to the local calculation.
+  const rentImpact = quote?.rentImpact ?? null;
+
+  const displayCurrentPct = rentImpact ? rentImpact.currentOwnershipPercentage : currentPct;
+  const displayNewPct = rentImpact
+    ? rentImpact.projectedOwnershipPercentage
+    : impact ? impact.newPercentage : currentPct + deltaPct;
+  const displayDeltaPct = rentImpact
+    ? rentImpact.deltaOwnershipPercentage
+    : impact ? impact.deltaPercentage : deltaPct;
+
+  const displayCurrentRent = rentImpact ? rentImpact.currentRentAmount : seed.currentRent;
+  const displayNewRent = rentImpact
+    ? rentImpact.projectedRentAmount
+    : impact ? impact.newRent : seed.currentRent;
+  const displayRentSaving = rentImpact
+    ? rentImpact.monthlySavingsAmount
+    : impact ? impact.rentSaving : 0;
 
   const nextGoalTokens = 10000;
   const milestoneProgress = Math.min(100, ((currentTokens + quantity) / nextGoalTokens) * 100);
@@ -338,6 +384,19 @@ export function FmzTenantTokenPurchasePage() {
       fullRent:      seed.fullRent,
       propertyValue: seed.propertyValue,
     });
+    // Backend rent impact is authoritative — override the dashboard-derived
+    // projections so the confirmation/success pages stay consistent with the quote.
+    if (quote.rentImpact) {
+      const ri = quote.rentImpact;
+      cart.currentPercentage = ri.currentOwnershipPercentage;
+      cart.newPercentage     = ri.projectedOwnershipPercentage;
+      cart.deltaPercentage   = ri.deltaOwnershipPercentage;
+      cart.currentRent       = ri.currentRentAmount;
+      cart.newRent           = ri.projectedRentAmount;
+      cart.rentSaving        = ri.monthlySavingsAmount;
+      cart.currentTokens     = ri.currentTokenBalance;
+      cart.totalTokens       = ri.totalSupply;
+    }
     writeTokenPurchaseCart(cart);
     router.push(localizedHref('/connected/tokens-to-purchase-pix/confirm'));
   }, [quote, method, seed, router]);
@@ -355,8 +414,19 @@ export function FmzTenantTokenPurchasePage() {
   const unitPrice = quote?.unitPrice ?? 1;
   const inlineCost = quote ? quote.total : quantity * unitPrice * (1 + processingFeeRate / 100);
   const futureTokens = currentTokens + quantity;
-  const deltaPct = totalTokens > 0 ? (quantity / totalTokens) * 100 : 0;
   const formatPercentagePoints = (value: number) => pctFmt.format(Number(value ?? 0));
+
+  // Goal pill (replaces the old promotion text). Prefers backend/dashboard goal data:
+  //   - "Faltam X tokens para a meta de Y%" when the remaining-token count is known
+  //   - "Meta Y%" when only the target percentage is known
+  //   - "Próxima meta: 10%" as a safe fallback when no goal data is available
+  const goalPct = seed.nextGoalPercentage ?? 10;
+  const goalLabel =
+    seed.nextGoalTokensRemaining != null && seed.nextGoalTokensRemaining > 0
+      ? `Faltam ${fmt.int(seed.nextGoalTokensRemaining)} tokens para a meta de ${fmt.int(goalPct)}%`
+      : seed.nextGoalPercentage != null
+        ? `Meta ${fmt.int(goalPct)}%`
+        : 'Próxima meta: 10%';
 
   if (!seed.propertyTokenizationId && !seedLoading) {
     return (
@@ -382,9 +452,9 @@ export function FmzTenantTokenPurchasePage() {
           <h1 className={styles.buyTitle}>Comprar tokens</h1>
           <p className={styles.buySub}>
             <span>
-              Você é dona de <strong>{fmt.pct(currentPct)}</strong> · próxima meta 10%
+              Você é dona de <strong>{fmt.pct(displayCurrentPct)}</strong> · próxima meta {fmt.int(goalPct)}%
             </span>
-            <span className={styles.buyPill}><span />Promoção mai/26 · taxa zero</span>
+            <span className={styles.buyPill}><span />{goalLabel}</span>
           </p>
         </div>
       </div>
@@ -492,22 +562,22 @@ export function FmzTenantTokenPurchasePage() {
           <div className={styles.buyImpactRow}>
             <span className={`${styles.buyImpactIcon} ${styles.buyImpactGold}`}><Sparkles size={16} /></span>
             <span className={styles.buyImpactLabel}>Sua posse no imóvel<small>Tokens {seed.tokenSymbol} / {fmt.int(totalTokens)} total</small></span>
-            <span className={styles.buyBefore}>{fmt.pct(currentPct)}</span>
+            <span className={styles.buyBefore}>{fmt.pct(displayCurrentPct)}</span>
             <ArrowRight size={13} className={styles.buyImpactArrow} />
             <strong className={`${styles.buyAfter} ${styles.buyAfterGold}`}>
-              {impact ? fmt.pct(impact.newPercentage) : fmt.pct(currentPct + deltaPct)}
-              <span>{impact ? `+${formatPercentagePoints(impact.deltaPercentage)} pp` : `+${formatPercentagePoints(deltaPct)} pp`}</span>
+              {fmt.pct(displayNewPct)}
+              <span>+{formatPercentagePoints(displayDeltaPct)} pp</span>
             </strong>
           </div>
 
           <div className={styles.buyImpactRow}>
             <span className={`${styles.buyImpactIcon} ${styles.buyImpactGreen}`}><Landmark size={16} /></span>
             <span className={styles.buyImpactLabel}>Aluguel mensal<small>Após desconto por tokens</small></span>
-            <span className={styles.buyBefore}>{fmt.money(seed.currentRent)}</span>
+            <span className={styles.buyBefore}>{fmt.money(displayCurrentRent)}</span>
             <ArrowRight size={13} className={styles.buyImpactArrow} />
             <strong className={`${styles.buyAfter} ${styles.buyAfterGreen}`}>
-              {impact ? fmt.money(impact.newRent) : fmt.money(seed.currentRent)}
-              {impact && <span>−{fmt.money(impact.rentSaving)}</span>}
+              {fmt.money(displayNewRent)}
+              {displayRentSaving > 0 && <span>−{fmt.money(displayRentSaving)}</span>}
             </strong>
           </div>
 
@@ -940,13 +1010,24 @@ export function FmzTenantTokenPurchasePixPage() {
           </div>
         </div>
 
-        {/* ── Loading state ── */}
-        {creating && (
+        {/* ── Loading state (PIX) ── */}
+        {creating && method === 'pix' && (
           <>
             <div className={styles.qrFrame}><Loader2 className={styles.spinner} /></div>
             <p className={styles.statusText}>Gerando cobrança no Asaas…</p>
             <p className={styles.subStatus}>Aguarde, conectando ao provedor de pagamento.</p>
           </>
+        )}
+
+        {/* ── Loading state (Boleto) ── */}
+        {/* No QR frame / PIX wording — boleto gets its own loading copy, then this
+            page redirects to the dedicated boleto page once creation succeeds. */}
+        {creating && method === 'boleto' && (
+          <div className={styles.boletoGenerating}>
+            <Loader2 className={styles.spinner} />
+            <p className={styles.statusText}>Gerando boleto bancário...</p>
+            <p className={styles.subStatus}>Registrando cobrança no Asaas.</p>
+          </div>
         )}
 
         {/* ── PIX content ── */}

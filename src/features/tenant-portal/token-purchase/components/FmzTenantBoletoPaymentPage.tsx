@@ -158,7 +158,10 @@ export function FmzTenantBoletoPaymentPage() {
 
   const details = state.status === 'ready' ? state.details : null;
 
-  const copyCode = details?.linhaDigitavel ?? details?.barcode ?? '';
+  // Copy field shows the linha digitável only; the barcode area uses the barcode
+  // value. They are kept strictly separate (a barcode is not a valid linha digitável).
+  const copyCode = details?.linhaDigitavel ?? '';
+  const barcodeValue = details?.barcode ?? '';
   const openUrl = details?.pdfUrl ?? details?.boletoUrl ?? null;
   const isPaid = boletoStatusIsPaid(details?.status);
 
@@ -171,7 +174,7 @@ export function FmzTenantBoletoPaymentPage() {
     }
   }, [copyCode]);
 
-  const barcodeBars = useMemo(() => buildBarcodeBars(copyCode), [copyCode]);
+  const barcodeBars = useMemo(() => buildBarcodeBars(barcodeValue), [barcodeValue]);
 
   const amountLabel = details?.amount != null
     ? formatCurrencyBRL(details.amount)
@@ -254,7 +257,7 @@ export function FmzTenantBoletoPaymentPage() {
                 )}
               </div>
 
-              {barcodeBars.length > 0 && (
+              {barcodeBars.length > 0 ? (
                 <div className={styles.barcodeWrap}>
                   <svg
                     className={styles.barcodeSvg}
@@ -267,6 +270,14 @@ export function FmzTenantBoletoPaymentPage() {
                       <rect key={i} x={bar.x} y="0" width={bar.width} height="100" fill="#0E1626" />
                     ))}
                   </svg>
+                  <div className={styles.bcLabel}>Código de barras</div>
+                </div>
+              ) : (
+                <div className={styles.barcodeWrap}>
+                  <div className={styles.barcodeEmpty}>
+                    <Barcode size={18} />
+                    <span>Código de barras não disponível</span>
+                  </div>
                   <div className={styles.bcLabel}>Código de barras</div>
                 </div>
               )}
@@ -381,12 +392,6 @@ export function FmzTenantBoletoPaymentPage() {
             <div className={styles.detRow}>
               <span className={styles.k}>Identificador</span>
               <span className={styles.v}>{details.providerBoletoId}</span>
-            </div>
-          )}
-          {details.paymentTransactionId && (
-            <div className={styles.detRow}>
-              <span className={styles.k}>Transação</span>
-              <span className={styles.v}>{details.paymentTransactionId}</span>
             </div>
           )}
         </div>

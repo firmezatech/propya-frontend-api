@@ -1,5 +1,24 @@
 export type FmzTokenPurchasePaymentMethod = 'pix' | 'boleto';
 
+// ── Rent impact ──────────────────────────────────────────────────────────────────
+// Optional projection returned by GET /tenant/token-purchases/quote describing how
+// the requested purchase changes the tenant's ownership and monthly rent. All values
+// are backend-authoritative; the UI prefers these over dashboard-derived estimates.
+
+export interface FmzTokenPurchaseRentImpact {
+  currentRentAmount: number;
+  projectedRentAmount: number;
+  monthlySavingsAmount: number;
+  currentOwnershipPercentage: number;
+  projectedOwnershipPercentage: number;
+  deltaOwnershipPercentage: number;
+  currentTokenBalance: number;
+  projectedTokenBalance: number;
+  totalSupply: number;
+  baseRentAmount: number;
+  adjustedBaseRentAmount: number;
+}
+
 // ── Quote ──────────────────────────────────────────────────────────────────────
 // Returned by GET /tenant/token-purchases/quote.
 // All monetary values are pre-computed server-side — the UI renders them directly.
@@ -23,6 +42,8 @@ export interface FmzTokenPurchaseQuote {
   issuedAt: string;
   expiresAt: string;
   expiresInSeconds: number;
+  /** Optional backend-computed rent/ownership projection for this quantity. */
+  rentImpact?: FmzTokenPurchaseRentImpact | null;
 }
 
 // ── Cart ───────────────────────────────────────────────────────────────────────
@@ -74,9 +95,14 @@ export interface FmzTokenPurchasePaymentPix {
 export interface FmzTokenPurchasePaymentBoleto {
   providerBoletoId?: string | null;
   nossoNumero?: string | null;
+  // Linha digitável / copyable code — backend & provider expose several aliases.
   linhaDigitavel?: string | null;
+  digitableLine?: string | null;
+  identificationField?: string | null;
   copyPasteCode?: string | null;
+  // Barcode — kept strictly separate from the linha digitável.
   barcode?: string | null;
+  barCode?: string | null;
   boletoUrl?: string | null;
   pdfUrl?: string | null;
   downloadUrl?: string | null;

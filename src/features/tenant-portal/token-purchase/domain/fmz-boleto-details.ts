@@ -2,6 +2,7 @@ import type {
   FmzTokenPurchasePayment,
   FmzTokenPurchaseStatusResponse,
 } from './fmz-token-purchase.types';
+import { firstFiniteNumberOrUndefined } from '../../../../lib/fmz-number';
 
 // ── Normalized boleto view-model ─────────────────────────────────────────────
 // A single, UI-friendly shape the boleto page renders directly. The backend may
@@ -15,8 +16,13 @@ export interface BoletoPaymentDetails {
   currency?: string;
   status?: string;
   dueDate?: string;
-  /** Preferred copyable code (linha digitável). Falls back to copyPasteCode. */
+  /**
+   * Copyable code shown in the copy field. Resolved from the linha digitável /
+   * digitable-line aliases only — NEVER from the barcode (they are different
+   * values and the barcode is not a valid linha digitável).
+   */
   linhaDigitavel?: string;
+  /** Barcode value for the barcode visual area. Kept separate from linhaDigitavel. */
   barcode?: string;
   nossoNumero?: string;
   providerBoletoId?: string;
@@ -34,17 +40,6 @@ type BoletoSource =
 function firstNonEmptyString(...values: Array<unknown>): string | undefined {
   for (const value of values) {
     if (typeof value === 'string' && value.trim() !== '') return value;
-  }
-  return undefined;
-}
-
-function firstFiniteNumber(...values: Array<unknown>): number | undefined {
-  for (const value of values) {
-    if (typeof value === 'number' && Number.isFinite(value)) return value;
-    if (typeof value === 'string' && value.trim() !== '') {
-      const n = Number(value.replace(',', '.'));
-      if (Number.isFinite(n)) return n;
-    }
   }
   return undefined;
 }
@@ -67,7 +62,7 @@ export function normalizeBoletoDetails(...sources: BoletoSource[]): BoletoPaymen
     const boleto = source.boleto ?? null;
 
     result.paymentTransactionId ??= firstNonEmptyString(source.paymentTransactionId);
-    result.amount ??= firstFiniteNumber(payment.totalAmount, status.amount);
+    result.amount ??= firstFiniteNumberOrUndefined(payment.totalAmount, status.amount);
     result.currency ??= firstNonEmptyString(status.currency);
     result.status ??= firstNonEmptyString(
       boleto?.status,
@@ -75,12 +70,16 @@ export function normalizeBoletoDetails(...sources: BoletoSource[]): BoletoPaymen
       status.paymentStatus,
     );
     result.dueDate ??= firstNonEmptyString(boleto?.dueAt, payment.dueAt, status.dueAt);
+    // Copyable code (linha digitável) — resolved only from digitable-line aliases.
+    // Never falls back to the barcode: they are distinct values.
     result.linhaDigitavel ??= firstNonEmptyString(
       boleto?.linhaDigitavel,
       boleto?.copyPasteCode,
-      boleto?.barcode,
+      boleto?.digitableLine,
+      boleto?.identificationField,
     );
-    result.barcode ??= firstNonEmptyString(boleto?.barcode, boleto?.linhaDigitavel);
+    // Barcode — resolved only from barcode aliases; never falls back to linha digitável.
+    result.barcode ??= firstNonEmptyString(boleto?.barcode, boleto?.barCode);
     result.nossoNumero ??= firstNonEmptyString(boleto?.nossoNumero);
     result.providerBoletoId ??= firstNonEmptyString(boleto?.providerBoletoId);
     result.pdfUrl ??= firstNonEmptyString(boleto?.pdfUrl, boleto?.downloadUrl);
@@ -93,11 +92,16 @@ export function normalizeBoletoDetails(...sources: BoletoSource[]): BoletoPaymen
 // ── Status translation ───────────────────────────────────────────────────────
 
 const BOLETO_STATUS_LABELS: Record<string, string> = {
+  // Pre-payment lifecycle states — all surface as "Aguardando pagamento" so the
+  // tenant never sees a raw provider state like "generated" or "registered".
+  generated: 'Aguardando pagamento',
+  registered: 'Aguardando pagamento',
+  sent: 'Aguardando pagamento',
   pending: 'Aguardando pagamento',
   awaiting_payment: 'Aguardando pagamento',
-  created: 'Boleto emitido',
-  issued: 'Boleto emitido',
-  registered: 'Boleto registrado',
+  created: 'Aguardando pagamento',
+  issued: 'Aguardando pagamento',
+  // Settled / terminal states.
   received: 'Pagamento recebido',
   confirmed: 'Pagamento confirmado',
   paid: 'Pago',

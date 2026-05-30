@@ -192,6 +192,13 @@ export function FmzContractSkeleton() {
 // ── Renter (tenant) dashboard skeleton ──────────────────────────────────────────
 // Mirrors the real FmzRenterDashboard layout: page title, hero (journey + goal
 // cards), content grid (bill card + simulator/history stack), and quick actions.
+//
+// The outer wrapper reproduces the real `.dashboard` container exactly — max-width
+// 1280px, centered (mx-auto), and the same responsive horizontal padding
+// (clamp(20px,4vw,48px)) plus clamp(24px,4vw,40px) top / 80px bottom — so the
+// skeleton occupies the same footprint as the loaded dashboard and never spans the
+// full viewport with oversized cards.
+//
 // Mobile-first — every multi-column grid collapses to a single column on small
 // screens. The hero and content grids switch to two columns at min-width:1081px
 // (via min-[1081px]:) to mirror the real dashboard's @media (max-width:1080px)
@@ -202,7 +209,11 @@ const SKELETON_CARD = 'rounded-2xl border border-fmz-border-light bg-white';
 
 export function FmzRenterDashboardSkeleton() {
   return (
-    <div className="space-y-6 py-2" aria-label="Carregando painel" aria-busy="true">
+    <div
+      className="mx-auto w-full max-w-[1280px] space-y-6 px-[clamp(20px,4vw,48px)] pt-[clamp(24px,4vw,40px)] pb-20"
+      aria-label="Carregando painel"
+      aria-busy="true"
+    >
       {/* Page title */}
       <SkBox height="h-8" width="w-56" />
 
