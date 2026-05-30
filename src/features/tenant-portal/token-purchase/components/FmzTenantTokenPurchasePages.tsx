@@ -107,6 +107,8 @@ interface CartSeed {
   currentRent: number;
   fullRent: number;
   propertyValue: number;
+  propertyLabel: string;
+  tokenSymbol: string;
 }
 
 function useDashboardSeed(): { seed: CartSeed; loading: boolean } {
@@ -142,6 +144,13 @@ function useDashboardSeed(): { seed: CartSeed; loading: boolean } {
       ?? 0,
     ),
     propertyValue: Number(dashboard?.ownership?.totalPropertyValue ?? dashboard?.property?.appraisedValue ?? 0),
+    propertyLabel:
+      searchParams.get('propertyLabel')
+      ?? dashboard?.property?.name
+      ?? dashboard?.property?.code
+      ?? dashboard?.property?.description
+      ?? 'Apto 54 Vila Madalena',
+    tokenSymbol: searchParams.get('tokenSymbol') ?? 'FT-0412',
   };
 
   return { seed, loading };
@@ -265,7 +274,7 @@ export function FmzTenantTokenPurchasePage() {
   const router = useRouter();
   const { seed, loading: seedLoading } = useDashboardSeed();
 
-  const [quantity, setQuantity] = useState(1000);
+  const [quantity, setQuantity] = useState(5000);
   const [method, setMethod] = useState<FmzTokenPurchasePaymentMethod>('pix');
 
   const quoteState = useTokenPurchaseQuote({
@@ -277,10 +286,18 @@ export function FmzTenantTokenPurchasePage() {
 
   const quote = quoteState.status === 'ok' ? quoteState.quote : null;
 
-  // Use quote bounds once loaded; fall back to safe defaults during initial load.
-  const minQty   = quote?.minQuantity ?? 1000;
-  const maxQty   = quote?.maxQuantity ?? 10000;
-  const stepSize = 1;
+  const minQty = quote?.minQuantity ?? 1000;
+  const availableBySeed = Math.max(seed.totalTokens - seed.currentTokens, 0);
+  const maxQty = quote?.maxQuantity ?? (availableBySeed > 0 ? availableBySeed : 92800);
+  const stepperSize = 1000;
+  const sliderStep = 100;
+  const totalTokens = seed.totalTokens > 0 ? seed.totalTokens : 100000;
+  const currentTokens = seed.currentTokens > 0 ? seed.currentTokens : 7200;
+  const currentPct = totalTokens > 0 ? (currentTokens / totalTokens) * 100 : 0;
+  const availableTokens = Math.max(totalTokens - currentTokens, 0);
+  const remainingAfterSelection = Math.max(availableTokens - quantity, 0);
+  const ownedWidth = totalTokens > 0 ? Math.min(100, (currentTokens / totalTokens) * 100) : 0;
+  const selectedWidth = totalTokens > 0 ? Math.min(100 - ownedWidth, (quantity / totalTokens) * 100) : 0;
 
   const impact = quote
     ? calculateImpactProjection({
@@ -293,12 +310,12 @@ export function FmzTenantTokenPurchasePage() {
       })
     : null;
 
-  const milestoneProgress = impact
-    ? Math.min(100, ((seed.currentTokens + quantity) / 10000) * 100)
-    : 0;
+  const nextGoalTokens = 10000;
+  const milestoneProgress = Math.min(100, ((currentTokens + quantity) / nextGoalTokens) * 100);
 
   const adjustQuantity = useCallback((next: number) => {
-    setQuantity(Math.max(minQty, Math.min(maxQty, next)));
+    const snapped = Math.round(next / sliderStep) * sliderStep;
+    setQuantity(Math.max(minQty, Math.min(maxQty, snapped)));
   }, [minQty, maxQty]);
 
   const proceed = useCallback(() => {
@@ -318,11 +335,25 @@ export function FmzTenantTokenPurchasePage() {
     router.push(localizedHref('/connected/tokens-to-purchase-pix/confirm'));
   }, [quote, method, seed, router]);
 
-  const presets = [1000, 2500, 5000, 10000];
+  const presetOptions = [
+    { tokens: 1000, label: 'mínimo' },
+    { tokens: Math.max(1000, nextGoalTokens - currentTokens), label: 'Meta 10%' },
+    { tokens: 5000, label: 'recomendado' },
+    { tokens: 10000, label: '+1 pp' },
+  ];
+
+  const processingFeeRate = quote?.processingFeePercent ?? 7.5;
+  const processingFee = quote?.processingFeeAmount ?? 0;
+  const purchaseTotal = quote?.total ?? 0;
+  const unitPrice = quote?.unitPrice ?? 1;
+  const inlineCost = quote ? quote.total : quantity * unitPrice * (1 + processingFeeRate / 100);
+  const futureTokens = currentTokens + quantity;
+  const deltaPct = totalTokens > 0 ? (quantity / totalTokens) * 100 : 0;
+  const formatPercentagePoints = (value: number) => pctFmt.format(Number(value ?? 0));
 
   if (!seed.propertyTokenizationId && !seedLoading) {
     return (
-      <main className={styles.page}>
+      <main className={styles.buyPage}>
         <BackButton />
         <div className={styles.alert}>
           <strong>Imóvel não identificado.</strong> Volte ao dashboard e tente novamente a partir do seu imóvel.
@@ -332,205 +363,231 @@ export function FmzTenantTokenPurchasePage() {
   }
 
   return (
-    <main className={styles.page}>
-      <BackButton />
-      <div className={styles.hero}>
+    <main className={styles.buyPage}>
+      <button type="button" className={styles.buyBackLink} onClick={() => router.push(localizedHref('/connected/dashboard'))}>
+        <ArrowLeft size={14} />
+        Voltar ao dashboard
+      </button>
+
+      <div className={styles.buyHeader}>
         <div>
-          <p className={styles.eyebrow}>Comprar tokens</p>
-          <h1 className={styles.title}>Aumente sua participação no imóvel</h1>
-          <p className={styles.subtitle}>
-            Escolha quantos tokens deseja adquirir. O preço unitário e a taxa de processamento são
-            definidos pela plataforma e exibidos abaixo.
-          </p>
-        </div>
-        <div className={styles.chip}>
-          <WalletCards size={22} />
-          <div>
-            <span className={styles.chipK}>Preço do token</span>
-            <span className={styles.chipV}>
-              {quote ? fmt.money(quote.unitPrice) : <Loader2 size={14} className={styles.spinnerInline} />}
+          <p className={styles.buySup}>Tokens · {seed.propertyLabel}</p>
+          <h1 className={styles.buyTitle}>Comprar tokens</h1>
+          <p className={styles.buySub}>
+            <span>
+              Você é dona de <strong>{fmt.pct(currentPct)}</strong> · próxima meta 10%
             </span>
-          </div>
+            <span className={styles.buyPill}><span />Promoção mai/26 · taxa zero</span>
+          </p>
         </div>
       </div>
 
-      <div className={styles.grid}>
-        {/* ── Quantity input ── */}
-        <section className={`${styles.card} ${styles.inputCard}`}>
-          <span className={styles.cardLabel}>Quantidade</span>
-          <div className={styles.tokenInput}>
+      <section className={styles.buyCols}>
+        <section className={`${styles.buyCard} ${styles.buyInputCard}`}>
+          <span className={styles.buyCardEyebrow}>Quantos tokens quer comprar?</span>
+
+          <div className={styles.buyAvail}>
+            <div className={styles.buyAvailTop}>
+              <span className={styles.buyAvailLabel}><span />Disponíveis para compra</span>
+              <span className={styles.buyAvailNum}>
+                <strong>{fmt.int(availableTokens || maxQty)}</strong> de {fmt.int(totalTokens)} <span>{seed.tokenSymbol}</span>
+              </span>
+            </div>
+            <div className={styles.buyAvailBar}>
+              <div className={styles.buyAvailOwned} style={{ width: `${ownedWidth}%` }} title="Já em circulação" />
+              <div className={styles.buyAvailSelected} style={{ width: `${selectedWidth}%` }} title="Sua seleção" />
+            </div>
+            <div className={styles.buyAvailLegend}>
+              <span><i className={styles.buyLegendOwned} />Em circulação <strong>{fmt.int(currentTokens)}</strong></span>
+              <span><i className={styles.buyLegendSelected} />Sua seleção <strong>{fmt.int(quantity)}</strong></span>
+              <span><i className={styles.buyLegendFree} />Restante <strong>{fmt.int(remainingAfterSelection)}</strong></span>
+            </div>
+          </div>
+
+          <div className={styles.buyTokenInput}>
             <button
               type="button"
-              className={styles.stepBtn}
+              className={styles.buyTokenStep}
               disabled={quantity <= minQty}
-              onClick={() => adjustQuantity(quantity - stepSize)}
+              onClick={() => adjustQuantity(quantity - stepperSize)}
+              aria-label="Diminuir 1.000"
             >−</button>
-            <div className={styles.tokenDisplay}>
-              <strong className={styles.tokenNumber}>{fmt.int(quantity)}</strong>
-              <span className={styles.tokenLabel}>tokens</span>
+            <div className={styles.buyTokenDisplay}>
+              <strong>{fmt.int(quantity)}</strong>
+              <span>{quantity === 1 ? 'token' : 'tokens'} · <b>{seed.tokenSymbol}</b></span>
             </div>
             <button
               type="button"
-              className={styles.stepBtn}
+              className={styles.buyTokenStep}
               disabled={quantity >= maxQty}
-              onClick={() => adjustQuantity(quantity + stepSize)}
+              onClick={() => adjustQuantity(quantity + stepperSize)}
+              aria-label="Aumentar 1.000"
             >+</button>
           </div>
 
-          {/* Price summary from backend quote */}
-          <div className={styles.costLine}>
+          <div className={styles.buyCostLine}>
             {quoteState.status === 'loading' && (
               <><Loader2 size={14} className={styles.spinnerInline} /> Calculando…</>
             )}
-            {quoteState.status === 'ok' && (
-              <>Total <strong>{fmt.money(quote?.total)}</strong></>
+            {quoteState.status === 'ok' && quote && (
+              <>
+                <span>Valor a pagar</span>
+                <strong>{fmt.money(quote.total)}</strong>
+                <small>· inclui taxa de {quote.processingFeePercent}%</small>
+              </>
             )}
-            {quoteState.status === 'error' && (
-              <span className={styles.quoteError}>{quoteState.message}</span>
+            {quoteState.status === 'idle' && (
+              <>
+                <span>Valor a pagar</span>
+                <strong>{fmt.money(inlineCost)}</strong>
+                <small>· inclui taxa de {processingFeeRate}%</small>
+              </>
             )}
+            {quoteState.status === 'error' && <span className={styles.quoteError}>{quoteState.message}</span>}
           </div>
 
-          <div className={styles.presets}>
-            {presets.map((p) => (
+          <div className={styles.buyPresets}>
+            {presetOptions.map((preset) => (
               <button
-                key={p}
+                key={`${preset.tokens}-${preset.label}`}
                 type="button"
-                className={`${styles.preset} ${quantity === p ? styles.presetActive : ''}`}
-                onClick={() => adjustQuantity(p)}
+                className={`${styles.buyPreset} ${quantity === preset.tokens ? styles.buyPresetActive : ''}`}
+                onClick={() => adjustQuantity(preset.tokens)}
+                disabled={preset.tokens > maxQty}
               >
-                {fmt.int(p)}
-                {quote && <span className={styles.presetSub}>{fmt.money(p * quote.unitPrice)}</span>}
+                <strong>{fmt.int(preset.tokens)}</strong>
+                {preset.label === 'Meta 10%' ? <span className={styles.buyGoldTag}>{preset.label}</span> : <span>{preset.label}</span>}
               </button>
             ))}
           </div>
 
-          <input
-            className={styles.slider}
-            type="range"
-            min={minQty}
-            max={maxQty}
-            step={stepSize}
-            value={quantity}
-            onChange={(e) => adjustQuantity(Number(e.target.value))}
-          />
-          <div className={styles.sliderLabels}>
-            <span>{fmt.int(minQty)}</span>
-            <span>{fmt.int(maxQty)}</span>
-          </div>
-
-          {/* Price breakdown (rendered directly from backend breakdown array) */}
-          {quote && quote.breakdown.length > 0 && (
-            <div className={styles.breakdown}>
-              {quote.breakdown.map((line) => (
-                <div key={line.label} className={styles.bdRow}>
-                  <span>{line.label}</span>
-                  <strong>{fmt.money(line.amount)}</strong>
-                </div>
-              ))}
+          <div className={styles.buySliderWrap}>
+            <input
+              className={styles.buySlider}
+              type="range"
+              min={minQty}
+              max={maxQty}
+              step={sliderStep}
+              value={Math.min(maxQty, quantity)}
+              onChange={(e) => adjustQuantity(Number(e.target.value))}
+            />
+            <div className={styles.buySliderLabels}>
+              <span>{fmt.int(minQty)}</span>
+              <span>{fmt.int(Math.round((minQty + maxQty) / 2))}</span>
+              <span>{fmt.int(maxQty)}</span>
             </div>
-          )}
+          </div>
         </section>
 
-        <aside>
-          {/* ── Impact projections ── */}
-          {impact && (
-            <section className={styles.card}>
-              <span className={styles.cardLabel}>Impacto da compra</span>
-              <div className={styles.impactRow}>
-                <span className={`${styles.ico} ${styles.icoGold}`}><Home size={17} /></span>
-                <span className={styles.impactLabel}>Sua posse<small>Percentual no imóvel</small></span>
-                <span className={styles.before}>{fmt.pct(impact.currentPercentage)}</span>
-                <ArrowRight size={14} />
-                <strong className={styles.after}>
-                  {fmt.pct(impact.newPercentage)}
-                  <span className={styles.delta}>+{fmt.pct(impact.deltaPercentage)} pp</span>
-                </strong>
-              </div>
-              <div className={styles.impactRow}>
-                <span className={`${styles.ico} ${styles.icoGreen}`}><ReceiptText size={17} /></span>
-                <span className={styles.impactLabel}>Aluguel estimado<small>Após confirmação</small></span>
-                <span className={styles.before}>{fmt.money(impact.currentRent)}</span>
-                <ArrowRight size={14} />
-                <strong className={styles.after}>
-                  {fmt.money(impact.newRent)}
-                  <span className={styles.delta}>−{fmt.money(impact.rentSaving)}</span>
-                </strong>
-              </div>
-              <div className={styles.impactRow}>
-                <span className={styles.ico}><Building2 size={17} /></span>
-                <span className={styles.impactLabel}>Valor conquistado<small>Equivalente em patrimônio</small></span>
-                <span className={styles.before}>{fmt.money(impact.currentOwnedValue)}</span>
-                <ArrowRight size={14} />
-                <strong className={styles.after}>{fmt.money(impact.newOwnedValue)}</strong>
-              </div>
-              <div className={styles.milestone}>
-                <div className={styles.milestoneHead}>
-                  <span>Meta de 10%</span>
-                  <span>{fmt.int(seed.currentTokens + quantity)} tokens</span>
-                </div>
-                <div className={styles.track}><div className={styles.fill} style={{ width: `${milestoneProgress}%` }} /></div>
-                <p className={styles.milestoneFoot}>
-                  {impact.toMilestone > 0
-                    ? <>Faltam <strong>{fmt.int(impact.toMilestone)} tokens</strong> para 10%.</>
-                    : <strong>Meta de 10% atingida ou ultrapassada.</strong>}
-                </p>
-              </div>
-            </section>
-          )}
+        <section className={styles.buyCard}>
+          <span className={styles.buyCardEyebrow}>Veja o impacto da sua compra</span>
 
-          {/* ── Payment method ── */}
-          <section className={`${styles.card} mt-4`}>
-            <span className={styles.cardLabel}>Forma de pagamento</span>
-            <div className={styles.paymentOptions}>
-              <button
-                type="button"
-                className={`${styles.paymentOpt} ${method === 'pix' ? styles.paymentOptActive : ''}`}
-                onClick={() => setMethod('pix')}
-              >
-                <span className={styles.radio} />
-                <span>
-                  <span className={styles.payName}>PIX <span className={styles.tag}>instantâneo</span></span>
-                  <span className={styles.payDesc}>QR Code dinâmico gerado pelo backend (Asaas).</span>
-                </span>
-              </button>
-              <button
-                type="button"
-                className={`${styles.paymentOpt} ${method === 'boleto' ? styles.paymentOptActive : ''}`}
-                onClick={() => setMethod('boleto')}
-              >
-                <span className={styles.radio} />
-                <span>
-                  <span className={styles.payName}>Boleto</span>
-                  <span className={styles.payDesc}>Compensação bancária em até 3 dias úteis.</span>
-                </span>
-              </button>
+          <div className={styles.buyImpactRow}>
+            <span className={`${styles.buyImpactIcon} ${styles.buyImpactGold}`}><Sparkles size={16} /></span>
+            <span className={styles.buyImpactLabel}>Sua posse no imóvel<small>Tokens {seed.tokenSymbol} / {fmt.int(totalTokens)} total</small></span>
+            <span className={styles.buyBefore}>{fmt.pct(currentPct)}</span>
+            <ArrowRight size={13} className={styles.buyImpactArrow} />
+            <strong className={`${styles.buyAfter} ${styles.buyAfterGold}`}>
+              {impact ? fmt.pct(impact.newPercentage) : fmt.pct(currentPct + deltaPct)}
+              <span>{impact ? `+${formatPercentagePoints(impact.deltaPercentage)} pp` : `+${formatPercentagePoints(deltaPct)} pp`}</span>
+            </strong>
+          </div>
+
+          <div className={styles.buyImpactRow}>
+            <span className={`${styles.buyImpactIcon} ${styles.buyImpactGreen}`}><Landmark size={16} /></span>
+            <span className={styles.buyImpactLabel}>Aluguel mensal<small>Após desconto por tokens</small></span>
+            <span className={styles.buyBefore}>{fmt.money(seed.currentRent)}</span>
+            <ArrowRight size={13} className={styles.buyImpactArrow} />
+            <strong className={`${styles.buyAfter} ${styles.buyAfterGreen}`}>
+              {impact ? fmt.money(impact.newRent) : fmt.money(seed.currentRent)}
+              {impact && <span>−{fmt.money(impact.rentSaving)}</span>}
+            </strong>
+          </div>
+
+          <div className={styles.buyImpactRow}>
+            <span className={styles.buyImpactIcon}><WalletCards size={16} /></span>
+            <span className={styles.buyImpactLabel}>Sua fatia em R$<small>Valor de mercado da sua participação</small></span>
+            <span className={styles.buyBefore}>{impact ? fmt.money(impact.currentOwnedValue) : fmt.money(0)}</span>
+            <ArrowRight size={13} className={styles.buyImpactArrow} />
+            <strong className={styles.buyAfter}>{impact ? fmt.money(impact.newOwnedValue) : fmt.money(0)}</strong>
+          </div>
+
+          <div className={styles.buyMilestone}>
+            <div className={styles.buyMilestoneHead}>
+              <span>Progresso até a próxima meta (10%)</span>
+              <strong>{fmt.int(futureTokens)}/{fmt.int(nextGoalTokens)} tokens</strong>
             </div>
-          </section>
-        </aside>
-      </div>
+            <div className={styles.buyMilestoneTrack}><div style={{ width: `${milestoneProgress}%` }} /></div>
+            <p>
+              {futureTokens >= nextGoalTokens
+                ? <><strong>Meta 10% ultrapassada</strong> — próxima recompensa em 25% de posse.</>
+                : <>Faltam <strong>{fmt.int(nextGoalTokens - futureTokens)} tokens</strong> para alcançar 10%.</>}
+            </p>
+          </div>
+        </section>
+      </section>
 
-      <div className={styles.ctaBar}>
-        <div className={styles.ctaSummary}>
-          <span className={styles.ctaK}>Resumo</span>
-          {quoteState.status === 'ok' && quote ? (
-            <>
-              <strong className={styles.ctaTotal}>{fmt.money(quote.total)}</strong>
-              <span className={styles.ctaMeta}>
-                {fmt.int(quantity)} tokens
-                {quote.processingFeeAmount > 0 && ` · taxa ${fmt.money(quote.processingFeeAmount)} (${quote.processingFeePercent}%)`}
-              </span>
-            </>
-          ) : (
-            <span className={styles.ctaTotal}><Loader2 size={16} className={styles.spinnerInline} /></span>
-          )}
+      <section className={`${styles.buyCard} ${styles.buyPaymentCard}`}>
+        <span className={styles.buyCardEyebrow}>Forma de pagamento</span>
+        <div className={styles.buyPaymentOptions}>
+          <button
+            type="button"
+            className={`${styles.buyPaymentOpt} ${method === 'pix' ? styles.buyPaymentActive : ''}`}
+            onClick={() => setMethod('pix')}
+          >
+            <span className={styles.buyRadio} />
+            <span className={`${styles.buyPaymentIcon} ${styles.buyPixIcon}`}><Zap size={16} /></span>
+            <span className={styles.buyPaymentBody}>
+              <span>PIX <b>Recomendado</b></span>
+              <small>Confirmação imediata · tokens creditados em segundos</small>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.buyPaymentOpt} ${method === 'boleto' ? styles.buyPaymentActive : ''}`}
+            onClick={() => setMethod('boleto')}
+          >
+            <span className={styles.buyRadio} />
+            <span className={styles.buyPaymentIcon}><ReceiptText size={16} /></span>
+            <span className={styles.buyPaymentBody}>
+              <span>Boleto bancário</span>
+              <small>Geramos um boleto agora · compensação em até 2 dias úteis</small>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <div className={styles.buyCtaBar}>
+        <div className={styles.buyCtaSummary}>
+          <span>Total</span>
+          <div>
+            {quoteState.status === 'ok' && quote ? (
+              <>
+                <strong><small>R$</small>{fmt.noSym(purchaseTotal)}</strong>
+                <em>
+                  <b>{fmt.int(quantity)} tokens</b>
+                  {processingFee > 0 && ` · taxa ${fmt.money(processingFee)}`}
+                  {' · paga via '}
+                  <b>{method.toUpperCase()}</b>
+                </em>
+              </>
+            ) : (
+              <>
+                <strong><small>R$</small>{fmt.noSym(inlineCost)}</strong>
+                <em><b>{fmt.int(quantity)} tokens</b> · paga via <b>{method.toUpperCase()}</b></em>
+              </>
+            )}
+          </div>
         </div>
         <button
           type="button"
-          className={styles.primary}
+          className={styles.buyConfirmButton}
           disabled={quoteState.status !== 'ok'}
           onClick={proceed}
         >
-          Continuar <ArrowRight size={16} />
+          <Check size={16} />
+          Confirmar compra
         </button>
       </div>
     </main>
