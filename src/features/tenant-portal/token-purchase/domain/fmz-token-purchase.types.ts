@@ -60,10 +60,14 @@ export interface FmzTokenPurchaseCart {
 
 export interface FmzTokenPurchasePaymentPix {
   txid?: string | null;
-  copyPasteCode?: string | null;
   qrCode?: string | null;
+  copyPasteCode?: string | null;
+  copyPaste?: string | null;
   qrCodeImageUrl?: string | null;
+  qrCodeImage?: string | null;
+  encodedImage?: string | null;
   dueAt?: string | null;
+  expiresAt?: string | null;
   status?: string | null;
 }
 
@@ -106,22 +110,9 @@ export interface FmzTokenPurchaseStatusResponse {
   currency?: string | null;
   dueAt?: string | null;
   paidAt?: string | null;
-  pix?: {
-    qrCode?: string | null;
-    qrCodeImageUrl?: string | null;
-    copyPaste?: string | null;
-    txid?: string | null;
-    dueAt?: string | null;
-    status?: string | null;
-  } | null;
-  boleto?: {
-    linhaDigitavel?: string | null;
-    barcode?: string | null;
-    boletoUrl?: string | null;
-    pdfUrl?: string | null;
-    dueAt?: string | null;
-    status?: string | null;
-  } | null;
+  // Same shapes as the creation response so polling and creation stay interchangeable.
+  pix?: FmzTokenPurchasePaymentPix | null;
+  boleto?: FmzTokenPurchasePaymentBoleto | null;
 }
 
 // ── Backend response envelope ──────────────────────────────────────────────────

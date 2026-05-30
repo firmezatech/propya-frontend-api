@@ -3,6 +3,7 @@ import type {
   FmzTokenPurchasePayment,
   FmzTokenPurchasePaymentBackendResponse,
   FmzTokenPurchasePaymentMethod,
+  FmzTokenPurchasePaymentPix,
   FmzTokenPurchaseQuote,
   FmzTokenPurchaseQuoteBackendResponse,
   FmzTokenPurchaseStatusResponse,
@@ -141,15 +142,51 @@ function extractErrorMessage(body: unknown): string | null {
 // ── Payment display helpers ────────────────────────────────────────────────────
 
 export function getPixCopyPasteCode(payment: FmzTokenPurchasePayment | null): string {
-  return payment?.pix?.copyPasteCode ?? payment?.pix?.qrCode ?? '';
+  return (
+    payment?.pix?.copyPasteCode ??
+    payment?.pix?.copyPaste ??
+    payment?.pix?.qrCode ??
+    ''
+  );
 }
 
-export function getPixQrCodeImageSrc(payment: FmzTokenPurchasePayment | null): string | null {
-  const raw = payment?.pix?.qrCodeImageUrl ?? null;
-  if (!raw) return null;
-  if (raw.startsWith('data:image') || raw.startsWith('http')) return raw;
-  if (raw.length > 120) return `data:image/png;base64,${raw}`;
-  return null;
+export function getPixQrCodeImageSrc(payment: FmzTokenPurchasePayment | null): string {
+  const image =
+    payment?.pix?.qrCodeImageUrl ??
+    payment?.pix?.qrCodeImage ??
+    payment?.pix?.encodedImage ??
+    '';
+
+  if (!image) return '';
+  if (image.startsWith('data:image/')) return image;
+  if (image.startsWith('http://') || image.startsWith('https://')) return image;
+  return `data:image/png;base64,${image}`;
+}
+
+export function getPixExpiration(payment: FmzTokenPurchasePayment | null): string | null {
+  return payment?.pix?.dueAt ?? payment?.pix?.expiresAt ?? null;
+}
+
+// Merges newly-polled pix fields into the current payment without overwriting
+// already-populated values with null/undefined from a partial later response.
+export function mergePixIntoPayment(
+  payment: FmzTokenPurchasePayment | null,
+  incomingPix: FmzTokenPurchasePaymentPix | null | undefined,
+): FmzTokenPurchasePayment | null {
+  if (!payment) return payment;
+  if (!incomingPix) return payment;
+
+  const currentPix = payment.pix ?? {};
+  const mergedPix: FmzTokenPurchasePaymentPix = { ...currentPix };
+
+  (Object.keys(incomingPix) as Array<keyof FmzTokenPurchasePaymentPix>).forEach((key) => {
+    const value = incomingPix[key];
+    if (value !== null && value !== undefined) {
+      mergedPix[key] = value;
+    }
+  });
+
+  return { ...payment, pix: mergedPix };
 }
 
 export function getBoletoLinhaDigitavel(payment: FmzTokenPurchasePayment | null): string {

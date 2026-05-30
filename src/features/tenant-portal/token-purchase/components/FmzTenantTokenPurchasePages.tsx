@@ -33,13 +33,16 @@ import type {
   FmzTokenPurchasePayment,
   FmzTokenPurchasePaymentMethod,
   FmzTokenPurchaseQuote,
+  FmzTokenPurchaseStatusResponse,
 } from '../domain/fmz-token-purchase.types';
 import {
   createTokenPurchasePayment,
   fetchTokenPurchaseStatus,
   getBoletoLinhaDigitavel,
   getPixCopyPasteCode,
+  getPixExpiration,
   getPixQrCodeImageSrc,
+  mergePixIntoPayment,
   statusIsPaid,
 } from '../services/fmz-token-purchase-api';
 import { fetchTokenPurchaseQuote } from '../services/fmz-token-purchase-api';
@@ -225,10 +228,12 @@ function usePaymentStatusPolling({
   paymentTransactionId,
   enabled,
   onConfirmed,
+  onStatus,
 }: {
   paymentTransactionId: string | null;
   enabled: boolean;
   onConfirmed: () => void;
+  onStatus?: (status: FmzTokenPurchaseStatusResponse) => void;
 }) {
   const [lastCheckedAt, setLastCheckedAt] = useState<Date | null>(null);
 
@@ -244,6 +249,8 @@ function usePaymentStatusPolling({
         if (controller.signal.aborted) return;
 
         setLastCheckedAt(new Date());
+        // Surface every status so the page can merge late-arriving pix details into the UI.
+        onStatus?.(status);
 
         if (isPaymentConfirmed(status.paymentStatus, status.tokenOrderStatus)) {
           onConfirmed();
@@ -261,7 +268,7 @@ function usePaymentStatusPolling({
       controller.abort();
       clearTimeout(timeoutId);
     };
-  }, [paymentTransactionId, enabled, onConfirmed]);
+  }, [paymentTransactionId, enabled, onConfirmed, onStatus]);
 
   return { lastCheckedAt };
 }
@@ -822,18 +829,26 @@ export function FmzTenantTokenPurchasePixPage() {
     router.push(localizedHref('/connected/tokens-to-purchase-pix/success'));
   }, [router]);
 
+  // Merge late-arriving pix details (e.g. backend recovered them) without losing existing ones.
+  const onStatus = useCallback((status: FmzTokenPurchaseStatusResponse) => {
+    if (!status.pix) return;
+    setPayment((current) => mergePixIntoPayment(current, status.pix));
+  }, []);
+
   const { lastCheckedAt } = usePaymentStatusPolling({
     paymentTransactionId,
     enabled: !!payment && !creating && !errorMsg,
     onConfirmed,
+    onStatus,
   });
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   const minutes = String(Math.floor(remainingSecs / 60)).padStart(2, '0');
   const seconds = String(remainingSecs % 60).padStart(2, '0');
 
-  const pixCode  = getPixCopyPasteCode(payment);
-  const qrImgSrc = getPixQrCodeImageSrc(payment);
+  const pixCode       = getPixCopyPasteCode(payment);
+  const qrImgSrc      = getPixQrCodeImageSrc(payment);
+  const pixExpiration = getPixExpiration(payment);
   const boletoCode     = getBoletoLinhaDigitavel(payment);
   const boletoDownload = payment?.boleto?.downloadUrl ?? payment?.boleto?.boletoUrl ?? null;
 
@@ -931,6 +946,11 @@ export function FmzTenantTokenPurchasePixPage() {
             </div>
             <p className={styles.statusText}>Aguardando pagamento</p>
             <p className={styles.subStatus}>Validade: {minutes}:{seconds}</p>
+            {pixExpiration && (
+              <p className={styles.subStatus}>
+                Expira em: {new Date(pixExpiration).toLocaleString('pt-BR')}
+              </p>
+            )}
             <div className={styles.copyBlock}>
               <span className={styles.copyCode}>{pixCode || 'Código PIX não disponível'}</span>
               <button
