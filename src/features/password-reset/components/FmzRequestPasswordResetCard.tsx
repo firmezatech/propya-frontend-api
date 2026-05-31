@@ -3,8 +3,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { ArrowLeft, ArrowRight, Loader2, Lock, Mail, MailCheck, Send, ShieldCheck } from 'lucide-react';
 import { z } from 'zod';
-import { Link, useRouter } from '../../../i18n/navigation';
-import { FmzBrandMark } from '../../../components/layout';
+import { Link } from '../../../i18n/navigation';
 import { FmzButton } from '../../../components/design-system';
 import { FmzEmailInput } from './FmzEmailInput';
 import { FmzFormAlert } from '../../api-errors/components';
@@ -43,7 +42,6 @@ const buildValidationError = (error: z.ZodError): { fieldErrors: FmzFieldErrorMa
 };
 
 export function FmzRequestPasswordResetCard() {
-  const router = useRouter();
   const authAccessConfig = useMemo(() => getFmzPasswordResetConfig(), []);
   const [apiError, setApiError] = useState<FmzNormalizedApiError | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FmzFieldErrorMap>({});
@@ -118,37 +116,65 @@ export function FmzRequestPasswordResetCard() {
   };
 
   return (
-    <section className="w-full max-w-5xl" aria-labelledby="fmz-request-password-reset-title">
-      <div className="overflow-hidden rounded-2xl border-[1.5px] border-fmz-border-light bg-white shadow-[0_4px_12px_rgba(13,19,33,0.06),0_20px_48px_-12px_rgba(13,19,33,0.14)] lg:grid lg:grid-cols-2">
-        {/* ── Brand panel ─────────────────────────────────────────── */}
-        <aside className="relative flex flex-col justify-center gap-8 overflow-hidden border-b border-fmz-border-light bg-gradient-to-b from-[#FBF7EE] to-[#F4EEDF] p-8 sm:p-10 lg:border-b-0 lg:border-r">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 opacity-60"
-            style={{
-              backgroundImage:
-                'linear-gradient(to right, rgba(13,19,33,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(13,19,33,0.04) 1px, transparent 1px)',
-              backgroundSize: '42px 42px',
-              maskImage: 'radial-gradient(circle at 30% 40%, black 0%, transparent 80%)',
-              WebkitMaskImage: 'radial-gradient(circle at 30% 40%, black 0%, transparent 80%)',
-            }}
-          />
+    <main className="grid grid-cols-1 lg:grid-cols-2" aria-labelledby="fmz-request-password-reset-title">
+      {/* ── LEFT: brand panel ─────────────────────────────────────── */}
+      <aside className="relative flex flex-col justify-center gap-8 overflow-hidden border-b border-fmz-border-light bg-gradient-to-b from-[#FBF7EE] to-[#F4EEDF] px-6 py-12 sm:px-10 lg:items-end lg:border-b-0 lg:border-r lg:py-16 lg:pl-14 lg:pr-[clamp(48px,6vw,92px)]">
+        {/* faint dotted grid, masked toward the top-left */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              'linear-gradient(to right, rgba(13,19,33,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(13,19,33,0.04) 1px, transparent 1px)',
+            backgroundSize: '42px 42px',
+            maskImage: 'radial-gradient(circle at 30% 40%, black 0%, transparent 80%)',
+            WebkitMaskImage: 'radial-gradient(circle at 30% 40%, black 0%, transparent 80%)',
+          }}
+        />
+        {/* gold radial glows */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(60% 50% at 110% -10%, rgba(245,200,66,0.22) 0%, transparent 60%), radial-gradient(50% 50% at -10% 110%, rgba(245,200,66,0.10) 0%, transparent 60%)',
+          }}
+        />
+        {/* geometric mark, bottom-right */}
+        <svg
+          aria-hidden="true"
+          width="540"
+          height="540"
+          viewBox="0 0 500 500"
+          fill="none"
+          className="pointer-events-none absolute -bottom-24 -right-20 text-fmz-navy opacity-[0.08]"
+        >
+          <path d="M250 50L450 175V325L250 450L50 325V175L250 50Z" stroke="currentColor" strokeWidth="1" />
+          <path d="M250 50L250 450M50 175L450 325M450 175L50 325" stroke="currentColor" strokeWidth=".5" />
+          <path d="M250 130L370 205V305L250 380L130 305V205L250 130Z" stroke="currentColor" strokeWidth="1" />
+          <path d="M250 210L310 245V295L250 330L190 295V245L250 210Z" stroke="currentColor" strokeWidth="1" />
+        </svg>
 
-          <div className="relative">
-            <span className="mb-6 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-fmz-gold-dark">
-              <span className="h-[1.5px] w-[18px] rounded-full bg-fmz-gold" />
-              Recuperação de acesso
+        <div className="relative w-full lg:max-w-[480px]">
+          <span className="mb-6 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-fmz-gold-dark">
+            <span className="h-[1.5px] w-[18px] rounded-full bg-fmz-gold" />
+            Recuperação de acesso
+          </span>
+          <h2 className="mb-5 max-w-[480px] font-sans text-[clamp(30px,3.4vw,44px)] font-extrabold leading-[1.05] tracking-[-0.035em] text-fmz-navy">
+            Sem pânico.<br />
+            Vamos{' '}
+            <span className="bg-gradient-to-br from-fmz-gold-dark to-fmz-gold bg-clip-text text-transparent">
+              recuperar
             </span>
-            <h2 className="mb-5 max-w-[420px] font-sans text-[clamp(26px,3.4vw,40px)] font-extrabold leading-[1.05] tracking-[-0.035em] text-fmz-navy">
-              Sem pânico. Vamos <span className="text-fmz-gold-dark">recuperar</span> o seu acesso.
-            </h2>
-            <p className="max-w-[400px] text-sm leading-relaxed text-fmz-text-muted">
-              Informe o e-mail cadastrado e enviaremos um link seguro para você criar uma nova senha. Seu patrimônio
-              tokenizado continua protegido o tempo todo.
-            </p>
-          </div>
+            <br />
+            o seu acesso.
+          </h2>
+          <p className="max-w-[420px] text-[14.5px] leading-relaxed text-fmz-text-muted">
+            Informe o e-mail cadastrado e enviaremos um link seguro para você criar uma nova senha. Seu patrimônio
+            tokenizado continua protegido o tempo todo.
+          </p>
 
-          <div className="relative rounded-2xl border border-fmz-border-light bg-white/70 p-5 backdrop-blur-sm">
+          <div className="mt-9 rounded-2xl border border-fmz-border-light bg-white/65 p-5 backdrop-blur-sm">
             <div className="mb-4 flex items-center gap-2.5">
               <span className="h-2 w-2 rounded-full bg-fmz-gold shadow-[0_0_0_3px_rgba(245,200,66,0.25)]" />
               <span className="text-xs font-semibold text-fmz-navy">Como funciona a recuperação</span>
@@ -174,22 +200,24 @@ export function FmzRequestPasswordResetCard() {
             </ol>
           </div>
 
-          <div className="relative flex items-start gap-2.5 rounded-xl border border-fmz-border-light bg-white/60 px-4 py-3.5 text-[12.5px] leading-relaxed text-fmz-text-muted">
+          <div className="mt-7 flex items-start gap-2.5 rounded-xl border border-fmz-border-light bg-white/55 px-4 py-3.5 text-[12.5px] leading-relaxed text-fmz-text-muted">
             <ShieldCheck className="mt-px h-4 w-4 shrink-0 text-fmz-gold-dark" aria-hidden="true" />
             <span>
               <b className="font-semibold text-fmz-navy">Nunca pedimos sua senha por e-mail ou telefone.</b> O link de
               recuperação leva apenas para o domínio oficial da FirmezaToken.
             </span>
           </div>
+        </div>
 
-          <div className="relative flex items-center gap-2.5 border-t border-fmz-border-light pt-5 text-[11px] font-medium tracking-[0.02em] text-fmz-text-muted">
-            <Lock className="h-3.5 w-3.5 text-fmz-gold-dark" aria-hidden="true" />
-            Criptografia ponta-a-ponta · LGPD
-          </div>
-        </aside>
+        <div className="relative flex w-full items-center gap-2.5 border-t border-fmz-border-light pt-6 text-[11px] font-medium tracking-[0.02em] text-fmz-text-muted lg:max-w-[480px]">
+          <Lock className="h-3.5 w-3.5 text-fmz-gold-dark" aria-hidden="true" />
+          Criptografia ponta-a-ponta · LGPD
+        </div>
+      </aside>
 
-        {/* ── Form / success column ───────────────────────────────── */}
-        <div className="flex flex-col justify-center p-6 sm:p-10">
+      {/* ── RIGHT: form / success column ──────────────────────────── */}
+      <section className="flex flex-col justify-center bg-white px-6 py-12 sm:px-10 lg:py-16 lg:pl-[clamp(48px,6vw,92px)] lg:pr-14">
+        <div className="w-full max-w-[440px]">
           {isSuccess ? (
             <div className="animate-[fmzFadeIn_0.3s_ease]">
               <span className="mb-6 grid h-16 w-16 place-items-center rounded-[18px] border-[1.5px] border-fmz-success-border bg-fmz-success-bg text-fmz-success">
@@ -239,7 +267,7 @@ export function FmzRequestPasswordResetCard() {
                 >
                   {isSubmitting
                     ? 'Reenviando…'
-                    : resendCooldown > 0
+                    : isResendCoolingDown
                       ? `Reenviar em ${resendCooldown}s`
                       : 'Reenviar link'}
                 </FmzButton>
@@ -325,26 +353,10 @@ export function FmzRequestPasswordResetCard() {
                   Fale com a gente
                 </a>
               </div>
-
-              <div className="mt-6 text-center text-sm text-fmz-text-muted lg:hidden">
-                Lembrou sua senha?{' '}
-                <FmzButton
-                  type="button"
-                  variant="link"
-                  className="font-sans font-bold text-fmz-navy"
-                  onClick={() => router.push(fmzPublicLayoutConfig.homePath)}
-                >
-                  Faça login
-                </FmzButton>
-              </div>
             </>
           )}
         </div>
-      </div>
-
-      <div className="mt-6 flex justify-center lg:hidden">
-        <FmzBrandMark size="header" />
-      </div>
-    </section>
+      </section>
+    </main>
   );
 }
