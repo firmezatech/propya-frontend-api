@@ -77,7 +77,9 @@ export function FmzTenantContractModule() {
   return (
     <FmzConnectedPageShell width="tenant">
       {isLoading ? (
-        <FmzContractSkeleton />
+        <div className="mx-auto w-full max-w-[1100px]">
+          <FmzContractSkeleton />
+        </div>
       ) : errorMessage ? (
         <ContractErrorState message={errorMessage} />
       ) : !contractPage ? (

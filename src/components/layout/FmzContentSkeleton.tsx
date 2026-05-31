@@ -169,22 +169,89 @@ export function FmzWalletSkeleton() {
 
 // ── Contract skeleton ───────────────────────────────────────────────────────────
 
+// Mirrors the real FmzTenantContractPage layout: page head (title + status pill
+// + actions), hero (property card + ownership card), a 3-up metrics strip, and a
+// two-column content grid (documents + economy/timeline). Breakpoints match the
+// page CSS exactly — hero/content collapse below 981px, metrics step 3→2→1 at
+// 900px / 600px — so the skeleton never disagrees with the loaded layout.
+
 export function FmzContractSkeleton() {
   return (
-    <div className="rounded-2xl border border-fmz-border-light bg-white p-8 space-y-6" aria-label="Carregando contrato">
-      <div className="space-y-2">
-        <SkBox height="h-3" width="w-20" />
-        <SkBox height="h-7" width="w-56" />
+    <div className="space-y-7 py-4" aria-label="Carregando contrato" aria-busy="true">
+      {/* Page head */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-2">
+          <SkBox height="h-8" width="w-56" />
+          <SkBox height="h-3" width="w-40" className="rounded-full" />
+        </div>
+        <div className="flex gap-2">
+          <SkBox height="h-9" width="w-28" className="rounded-xl" />
+          <SkBox height="h-9" width="w-32" className="rounded-xl" />
+        </div>
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="space-y-1.5">
-            <SkBox height="h-3" width="w-28" />
-            <SkBox height="h-4" width="w-40" />
+
+      {/* Hero: property card + ownership card */}
+      <div className="grid grid-cols-1 gap-[18px] min-[981px]:grid-cols-[1.4fr_1fr]">
+        <div className={`${SKELETON_CARD} p-6 space-y-4`}>
+          <SkBox height="h-3" width="w-20" />
+          <SkBox height="h-6" width="w-3/4" />
+          <SkBox height="h-3" width="w-40" />
+          <div className="grid grid-cols-3 gap-3 pt-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkBox key={i} height="h-10" width="w-full" className="rounded-lg" />
+            ))}
+          </div>
+        </div>
+        <div className={`${SKELETON_CARD} flex flex-col items-center gap-4 p-6`}>
+          <SkBox height="h-3" width="w-24" className="self-start" />
+          <SkBox height="h-28" width="w-28" className="rounded-full" />
+          <SkBox height="h-3" width="w-32" />
+          <SkBox height="h-3" width="w-24" />
+        </div>
+      </div>
+
+      {/* Metrics strip */}
+      <div className="grid grid-cols-1 gap-[14px] min-[601px]:grid-cols-2 min-[901px]:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className={`${SKELETON_CARD} p-5 space-y-2`}>
+            <SkBox height="h-3" width="w-24" />
+            <SkBox height="h-7" width="w-28" />
+            <SkBox height="h-3" width="w-20" />
           </div>
         ))}
       </div>
-      <SkBox height="h-36" width="w-full" className="rounded-xl" />
+
+      {/* Content grid: documents + economy/timeline */}
+      <div className="grid grid-cols-1 items-start gap-[18px] min-[981px]:grid-cols-[1.1fr_1.4fr]">
+        <div className={`${SKELETON_CARD} p-6 space-y-4`}>
+          <div className="flex items-center justify-between">
+            <SkBox height="h-4" width="w-32" />
+            <SkBox height="h-3" width="w-20" />
+          </div>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-xl border border-fmz-border-light p-3">
+              <SkBox height="h-9" width="w-9" className="rounded-lg shrink-0" />
+              <div className="flex-1 space-y-2">
+                <SkBox height="h-3" width="w-32" />
+                <SkBox height="h-3" width="w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className={`${SKELETON_CARD} p-6 space-y-4`}>
+          <SkBox height="h-4" width="w-36" />
+          <SkBox height="h-8" width="w-44" />
+          <SkBox height="h-12" width="w-full" className="rounded-xl" />
+          <div className="space-y-3 pt-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <SkBox height="h-3" width="w-32" />
+                <SkBox height="h-3" width="w-16" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -445,6 +512,83 @@ export function FmzAdminFormSkeleton() {
             <SkBox height="h-10" width="w-full" className="rounded-lg" />
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Account skeleton ────────────────────────────────────────────────────────────
+// Mirrors the main column of FmzAccountPage while the profile resolves: a KYC
+// progress banner followed by the stacked editable cards (personal data, address,
+// wallet, password, KYC documents). The sidebar and page header are always
+// rendered by the page itself, so this only covers the content that swaps in.
+
+function AccountFieldGridSkeleton({ fields }: { fields: number }) {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {Array.from({ length: fields }).map((_, i) => (
+        <div key={i} className="space-y-2">
+          <SkBox height="h-3" width="w-24" />
+          <SkBox height="h-11" width="w-full" className="rounded-lg" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AccountCardSkeleton({ fields }: { fields: number }) {
+  return (
+    <div className={`${SKELETON_CARD} p-6 space-y-5`}>
+      <div className="flex items-center gap-3">
+        <SkBox height="h-9" width="w-9" className="rounded-xl shrink-0" />
+        <div className="space-y-1.5">
+          <SkBox height="h-4" width="w-40" />
+          <SkBox height="h-3" width="w-56" className="max-w-full" />
+        </div>
+      </div>
+      <AccountFieldGridSkeleton fields={fields} />
+    </div>
+  );
+}
+
+export function FmzAccountSkeleton() {
+  return (
+    <div className="space-y-5" aria-label="Carregando dados da conta" aria-busy="true">
+      {/* KYC progress banner */}
+      <div className={`${SKELETON_CARD} flex items-center gap-4 p-5`}>
+        <SkBox height="h-12" width="w-12" className="rounded-full shrink-0" />
+        <div className="flex-1 space-y-2">
+          <SkBox height="h-4" width="w-48" className="max-w-full" />
+          <SkBox height="h-2.5" width="w-full" className="rounded-full" />
+        </div>
+        <SkBox height="h-6" width="w-20" className="rounded-full shrink-0" />
+      </div>
+
+      <AccountCardSkeleton fields={4} />
+      <AccountCardSkeleton fields={4} />
+
+      {/* Wallet info card */}
+      <div className={`${SKELETON_CARD} p-6 space-y-4`}>
+        <div className="flex items-center gap-3">
+          <SkBox height="h-9" width="w-9" className="rounded-xl shrink-0" />
+          <SkBox height="h-4" width="w-36" />
+        </div>
+        <SkBox height="h-12" width="w-full" className="rounded-lg" />
+      </div>
+
+      <AccountCardSkeleton fields={2} />
+
+      {/* KYC documents card */}
+      <div className={`${SKELETON_CARD} p-6 space-y-4`}>
+        <div className="flex items-center gap-3">
+          <SkBox height="h-9" width="w-9" className="rounded-xl shrink-0" />
+          <SkBox height="h-4" width="w-44" />
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <SkBox key={i} height="h-24" width="w-full" className="rounded-xl" />
+          ))}
+        </div>
       </div>
     </div>
   );

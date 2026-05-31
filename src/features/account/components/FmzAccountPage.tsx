@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { FmzConnectedPageShell } from '../../../components/layout';
+import { FmzConnectedPageShell, FmzAccountSkeleton } from '../../../components/layout';
 import { FmzFormAlert } from '../../api-errors/components';
 import { FMZ_API_ERROR_CODES } from '../../api-errors/domain';
 import type { FmzNormalizedApiError } from '../../api-errors/domain';
@@ -236,14 +236,7 @@ export function FmzAccountPage() {
         <FmzFormAlert error={apiError} />
 
         {/* Loading — profile hasn't resolved yet */}
-        {isPageLoading ? (
-          <div className={styles.stateCard}>
-            <div className={styles.loadingContent}>
-              <span className={styles.loadingSpinner} />
-              Carregando dados da inquilina...
-            </div>
-          </div>
-        ) : null}
+        {isPageLoading ? <FmzAccountSkeleton /> : null}
 
         {/* Error — profile failed before form could be initialised */}
         {isPageError ? (

@@ -31,3 +31,18 @@ export function FmzTenantContentFrame({ children, className }: PropsWithChildren
     </div>
   );
 }
+
+/**
+ * Suspense-fallback frame for tenant pages (wallet, payment history, invoice,
+ * contract). It reproduces the exact chrome the loaded page renders — the
+ * `width="tenant"` shell plus the inner 1100px content column (the `.page`
+ * container each tenant module uses) — so the skeleton occupies the same width
+ * as the real content and there is no layout jump when the page mounts.
+ */
+export function FmzTenantPageSkeletonFrame({ children }: PropsWithChildren) {
+  return (
+    <FmzConnectedPageShell width="tenant">
+      <div className="mx-auto w-full max-w-[1100px]">{children}</div>
+    </FmzConnectedPageShell>
+  );
+}

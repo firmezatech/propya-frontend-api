@@ -1009,29 +1009,6 @@
   padding: 32px;
 }
 
-.loadingContent {
-  min-height: 160px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: var(--fmz-text-muted);
-  font-size: 14px;
-}
-
-.loadingSpinner {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 2px solid var(--fmz-border-light);
-  border-top-color: var(--fmz-navy);
-  animation: accountSpin 0.9s linear infinite;
-}
-
-@keyframes accountSpin {
-  to { transform: rotate(360deg); }
-}
-
 .emptyText {
   color: var(--fmz-text-muted);
   font-size: 14px;
