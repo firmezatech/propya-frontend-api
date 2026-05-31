@@ -93,6 +93,34 @@ describe('normalizeBoletoDetails', () => {
   it('ignores null/undefined sources and returns an empty object when nothing usable', () => {
     expect(normalizeBoletoDetails(null, undefined)).toEqual({});
   });
+
+  it('resolves linha digitável from any alias in priority order', () => {
+    expect(
+      normalizeBoletoDetails({ paymentTransactionId: 'p', boleto: { copyPasteCode: 'COPY' } }).linhaDigitavel,
+    ).toBe('COPY');
+    expect(
+      normalizeBoletoDetails({ paymentTransactionId: 'p', boleto: { digitableLine: 'DIGIT' } }).linhaDigitavel,
+    ).toBe('DIGIT');
+    expect(
+      normalizeBoletoDetails({ paymentTransactionId: 'p', boleto: { identificationField: 'IDENT' } }).linhaDigitavel,
+    ).toBe('IDENT');
+  });
+
+  it('resolves barcode from barcode/barCode aliases', () => {
+    expect(normalizeBoletoDetails({ paymentTransactionId: 'p', boleto: { barCode: 'BC' } }).barcode).toBe('BC');
+  });
+
+  it('keeps linha digitável and barcode strictly separate — never cross-fills', () => {
+    // Only a barcode present: linha digitável must stay undefined (no fallback to barcode).
+    const onlyBarcode = normalizeBoletoDetails({ paymentTransactionId: 'p', boleto: { barcode: 'BARCODE-ONLY' } });
+    expect(onlyBarcode.barcode).toBe('BARCODE-ONLY');
+    expect(onlyBarcode.linhaDigitavel).toBeUndefined();
+
+    // Only a linha digitável present: barcode must stay undefined (no fallback to linha digitável).
+    const onlyLinha = normalizeBoletoDetails({ paymentTransactionId: 'p', boleto: { linhaDigitavel: 'LINHA-ONLY' } });
+    expect(onlyLinha.linhaDigitavel).toBe('LINHA-ONLY');
+    expect(onlyLinha.barcode).toBeUndefined();
+  });
 });
 
 describe('translateBoletoStatus', () => {
@@ -101,6 +129,12 @@ describe('translateBoletoStatus', () => {
     expect(translateBoletoStatus('PAID')).toBe('Pago');
     expect(translateBoletoStatus('received')).toBe('Pagamento recebido');
     expect(translateBoletoStatus('overdue')).toBe('Vencido');
+  });
+
+  it('surfaces pre-payment provider states as "Aguardando pagamento" — never raw', () => {
+    expect(translateBoletoStatus('generated')).toBe('Aguardando pagamento');
+    expect(translateBoletoStatus('registered')).toBe('Aguardando pagamento');
+    expect(translateBoletoStatus('sent')).toBe('Aguardando pagamento');
   });
 
   it('humanizes unknown statuses and defaults when empty', () => {

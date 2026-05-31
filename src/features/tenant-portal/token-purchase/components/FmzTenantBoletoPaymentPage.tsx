@@ -382,18 +382,12 @@ export function FmzTenantBoletoPaymentPage() {
               <span className={styles.v}>{formatCurrencyBRL(details.amount)}</span>
             </div>
           )}
-          {details.nossoNumero && (
-            <div className={styles.detRow}>
-              <span className={styles.k}>Nosso número</span>
-              <span className={styles.v}>{details.nossoNumero}</span>
-            </div>
-          )}
-          {details.providerBoletoId && (
-            <div className={styles.detRow}>
-              <span className={styles.k}>Identificador</span>
-              <span className={styles.v}>{details.providerBoletoId}</span>
-            </div>
-          )}
+          {/*
+            Tenant-facing details card intentionally shows only Status, Vencimento and
+            Valor. Internal/technical fields (nosso número, providerBoletoId / payment
+            ids) stay in the normalized `details` object for internal use but are never
+            rendered to the tenant.
+          */}
         </div>
       )}
 
