@@ -24,6 +24,13 @@ const booleanValue = (value: unknown, fallback = true): boolean => {
 
 const normalizeKey = (value: string): string => value.trim().toLowerCase();
 
+// Derives the local part of an email ("mirella@x.com" → "mirella"), or '' when absent.
+const emailPrefix = (email: string): string => {
+  const trimmed = email.trim();
+  if (!trimmed.includes('@')) return '';
+  return trimmed.split('@')[0]?.trim() ?? '';
+};
+
 const pushNormalized = (target: Set<string>, value: unknown): void => {
   if (typeof value === 'string' || typeof value === 'number') {
     const normalized = normalizeKey(String(value));
@@ -82,10 +89,21 @@ const normalizeCurrentAccessPrincipal = (payload: unknown): FmzAccessControlPrin
   const permissionKeys = stringArray(user.permissionKeys, user.permissions, record.permissionKeys, record.permissions);
   const hasAdminPage = accessiblePages.some((page) => page.key.startsWith('admin.'));
 
+  const email = str(user.email, str(record.email, ''));
+  // Display name priority: standardized backend identity → legacy aliases → email prefix.
+  // Never falls back to a brand/product name.
+  const displayName = str(
+    user.displayName,
+    str(user.name, str(user.fullName, str(user.full_name,
+      str(record.name, str(record.fullName, str(record.full_name, emailPrefix(email))))))),
+  );
+
   return {
     id: str(user.id, str(user.userId, str(user.email))),
-    name: str(user.name, str(user.fullName, str(user.full_name, ''))),
-    email: str(user.email, ''),
+    name: displayName,
+    displayName,
+    email,
+    initials: str(user.initials, ''),
     permissionKeys,
     roleKeys,
     accessiblePages,

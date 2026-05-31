@@ -126,7 +126,7 @@ const normalizeLoginPayload = (payload: unknown, fallbackEmail: string) => {
   const user = recordOf(record.user ?? record.data ?? record.principal ?? record);
   const accessToken = String(record.accessToken ?? record.token ?? user.accessToken ?? user.token ?? '');
   const wallet = String(user.wallet ?? user.walletAddress ?? user.wallet_address ?? record.wallet ?? '');
-  const name = String(user.name ?? user.fullName ?? user.full_name ?? record.name ?? '');
+  const name = String(user.displayName ?? user.name ?? user.fullName ?? user.full_name ?? record.name ?? '');
   const email = String(user.email ?? record.email ?? fallbackEmail);
   const profile = Number(user.profile ?? record.profile);
   const roleKeys = normalizeStringArray(user.roleKeys, user.roles, user.role, record.roleKeys, record.roles, record.role);

@@ -39,7 +39,9 @@ const makePrincipal = (
 ): FmzAccessControlPrincipal => ({
   id: 'user-1',
   name: 'Ana Silva',
+  displayName: 'Ana Silva',
   email: 'ana@example.com',
+  initials: 'AS',
   permissionKeys: [],
   roleKeys: ['renter'],
   accessiblePages: pages,

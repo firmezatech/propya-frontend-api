@@ -18,7 +18,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { fmzCn } from '../../../lib/fmz-classnames';
 import { isSafeInternalPath } from '../../../lib/fmz-safe-url';
-import { buildFmzConnectedUserInitials, buildFmzConnectedUserSummary } from '../connected-user/fmz-connected-user-storage';
+import {
+  readStoredConnectedUserEmail,
+  readStoredConnectedUserName,
+  resolveConnectedUserSummary,
+} from '../connected-user/fmz-connected-user-storage';
 import { performFirmezaLogout } from '../../../services/auth/fmz-logout';
 import type { FmzConnectedDropdownItem } from './fmz-connected-dropdown.types';
 import type { FmzConnectedUserSummary } from '../connected-user/fmz-connected-user.types';
@@ -38,6 +42,10 @@ type FmzConnectedDropdownProps = {
   localizeHref: (href: string) => string;
   defaultUserName: string;
   defaultUserEmail: string;
+  /** Backend-authoritative identity — takes priority over localStorage. */
+  principalName?: string | null;
+  principalEmail?: string | null;
+  principalInitials?: string | null;
   locale?: string;
   roleLabel?: string;
 };
@@ -94,6 +102,9 @@ export function FmzConnectedDropdown({
   localizeHref,
   defaultUserName,
   defaultUserEmail,
+  principalName = null,
+  principalEmail = null,
+  principalInitials = null,
   locale,
   roleLabel = 'Inquilina',
 }: FmzConnectedDropdownProps) {
@@ -104,11 +115,19 @@ export function FmzConnectedDropdown({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
-  const [userSummary, setUserSummary] = useState<FmzConnectedUserSummary>(() => ({
-    name: defaultUserName,
-    email: defaultUserEmail,
-    initials: buildFmzConnectedUserInitials(defaultUserName),
-  }));
+  // Resolves the displayed identity from the backend principal first, falling back
+  // to localStorage, then email prefix, then the neutral default. Server render and
+  // first paint use principal-only (no storage access); the effect re-syncs on the
+  // client where localStorage is available.
+  const [userSummary, setUserSummary] = useState<FmzConnectedUserSummary>(() =>
+    resolveConnectedUserSummary({
+      principalName,
+      principalEmail,
+      principalInitials,
+      defaultName: defaultUserName,
+      defaultEmail: defaultUserEmail,
+    }),
+  );
 
   // ── Tenant notification hook — tenant endpoints ONLY ──────────────────────
   const {
@@ -120,15 +139,28 @@ export function FmzConnectedDropdown({
   } = useFmzTenantNotifications();
 
   useEffect(() => {
-    setUserSummary(buildFmzConnectedUserSummary());
-    const syncUserSummary = () => setUserSummary(buildFmzConnectedUserSummary());
+    // Backend identity wins; localStorage only fills gaps. Re-runs when the principal
+    // identity changes (e.g. /me/access resolves after first paint) and on storage events.
+    const syncUserSummary = () =>
+      setUserSummary(
+        resolveConnectedUserSummary({
+          principalName,
+          principalEmail,
+          principalInitials,
+          storedName: readStoredConnectedUserName(),
+          storedEmail: readStoredConnectedUserEmail(),
+          defaultName: defaultUserName,
+          defaultEmail: defaultUserEmail,
+        }),
+      );
+    syncUserSummary();
     window.addEventListener('storage', syncUserSummary);
     window.addEventListener('walletChanged', syncUserSummary);
     return () => {
       window.removeEventListener('storage', syncUserSummary);
       window.removeEventListener('walletChanged', syncUserSummary);
     };
-  }, []);
+  }, [principalName, principalEmail, principalInitials, defaultUserName, defaultUserEmail]);
 
   // Close both menus on outside click.
   useEffect(() => {

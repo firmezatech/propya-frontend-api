@@ -27,7 +27,10 @@ export const fmzPublicLayoutConfig = {
   connectedAdminTenantSettingsPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TENANT_SETTINGS_PATH', '/connected/tenant-settings'),
   connectedAdminUsersLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_USERS_LABEL', 'Usuários'),
   connectedAdminPropertiesLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_PROPERTIES_LABEL', 'Imóveis'),
-  defaultConnectedUserName: getPublicEnvValue('NEXT_PUBLIC_FMZ_DEFAULT_CONNECTED_USER_NAME', 'Firmeza Token'),
+  // Neutral fallback for the connected user identity — must NOT be a brand/product
+  // name. The authenticated name comes from the backend identity (or localStorage as a
+  // fallback); this is only used when no name and no email are available.
+  defaultConnectedUserName: getPublicEnvValue('NEXT_PUBLIC_FMZ_DEFAULT_CONNECTED_USER_NAME', 'Usuária'),
   defaultConnectedUserEmail: getPublicEnvValue('NEXT_PUBLIC_FMZ_DEFAULT_CONNECTED_USER_EMAIL', 'Conta conectada'),
   connectedUserNameStorageKey: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_USER_NAME_STORAGE_KEY', 'name'),
   connectedUserEmailStorageKey: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_USER_EMAIL_STORAGE_KEY', 'email'),

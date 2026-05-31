@@ -193,6 +193,9 @@ export function FmzConnectedHeader({ principal = null }: FmzConnectedHeaderProps
             localizeHref={localizeHref}
             defaultUserName={fmzPublicLayoutConfig.defaultConnectedUserName}
             defaultUserEmail={fmzPublicLayoutConfig.defaultConnectedUserEmail}
+            principalName={principal?.displayName || principal?.name}
+            principalEmail={principal?.email}
+            principalInitials={principal?.initials}
             locale={params?.locale}
             roleLabel={roleLabel}
           />
