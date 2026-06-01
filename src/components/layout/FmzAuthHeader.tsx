@@ -33,15 +33,19 @@ export function FmzAuthHeader({
   ariaLabel,
 }: FmzAuthHeaderProps) {
   return (
+    // Spacing utilities use the `!` important modifier so the header keeps its
+    // padding/margins even inside the login/register shells, whose legacy scoped
+    // `* { margin:0; padding:0 }` reset would otherwise zero out same-specificity
+    // Tailwind padding. Harmless on pages without that reset.
     <nav
       aria-label={ariaLabel}
-      className="sticky top-0 z-[100] flex h-[68px] items-center justify-between gap-[18px] border-b border-fmz-border-light bg-white/90 px-[clamp(20px,4vw,40px)] backdrop-blur-md backdrop-saturate-150"
+      className="sticky top-0 z-[100] flex h-[68px] items-center justify-between gap-[18px] border-b border-fmz-border-light bg-white/90 !px-[clamp(20px,4vw,40px)] backdrop-blur-md backdrop-saturate-150"
     >
       <div className="flex min-w-0 items-center gap-3.5">
         <Link href="/" aria-label="FirmezaToken" className="no-underline">
           <FmzBrandMark size="header" />
         </Link>
-        <span aria-hidden="true" className="mx-1 hidden h-[22px] w-px shrink-0 bg-fmz-border-light md:block" />
+        <span aria-hidden="true" className="!mx-1 hidden h-[22px] w-px shrink-0 bg-fmz-border-light md:block" />
         <span className="hidden items-center gap-[7px] whitespace-nowrap text-[12.5px] font-medium text-fmz-text-muted md:flex">
           <span className="h-[5px] w-[5px] shrink-0 rounded-full bg-fmz-gold shadow-[0_0_0_3px_rgba(245,200,66,0.22)]" />
           <strong className="font-semibold text-fmz-navy">{contextLabel}</strong>
@@ -52,7 +56,7 @@ export function FmzAuthHeader({
         {helperText ? <span className="hidden sm:inline">{helperText}</span> : null}
         <Link
           href={actionHref}
-          className="inline-flex items-center gap-1.5 rounded-[10px] border-[1.5px] border-fmz-border-light bg-white px-3.5 py-2 text-[13px] font-semibold text-fmz-navy no-underline transition hover:-translate-y-px hover:border-fmz-navy hover:shadow-[0_6px_18px_rgba(13,19,33,0.08)] [&_svg]:h-[13px] [&_svg]:w-[13px] [&_svg]:text-fmz-gold-dark"
+          className="inline-flex items-center gap-1.5 rounded-[10px] border-[1.5px] border-fmz-border-light bg-white !px-3.5 !py-2 text-[13px] font-semibold text-fmz-navy no-underline transition hover:-translate-y-px hover:border-fmz-navy hover:shadow-[0_6px_18px_rgba(13,19,33,0.08)] [&_svg]:h-[13px] [&_svg]:w-[13px] [&_svg]:text-fmz-gold-dark"
         >
           {actionIcon}
           {actionLabel}
