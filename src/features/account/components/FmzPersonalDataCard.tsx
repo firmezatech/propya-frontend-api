@@ -1,7 +1,6 @@
 import { Calendar, Check, Info, Lock, Mail, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { formatBirthdateInput } from '../../../lib/fmz-phone-country-format';
-import type { FmzPhoneCountryCode } from '../../../lib/fmz-phone-country-format';
 import type { AccountPageUser } from '../domain/fmz-account-page.types';
 import { FmzAccountFieldShell } from './FmzAccountFieldShell';
 import { FmzAccountPhoneInput } from './FmzAccountPhoneInput';
@@ -19,7 +18,7 @@ type PersonalDataCardProps = {
 export function FmzPersonalDataCard({ userData, isSaving, onFieldChange, onCancel, onSave }: PersonalDataCardProps) {
   const t = useTranslations('MyAccount');
 
-  const handlePhoneChange = (nationalNumber: string, countryCode: FmzPhoneCountryCode) => {
+  const handlePhoneChange = (nationalNumber: string, countryCode: string) => {
     onFieldChange('phone', nationalNumber);
     onFieldChange('phoneCountry', countryCode);
   };

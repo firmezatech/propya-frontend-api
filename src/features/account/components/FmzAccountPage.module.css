@@ -503,12 +503,8 @@
 ───────────────────────────────────────────── */
 .phoneRow {
   display: grid;
-  grid-template-columns: 140px 1fr;
+  grid-template-columns: 168px 1fr;
   gap: 8px;
-}
-
-.phoneCountrySelect {
-  flex-shrink: 0;
 }
 
 .phoneNumberInput {

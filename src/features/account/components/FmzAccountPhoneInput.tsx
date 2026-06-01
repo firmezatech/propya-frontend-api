@@ -1,80 +1,58 @@
 'use client';
 
-import { ChevronDown, Phone } from 'lucide-react';
 import { useMemo } from 'react';
 import {
   formatFmzPhoneNationalNumber,
-  getDefaultFmzPhoneCountry,
-  getEnabledFmzPhoneCountries,
   getFmzPhoneCountry,
   type FmzPhoneCountryCode,
 } from '../../../lib/fmz-phone-country-format';
+import { resolveFmzCountryPhone, type FmzCountryPhone } from '../../../lib/fmz-country-phone-data';
+import { FmzCountryPhoneSelect } from '../../../components/design-system';
 import styles from './FmzAccountPage.module.css';
 
 type AccountPhoneInputProps = {
   phone: string;
   phoneCountry: string;
-  onPhoneChange: (nationalNumber: string, countryCode: FmzPhoneCountryCode) => void;
+  onPhoneChange: (nationalNumber: string, countryCode: string) => void;
 };
 
-const resolveCountryCode = (value: string): FmzPhoneCountryCode => {
-  const enabled = getEnabledFmzPhoneCountries();
-  const match = enabled.find((c) => c.code === value.trim().toUpperCase());
-  return match ? match.code : getDefaultFmzPhoneCountry();
-};
+// Only the countries the formatting lib knows (BR/US/PT) get a national mask.
+// getFmzPhoneCountry returns the default country for unknown codes, so an exact
+// code match means the lib has a real mask for it.
+const hasNationalMask = (iso2: string): iso2 is FmzPhoneCountryCode => getFmzPhoneCountry(iso2).code === iso2;
 
-const extractNationalNumber = (phone: string, countryCode: FmzPhoneCountryCode): string => {
-  const country = getFmzPhoneCountry(countryCode);
-  const withoutDialCode = phone.startsWith(country.dialCode)
-    ? phone.slice(country.dialCode.length).trim()
-    : phone;
-  return formatFmzPhoneNationalNumber(withoutDialCode, countryCode);
+const formatNationalNumber = (value: string, iso2: string): string =>
+  hasNationalMask(iso2) ? formatFmzPhoneNationalNumber(value, iso2) : value.replace(/\D/g, '').slice(0, 15);
+
+const placeholderFor = (country: FmzCountryPhone): string =>
+  hasNationalMask(country.iso2) ? getFmzPhoneCountry(country.iso2).placeholder : 'Número de telefone';
+
+const extractNationalNumber = (phone: string, country: FmzCountryPhone): string => {
+  const withoutDialCode = phone.startsWith(country.dialCode) ? phone.slice(country.dialCode.length).trim() : phone;
+  return formatNationalNumber(withoutDialCode, country.iso2);
 };
 
 export function FmzAccountPhoneInput({ phone, phoneCountry, onPhoneChange }: AccountPhoneInputProps) {
-  const enabledCountries = useMemo(() => getEnabledFmzPhoneCountries(), []);
-  const activeCode = resolveCountryCode(phoneCountry);
-  const activeCountry = getFmzPhoneCountry(activeCode);
-  const nationalNumber = useMemo(
-    () => extractNationalNumber(phone, activeCode),
-    [phone, activeCode],
-  );
+  const activeCountry = useMemo(() => resolveFmzCountryPhone(phoneCountry), [phoneCountry]);
+  const nationalNumber = useMemo(() => extractNationalNumber(phone, activeCountry), [phone, activeCountry]);
 
-  const handleCountryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const nextCode = event.target.value as FmzPhoneCountryCode;
-    const reformatted = formatFmzPhoneNationalNumber(nationalNumber, nextCode);
-    onPhoneChange(reformatted, nextCode);
+  const handleCountrySelect = (country: FmzCountryPhone) => {
+    onPhoneChange(formatNationalNumber(nationalNumber, country.iso2), country.iso2);
   };
 
   const handleNumberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatFmzPhoneNationalNumber(event.target.value, activeCode);
-    onPhoneChange(formatted, activeCode);
+    onPhoneChange(formatNationalNumber(event.target.value, activeCountry.iso2), activeCountry.iso2);
   };
 
   return (
     <div className={styles.phoneRow}>
-      <div className={`${styles.fieldInput} ${styles.phoneCountrySelect}`}>
-        <Phone className={styles.iconLeft} aria-hidden="true" />
-        <select
-          value={activeCode}
-          onChange={handleCountryChange}
-          aria-label="Código do país"
-          className={styles.hasIcon}
-        >
-          {enabledCountries.map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.dialCode} {c.code}
-            </option>
-          ))}
-        </select>
-        <ChevronDown className={styles.selectIcon} aria-hidden="true" />
-      </div>
+      <FmzCountryPhoneSelect value={activeCountry.iso2} onChange={handleCountrySelect} ariaLabel="Código do país" />
       <div className={`${styles.fieldInput} ${styles.phoneNumberInput}`}>
         <input
           type="tel"
           inputMode="tel"
           value={nationalNumber}
-          placeholder={activeCountry.placeholder}
+          placeholder={placeholderFor(activeCountry)}
           onChange={handleNumberChange}
           aria-label="Número de telefone"
         />
