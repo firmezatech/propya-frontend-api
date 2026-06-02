@@ -30,6 +30,9 @@ export type TenantNotification = {
   readAt: string | null;
   deliveredAt: string | null;
   createdAt: string;
+  // Backend-provided structured payload (e.g. the token-acquisition celebration). Optional and
+  // type-specific; consumers read the keys they expect (see token-acquisition feature).
+  metadata?: Record<string, unknown> | null;
 };
 
 // ─── API Responses ────────────────────────────────────────────────────────────

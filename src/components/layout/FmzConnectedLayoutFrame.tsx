@@ -14,6 +14,7 @@ import type { FmzAccessControlPrincipal } from '../../features/access-control/do
 import { FMZ_AUTH_SESSION_CHANGED_EVENT } from '../../services/auth/auth-storage';
 import { hasAdminAccessiblePage } from '../../features/access-control/domain';
 import { FmzRouteAccessGuard } from '../../features/access-control/components/FmzRouteAccessGuard';
+import { FmzCelebrationRedirectGate } from './FmzCelebrationRedirectGate';
 import { fmzCn } from '../../lib/fmz-classnames';
 
 interface FmzConnectedLayoutFrameProps {
@@ -143,6 +144,8 @@ export function FmzConnectedLayoutFrame({ children }: FmzConnectedLayoutFramePro
     <div className="flex min-h-[100dvh] flex-col bg-[#F7F8FA] text-fmz-text-primary">
       <FmzAuthenticatedRoute>
         <FmzConnectedHeader principal={currentPrincipal} />
+        {/* Tenant-only: redirect to the celebration page when a voluntary purchase has settled. */}
+        <FmzCelebrationRedirectGate />
         <FmzRouteAccessGuard principal={currentPrincipal} isLoading={false}>
           <div className="flex flex-1 flex-col">{children}</div>
         </FmzRouteAccessGuard>
