@@ -236,20 +236,37 @@ export type FmzTenantDocument = {
   createdAt?: string | null;
 };
 
-export type FmzTenantWallet = {
-  id?: string | null;
-  userId?: string | null;
-  walletAddress?: string | null;
-  publicKey?: string | null;
-  chainId?: string | null;
-  walletType?: string | null;
-  custodyType?: string | null;
-  verificationStatus?: string | null;
-  status?: string | null;
-  assignedAt?: string | null;
-  verifiedAt?: string | null;
-  createdAt?: string | null;
-  updatedAt?: string | null;
+export type FmzUserWalletMovement = {
+  occurredAt: string | null;
+  date: string | null;
+  time: string | null;
+  description: string | null;
+  subtype: string | null;
+  type: 'buy' | 'rent' | null;
+  typeLabel: string | null;
+  tokens: number | null;
+  amount: number | null;
+  status: string | null;
+  statusLabel: string | null;
+  referenceId: string | null;
+};
+
+export type FmzUserWalletSummary = {
+  investedInTokens: number | null;
+  purchaseCount: number | null;
+  tokensInWallet: number | null;
+  ownershipPercent: number | null;
+  rentSavings: number | null;
+  totalOutflows: number | null;
+  totalInflows: number | null;
+  netBalance: number | null;
+};
+
+export type FmzUserWallet = {
+  period: { from: string | null; to: string | null; days: number | null } | null;
+  summary: FmzUserWalletSummary | null;
+  movements: FmzUserWalletMovement[];
+  pagination: { total: number; offset: number; limit: number; hasMore: boolean } | null;
 };
 
 export type FmzTenantPaymentHistoryItem = {

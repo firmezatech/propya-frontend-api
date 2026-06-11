@@ -8,12 +8,8 @@ import {
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { FmzConnectedPageShell, FmzWalletSkeleton } from '../../../../components/layout';
-import {
-  getCurrentTenantDashboard,
-  getCurrentTenantPaymentHistory,
-  getCurrentTenantWallets,
-} from '../../services';
-import type { FmzTenantDashboard, FmzTenantPaymentHistoryItem, FmzTenantWallet } from '../../domain';
+import { getCurrentTenantDashboard, getUserWallet } from '../../services';
+import type { FmzTenantDashboard, FmzUserWallet } from '../../domain';
 import styles from './FmzWalletPage.module.css';
 
 const moneyFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -65,17 +61,17 @@ function buildMonthGroup(reference: string): string {
   return reference;
 }
 
-function buildTransactionsFromHistory(history: FmzTenantPaymentHistoryItem[]): WalletTransaction[] {
-  return history.map((item) => ({
-    id: item.id,
-    type: 'buy',
-    title: 'Compra de tokens',
-    tag: (item.paymentMethod ?? 'Boleto').toUpperCase(),
-    date: formatShortDate(item.paidAt ?? item.dueDate),
-    txId: item.id.slice(0, 20),
-    quantityLabel: '—',
-    amountLabel: formatMoney(item.amount),
-    monthGroup: buildMonthGroup(item.reference),
+function buildTransactionsFromMovements(movements: FmzUserWallet['movements']): WalletTransaction[] {
+  return movements.map((m, index) => ({
+    id: m.referenceId ?? m.occurredAt ?? `movement-${index}`,
+    type: m.type === 'rent' ? ('bonus' as const) : ('buy' as const),
+    title: m.description ?? (m.type === 'rent' ? 'Rendimento de aluguel' : 'Compra de tokens'),
+    tag: m.typeLabel?.toUpperCase() ?? undefined,
+    date: formatShortDate(m.date),
+    txId: m.referenceId?.slice(0, 20) ?? undefined,
+    quantityLabel: m.tokens != null ? formatNum(m.tokens) : '—',
+    amountLabel: formatMoney(m.amount),
+    monthGroup: m.date ? buildMonthGroup(m.date) : '—',
   }));
 }
 
@@ -96,9 +92,9 @@ function WalletTransactionSection({ transactions }: { transactions: WalletTransa
   const [search, setSearch] = useState('');
 
   const counts = useMemo(() => {
-    const c: Record<TxFilter, number> = { all: transactions.length, buy: 0, bonus: 0, reval: 0 };
-    for (const tx of transactions) c[tx.type] = (c[tx.type] ?? 0) + 1;
-    return c;
+    const counts: Record<TxFilter, number> = { all: transactions.length, buy: 0, bonus: 0, reval: 0 };
+    for (const tx of transactions) counts[tx.type] = (counts[tx.type] ?? 0) + 1;
+    return counts;
   }, [transactions]);
 
   const filtered = useMemo(() => {
@@ -202,15 +198,11 @@ function WalletTransactionSection({ transactions }: { transactions: WalletTransa
   );
 }
 
-function WalletHeroCard({ dashboard, wallets }: { dashboard: FmzTenantDashboard; wallets: FmzTenantWallet[] }) {
+function WalletHeroCard({ dashboard }: { dashboard: FmzTenantDashboard }) {
   const ownership = dashboard.ownership;
   const tokenBalance = ownership?.tokenBalance ?? 0;
   const ownedValue = ownership?.currentOwnedValue ?? 0;
-
-  const walletId = wallets[0]?.id ?? wallets[0]?.walletAddress ?? null;
-  const walletIdShort = walletId ? walletId.slice(-8).toUpperCase() : null;
-
-  const balanceFormatted = formatMoney(ownedValue).replace('R$ ', '').replace('R$ ', '');
+  const balanceFormatted = formatMoney(ownedValue).replace(/R\$ /g, '');
 
   return (
     <div className={styles.walletCard}>
@@ -219,7 +211,6 @@ function WalletHeroCard({ dashboard, wallets }: { dashboard: FmzTenantDashboard;
           <Wallet size={11} />
           Saldo da carteira
         </span>
-        {walletIdShort && <span className={styles.walletId}>{walletIdShort}</span>}
       </div>
 
       <div>
@@ -262,7 +253,6 @@ function WalletHeroCard({ dashboard, wallets }: { dashboard: FmzTenantDashboard;
           <span>mai/26</span>
         </div>
       </div>
-
     </div>
   );
 }
@@ -338,8 +328,7 @@ export function FmzWalletPage() {
   const propertyId = searchParams.get('propertyId');
 
   const [dashboard, setDashboard] = useState<FmzTenantDashboard | null>(null);
-  const [wallets, setWallets] = useState<FmzTenantWallet[]>([]);
-  const [history, setHistory] = useState<FmzTenantPaymentHistoryItem[]>([]);
+  const [wallet, setWallet] = useState<FmzUserWallet | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -350,12 +339,11 @@ export function FmzWalletPage() {
       setIsLoading(true);
       setErrorMessage(null);
       try {
-        const [data, wlts, hist] = await Promise.all([
+        const [data, walletData] = await Promise.all([
           getCurrentTenantDashboard(propertyId),
-          getCurrentTenantWallets(),
-          getCurrentTenantPaymentHistory(propertyId),
+          getUserWallet(),
         ]);
-        if (active) { setDashboard(data); setWallets(wlts); setHistory(hist); }
+        if (active) { setDashboard(data); setWallet(walletData); }
       } catch {
         if (active) setErrorMessage('Não foi possível carregar os dados da carteira.');
       } finally {
@@ -368,7 +356,7 @@ export function FmzWalletPage() {
   }, [propertyId]);
 
   const ownership = dashboard?.ownership;
-  const transactions = useMemo(() => buildTransactionsFromHistory(history), [history]);
+  const transactions = useMemo(() => buildTransactionsFromMovements(wallet?.movements ?? []), [wallet]);
 
   return (
     <FmzConnectedPageShell width="tenant">
@@ -416,7 +404,7 @@ export function FmzWalletPage() {
 
           {dashboard && (
             <section className={styles.hero}>
-              <WalletHeroCard dashboard={dashboard} wallets={wallets} />
+              <WalletHeroCard dashboard={dashboard} />
               <AssetDistributionCard dashboard={dashboard} />
             </section>
           )}

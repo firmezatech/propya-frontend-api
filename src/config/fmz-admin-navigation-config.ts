@@ -1,4 +1,4 @@
-import { Activity, Building2, FileText, Home, LucideIcon, ReceiptText, Receipt, ShieldCheck, SlidersHorizontal, UserRound, Wrench } from 'lucide-react';
+import { Activity, Building2, FileText, Home, LucideIcon, ReceiptText, Receipt, ScanFace, ShieldCheck, SlidersHorizontal, UserRound, Wrench } from 'lucide-react';
 import { fmzPublicLayoutConfig } from './fmz-public-layout-config';
 import { getPublicEnvValue } from '../lib/fmz-env';
 
@@ -26,6 +26,7 @@ export const fmzAdminPageIconByKey: Record<string, LucideIcon> = {
   'admin.tenant_settings': SlidersHorizontal,
   'admin.gas': Activity,
   'admin.rent_charges': Receipt,
+  'admin.kyc': ScanFace,
 };
 
 export const fmzAdminNavigationConfig = {
@@ -105,6 +106,14 @@ export const fmzAdminNavigationConfig = {
       href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_RENT_CHARGES_PATH', '/connected/admin-rent-charges'),
       requiredPermissionKey: 'admin.rent_charges.view',
       icon: Receipt,
+    },
+    {
+      id: 'admin.kyc',
+      pageKey: 'admin.kyc',
+      label: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_KYC_LABEL', 'Verificação de Identidade'),
+      href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_KYC_PATH', '/connected/admin-kyc'),
+      requiredPermissionKey: 'admin.kyc.users.view',
+      icon: ScanFace,
     },
   ] satisfies FmzAdminNavigationItem[],
 } as const;

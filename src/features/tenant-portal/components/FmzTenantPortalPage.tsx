@@ -9,8 +9,8 @@ import {
   FmzPaymentHistorySkeleton,
   FmzWalletSkeleton,
 } from '../../../components/layout';
-import { getCurrentTenantDashboard, getCurrentTenantPaymentHistory, getCurrentTenantWallets } from '../services';
-import type { FmzTenantDashboard, FmzTenantPaymentHistoryItem, FmzTenantWallet } from '../domain';
+import { getCurrentTenantDashboard, getCurrentTenantPaymentHistory } from '../services';
+import type { FmzTenantDashboard, FmzTenantPaymentHistoryItem } from '../domain';
 
 type FmzTenantPortalPageKind = 'invoice' | 'paymentHistory' | 'wallet' | 'tokens';
 
@@ -195,10 +195,14 @@ function TenantPaymentHistoryView({ history }: { history: FmzTenantPaymentHistor
   );
 }
 
-function TenantWalletView({ dashboard, wallets }: { dashboard: FmzTenantDashboard | null; wallets: FmzTenantWallet[] }) {
+function UserWalletView({ dashboard }: { dashboard: FmzTenantDashboard | null }) {
   const ownership = dashboard?.ownership;
   const tokenBalance = ownership?.tokenBalance ?? 0;
   const pendingTokenBalance = ownership?.pendingTokenBalance ?? 0;
+
+  if (!dashboard) {
+    return <EmptyState title="Carteira não encontrada" description="Sem dados de posse disponíveis. Verifique se a sessão está ativa." />;
+  }
 
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -206,44 +210,16 @@ function TenantWalletView({ dashboard, wallets }: { dashboard: FmzTenantDashboar
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">Minha carteira</p>
-            <h2 className="mt-1 text-2xl font-extrabold text-fmz-navy">Wallet vinculada à inquilina</h2>
+            <h2 className="mt-1 text-2xl font-extrabold text-fmz-navy">Tokens e participação</h2>
           </div>
           <WalletCards className="h-7 w-7 text-fmz-navy" />
         </div>
 
-        <div className="mb-5 grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3">
           <MetricCard label="Tokens disponíveis" value={formatTokenAmount(tokenBalance)} icon={WalletCards} />
           <MetricCard label="Tokens pendentes" value={formatTokenAmount(pendingTokenBalance)} icon={ReceiptText} />
           <MetricCard label="Participação atual" value={formatPercent(ownership?.currentPercentage)} icon={House} />
         </div>
-
-        {wallets.length === 0 ? (
-          <EmptyState title="Carteira não encontrada" description="A rota GET /listWallets não retornou uma wallet vinculada ao usuário autenticado." />
-        ) : (
-          <div className="space-y-4">
-            {wallets.map((wallet) => (
-              <article key={wallet.id ?? wallet.walletAddress ?? wallet.publicKey} className="rounded-2xl border border-fmz-border-light bg-fmz-page p-5">
-                <div className="grid gap-4 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">ID da wallet</p>
-                    <p className="mt-2 break-all text-sm font-semibold text-fmz-navy">{wallet.id ?? 'Não informado'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-fmz-text-hint">Endereço</p>
-                    <p className="mt-2 break-all text-sm text-fmz-navy">{wallet.walletAddress ?? wallet.publicKey ?? 'Não informado'}</p>
-                  </div>
-                </div>
-
-                <div className="mt-4 grid gap-3 md:grid-cols-4">
-                  <div><span className="text-xs text-fmz-text-hint">Tokens</span><strong className="block text-sm text-fmz-navy">{formatTokenAmount(tokenBalance)}</strong></div>
-                  <div><span className="text-xs text-fmz-text-hint">Rede</span><strong className="block text-sm text-fmz-navy">{wallet.chainId ?? '—'}</strong></div>
-                  <div><span className="text-xs text-fmz-text-hint">Tipo</span><strong className="block text-sm text-fmz-navy">{wallet.walletType ?? '—'}</strong></div>
-                  <div><span className="text-xs text-fmz-text-hint">Status</span><strong className="block text-sm text-fmz-navy">{wallet.status ?? wallet.verificationStatus ?? '—'}</strong></div>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
       </section>
 
       <aside className="rounded-2xl border border-fmz-border-light bg-white p-6 shadow-sm">
@@ -264,7 +240,6 @@ export function FmzTenantPortalPage({ kind }: FmzTenantPortalPageProps) {
   const searchParams = useSearchParams();
   const propertyId = searchParams.get('propertyId');
   const [dashboard, setDashboard] = useState<FmzTenantDashboard | null>(null);
-  const [wallets, setWallets] = useState<FmzTenantWallet[]>([]);
   const [history, setHistory] = useState<FmzTenantPaymentHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -277,17 +252,16 @@ export function FmzTenantPortalPage({ kind }: FmzTenantPortalPageProps) {
       setErrorMessage(null);
 
       try {
-        const [nextDashboard, nextHistory, nextWallets] = await Promise.all([
+        const [nextDashboard, nextHistory] = await Promise.all([
           getCurrentTenantDashboard(propertyId),
           kind === 'paymentHistory' ? getCurrentTenantPaymentHistory(propertyId) : Promise.resolve([]),
-          kind === 'wallet' || kind === 'tokens' ? getCurrentTenantWallets() : Promise.resolve([]),
         ]);
 
         if (!isMounted) return;
         setDashboard(nextDashboard);
         setHistory(nextHistory);
-        setWallets(nextWallets);
-      } catch {
+      } catch (error) {
+        console.error('loadTenantPageData failed', error);
         if (!isMounted) return;
         setErrorMessage('Não foi possível carregar os dados desta página. Verifique se a sessão está ativa e se a role tenant possui permissão para a rota do backend.');
       } finally {
@@ -335,7 +309,7 @@ export function FmzTenantPortalPage({ kind }: FmzTenantPortalPageProps) {
       ) : kind === 'paymentHistory' ? (
         <TenantPaymentHistoryView history={history} />
       ) : (
-        <TenantWalletView dashboard={dashboard} wallets={wallets} />
+        <UserWalletView dashboard={dashboard} />
       )}
     </FmzConnectedPageShell>
   );
