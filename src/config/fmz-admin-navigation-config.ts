@@ -1,4 +1,4 @@
-import { Activity, Building2, FileText, Home, LucideIcon, ReceiptText, ShieldCheck, SlidersHorizontal, UserRound, Wrench } from 'lucide-react';
+import { Activity, Building2, FileText, Home, LucideIcon, ReceiptText, Receipt, ShieldCheck, SlidersHorizontal, UserRound, Wrench } from 'lucide-react';
 import { fmzPublicLayoutConfig } from './fmz-public-layout-config';
 import { getPublicEnvValue } from '../lib/fmz-env';
 
@@ -25,6 +25,7 @@ export const fmzAdminPageIconByKey: Record<string, LucideIcon> = {
   'admin.rent.adjustment': FileText,
   'admin.tenant_settings': SlidersHorizontal,
   'admin.gas': Activity,
+  'admin.rent_charges': Receipt,
 };
 
 export const fmzAdminNavigationConfig = {
@@ -96,6 +97,14 @@ export const fmzAdminNavigationConfig = {
       href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TENANT_SETTINGS_PATH', '/connected/tenant-settings'),
       requiredPermissionKey: 'admin.tenant_settings.view',
       icon: SlidersHorizontal,
+    },
+    {
+      id: 'admin.rent_charges',
+      pageKey: 'admin.rent_charges',
+      label: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_RENT_CHARGES_LABEL', 'Boletos de Aluguel'),
+      href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_RENT_CHARGES_PATH', '/connected/admin-rent-charges'),
+      requiredPermissionKey: 'admin.rent_charges.view',
+      icon: Receipt,
     },
   ] satisfies FmzAdminNavigationItem[],
 } as const;
