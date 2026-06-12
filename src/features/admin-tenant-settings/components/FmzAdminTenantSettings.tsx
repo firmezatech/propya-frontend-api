@@ -900,10 +900,10 @@ export function FmzAdminTenantSettings() {
             Configurações da Plataforma
           </div>
           <h1 className="font-sans text-[26px] font-extrabold tracking-[-0.025em] text-[#0D1321]">
-            Parâmetros
+            Configurações da Plataforma
           </h1>
           <p className="mt-1 text-[13px] leading-[1.6] text-[#5A6478]">
-            Gerencie as taxas operacionais e as metas de aquisição de tokens para os inquilinos.
+            Gerencie taxas, metas de aquisição e dados de identidade exibidos no extrato do inquilino.
           </p>
         </div>
       </div>
