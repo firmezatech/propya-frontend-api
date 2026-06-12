@@ -24,7 +24,7 @@ export const fmzPublicLayoutConfig = {
   connectedAdminRolesLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_ROLES_LABEL', 'Roles'),
   connectedAdminUsersPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_USERS_PATH', '/connected/admin-user-list'),
   connectedAdminPropertiesPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_PROPERTIES_PATH', '/connected/property-management'),
-  connectedAdminTenantSettingsPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TENANT_SETTINGS_PATH', '/connected/tenant-settings'),
+  connectedAdminTenantSettingsPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TENANT_SETTINGS_PATH', '/connected/platform-settings'),
   connectedAdminUsersLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_USERS_LABEL', 'Usuários'),
   connectedAdminPropertiesLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_PROPERTIES_LABEL', 'Imóveis'),
   // Neutral fallback for the connected user identity — must NOT be a brand/product

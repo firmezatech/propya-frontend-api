@@ -11,7 +11,6 @@ import type {
   FmzAdminRentCharge,
   FmzAdminRentChargeFilters,
   FmzRentChargeAdjustPayload,
-  FmzRentChargeEditableValues,
   FmzRentChargeSummary,
 } from '../domain';
 
@@ -35,10 +34,6 @@ export type FmzAdminRentChargesState = {
   summary: FmzRentChargeSummary;
   listLoading: boolean;
   listError: FmzNormalizedApiError | null;
-  /** Id da linha em edição inline; null quando nenhuma aberta. */
-  editingId: string | null;
-  /** Valores do draft para o modo de edição inline. */
-  draftValues: FmzRentChargeEditableValues | null;
   adjusting: boolean;
   adjustError: FmzNormalizedApiError | null;
   validating: boolean;
@@ -47,12 +42,6 @@ export type FmzAdminRentChargesState = {
 
 export type FmzAdminRentChargesActions = {
   setFilter: (patch: Partial<FmzAdminRentChargeFilters>) => void;
-  startEditing: (charge: FmzAdminRentCharge) => void;
-  cancelEditing: () => void;
-  setDraftField: (
-    field: keyof FmzRentChargeEditableValues,
-    value: string,
-  ) => void;
   adjustCharge: (id: string, payload: FmzRentChargeAdjustPayload) => Promise<boolean>;
   validateCharge: (id: string) => Promise<boolean>;
 };
@@ -62,10 +51,8 @@ export type FmzAdminRentChargesHook = FmzAdminRentChargesState &
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
 
-/**
- * Aplica o resultado de um ajuste manual a uma cobrança existente.
- * Função pura — sem efeitos colaterais, fácil de testar isoladamente.
- */
+// amounts = original system calculation (immutable).
+// calculatedAmounts = effective billing amounts (updated when admin adjusts).
 function applyAdjustResult(
   charge: FmzAdminRentCharge,
   payload: FmzRentChargeAdjustPayload,
@@ -96,10 +83,6 @@ const INITIAL_SUMMARY: FmzRentChargeSummary = {
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-/**
- * Gerencia estado da página admin de boletos de aluguel:
- * filtros, listagem, resumo e ações de ajuste/validação por linha.
- */
 export function useFmzAdminRentCharges(): FmzAdminRentChargesHook {
   const [filters, setFiltersState] = useState<FmzAdminRentChargeFilters>({
     competenceMonth: currentCompetenceMonth(),
@@ -109,14 +92,11 @@ export function useFmzAdminRentCharges(): FmzAdminRentChargesHook {
   const [summary, setSummary] = useState<FmzRentChargeSummary>(INITIAL_SUMMARY);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState<FmzNormalizedApiError | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [draftValues, setDraftValues] = useState<FmzRentChargeEditableValues | null>(null);
   const [adjusting, setAdjusting] = useState(false);
   const [adjustError, setAdjustError] = useState<FmzNormalizedApiError | null>(null);
   const [validating, setValidating] = useState(false);
   const [validateError, setValidateError] = useState<FmzNormalizedApiError | null>(null);
 
-  // Ref de geração: incrementado a cada fetch; descarta respostas de fetches obsoletos.
   const fetchGenerationRef = useRef(0);
 
   // ── Fetch list ──────────────────────────────────────────────────────────────
@@ -147,38 +127,7 @@ export function useFmzAdminRentCharges(): FmzAdminRentChargesHook {
 
   const setFilter = useCallback((patch: Partial<FmzAdminRentChargeFilters>) => {
     setFiltersState((previous) => ({ ...previous, ...patch }));
-    setEditingId(null);
-    setDraftValues(null);
   }, []);
-
-  // ── Edit inline ─────────────────────────────────────────────────────────────
-
-  const startEditing = useCallback((charge: FmzAdminRentCharge) => {
-    const src = charge.hasManualAdjustment
-      ? charge.calculatedAmounts
-      : charge.amounts;
-    setEditingId(charge.id);
-    setDraftValues({
-      tokenPurchase: src.tokenPurchase,
-      discountedRent: src.discountedRent,
-      platformAdminFee: src.platformAdminFee,
-      tokenPurchaseFee: src.tokenPurchaseFee,
-    });
-    setAdjustError(null);
-  }, []);
-
-  const cancelEditing = useCallback(() => {
-    setEditingId(null);
-    setDraftValues(null);
-    setAdjustError(null);
-  }, []);
-
-  const setDraftField = useCallback(
-    (field: keyof FmzRentChargeEditableValues, value: string) => {
-      setDraftValues((previous) => (previous ? { ...previous, [field]: value } : previous));
-    },
-    [],
-  );
 
   // ── Adjust ──────────────────────────────────────────────────────────────────
 
@@ -195,8 +144,6 @@ export function useFmzAdminRentCharges(): FmzAdminRentChargesHook {
               : charge,
           ),
         );
-        setEditingId(null);
-        setDraftValues(null);
         return true;
       } catch (err) {
         setAdjustError(normalizeFmzApiError(err));
@@ -215,7 +162,6 @@ export function useFmzAdminRentCharges(): FmzAdminRentChargesHook {
     setValidateError(null);
     try {
       await validateAdminRentCharge(id);
-      // Reload list para garantir status atualizado do servidor
       await fetchList(filters);
       return true;
     } catch (err) {
@@ -232,16 +178,11 @@ export function useFmzAdminRentCharges(): FmzAdminRentChargesHook {
     summary,
     listLoading,
     listError,
-    editingId,
-    draftValues,
     adjusting,
     adjustError,
     validating,
     validateError,
     setFilter,
-    startEditing,
-    cancelEditing,
-    setDraftField,
     adjustCharge,
     validateCharge,
   };

@@ -95,7 +95,7 @@ export const fmzAdminNavigationConfig = {
       id: 'admin.tenant_settings',
       pageKey: 'admin.tenant_settings',
       label: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TENANT_SETTINGS_LABEL', 'Parâmetros'),
-      href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TENANT_SETTINGS_PATH', '/connected/tenant-settings'),
+      href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TENANT_SETTINGS_PATH', '/connected/platform-settings'),
       requiredPermissionKey: 'admin.tenant_settings.view',
       icon: SlidersHorizontal,
     },

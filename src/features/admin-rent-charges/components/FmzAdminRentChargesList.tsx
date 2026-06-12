@@ -11,13 +11,18 @@ import { FmzAdminRentChargeRow } from './FmzAdminRentChargeRow';
 import type {
   FmzAdminRentCharge,
   FmzAdminRentChargeFilters,
-  FmzRentChargeAdjustPayload,
+  FmzRentChargeEditableValues,
   FmzRentChargeStatus,
 } from '../domain';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Toast = { message: string; ok: boolean } | null;
+
+type PendingValidate = {
+  charge: FmzAdminRentCharge;
+  draft: FmzRentChargeEditableValues;
+} | null;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -32,7 +37,6 @@ const TOAST_DURATION_MS = 2800;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Constrói lista de opções de meses para o seletor de competência (6 meses atrás até mês atual). */
 function buildCompetenceMonthOptions(): Array<{ value: string; label: string }> {
   const options: Array<{ value: string; label: string }> = [];
   const now = new Date(
@@ -53,18 +57,53 @@ const COMPETENCE_MONTH_OPTIONS = buildCompetenceMonthOptions();
 
 const brlFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
+function parseBrl(value: string): number {
+  const parsed = Number(value.replace(/\./g, '').replace(',', '.'));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+function formatBrl(value: string): string {
+  return brlFormatter.format(parseBrl(value));
+}
+
+function parseNum(value: string): number {
+  const n = parseFloat(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Returns true when any draft field differs from the current server amounts by more than R$0.005. */
+function isDirtyFromServer(draft: FmzRentChargeEditableValues, charge: FmzAdminRentCharge): boolean {
+  const src = charge.calculatedAmounts;
+  return (
+    Math.abs(parseNum(draft.tokenPurchase) - parseNum(src.tokenPurchase)) > 0.005 ||
+    Math.abs(parseNum(draft.discountedRent) - parseNum(src.discountedRent)) > 0.005 ||
+    Math.abs(parseNum(draft.platformAdminFee) - parseNum(src.platformAdminFee)) > 0.005 ||
+    Math.abs(parseNum(draft.tokenPurchaseFee) - parseNum(src.tokenPurchaseFee)) > 0.005
+  );
+}
+
+function draftGross(draft: FmzRentChargeEditableValues): string {
+  return (
+    parseNum(draft.tokenPurchase) +
+    parseNum(draft.discountedRent) +
+    parseNum(draft.platformAdminFee) +
+    parseNum(draft.tokenPurchaseFee)
+  ).toFixed(2);
+}
+
 // ─── Confirm modal ────────────────────────────────────────────────────────────
 
 type ConfirmModalProps = {
-  charge: FmzAdminRentCharge;
+  pending: PendingValidate;
   validating: boolean;
+  adjusting: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 };
 
-function ConfirmValidateModal({ charge, validating, onConfirm, onCancel }: ConfirmModalProps) {
-  const formatCurrency = (value: string) => brlFormatter.format(parseFloat(value) || 0);
-  const amounts = charge.hasManualAdjustment ? charge.calculatedAmounts : charge.amounts;
+function ConfirmValidateModal({ pending, validating, adjusting, onConfirm, onCancel }: ConfirmModalProps) {
+  if (!pending) return null;
+  const { charge, draft } = pending;
+  const busy = validating || adjusting;
 
   return (
     <div
@@ -92,7 +131,7 @@ function ConfirmValidateModal({ charge, validating, onConfirm, onCancel }: Confi
           </button>
         </div>
 
-        {/* Body */}
+        {/* Body — shows draft values (D-13) */}
         <div className="px-6 py-5">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-[13px] bg-[#F0FAF5] mx-auto">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -111,10 +150,10 @@ function ConfirmValidateModal({ charge, validating, onConfirm, onCancel }: Confi
           <div className="rounded-[10px] border-[1.5px] border-[#E8EAF0] bg-[#F7F8FA] px-4 py-3">
             {(
               [
-                { label: 'Tokens adquiridos', value: formatCurrency(amounts.tokenPurchase) },
-                { label: 'Aluguel mensal', value: formatCurrency(amounts.discountedRent) },
-                { label: 'Taxa sobre aluguel', value: formatCurrency(amounts.platformAdminFee) },
-                { label: 'Taxa compra tokens', value: formatCurrency(amounts.tokenPurchaseFee) },
+                { label: 'Tokens adquiridos', value: formatBrl(draft.tokenPurchase) },
+                { label: 'Aluguel mensal', value: formatBrl(draft.discountedRent) },
+                { label: 'Taxa sobre aluguel', value: formatBrl(draft.platformAdminFee) },
+                { label: 'Taxa compra tokens', value: formatBrl(draft.tokenPurchaseFee) },
               ] as const
             ).map(({ label, value }) => (
               <div
@@ -128,7 +167,7 @@ function ConfirmValidateModal({ charge, validating, onConfirm, onCancel }: Confi
             <div className="flex items-center justify-between pt-2 text-[13px]">
               <span className="font-bold text-[#0D1321]">Total a pagar</span>
               <span className="font-sans text-[15px] font-bold text-[#0D1321]">
-                {formatCurrency(amounts.gross)}
+                {formatBrl(draftGross(draft))}
               </span>
             </div>
           </div>
@@ -139,7 +178,7 @@ function ConfirmValidateModal({ charge, validating, onConfirm, onCancel }: Confi
           <button
             type="button"
             onClick={onCancel}
-            disabled={validating}
+            disabled={busy}
             className="inline-flex items-center gap-1.5 rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white px-5 py-2.5 text-[13px] font-medium text-[#5A6478] transition hover:border-[#0D1321] hover:text-[#0D1321] disabled:opacity-60"
           >
             Cancelar
@@ -147,10 +186,10 @@ function ConfirmValidateModal({ charge, validating, onConfirm, onCancel }: Confi
           <button
             type="button"
             onClick={onConfirm}
-            disabled={validating}
+            disabled={busy}
             className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#F5C842] px-5 py-2.5 font-sans text-[13px] font-bold uppercase tracking-[0.04em] text-[#0D1321] shadow-[0_3px_12px_rgba(245,200,66,0.25)] transition hover:-translate-y-0.5 hover:bg-[#C8A020] disabled:opacity-60"
           >
-            {validating ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+            {busy ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
             Gerar boleto
           </button>
         </div>
@@ -161,15 +200,11 @@ function ConfirmValidateModal({ charge, validating, onConfirm, onCancel }: Confi
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-/**
- * Componente principal da página admin de boletos de aluguel.
- * Gerencia filtros, summary strip, listagem com edição inline e modal de confirmação.
- */
 export function FmzAdminRentChargesList() {
   const hook = useFmzAdminRentCharges();
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [pendingValidateCharge, setPendingValidateCharge] = useState<FmzAdminRentCharge | null>(null);
+  const [pendingValidate, setPendingValidate] = useState<PendingValidate>(null);
   const [toast, setToast] = useState<Toast>(null);
 
   const notify = useCallback((message: string, ok = true) => {
@@ -179,8 +214,7 @@ export function FmzAdminRentChargesList() {
 
   const handleToggleExpand = useCallback((id: string) => {
     setExpandedId((previous) => (previous === id ? null : id));
-    if (hook.editingId) hook.cancelEditing();
-  }, [hook]);
+  }, []);
 
   const handleCompetenceMonthChange = useCallback(
     (value: string) => {
@@ -198,36 +232,46 @@ export function FmzAdminRentChargesList() {
     [hook],
   );
 
-  const handleSaveAdjust = useCallback(
-    async (id: string, payload: FmzRentChargeAdjustPayload) => {
-      const ok = await hook.adjustCharge(id, payload);
-      if (ok) {
-        notify('Valores ajustados com sucesso. ✓');
-      } else {
-        notify('Não foi possível salvar o ajuste.', false);
-      }
+  // D-13: onRequestValidate receives charge + current draft from the row.
+  const handleRequestValidate = useCallback(
+    (charge: FmzAdminRentCharge, draft: FmzRentChargeEditableValues) => {
+      setPendingValidate({ charge, draft });
     },
-    [hook, notify],
+    [],
   );
 
-  const handleRequestValidate = useCallback((charge: FmzAdminRentCharge) => {
-    setPendingValidateCharge(charge);
-  }, []);
-
+  // D-13: adjust (if dirty) then validate in a single confirm action.
   const handleConfirmValidate = useCallback(async () => {
-    if (!pendingValidateCharge) return;
-    const ok = await hook.validateCharge(pendingValidateCharge.id);
-    setPendingValidateCharge(null);
+    if (!pendingValidate) return;
+    const { charge, draft } = pendingValidate;
+
+    if (isDirtyFromServer(draft, charge)) {
+      const adjusted = await hook.adjustCharge(charge.id, {
+        tokenPurchaseAmount: draft.tokenPurchase,
+        discountedRentAmount: draft.discountedRent,
+        platformAdminFeeAmount: draft.platformAdminFee,
+        tokenPurchaseFeeAmount: draft.tokenPurchaseFee,
+        reason: 'Ajuste manual pelo admin',
+      });
+      if (!adjusted) {
+        setPendingValidate(null);
+        notify('Não foi possível salvar o ajuste.', false);
+        return;
+      }
+    }
+
+    const ok = await hook.validateCharge(charge.id);
+    setPendingValidate(null);
     if (ok) {
       setExpandedId(null);
-      notify(`Boleto de ${pendingValidateCharge.tenant.name} gerado e enviado! ✓`);
+      notify(`Boleto de ${charge.tenant.name} gerado e enviado! ✓`);
     } else {
       notify('Não foi possível gerar o boleto.', false);
     }
-  }, [hook, pendingValidateCharge, notify]);
+  }, [hook, pendingValidate, notify]);
 
   const handleCancelValidate = useCallback(() => {
-    setPendingValidateCharge(null);
+    setPendingValidate(null);
   }, []);
 
   return (
@@ -247,7 +291,7 @@ export function FmzAdminRentChargesList() {
         </div>
       </div>
 
-      {/* API error */}
+      {/* API errors */}
       {hook.listError ? (
         <div className="mb-5">
           <FmzFormAlert error={hook.listError} />
@@ -264,7 +308,6 @@ export function FmzAdminRentChargesList() {
 
       {/* Filters */}
       <div className="mb-5 flex flex-wrap items-center gap-2.5">
-        {/* Competence month selector */}
         <div className="relative">
           <select
             value={hook.filters.competenceMonth}
@@ -283,13 +326,10 @@ export function FmzAdminRentChargesList() {
           />
         </div>
 
-        {/* Status filter */}
         <div className="relative">
           <select
             value={hook.filters.status ?? ''}
-            onChange={(e) =>
-              handleStatusChange(e.target.value as FmzRentChargeStatus | '')
-            }
+            onChange={(e) => handleStatusChange(e.target.value as FmzRentChargeStatus | '')}
             className="appearance-none rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white py-2.5 pl-3.5 pr-9 text-[13px] text-[#5A6478] outline-none transition focus:border-[#F5C842]"
           >
             {STATUS_OPTIONS.map((opt) => (
@@ -319,14 +359,7 @@ export function FmzAdminRentChargesList() {
               key={charge.id}
               charge={charge}
               isExpanded={expandedId === charge.id}
-              isEditing={hook.editingId === charge.id}
-              draftValues={hook.editingId === charge.id ? hook.draftValues : null}
-              adjusting={hook.adjusting}
               onToggleExpand={handleToggleExpand}
-              onStartEditing={hook.startEditing}
-              onCancelEditing={hook.cancelEditing}
-              onDraftFieldChange={hook.setDraftField}
-              onSaveAdjust={(id, payload) => void handleSaveAdjust(id, payload)}
               onRequestValidate={handleRequestValidate}
             />
           ))}
@@ -345,7 +378,7 @@ export function FmzAdminRentChargesList() {
         </div>
       )}
 
-      {/* Adjust error alert inline */}
+      {/* Adjust error alert */}
       {hook.adjustError ? (
         <div className="mt-4 flex items-center gap-2 rounded-[9px] border border-[#F5C4BF] bg-[#FEF5F4] px-4 py-3 text-[13px] text-[#D94F3D]">
           <AlertTriangle size={15} className="flex-shrink-0" />
@@ -354,14 +387,13 @@ export function FmzAdminRentChargesList() {
       ) : null}
 
       {/* Confirm modal */}
-      {pendingValidateCharge ? (
-        <ConfirmValidateModal
-          charge={pendingValidateCharge}
-          validating={hook.validating}
-          onConfirm={() => void handleConfirmValidate()}
-          onCancel={handleCancelValidate}
-        />
-      ) : null}
+      <ConfirmValidateModal
+        pending={pendingValidate}
+        validating={hook.validating}
+        adjusting={hook.adjusting}
+        onConfirm={() => void handleConfirmValidate()}
+        onCancel={handleCancelValidate}
+      />
 
       {/* Toast */}
       {toast ? (

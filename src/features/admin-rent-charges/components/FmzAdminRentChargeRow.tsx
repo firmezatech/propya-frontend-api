@@ -1,10 +1,10 @@
 'use client';
 
-import { Check, ChevronDown, Loader2, Pencil, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Check, ChevronDown, RotateCcw, X } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
 import type {
   FmzAdminRentCharge,
-  FmzRentChargeAdjustPayload,
   FmzRentChargeEditableValues,
   FmzRentChargeStatus,
 } from '../domain';
@@ -16,7 +16,6 @@ const brlFormatter = new Intl.NumberFormat('pt-BR', {
   currency: 'BRL',
 });
 
-/** Converte string monetária BR (ex: "1.234,56") para número. Retorna 0 para entradas inválidas. */
 function parseBrl(value: string): number {
   if (!value || typeof value !== 'string') return 0;
   const normalized = value.replace(/\./g, '').replace(',', '.');
@@ -28,6 +27,11 @@ function formatBrl(value: string): string {
   return brlFormatter.format(parseBrl(value));
 }
 
+function parseNum(value: string): number {
+  const n = parseFloat(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
 // ─── Status config ────────────────────────────────────────────────────────────
 
 const STATUS_LABEL: Record<FmzRentChargeStatus, string> = {
@@ -37,39 +41,71 @@ const STATUS_LABEL: Record<FmzRentChargeStatus, string> = {
 };
 
 const STATUS_BADGE_CLASS: Record<FmzRentChargeStatus, string> = {
-  pending_validation:
-    'bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]',
+  pending_validation: 'bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]',
   open: 'bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE]',
   paid: 'bg-[#F0FAF5] text-[#1A8C5B] border border-[#A8DFC4]',
 };
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const MONTH_NAMES_PT = [
+  'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+  'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+] as const;
+
+function formatCompetenceMonth(isoDate: string): string {
+  if (!isoDate) return '—';
+  const [year, month] = isoDate.split('-');
+  const monthIndex = parseInt(month ?? '1', 10) - 1;
+  return `${MONTH_NAMES_PT[monthIndex] ?? month}/${year}`;
+}
+
+/** Returns "Calculado: R$ X.XX" when |draft − original| > R$0.005, else null. */
+function calcDiff(draftVal: string, origVal: string): string | null {
+  return Math.abs(parseNum(draftVal) - parseNum(origVal)) > 0.005
+    ? `Calculado: ${formatBrl(origVal)}`
+    : null;
+}
+
+function toEditableValues(amounts: FmzAdminRentCharge['amounts']): FmzRentChargeEditableValues {
+  return {
+    tokenPurchase: amounts.tokenPurchase,
+    discountedRent: amounts.discountedRent,
+    platformAdminFee: amounts.platformAdminFee,
+    tokenPurchaseFee: amounts.tokenPurchaseFee,
+  };
+}
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export type FmzAdminRentChargeRowProps = {
   charge: FmzAdminRentCharge;
   isExpanded: boolean;
-  isEditing: boolean;
-  draftValues: FmzRentChargeEditableValues | null;
-  adjusting: boolean;
   onToggleExpand: (id: string) => void;
-  onStartEditing: (charge: FmzAdminRentCharge) => void;
-  onCancelEditing: () => void;
-  onDraftFieldChange: (field: keyof FmzRentChargeEditableValues, value: string) => void;
-  onSaveAdjust: (id: string, payload: FmzRentChargeAdjustPayload) => void;
-  onRequestValidate: (charge: FmzAdminRentCharge) => void;
+  onRequestValidate: (charge: FmzAdminRentCharge, draft: FmzRentChargeEditableValues) => void;
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
+
+function AdjustedBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-[#F0D870] bg-[#FFF9E6] px-2 py-0.5 text-[10px] font-semibold text-[#C8A020]">
+      Ajustado
+    </span>
+  );
+}
 
 function EditableAmountField({
   label,
   field,
   value,
+  hint,
   onChange,
 }: {
   label: string;
   field: keyof FmzRentChargeEditableValues;
   value: string;
+  hint: string | null;
   onChange: (field: keyof FmzRentChargeEditableValues, value: string) => void;
 }) {
   return (
@@ -90,82 +126,61 @@ function EditableAmountField({
           className="w-full rounded-[8px] border-[1.5px] border-[#E8EAF0] bg-[#F7F8FA] py-2 pl-9 pr-3 font-sans text-[15px] font-bold text-[#0D1321] outline-none transition focus:border-[#F5C842] focus:bg-white focus:shadow-[0_0_0_3px_rgba(245,200,66,0.13)]"
         />
       </div>
+      {hint ? (
+        <div className="mt-1 text-[10px] font-semibold text-[#C8A020]">✎ {hint}</div>
+      ) : null}
     </label>
   );
 }
 
-function AdjustedBadge() {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-[#F0D870] bg-[#FFF9E6] px-2 py-0.5 text-[10px] font-semibold text-[#C8A020]">
-      Ajustado
-    </span>
-  );
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function buildAdjustPayload(
-  draft: FmzRentChargeEditableValues,
-): FmzRentChargeAdjustPayload {
-  return {
-    tokenPurchaseAmount: draft.tokenPurchase,
-    discountedRentAmount: draft.discountedRent,
-    platformAdminFeeAmount: draft.platformAdminFee,
-    tokenPurchaseFeeAmount: draft.tokenPurchaseFee,
-    reason: 'Ajuste manual pelo admin',
-  };
-}
-
-const MONTH_NAMES_PT = [
-  'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-  'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
-] as const;
-
-function formatCompetenceMonth(isoDate: string): string {
-  if (!isoDate) return '—';
-  const [year, month] = isoDate.split('-');
-  const monthIndex = parseInt(month ?? '1', 10) - 1;
-  return `${MONTH_NAMES_PT[monthIndex] ?? month}/${year}`;
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
-/**
- * Linha da tabela de cobranças de aluguel com suporte a:
- * - Modo visualização com accordion de detalhes
- * - Modo edição inline dos 4 campos editáveis
- * - Badge "Ajustado" quando hasManualAdjustment
- * - Botão "Validar" apenas para status pending_validation
- */
 export function FmzAdminRentChargeRow({
   charge,
   isExpanded,
-  isEditing,
-  draftValues,
-  adjusting,
   onToggleExpand,
-  onStartEditing,
-  onCancelEditing,
-  onDraftFieldChange,
-  onSaveAdjust,
   onRequestValidate,
 }: FmzAdminRentChargeRowProps) {
-  const displayAmounts = charge.hasManualAdjustment
-    ? charge.calculatedAmounts
-    : charge.amounts;
+  // Draft state — initialized from calculatedAmounts (effective billing amounts) on each panel open.
+  // amounts = original system calculation (immutable); calculatedAmounts = current effective.
+  const [draft, setDraft] = useState<FmzRentChargeEditableValues>(
+    () => toEditableValues(charge.calculatedAmounts),
+  );
+
+  // Reset draft every time the panel opens (D-9).
+  // Intentionally omitting charge.calculatedAmounts from deps: we want a snapshot
+  // on open, not live-tracking of server state while the admin is editing.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (isExpanded) setDraft(toEditableValues(charge.calculatedAmounts)); }, [isExpanded]);
+
+  // Live total (D-10).
+  const liveTotal =
+    parseNum(draft.tokenPurchase) +
+    parseNum(draft.discountedRent) +
+    parseNum(draft.platformAdminFee) +
+    parseNum(draft.tokenPurchaseFee);
+  const liveTotalStr = liveTotal.toFixed(2);
+
+  // Whether any field differs from the original system calculation (D-11).
+  const anyDirtyFromCalc =
+    parseNum(draft.tokenPurchase) !== parseNum(charge.amounts.tokenPurchase) ||
+    parseNum(draft.discountedRent) !== parseNum(charge.amounts.discountedRent) ||
+    parseNum(draft.platformAdminFee) !== parseNum(charge.amounts.platformAdminFee) ||
+    parseNum(draft.tokenPurchaseFee) !== parseNum(charge.amounts.tokenPurchaseFee);
+
+  const handleFieldChange = useCallback(
+    (field: keyof FmzRentChargeEditableValues, value: string) => {
+      setDraft((prev) => ({ ...prev, [field]: value }));
+    },
+    [],
+  );
+
+  // Recalculate: reset to original system amounts (D-12).
+  const handleRecalculate = useCallback(() => {
+    setDraft(toEditableValues(charge.amounts));
+  }, [charge.amounts]);
 
   const isPendingValidation = charge.status === 'pending_validation';
-
-  function handleSaveAdjust() {
-    if (!draftValues) return;
-    onSaveAdjust(charge.id, buildAdjustPayload(draftValues));
-  }
-
-  /** Cancela edição inline E fecha o accordion — intenção explícita para o botão X do header. */
-  function handleCancelEditingAndCollapse() {
-    onCancelEditing();
-    onToggleExpand(charge.id);
-  }
 
   return (
     <div
@@ -248,7 +263,7 @@ export function FmzAdminRentChargeRow({
               Aluguel
             </div>
             <div className="font-sans text-[13px] font-bold text-[#0D1321]">
-              {formatBrl(displayAmounts.discountedRent)}
+              {formatBrl(charge.calculatedAmounts.discountedRent)}
             </div>
           </div>
           <div className="text-right">
@@ -256,7 +271,7 @@ export function FmzAdminRentChargeRow({
               Tokens
             </div>
             <div className="font-sans text-[13px] font-bold text-[#0D1321]">
-              {formatBrl(displayAmounts.tokenPurchase)}
+              {formatBrl(charge.calculatedAmounts.tokenPurchase)}
             </div>
           </div>
           <div className="text-right">
@@ -264,7 +279,7 @@ export function FmzAdminRentChargeRow({
               Total
             </div>
             <div className="font-sans text-[13px] font-bold text-[#0D1321]">
-              {formatBrl(displayAmounts.gross)}
+              {formatBrl(charge.calculatedAmounts.gross)}
             </div>
           </div>
         </div>
@@ -295,7 +310,7 @@ export function FmzAdminRentChargeRow({
             </div>
             <button
               type="button"
-              onClick={handleCancelEditingAndCollapse}
+              onClick={() => onToggleExpand(charge.id)}
               className="flex h-7 w-7 items-center justify-center rounded-[6px] border border-white/15 bg-white/7 text-white/60 transition hover:bg-white/14 hover:text-white"
               aria-label="Fechar painel"
             >
@@ -303,61 +318,40 @@ export function FmzAdminRentChargeRow({
             </button>
           </div>
 
-          {/* Editable fields or view mode */}
+          {/* Editable fields (D-9) */}
           <div className="bg-white p-5">
-            {isEditing && draftValues ? (
-              <div className="grid grid-cols-2 gap-4">
-                <EditableAmountField
-                  label="Valor dos Tokens"
-                  field="tokenPurchase"
-                  value={draftValues.tokenPurchase}
-                  onChange={onDraftFieldChange}
-                />
-                <EditableAmountField
-                  label="Aluguel Mensal"
-                  field="discountedRent"
-                  value={draftValues.discountedRent}
-                  onChange={onDraftFieldChange}
-                />
-                <EditableAmountField
-                  label="Taxa sobre Aluguel"
-                  field="platformAdminFee"
-                  value={draftValues.platformAdminFee}
-                  onChange={onDraftFieldChange}
-                />
-                <EditableAmountField
-                  label="Taxa sobre Compra de Tokens"
-                  field="tokenPurchaseFee"
-                  value={draftValues.tokenPurchaseFee}
-                  onChange={onDraftFieldChange}
-                />
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {(
-                  [
-                    { label: 'Valor dos Tokens', value: displayAmounts.tokenPurchase },
-                    { label: 'Aluguel Mensal', value: displayAmounts.discountedRent },
-                    { label: 'Taxa sobre Aluguel', value: displayAmounts.platformAdminFee },
-                    { label: 'Taxa Compra Tokens', value: displayAmounts.tokenPurchaseFee },
-                  ] as const
-                ).map(({ label, value }) => (
-                  <div
-                    key={label}
-                    className="rounded-[9px] border border-[#E8EAF0] bg-[#F7F8FA] px-3.5 py-3"
-                  >
-                    <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.07em] text-[#9AA3B0]">
-                      {label}
-                    </div>
-                    <div className="font-sans text-[15px] font-bold text-[#0D1321]">
-                      {formatBrl(value)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-4">
+              <EditableAmountField
+                label="Valor dos Tokens"
+                field="tokenPurchase"
+                value={draft.tokenPurchase}
+                hint={calcDiff(draft.tokenPurchase, charge.amounts.tokenPurchase)}
+                onChange={handleFieldChange}
+              />
+              <EditableAmountField
+                label="Aluguel Mensal"
+                field="discountedRent"
+                value={draft.discountedRent}
+                hint={calcDiff(draft.discountedRent, charge.amounts.discountedRent)}
+                onChange={handleFieldChange}
+              />
+              <EditableAmountField
+                label="Taxa sobre Aluguel"
+                field="platformAdminFee"
+                value={draft.platformAdminFee}
+                hint={calcDiff(draft.platformAdminFee, charge.amounts.platformAdminFee)}
+                onChange={handleFieldChange}
+              />
+              <EditableAmountField
+                label="Taxa sobre Compra de Tokens"
+                field="tokenPurchaseFee"
+                value={draft.tokenPurchaseFee}
+                hint={calcDiff(draft.tokenPurchaseFee, charge.amounts.tokenPurchaseFee)}
+                onChange={handleFieldChange}
+              />
+            </div>
 
-            {/* Total bar */}
+            {/* Live total bar (D-10) */}
             <div className="mt-4 flex items-center justify-between rounded-[10px] bg-[#0D1321] px-4 py-3.5">
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-white/50">
@@ -369,11 +363,11 @@ export function FmzAdminRentChargeRow({
               </div>
               <div className="text-right">
                 <div className="font-sans text-[20px] font-extrabold text-white">
-                  {formatBrl(displayAmounts.gross)}
+                  {formatBrl(liveTotalStr)}
                 </div>
-                {charge.hasManualAdjustment ? (
+                {anyDirtyFromCalc ? (
                   <div className="text-[10px] font-semibold text-[#F5C842]">
-                    valor ajustado manualmente
+                    ⚠ valor ajustado manualmente
                   </div>
                 ) : null}
               </div>
@@ -396,65 +390,27 @@ export function FmzAdminRentChargeRow({
             </div>
 
             <div className="flex items-center gap-2">
-              {isEditing ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={onCancelEditing}
-                    className="inline-flex items-center gap-1.5 rounded-[8px] border-[1.5px] border-[#E8EAF0] bg-white px-4 py-2 text-[12.5px] font-medium text-[#5A6478] transition hover:border-[#0D1321] hover:text-[#0D1321]"
-                  >
-                    <X size={12} /> Cancelar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSaveAdjust}
-                    disabled={adjusting}
-                    className="inline-flex items-center gap-1.5 rounded-[8px] bg-[#0D1321] px-4 py-2 text-[12.5px] font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#162030] disabled:opacity-60"
-                  >
-                    {adjusting ? (
-                      <Loader2 size={12} className="animate-spin" />
-                    ) : (
-                      <Check size={12} />
-                    )}
-                    Salvar ajuste
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => onStartEditing(charge)}
-                    className="inline-flex items-center gap-1.5 rounded-[8px] border-[1.5px] border-[#E8EAF0] bg-white px-4 py-2 text-[12.5px] font-medium text-[#5A6478] transition hover:border-[#0D1321] hover:text-[#0D1321]"
-                  >
-                    <Pencil size={12} /> Ajustar valores
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onRequestValidate(charge)}
-                    className="inline-flex items-center gap-1.5 rounded-[8px] bg-[#F5C842] px-5 py-2 font-sans text-[12.5px] font-bold uppercase tracking-[0.04em] text-[#0D1321] shadow-[0_3px_12px_rgba(245,200,66,0.25)] transition hover:-translate-y-0.5 hover:bg-[#C8A020]"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                      <rect
-                        x="3"
-                        y="5"
-                        width="18"
-                        height="14"
-                        rx="2"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      />
-                      <path d="M3 9h18" stroke="currentColor" strokeWidth="1.8" />
-                      <path
-                        d="M8 14h8"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    Gerar boleto
-                  </button>
-                </>
-              )}
+              {/* Recalculate button (D-12) */}
+              <button
+                type="button"
+                onClick={handleRecalculate}
+                className="inline-flex items-center gap-1.5 rounded-[8px] border-[1.5px] border-[#E8EAF0] bg-white px-4 py-2 text-[12.5px] font-medium text-[#5A6478] transition hover:border-[#0D1321] hover:text-[#0D1321]"
+              >
+                <RotateCcw size={12} /> Recalcular
+              </button>
+              {/* Generate boleto (D-13) */}
+              <button
+                type="button"
+                onClick={() => onRequestValidate(charge, draft)}
+                className="inline-flex items-center gap-1.5 rounded-[8px] bg-[#F5C842] px-5 py-2 font-sans text-[12.5px] font-bold uppercase tracking-[0.04em] text-[#0D1321] shadow-[0_3px_12px_rgba(245,200,66,0.25)] transition hover:-translate-y-0.5 hover:bg-[#C8A020]"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
+                  <path d="M3 9h18" stroke="currentColor" strokeWidth="1.8" />
+                  <path d="M8 14h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                Gerar boleto
+              </button>
             </div>
           </div>
         </div>
