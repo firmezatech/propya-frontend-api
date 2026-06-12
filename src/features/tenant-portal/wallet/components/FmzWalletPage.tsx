@@ -380,7 +380,7 @@ export function FmzWalletPage() {
               <h1 className={styles.pageTitle}>Carteira</h1>
             </div>
             <div className={styles.pageHeadRight}>
-              <Link href="/connected/coming-soon" className={styles.btn}>
+              <Link href="/connected/wallet/statement" className={styles.btn}>
                 <Download size={15} /> Extrato
               </Link>
               {(() => {
