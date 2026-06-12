@@ -150,7 +150,7 @@ export function FmzAdminKycList() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[960px] px-4 py-8">
+    <div className="w-full">
       {/* Header */}
       <div className="mb-6">
         <h1 className="font-sans text-[22px] font-extrabold text-[#0D1321]">
