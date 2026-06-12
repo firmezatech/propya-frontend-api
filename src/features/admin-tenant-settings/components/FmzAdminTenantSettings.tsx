@@ -11,10 +11,12 @@ import {
   createOwnershipGoal,
   getAdminTenantSettings,
   listEligibleTenants,
+  listPlatformParams,
   updateFeeParameter,
   updateOwnershipGoal,
+  updatePlatformParam,
 } from '../services';
-import type { FmzAdminEligibleTenant, FmzAdminFeeParameter, FmzAdminOwnershipGoal } from '../domain';
+import type { FmzAdminEligibleTenant, FmzAdminFeeParameter, FmzAdminOwnershipGoal, FmzPlatformParam } from '../domain';
 
 // ─── local form types ───────────────────────────────────────────────────────
 
@@ -44,6 +46,7 @@ type GoalForm = {
 
 type FieldErrors = Record<string, string>;
 type Toast = { message: string; ok: boolean } | null;
+type PlatformFieldState = { value: string; saving: boolean; saved: boolean; error: string | null };
 
 // ─── constants ──────────────────────────────────────────────────────────────
 
@@ -466,6 +469,62 @@ function OwnershipGoalRow({
   );
 }
 
+function PlatformParamField({
+  param,
+  state,
+  onChange,
+  onSave,
+}: {
+  param: FmzPlatformParam;
+  state: PlatformFieldState;
+  onChange: (value: string) => void;
+  onSave: () => void;
+}) {
+  const isDirty = state.value !== (param.textValue ?? '');
+
+  return (
+    <div className="rounded-[12px] border-[1.5px] border-[#E8EAF0] bg-white p-4">
+      <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.07em] text-[#5A6478]">
+        {param.label}
+      </label>
+      {param.description && (
+        <div className="mb-2 text-[11.5px] leading-snug text-[#9AA3B0]">{param.description}</div>
+      )}
+      <div className="flex items-center gap-2">
+        <input
+          className={fmzCn(inputClass(Boolean(state.error)), 'flex-1')}
+          value={state.value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={param.label}
+          disabled={state.saving}
+        />
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={!isDirty || state.saving}
+          className={fmzCn(
+            'inline-flex shrink-0 items-center gap-1.5 rounded-[9px] px-4 py-[10px] text-[12px] font-bold uppercase tracking-[0.04em] transition',
+            isDirty && !state.saving
+              ? 'bg-[#0D1321] text-white hover:-translate-y-px hover:bg-[#162030]'
+              : 'cursor-not-allowed bg-[#F0F1F5] text-[#9AA3B0]',
+          )}
+        >
+          {state.saving
+            ? <Loader2 size={12} strokeWidth={2.5} className="animate-spin" />
+            : <Check size={12} strokeWidth={2.5} />}
+          Salvar
+        </button>
+      </div>
+      {state.error && (
+        <div className="mt-1.5 text-[11.5px] text-[#D94F3D]">{state.error}</div>
+      )}
+      {state.saved && !isDirty && (
+        <div className="mt-1.5 text-[11.5px] font-medium text-[#1A8C5B]">Salvo com sucesso!</div>
+      )}
+    </div>
+  );
+}
+
 // ─── main component ──────────────────────────────────────────────────────────
 
 export function FmzAdminTenantSettings() {
@@ -496,6 +555,10 @@ export function FmzAdminTenantSettings() {
   const [tenantsError, setTenantsError] = useState<string | null>(null);
   const selectedTenant = eligibleTenants.find((t) => t.tenantUserId === goalForm.tenantUserId) ?? null;
 
+  // platform identity params state
+  const [platformParams, setPlatformParams] = useState<FmzPlatformParam[]>([]);
+  const [platformParamStates, setPlatformParamStates] = useState<Record<string, PlatformFieldState>>({});
+
   useEffect(() => {
     return () => {
       if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -525,6 +588,63 @@ export function FmzAdminTenantSettings() {
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const params = await listPlatformParams();
+        if (!active) return;
+        setPlatformParams(params);
+        setPlatformParamStates(
+          Object.fromEntries(
+            params.map((p) => [p.parameterKey, { value: p.textValue ?? '', saving: false, saved: false, error: null }]),
+          ),
+        );
+      } catch {
+        // non-critical section — page remains functional without it
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
+  const setPlatformParamValue = useCallback((key: string, value: string) => {
+    setPlatformParamStates((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], value, saved: false, error: null },
+    }));
+  }, []);
+
+  const savePlatformParam = useCallback(async (key: string) => {
+    const current = platformParamStates[key];
+    if (!current || current.saving) return;
+
+    setPlatformParamStates((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], saving: true, error: null, saved: false },
+    }));
+
+    try {
+      const updated = await updatePlatformParam(key, current.value);
+      setPlatformParams((prev) => prev.map((p) => (p.parameterKey === key ? updated : p)));
+      setPlatformParamStates((prev) => ({
+        ...prev,
+        [key]: { ...prev[key], saving: false, saved: true },
+      }));
+      setTimeout(() => {
+        setPlatformParamStates((prev) => ({
+          ...prev,
+          [key]: { ...prev[key], saved: false },
+        }));
+      }, TOAST_DISPLAY_MS);
+    } catch (err) {
+      const normalized = normalizeFmzApiError(err);
+      setPlatformParamStates((prev) => ({
+        ...prev,
+        [key]: { ...prev[key], saving: false, error: normalized.description ?? 'Erro ao salvar.' },
+      }));
+    }
+  }, [platformParamStates]);
 
   // ── fee modal ─────────────────────────────────────────────────────────────
 
@@ -863,6 +983,35 @@ export function FmzAdminTenantSettings() {
             ))
         )}
       </div>
+
+      {/* platform identity params section */}
+      {platformParams.length > 0 && (
+        <>
+          <div className="my-9 h-px bg-[#E8EAF0]" />
+          <div className="mb-5">
+            <div className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#9AA3B0]">Identidade</div>
+            <div className="font-sans text-[17px] font-bold text-[#0D1321]">Configurações do extrato do inquilino</div>
+            <div className="mt-0.5 text-[12.5px] text-[#5A6478]">
+              Dados exibidos no cabeçalho e rodapé do extrato gerado para o inquilino.
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {platformParams.map((param) => {
+              const state = platformParamStates[param.parameterKey];
+              if (!state) return null;
+              return (
+                <PlatformParamField
+                  key={param.parameterKey}
+                  param={param}
+                  state={state}
+                  onChange={(value) => setPlatformParamValue(param.parameterKey, value)}
+                  onSave={() => void savePlatformParam(param.parameterKey)}
+                />
+              );
+            })}
+          </div>
+        </>
+      )}
 
       {/* ── fee parameter modal ─────────────────────────────────────────────── */}
       <ModalBackdrop open={feeModalOpen} onClose={closeFeeModal}>

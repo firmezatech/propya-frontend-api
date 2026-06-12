@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, Printer } from 'lucide-react';
 import { getUserWallet } from '../../services';
 import { getTenantProfile } from '../../services/fmz-tenant-profile-api';
+import { getPlatformInfo, type FmzPlatformInfo } from '../../services/fmz-platform-info-api';
 import type { FmzUserWallet, FmzUserWalletMovement } from '../../domain';
 import type { TenantUserData } from '../../domain/fmz-tenant-profile.types';
 import styles from './FmzWalletStatementPage.module.css';
@@ -149,23 +150,26 @@ function SCard({ label, value, sub, accent }: {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function FmzWalletStatementPage() {
-  const [wallet, setWallet]     = useState<FmzUserWallet | null>(null);
-  const [user,   setUser]       = useState<TenantUserData | null>(null);
-  const [isLoading, setLoading] = useState(true);
-  const [error,  setError]      = useState<string | null>(null);
-  const issuedRef               = useRef(new Date());
+  const [wallet, setWallet]         = useState<FmzUserWallet | null>(null);
+  const [user,   setUser]           = useState<TenantUserData | null>(null);
+  const [platformInfo, setPlatform] = useState<FmzPlatformInfo | null>(null);
+  const [isLoading, setLoading]     = useState(true);
+  const [error,  setError]          = useState<string | null>(null);
+  const issuedRef                   = useRef(new Date());
 
   useEffect(() => {
     let active = true;
     void (async () => {
       try {
-        const [walletData, profileData] = await Promise.all([
+        const [walletData, profileData, info] = await Promise.all([
           getUserWallet(),
           getTenantProfile(),
+          getPlatformInfo(),
         ]);
         if (!active) return;
         setWallet(walletData);
         setUser(profileData.profile.user);
+        setPlatform(info);
       } catch {
         if (active) setError('Não foi possível carregar o extrato. Tente novamente.');
       } finally {
@@ -228,7 +232,7 @@ export function FmzWalletStatementPage() {
               </svg>
             </div>
             <div className={styles.brandText}>
-              <span className={styles.brandName}>FirmezaToken</span>
+              <span className={styles.brandName}>{platformInfo?.brand_name ?? 'FirmezaToken'}</span>
               <span className={styles.brandTagline}>A revolução imobiliária começou.</span>
             </div>
           </div>
@@ -348,9 +352,13 @@ export function FmzWalletStatementPage() {
         <footer className={styles.foot}>
           <div className={styles.footLeft}>
             <strong>Documento informativo.</strong> Os valores acima refletem movimentações
-            registradas na plataforma FirmezaToken até a data de emissão. Em caso de divergência,
-            fale conosco em <strong>suporte@propya.ai</strong>.<br />
-            Propya Gestão Imobiliária · CNPJ 00.000.000/0001-00 · São Paulo, SP.
+            registradas na plataforma {platformInfo?.brand_name ?? 'FirmezaToken'} até a data de emissão. Em caso de divergência,
+            fale conosco em <strong>{platformInfo?.support_email ?? 'contato@propya.ai'}</strong>.<br />
+            {[
+              platformInfo?.company_legal_name ?? 'Propya Gestão Imobiliária',
+              platformInfo?.company_cnpj ? `CNPJ ${platformInfo.company_cnpj}` : 'CNPJ 00.000.000/0001-00',
+              platformInfo?.company_address ?? 'São Paulo, SP',
+            ].join(' · ')}
           </div>
           <div className={styles.footRight}>
             <span className={styles.footRightLab}>Hash de integridade</span>

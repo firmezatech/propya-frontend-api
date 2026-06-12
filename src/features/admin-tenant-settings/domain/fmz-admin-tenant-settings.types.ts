@@ -82,3 +82,13 @@ export type FmzAdminTenantSettings = {
   parameters: FmzAdminFeeParameter[];
   goals: FmzAdminOwnershipGoal[];
 };
+
+export type FmzPlatformParam = {
+  parameterKey: string;
+  label: string;
+  description: string | null;
+  valueType: 'text' | 'numeric' | 'percent';
+  textValue: string | null;
+  numericValue: number | null;
+  isActive: boolean;
+};
