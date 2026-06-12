@@ -1,5 +1,7 @@
 import { authenticatedFirmezaFetch } from '../../../../services/firmeza-api-client';
 import type {
+  FmzTokenPurchaseContext,
+  FmzTokenPurchaseContextBackendResponse,
   FmzTokenPurchasePayment,
   FmzTokenPurchasePaymentBackendResponse,
   FmzTokenPurchasePaymentMethod,
@@ -12,28 +14,45 @@ import type {
 // ── Quote ──────────────────────────────────────────────────────────────────────
 
 /**
+ * Fetches quantity-independent context for the token purchase page.
+ * Cached 30s server-side per (user, tokenization). Safe to call once on mount.
+ */
+export async function fetchTokenPurchaseQuoteContext({
+  propertyTokenizationId,
+}: {
+  propertyTokenizationId: string;
+}): Promise<FmzTokenPurchaseContext> {
+  const params = new URLSearchParams({ propertyTokenizationId });
+  const response = await authenticatedFirmezaFetch(
+    `/tenant/token-purchases/quote/context?${params.toString()}`,
+  );
+  const body = (await response.json().catch(() => ({}))) as FmzTokenPurchaseContextBackendResponse;
+  if (!response.ok) {
+    throw new Error(
+      extractErrorMessage(body) ?? `Não foi possível carregar o contexto (HTTP ${response.status}).`,
+    );
+  }
+  if (!body.context) {
+    throw new Error('Resposta do contexto inválida — campo context ausente.');
+  }
+  return body.context;
+}
+
+/**
  * Fetches a server-computed price quote for a prospective token purchase.
  * No DB writes — safe to call on every quantity change (use with debounce).
- *
- * The returned quote contains all monetary values pre-computed server-side.
- * The UI must display these values directly — no client-side price calculations.
- *
- * @throws {Error} if the tokenizationId is missing, the tokenization is
- *                 inactive, or the quantity exceeds available supply.
+ * PIX and Boleto have the same fee, so paymentMethod is not required.
  */
 export async function fetchTokenPurchaseQuote({
   propertyTokenizationId,
   quantity,
-  paymentMethod,
 }: {
   propertyTokenizationId: string;
   quantity: number;
-  paymentMethod: FmzTokenPurchasePaymentMethod;
 }): Promise<FmzTokenPurchaseQuote> {
   const params = new URLSearchParams({
     propertyTokenizationId,
     quantity: String(quantity),
-    paymentMethod,
   });
 
   const response = await authenticatedFirmezaFetch(

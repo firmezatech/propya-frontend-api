@@ -38,6 +38,8 @@ import type {
 } from '../domain/fmz-token-purchase.types';
 import {
   createTokenPurchasePayment,
+  fetchTokenPurchaseQuote,
+  fetchTokenPurchaseQuoteContext,
   fetchTokenPurchaseStatus,
   getPixCopyPasteCode,
   getPixExpiration,
@@ -45,14 +47,7 @@ import {
   mergePixIntoPayment,
   statusIsPaid,
 } from '../services/fmz-token-purchase-api';
-import { fetchTokenPurchaseQuote } from '../services/fmz-token-purchase-api';
-import { getCurrentTenantDashboard } from '../../services';
-import type { FmzTenantDashboard } from '../../domain';
-import {
-  firstFiniteNumber,
-  firstFiniteNumberOrUndefined,
-  toFiniteNumber,
-} from '../../../../lib/fmz-number';
+import type { FmzTokenPurchaseContext } from '../domain/fmz-token-purchase.types';
 
 // ── Formatters ─────────────────────────────────────────────────────────────────
 
@@ -105,83 +100,27 @@ function BackButton({ fallback = '/connected/dashboard' }: { fallback?: string }
   );
 }
 
-// ── Dashboard seed hook ────────────────────────────────────────────────────────
+// ── Quote context hook ─────────────────────────────────────────────────────────
+// Replaces useDashboardSeed: fetches quantity-independent context from the backend
+// (cached 30s server-side). No sequential dashboard waterfall.
 
-interface CartSeed {
-  propertyTokenizationId: string | null;
-  propertyId: string | null;
-  currentTokens: number;
-  totalTokens: number;
-  currentRent: number;
-  fullRent: number;
-  propertyValue: number;
-  propertyLabel: string;
-  tokenSymbol: string;
-  /** Next ownership goal (from dashboard), used for the goal pill near the title. */
-  nextGoalPercentage: number | null;
-  nextGoalTokensRemaining: number | null;
-}
-
-function useDashboardSeed(): { seed: CartSeed; loading: boolean } {
-  const searchParams = useSearchParams();
-  const [dashboard, setDashboard] = useState<FmzTenantDashboard | null>(null);
+function useQuoteContext(propertyTokenizationId: string | null): {
+  context: FmzTokenPurchaseContext | null;
+  loading: boolean;
+} {
+  const [context, setContext] = useState<FmzTokenPurchaseContext | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!propertyTokenizationId) { setLoading(false); return; }
     let mounted = true;
-    const propertyId = searchParams.get('propertyId');
-    void getCurrentTenantDashboard(propertyId)
-      .then((data) => { if (mounted) setDashboard(data); })
-      .catch(() => { if (mounted) setDashboard(null); })
-      .finally(() => { if (mounted) setLoading(false); });
+    void fetchTokenPurchaseQuoteContext({ propertyTokenizationId })
+      .then((ctx) => { if (mounted) { setContext(ctx); setLoading(false); } })
+      .catch(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
-  }, [searchParams]);
+  }, [propertyTokenizationId]);
 
-  const seed: CartSeed = {
-    propertyTokenizationId:
-      searchParams.get('propertyTokenizationId')
-      ?? (dashboard?.ownership as Record<string, unknown> | undefined | null)?.['propertyTokenizationId'] as string | null
-      ?? null,
-    propertyId: searchParams.get('propertyId') ?? (dashboard?.property?.id != null ? String(dashboard.property.id) : null),
-    currentTokens: toFiniteNumber(dashboard?.ownership?.tokenBalance),
-    totalTokens:   toFiniteNumber(dashboard?.ownership?.totalSupply),
-    // Discounted (current) rent — prefer rentInsight, then monthlySummary, then contract.
-    // Each candidate is a number field; firstFiniteNumber skips nulls/objects safely.
-    currentRent:   firstFiniteNumber(
-      dashboard?.rentInsight?.currentRentAmount,
-      dashboard?.rentInsight?.discountedRentAmount,
-      dashboard?.monthlySummary?.discountedRentAmount,
-      dashboard?.monthlySummary?.rentWithDiscountAmount,
-      dashboard?.monthlySummary?.totalDueAmount,
-      dashboard?.contract?.currentRentAmount,
-    ),
-    // Full (pre-discount) rent — the adjusted base rent the discount is applied to.
-    fullRent:      firstFiniteNumber(
-      dashboard?.rentInsight?.adjustedBaseRentAmount,
-      dashboard?.rentInsight?.originalRentAmount,
-      dashboard?.monthlySummary?.adjustedBaseRentAmount,
-      dashboard?.monthlySummary?.originalRentAmount,
-      dashboard?.contract?.baseMonthlyRent,
-      dashboard?.contract?.originalBaseRent,
-    ),
-    propertyValue: firstFiniteNumber(dashboard?.ownership?.totalPropertyValue, dashboard?.property?.appraisedValue),
-    nextGoalPercentage:
-      firstFiniteNumberOrUndefined(
-        dashboard?.ownershipGoals?.next?.targetPercentage,
-        dashboard?.nextGoal?.percentage,
-      ) ?? null,
-    nextGoalTokensRemaining:
-      firstFiniteNumberOrUndefined(dashboard?.ownershipGoals?.next?.tokensRemaining) ?? null,
-    propertyLabel:
-      searchParams.get('propertyLabel')
-      ?? dashboard?.property?.name
-      ?? dashboard?.property?.code
-      ?? dashboard?.property?.description
-      ?? 'Apto 54 Vila Madalena',
-    tokenSymbol: searchParams.get('tokenSymbol') ?? 'FT-0412',
-  };
-
-  return { seed, loading };
+  return { context, loading };
 }
 
 // ── Quote fetching hook ────────────────────────────────────────────────────────
@@ -195,12 +134,10 @@ type QuoteState =
 function useTokenPurchaseQuote({
   propertyTokenizationId,
   quantity,
-  paymentMethod,
   enabled,
 }: {
   propertyTokenizationId: string | null;
   quantity: number;
-  paymentMethod: FmzTokenPurchasePaymentMethod;
   enabled: boolean;
 }): QuoteState {
   const [state, setState] = useState<QuoteState>({ status: 'idle' });
@@ -218,7 +155,7 @@ function useTokenPurchaseQuote({
 
     debounceRef.current = setTimeout(() => {
       let cancelled = false;
-      void fetchTokenPurchaseQuote({ propertyTokenizationId, quantity, paymentMethod })
+      void fetchTokenPurchaseQuote({ propertyTokenizationId, quantity })
         .then((quote) => {
           if (!cancelled) setState({ status: 'ok', quote });
         })
@@ -236,7 +173,7 @@ function useTokenPurchaseQuote({
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [propertyTokenizationId, quantity, paymentMethod, enabled]);
+  }, [propertyTokenizationId, quantity, enabled]);
 
   return state;
 }
@@ -304,67 +241,87 @@ function usePaymentStatusPolling({
 
 export function FmzTenantTokenPurchasePage() {
   const router = useRouter();
-  const { seed, loading: seedLoading } = useDashboardSeed();
+  const searchParams = useSearchParams();
 
-  const [quantity, setQuantity] = useState(5000);
+  const propertyTokenizationId = searchParams.get('propertyTokenizationId');
+  const propertyId             = searchParams.get('propertyId');
+  const propertyLabelParam     = searchParams.get('propertyLabel');
+  const tokenSymbolParam       = searchParams.get('tokenSymbol');
+
+  const { context, loading: contextLoading } = useQuoteContext(propertyTokenizationId);
+
+  // Derive seed values from context (used to require a full dashboard fetch)
+  const currentTokens  = context?.rentProjectionInputs?.currentTokenBalance ?? 0;
+  const totalTokens    = context?.totalSupply ?? 0;
+  const currentRent    = context?.rentProjectionInputs?.currentRentAmount ?? 0;
+  const fullRent       = context?.rentProjectionInputs?.adjustedBaseRentAmount ?? 0;
+  const propertyValue  = (context?.unitPrice ?? 1) * totalTokens;
+  const propertyLabel  = propertyLabelParam ?? context?.tokenName ?? 'Apto 54 Vila Madalena';
+  const tokenSymbol    = tokenSymbolParam ?? context?.tokenSymbol ?? 'FT-0412';
+
+  // Goals from context — find next unreached goal for the user
+  const goals = context?.goals ?? [];
+  const nextGoal = goals
+    .filter((g) => g.targetTokenAmount > currentTokens)
+    .sort((a, b) => a.targetTokenAmount - b.targetTokenAmount)[0] ?? null;
+  const nextGoalTokens = nextGoal?.targetTokenAmount ?? 10000;
+  const nextGoalPct    = nextGoal?.targetPercentage ?? 10;
+  const tokensToNextGoal = Math.max(0, nextGoalTokens - currentTokens);
+
+  const minQty = context?.minQuantity ?? 1000;
+  const maxQty = context?.maxQuantity ?? (totalTokens - currentTokens > 0 ? totalTokens - currentTokens : 92800);
+
+  // Slider starts at user's current token balance, clamped to [minQty, maxQty].
+  // Initialized once context loads — null until then to avoid rendering stale 5000.
+  const [quantity, setQuantity] = useState<number | null>(null);
+  const effectiveQuantity = quantity ?? 5000;
+
+  useEffect(() => {
+    if (quantity !== null || contextLoading || !context) return;
+    const initial = Math.max(minQty, Math.min(maxQty, currentTokens > 0 ? currentTokens : minQty));
+    setQuantity(initial);
+  }, [context, contextLoading, quantity, minQty, maxQty, currentTokens]);
+
   const [method, setMethod] = useState<FmzTokenPurchasePaymentMethod>('pix');
 
   const quoteState = useTokenPurchaseQuote({
-    propertyTokenizationId: seed.propertyTokenizationId,
-    quantity,
-    paymentMethod: method,
-    enabled: !seedLoading,
+    propertyTokenizationId,
+    quantity: effectiveQuantity,
+    enabled: !contextLoading && quantity !== null,
   });
 
   const quote = quoteState.status === 'ok' ? quoteState.quote : null;
 
-  const minQty = quote?.minQuantity ?? 1000;
-  const availableBySeed = Math.max(seed.totalTokens - seed.currentTokens, 0);
-  const maxQty = quote?.maxQuantity ?? (availableBySeed > 0 ? availableBySeed : 92800);
   const stepperSize = 1000;
-  const sliderStep = 100;
-  const totalTokens = seed.totalTokens > 0 ? seed.totalTokens : 100000;
-  const currentTokens = seed.currentTokens > 0 ? seed.currentTokens : 7200;
-  const currentPct = totalTokens > 0 ? (currentTokens / totalTokens) * 100 : 0;
-  const deltaPct = totalTokens > 0 ? (quantity / totalTokens) * 100 : 0;
-  const availableTokens = Math.max(totalTokens - currentTokens, 0);
-  const remainingAfterSelection = Math.max(availableTokens - quantity, 0);
-  const ownedWidth = totalTokens > 0 ? Math.min(100, (currentTokens / totalTokens) * 100) : 0;
-  const selectedWidth = totalTokens > 0 ? Math.min(100 - ownedWidth, (quantity / totalTokens) * 100) : 0;
+  const sliderStep  = 100;
+  const currentPct  = totalTokens > 0 ? (currentTokens / totalTokens) * 100 : 0;
+  const deltaPct    = totalTokens > 0 ? (effectiveQuantity / totalTokens) * 100 : 0;
+  const availableTokens         = Math.max(totalTokens - currentTokens, 0);
+  const remainingAfterSelection = Math.max(availableTokens - effectiveQuantity, 0);
+  const ownedWidth    = totalTokens > 0 ? Math.min(100, (currentTokens / totalTokens) * 100) : 0;
+  const selectedWidth = totalTokens > 0 ? Math.min(100 - ownedWidth, (effectiveQuantity / totalTokens) * 100) : 0;
 
   const impact = quote
     ? calculateImpactProjection({
-        currentTokens:    seed.currentTokens,
-        purchaseQuantity: quantity,
-        totalTokens:      seed.totalTokens,
-        currentRent:      seed.currentRent,
-        fullRent:         seed.fullRent,
-        propertyValue:    seed.propertyValue,
+        currentTokens,
+        purchaseQuantity: effectiveQuantity,
+        totalTokens,
+        currentRent,
+        fullRent,
+        propertyValue,
       })
     : null;
 
-  // Backend-authoritative rent/ownership projection. When present it wins over the
-  // dashboard-derived `impact`; otherwise we fall back to the local calculation.
   const rentImpact = quote?.rentImpact ?? null;
 
-  const displayCurrentPct = rentImpact ? rentImpact.currentOwnershipPercentage : currentPct;
-  const displayNewPct = rentImpact
-    ? rentImpact.projectedOwnershipPercentage
-    : impact ? impact.newPercentage : currentPct + deltaPct;
-  const displayDeltaPct = rentImpact
-    ? rentImpact.deltaOwnershipPercentage
-    : impact ? impact.deltaPercentage : deltaPct;
+  const displayCurrentPct  = rentImpact ? rentImpact.currentOwnershipPercentage  : currentPct;
+  const displayNewPct      = rentImpact ? rentImpact.projectedOwnershipPercentage : impact ? impact.newPercentage  : currentPct + deltaPct;
+  const displayDeltaPct    = rentImpact ? rentImpact.deltaOwnershipPercentage     : impact ? impact.deltaPercentage : deltaPct;
+  const displayCurrentRent = rentImpact ? rentImpact.currentRentAmount            : currentRent;
+  const displayNewRent     = rentImpact ? rentImpact.projectedRentAmount          : impact ? impact.newRent        : currentRent;
+  const displayRentSaving  = rentImpact ? rentImpact.monthlySavingsAmount         : impact ? impact.rentSaving     : 0;
 
-  const displayCurrentRent = rentImpact ? rentImpact.currentRentAmount : seed.currentRent;
-  const displayNewRent = rentImpact
-    ? rentImpact.projectedRentAmount
-    : impact ? impact.newRent : seed.currentRent;
-  const displayRentSaving = rentImpact
-    ? rentImpact.monthlySavingsAmount
-    : impact ? impact.rentSaving : 0;
-
-  const nextGoalTokens = 10000;
-  const milestoneProgress = Math.min(100, ((currentTokens + quantity) / nextGoalTokens) * 100);
+  const milestoneProgress = Math.min(100, ((currentTokens + effectiveQuantity) / nextGoalTokens) * 100);
 
   const adjustQuantity = useCallback((next: number) => {
     const snapped = Math.round(next / sliderStep) * sliderStep;
@@ -377,15 +334,13 @@ export function FmzTenantTokenPurchasePage() {
       quote,
       method,
       idempotencyKey: crypto.randomUUID(),
-      propertyId:    seed.propertyId,
-      currentTokens: seed.currentTokens,
-      totalTokens:   seed.totalTokens,
-      currentRent:   seed.currentRent,
-      fullRent:      seed.fullRent,
-      propertyValue: seed.propertyValue,
+      propertyId,
+      currentTokens,
+      totalTokens,
+      currentRent,
+      fullRent,
+      propertyValue,
     });
-    // Backend rent impact is authoritative — override the dashboard-derived
-    // projections so the confirmation/success pages stay consistent with the quote.
     if (quote.rentImpact) {
       const ri = quote.rentImpact;
       cart.currentPercentage = ri.currentOwnershipPercentage;
@@ -399,36 +354,32 @@ export function FmzTenantTokenPurchasePage() {
     }
     writeTokenPurchaseCart(cart);
     router.push(localizedHref('/connected/tokens-to-purchase-pix/confirm'));
-  }, [quote, method, seed, router]);
+  }, [quote, method, propertyId, currentTokens, totalTokens, currentRent, fullRent, propertyValue, router]);
 
   const presetOptions = [
-    { tokens: 1000, label: 'mínimo' },
-    { tokens: Math.max(1000, nextGoalTokens - currentTokens), label: 'Meta 10%' },
-    { tokens: 5000, label: 'recomendado' },
-    { tokens: 10000, label: '+1 pp' },
-  ];
+    { tokens: minQty, label: 'mínimo' },
+    ...(nextGoal && tokensToNextGoal > minQty && tokensToNextGoal <= maxQty
+      ? [{ tokens: tokensToNextGoal, label: nextGoal.title }]
+      : []),
+    { tokens: Math.min(5000, maxQty), label: 'recomendado' },
+    { tokens: Math.min(10000, maxQty), label: '+1 pp' },
+  ].filter((p, i, arr) => p.tokens >= minQty && arr.findIndex((x) => x.tokens === p.tokens) === i);
 
-  const processingFeeRate = quote?.processingFeePercent ?? 7.5;
-  const processingFee = quote?.processingFeeAmount ?? 0;
-  const purchaseTotal = quote?.total ?? 0;
-  const unitPrice = quote?.unitPrice ?? 1;
-  const inlineCost = quote ? quote.total : quantity * unitPrice * (1 + processingFeeRate / 100);
-  const futureTokens = currentTokens + quantity;
+  const processingFeeRate = quote?.processingFeePercent ?? (context?.processingFeePercent ?? 7.5);
+  const processingFee  = quote?.processingFeeAmount ?? 0;
+  const purchaseTotal  = quote?.total ?? 0;
+  const unitPrice      = quote?.unitPrice ?? (context?.unitPrice ?? 1);
+  const inlineCost     = quote ? quote.total : effectiveQuantity * unitPrice * (1 + processingFeeRate / 100);
+  const futureTokens   = currentTokens + effectiveQuantity;
   const formatPercentagePoints = (value: number) => pctFmt.format(Number(value ?? 0));
 
-  // Goal pill (replaces the old promotion text). Prefers backend/dashboard goal data:
-  //   - "Faltam X tokens para a meta de Y%" when the remaining-token count is known
-  //   - "Meta Y%" when only the target percentage is known
-  //   - "Próxima meta: 10%" as a safe fallback when no goal data is available
-  const goalPct = seed.nextGoalPercentage ?? 10;
-  const goalLabel =
-    seed.nextGoalTokensRemaining != null && seed.nextGoalTokensRemaining > 0
-      ? `Faltam ${fmt.int(seed.nextGoalTokensRemaining)} tokens para a meta de ${fmt.int(goalPct)}%`
-      : seed.nextGoalPercentage != null
-        ? `Meta ${fmt.int(goalPct)}%`
-        : 'Próxima meta: 10%';
+  const goalLabel = tokensToNextGoal > 0
+    ? `Faltam ${fmt.int(tokensToNextGoal)} tokens para a meta de ${fmt.int(nextGoalPct)}%`
+    : nextGoal
+      ? `Meta ${fmt.int(nextGoalPct)}% atingida!`
+      : 'Continue comprando tokens';
 
-  if (!seed.propertyTokenizationId && !seedLoading) {
+  if (!propertyTokenizationId && !contextLoading) {
     return (
       <main className={styles.buyPage}>
         <BackButton />
@@ -448,11 +399,11 @@ export function FmzTenantTokenPurchasePage() {
 
       <div className={styles.buyHeader}>
         <div>
-          <p className={styles.buySup}>Tokens · {seed.propertyLabel}</p>
+          <p className={styles.buySup}>Tokens · {propertyLabel}</p>
           <h1 className={styles.buyTitle}>Comprar tokens</h1>
           <p className={styles.buySub}>
             <span>
-              Você é dona de <strong>{fmt.pct(displayCurrentPct)}</strong> · próxima meta {fmt.int(goalPct)}%
+              Você é dona de <strong>{fmt.pct(displayCurrentPct)}</strong> · próxima meta {fmt.int(nextGoalPct)}%
             </span>
             <span className={styles.buyPill}><span />{goalLabel}</span>
           </p>
@@ -467,7 +418,7 @@ export function FmzTenantTokenPurchasePage() {
             <div className={styles.buyAvailTop}>
               <span className={styles.buyAvailLabel}><span />Disponíveis para compra</span>
               <span className={styles.buyAvailNum}>
-                <strong>{fmt.int(availableTokens || maxQty)}</strong> de {fmt.int(totalTokens)} <span>{seed.tokenSymbol}</span>
+                <strong>{fmt.int(availableTokens || maxQty)}</strong> de {fmt.int(totalTokens)} <span>{tokenSymbol}</span>
               </span>
             </div>
             <div className={styles.buyAvailBar}>
@@ -476,7 +427,7 @@ export function FmzTenantTokenPurchasePage() {
             </div>
             <div className={styles.buyAvailLegend}>
               <span><i className={styles.buyLegendOwned} />Em circulação <strong>{fmt.int(currentTokens)}</strong></span>
-              <span><i className={styles.buyLegendSelected} />Sua seleção <strong>{fmt.int(quantity)}</strong></span>
+              <span><i className={styles.buyLegendSelected} />Sua seleção <strong>{fmt.int(effectiveQuantity)}</strong></span>
               <span><i className={styles.buyLegendFree} />Restante <strong>{fmt.int(remainingAfterSelection)}</strong></span>
             </div>
           </div>
@@ -485,19 +436,19 @@ export function FmzTenantTokenPurchasePage() {
             <button
               type="button"
               className={styles.buyTokenStep}
-              disabled={quantity <= minQty}
-              onClick={() => adjustQuantity(quantity - stepperSize)}
+              disabled={effectiveQuantity <= minQty}
+              onClick={() => adjustQuantity(effectiveQuantity - stepperSize)}
               aria-label="Diminuir 1.000"
             >−</button>
             <div className={styles.buyTokenDisplay}>
-              <strong>{fmt.int(quantity)}</strong>
-              <span>{quantity === 1 ? 'token' : 'tokens'} · <b>{seed.tokenSymbol}</b></span>
+              <strong>{fmt.int(effectiveQuantity)}</strong>
+              <span>{effectiveQuantity === 1 ? 'token' : 'tokens'} · <b>{tokenSymbol}</b></span>
             </div>
             <button
               type="button"
               className={styles.buyTokenStep}
-              disabled={quantity >= maxQty}
-              onClick={() => adjustQuantity(quantity + stepperSize)}
+              disabled={effectiveQuantity >= maxQty}
+              onClick={() => adjustQuantity(effectiveQuantity + stepperSize)}
               aria-label="Aumentar 1.000"
             >+</button>
           </div>
@@ -528,12 +479,14 @@ export function FmzTenantTokenPurchasePage() {
               <button
                 key={`${preset.tokens}-${preset.label}`}
                 type="button"
-                className={`${styles.buyPreset} ${quantity === preset.tokens ? styles.buyPresetActive : ''}`}
+                className={`${styles.buyPreset} ${effectiveQuantity === preset.tokens ? styles.buyPresetActive : ''}`}
                 onClick={() => adjustQuantity(preset.tokens)}
                 disabled={preset.tokens > maxQty}
               >
                 <strong>{fmt.int(preset.tokens)}</strong>
-                {preset.label === 'Meta 10%' ? <span className={styles.buyGoldTag}>{preset.label}</span> : <span>{preset.label}</span>}
+                {nextGoal && preset.label === nextGoal.title
+                  ? <span className={styles.buyGoldTag}>{preset.label}</span>
+                  : <span>{preset.label}</span>}
               </button>
             ))}
           </div>
@@ -545,7 +498,7 @@ export function FmzTenantTokenPurchasePage() {
               min={minQty}
               max={maxQty}
               step={sliderStep}
-              value={Math.min(maxQty, quantity)}
+              value={Math.min(maxQty, effectiveQuantity)}
               onChange={(e) => adjustQuantity(Number(e.target.value))}
             />
             <div className={styles.buySliderLabels}>
@@ -561,7 +514,7 @@ export function FmzTenantTokenPurchasePage() {
 
           <div className={styles.buyImpactRow}>
             <span className={`${styles.buyImpactIcon} ${styles.buyImpactGold}`}><Sparkles size={16} /></span>
-            <span className={styles.buyImpactLabel}>Sua posse no imóvel<small>Tokens {seed.tokenSymbol} / {fmt.int(totalTokens)} total</small></span>
+            <span className={styles.buyImpactLabel}>Sua posse no imóvel<small>Tokens {tokenSymbol} / {fmt.int(totalTokens)} total</small></span>
             <span className={styles.buyBefore}>{fmt.pct(displayCurrentPct)}</span>
             <ArrowRight size={13} className={styles.buyImpactArrow} />
             <strong className={`${styles.buyAfter} ${styles.buyAfterGold}`}>
@@ -591,14 +544,16 @@ export function FmzTenantTokenPurchasePage() {
 
           <div className={styles.buyMilestone}>
             <div className={styles.buyMilestoneHead}>
-              <span>Progresso até a próxima meta (10%)</span>
+              <span>
+                {nextGoal ? `Progresso até a meta: ${nextGoal.title}` : 'Progresso de aquisição'}
+              </span>
               <strong>{fmt.int(futureTokens)}/{fmt.int(nextGoalTokens)} tokens</strong>
             </div>
             <div className={styles.buyMilestoneTrack}><div style={{ width: `${milestoneProgress}%` }} /></div>
             <p>
               {futureTokens >= nextGoalTokens
-                ? <><strong>Meta 10% ultrapassada</strong> — próxima recompensa em 25% de posse.</>
-                : <>Faltam <strong>{fmt.int(nextGoalTokens - futureTokens)} tokens</strong> para alcançar 10%.</>}
+                ? <><strong>Meta atingida!</strong> {nextGoal?.rewardDescription ?? 'Continue comprando para o próximo marco.'}</>
+                : <>Faltam <strong>{fmt.int(nextGoalTokens - futureTokens)} tokens</strong> para alcançar {fmt.int(nextGoalPct)}%.</>}
             </p>
           </div>
         </section>
@@ -643,7 +598,7 @@ export function FmzTenantTokenPurchasePage() {
               <>
                 <strong><small>R$</small>{fmt.noSym(purchaseTotal)}</strong>
                 <em>
-                  <b>{fmt.int(quantity)} tokens</b>
+                  <b>{fmt.int(effectiveQuantity)} tokens</b>
                   {processingFee > 0 && ` · taxa ${fmt.money(processingFee)}`}
                   {' · paga via '}
                   <b>{method.toUpperCase()}</b>
@@ -652,7 +607,7 @@ export function FmzTenantTokenPurchasePage() {
             ) : (
               <>
                 <strong><small>R$</small>{fmt.noSym(inlineCost)}</strong>
-                <em><b>{fmt.int(quantity)} tokens</b> · paga via <b>{method.toUpperCase()}</b></em>
+                <em><b>{fmt.int(effectiveQuantity)} tokens</b> · paga via <b>{method.toUpperCase()}</b></em>
               </>
             )}
           </div>

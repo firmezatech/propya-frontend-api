@@ -83,6 +83,18 @@ export type FmzAdminTenantSettings = {
   goals: FmzAdminOwnershipGoal[];
 };
 
+export type FmzAdminGoalAchievement = {
+  id: string;
+  goalId: string;
+  tenantUserId: string;
+  tenantName: string | null;
+  tenantEmail: string | null;
+  propertyTokenizationId: string;
+  tokenBalanceAtAchievement: number;
+  ownershipBpsAtAchievement: number;
+  achievedAt: string;
+};
+
 export type FmzPlatformParam = {
   parameterKey: string;
   label: string;

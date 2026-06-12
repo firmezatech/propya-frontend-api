@@ -1,5 +1,54 @@
 export type FmzTokenPurchasePaymentMethod = 'pix' | 'boleto';
 
+// ── Quote context ──────────────────────────────────────────────────────────────
+// Returned by GET /tenant/token-purchases/quote/context.
+// Quantity-independent — safe to fetch once on page load and cache for 30s.
+
+export interface FmzTokenPurchaseGoal {
+  id: string;
+  goalKey: string;
+  title: string;
+  description: string | null;
+  rewardDescription: string | null;
+  targetPercentage: number;
+  targetTokenAmount: number;
+  displayOrder: number;
+}
+
+export interface FmzTokenPurchaseContextRentProjection {
+  currentTokenBalance: number;
+  ownershipBps: number;
+  currentOwnershipPercentage: number;
+  baseRentAmount: number;
+  adjustedBaseRentAmount: number;
+  currentRentAmount: number;
+}
+
+export interface FmzTokenPurchaseContext {
+  propertyTokenizationId: string;
+  tokenSymbol: string | null;
+  tokenName: string | null;
+  currency: string;
+  unitPrice: number;
+  processingFeePercent: number;
+  totalSupply: number;
+  availableSupply: number;
+  minQuantity: number;
+  maxQuantity: number;
+  rentProjectionInputs: FmzTokenPurchaseContextRentProjection | null;
+  goals: FmzTokenPurchaseGoal[];
+  issuedAt: string;
+  expiresAt: string;
+  expiresInSeconds: number;
+}
+
+export interface FmzTokenPurchaseContextBackendResponse {
+  success?: boolean;
+  context?: FmzTokenPurchaseContext;
+  message?: string;
+  errors?: unknown;
+}
+
 // ── Rent impact ──────────────────────────────────────────────────────────────────
 // Optional projection returned by GET /tenant/token-purchases/quote describing how
 // the requested purchase changes the tenant's ownership and monthly rent. All values

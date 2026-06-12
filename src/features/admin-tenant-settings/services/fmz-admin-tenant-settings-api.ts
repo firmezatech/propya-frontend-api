@@ -3,6 +3,7 @@ import type {
   FmzAdminEligibleTenant,
   FmzAdminFeeParameter,
   FmzAdminFeeParameterDraft,
+  FmzAdminGoalAchievement,
   FmzAdminOwnershipGoal,
   FmzAdminOwnershipGoalDraft,
   FmzAdminTenantSettings,
@@ -177,4 +178,32 @@ export async function updateOwnershipGoal(
   );
   const r = recordOf(data);
   return normalizeOwnershipGoal(r.goal ?? r.data ?? data);
+}
+
+export const normalizeGoalAchievement = (raw: unknown): FmzAdminGoalAchievement => {
+  const r = recordOf(raw);
+  return {
+    id: str(r.id),
+    goalId: str(r.goalId ?? r.goal_id),
+    tenantUserId: str(r.tenantUserId ?? r.tenant_user_id),
+    tenantName: optionalStr(r.tenantName ?? r.tenant_name),
+    tenantEmail: optionalStr(r.tenantEmail ?? r.tenant_email),
+    propertyTokenizationId: str(r.propertyTokenizationId ?? r.property_tokenization_id),
+    tokenBalanceAtAchievement: num(r.tokenBalanceAtAchievement ?? r.token_balance_at_achievement),
+    ownershipBpsAtAchievement: num(r.ownershipBpsAtAchievement ?? r.ownership_bps_at_achievement),
+    achievedAt: str(r.achievedAt ?? r.achieved_at),
+  };
+};
+
+export async function listGoalAchievements(
+  propertyTokenizationId: string,
+  goalId?: string,
+): Promise<FmzAdminGoalAchievement[]> {
+  const params = new URLSearchParams({ propertyTokenizationId });
+  if (goalId) params.set('goalId', goalId);
+  const { data } = await firmezaApiClient.get(
+    `${TENANT_SETTINGS_PATH}/goals/achievements?${params.toString()}`,
+  );
+  const r = recordOf(data);
+  return arr(r.achievements ?? r.data).map(normalizeGoalAchievement);
 }

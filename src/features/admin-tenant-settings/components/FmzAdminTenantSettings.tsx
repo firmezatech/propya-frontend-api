@@ -11,12 +11,13 @@ import {
   createOwnershipGoal,
   getAdminTenantSettings,
   listEligibleTenants,
+  listGoalAchievements,
   listPlatformParams,
   updateFeeParameter,
   updateOwnershipGoal,
   updatePlatformParam,
 } from '../services';
-import type { FmzAdminEligibleTenant, FmzAdminFeeParameter, FmzAdminOwnershipGoal, FmzPlatformParam } from '../domain';
+import type { FmzAdminEligibleTenant, FmzAdminFeeParameter, FmzAdminGoalAchievement, FmzAdminOwnershipGoal, FmzPlatformParam } from '../domain';
 
 // ─── local form types ───────────────────────────────────────────────────────
 
@@ -530,6 +531,7 @@ function PlatformParamField({
 export function FmzAdminTenantSettings() {
   const [parameters, setParameters] = useState<FmzAdminFeeParameter[]>([]);
   const [goals, setGoals] = useState<FmzAdminOwnershipGoal[]>([]);
+  const [achievements, setAchievements] = useState<FmzAdminGoalAchievement[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<FmzNormalizedApiError | null>(null);
   const [toast, setToast] = useState<Toast>(null);
@@ -578,6 +580,17 @@ export function FmzAdminTenantSettings() {
       const settings = await getAdminTenantSettings();
       setParameters(settings.parameters);
       setGoals(settings.goals);
+
+      // Load achievements for every unique tokenization — best-effort, non-blocking.
+      const tokenizationIds = Array.from(new Set(
+        settings.goals.map((g) => g.propertyTokenizationId).filter((id): id is string => Boolean(id)),
+      ));
+      if (tokenizationIds.length) {
+        const lists = await Promise.all(
+          tokenizationIds.map((id) => listGoalAchievements(id).catch(() => [] as FmzAdminGoalAchievement[])),
+        );
+        setAchievements(lists.flat());
+      }
     } catch (err) {
       setLoadError(normalizeFmzApiError(err));
     } finally {
@@ -983,6 +996,82 @@ export function FmzAdminTenantSettings() {
             ))
         )}
       </div>
+
+      {/* goal achievements section */}
+      {goals.length > 0 && (
+        <>
+          <div className="my-9 h-px bg-[#E8EAF0]" />
+          <div className="mb-5">
+            <div className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#9AA3B0]">Jornada do Inquilino</div>
+            <div className="font-sans text-[17px] font-bold text-[#0D1321]">Conquistas registradas</div>
+            <div className="mt-0.5 text-[12.5px] text-[#5A6478]">
+              Inquilinas que já atingiram cada meta de aquisição.
+            </div>
+          </div>
+
+          {goals
+            .sort((a, b) => {
+              const aPct = a.targetPercentage != null;
+              const bPct = b.targetPercentage != null;
+              if (aPct !== bPct) return aPct ? -1 : 1;
+              return (a.targetPercentage ?? a.targetTokenAmount ?? 0) -
+                (b.targetPercentage ?? b.targetTokenAmount ?? 0);
+            })
+            .map((goal) => {
+              const goalAchievements = achievements.filter((a) => a.goalId === goal.id);
+              return (
+                <div key={goal.id} className="mb-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="font-sans text-[13px] font-bold text-[#0D1321]">{goal.title}</span>
+                    <span className="inline-flex items-center rounded-[20px] bg-[#F0F1F5] px-[8px] py-[2px] text-[10.5px] font-semibold text-[#5A6478]">
+                      {goalAchievements.length} {goalAchievements.length === 1 ? 'conquista' : 'conquistas'}
+                    </span>
+                  </div>
+
+                  {goalAchievements.length === 0 ? (
+                    <div className="rounded-[10px] border-[1.5px] border-dashed border-[#E8EAF0] bg-[#F7F8FA] px-5 py-4 text-[12.5px] text-[#9AA3B0]">
+                      Nenhuma inquilina atingiu esta meta ainda.
+                    </div>
+                  ) : (
+                    <div className="overflow-hidden rounded-[12px] border-[1.5px] border-[#E8EAF0] bg-white">
+                      <table className="w-full text-left text-[12.5px]">
+                        <thead>
+                          <tr className="border-b border-[#E8EAF0] bg-[#F7F8FA]">
+                            <th className="px-4 py-2.5 font-semibold text-[#9AA3B0] uppercase tracking-[0.06em] text-[10.5px]">Inquilina</th>
+                            <th className="px-4 py-2.5 font-semibold text-[#9AA3B0] uppercase tracking-[0.06em] text-[10.5px]">Tokens</th>
+                            <th className="px-4 py-2.5 font-semibold text-[#9AA3B0] uppercase tracking-[0.06em] text-[10.5px]">Posse (bps)</th>
+                            <th className="px-4 py-2.5 font-semibold text-[#9AA3B0] uppercase tracking-[0.06em] text-[10.5px]">Conquistada em</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {goalAchievements.map((a) => (
+                            <tr key={a.id} className="border-b border-[#E8EAF0] last:border-0 hover:bg-[#F7F8FA]">
+                              <td className="px-4 py-3">
+                                <div className="font-medium text-[#0D1321]">{a.tenantName ?? '—'}</div>
+                                <div className="text-[11px] text-[#9AA3B0]">{a.tenantEmail ?? '—'}</div>
+                              </td>
+                              <td className="px-4 py-3 font-sans font-bold text-[#0D1321]">
+                                {a.tokenBalanceAtAchievement.toLocaleString('pt-BR')}
+                              </td>
+                              <td className="px-4 py-3 text-[#5A6478]">
+                                {(a.ownershipBpsAtAchievement / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
+                              </td>
+                              <td className="px-4 py-3 text-[#5A6478]">
+                                {a.achievedAt
+                                  ? new Date(a.achievedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                  : '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+        </>
+      )}
 
       {/* platform identity params section */}
       {platformParams.length > 0 && (
