@@ -97,9 +97,9 @@ function resolveStatClass(status: string | null): string {
 }
 
 function resolveStatLabel(m: FmzUserWalletMovement): string {
-  if (m.statusLabel) return m.statusLabel;
-  const s = (m.status ?? '').toLowerCase();
-  return STATUS_LABEL_PT[s] ?? m.status ?? '—';
+  const raw = m.statusLabel ?? m.status ?? '';
+  const s = raw.toLowerCase();
+  return STATUS_LABEL_PT[s] ?? (raw || '—');
 }
 
 // ── Row component ─────────────────────────────────────────────────────────────
@@ -137,7 +137,7 @@ function StatementRow({ m }: { m: FmzUserWalletMovement }) {
       </td>
       <td className={`${styles.tAmt} ${amtClass}`}>{fmtBRL(m.amount)}</td>
       <td style={{ textAlign: 'center' }}>
-        <span className={`${styles.tStat} ${resolveStatClass(m.status)}`}>
+        <span className={`${styles.tStat} ${resolveStatClass(m.statusLabel ?? m.status)}`}>
           <span className={styles.tStatDot} />
           {resolveStatLabel(m)}
         </span>
