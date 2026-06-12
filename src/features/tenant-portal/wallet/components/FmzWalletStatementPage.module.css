@@ -113,11 +113,11 @@
 .brandMark {
   width: 40px; height: 40px;
   border-radius: 9px;
-  background: var(--st-gold);
+  background: transparent;
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  box-shadow: inset 0 -2px 0 rgba(14,22,38,.08);
+  overflow: hidden;
 }
 .brandText { display: flex; flex-direction: column; gap: 1px; line-height: 1.1; }
 .brandName { font-weight: 800; font-size: 15pt; color: var(--st-navy); letter-spacing: -.015em; }
@@ -337,6 +337,7 @@
 .tStatOk    { background: var(--st-green-tint); color: var(--st-green); }
 .tStatWait  { background: var(--st-gold-tint);  color: var(--st-gold-deep); }
 .tStatBlue  { background: var(--st-blue-tint);  color: var(--st-blue); }
+.tStatRed   { background: var(--st-red-tint);   color: var(--st-red); }
 
 .table tfoot td {
   background: var(--st-page);
@@ -423,15 +424,31 @@
 
 /* ── PRINT ── */
 @media print {
+  /* Hide everything outside the statement document */
+  :global(body) * { visibility: hidden; }
+
+  /* Reveal only the statement screen and all its children */
+  .screen, .screen * { visibility: visible !important; }
+
+  .screen {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    padding: 0;
+    overflow: visible;
+    font-family: 'Inter', sans-serif;
+  }
+
   .toolbar { display: none !important; }
-  .screen  { background: #fff; padding: 0; }
+
   .doc {
     box-shadow: none;
     border-radius: 0;
     width: 210mm;
     min-height: 297mm;
-    margin: 0;
+    margin: 0 auto;
     padding: 14mm 14mm 16mm;
+    font-family: 'Inter', sans-serif;
   }
 }
 

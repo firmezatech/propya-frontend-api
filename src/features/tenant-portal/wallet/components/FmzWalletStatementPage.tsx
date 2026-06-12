@@ -56,20 +56,50 @@ function buildHash(movements: FmzUserWalletMovement[]): string {
 
 // ── Status badge helpers ──────────────────────────────────────────────────────
 
+const STATUS_LABEL_PT: Record<string, string> = {
+  open:               'Em aberto',
+  pending:            'Aguardando',
+  awaiting:           'Aguardando',
+  aguardando:         'Aguardando',
+  settlement_pending: 'Aguardando pagamento',
+  processing:         'Processando',
+  in_review:          'Em análise',
+  paid:               'Compensado',
+  completed:          'Compensado',
+  applied:            'Aplicado',
+  ok:                 'Compensado',
+  confirmed:          'Confirmado',
+  failed:             'Falhou',
+  error:              'Falhou',
+  cancelled:          'Cancelado',
+  canceled:           'Cancelado',
+  refunded:           'Reembolsado',
+  rejected:           'Recusado',
+  expired:            'Expirado',
+};
+
+type StatClass = 'ok' | 'wait' | 'blue' | 'red';
+
+const STATUS_CLASS_MAP: Record<string, StatClass> = {
+  paid: 'ok', completed: 'ok', applied: 'ok', ok: 'ok', confirmed: 'ok',
+  pending: 'wait', awaiting: 'wait', aguardando: 'wait', open: 'wait', settlement_pending: 'wait',
+  processing: 'blue', in_review: 'blue',
+  failed: 'red', error: 'red',
+};
+
 function resolveStatClass(status: string | null): string {
   if (!status) return '';
-  const s = status.toLowerCase();
-  if (s === 'paid' || s === 'completed' || s === 'applied' || s === 'ok') return styles.tStatOk;
-  if (s === 'pending' || s === 'awaiting' || s === 'aguardando')          return styles.tStatWait;
+  const cls = STATUS_CLASS_MAP[status.toLowerCase()];
+  if (cls === 'ok')   return styles.tStatOk;
+  if (cls === 'wait') return styles.tStatWait;
+  if (cls === 'red')  return styles.tStatRed;
   return styles.tStatBlue;
 }
 
 function resolveStatLabel(m: FmzUserWalletMovement): string {
   if (m.statusLabel) return m.statusLabel;
   const s = (m.status ?? '').toLowerCase();
-  if (s === 'paid' || s === 'completed') return 'Compensado';
-  if (s === 'pending')                   return 'Aguardando';
-  return m.status ?? '—';
+  return STATUS_LABEL_PT[s] ?? m.status ?? '—';
 }
 
 // ── Row component ─────────────────────────────────────────────────────────────
@@ -226,10 +256,8 @@ export function FmzWalletStatementPage() {
         <header className={styles.head}>
           <div className={styles.brand}>
             <div className={styles.brandMark}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M12 3L3 8.5V15.5L12 21L21 15.5V8.5L12 3Z" stroke="#0E1626" strokeWidth="2.2" strokeLinejoin="round" />
-                <path d="M12 3V21M3 8.5L21 15.5M21 8.5L3 15.5" stroke="#0E1626" strokeWidth="1.1" strokeOpacity=".4" />
-              </svg>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="" width={40} height={40} style={{ objectFit: 'contain', borderRadius: 9 }} />
             </div>
             <div className={styles.brandText}>
               <span className={styles.brandName}>{platformInfo?.brand_name ?? 'FirmezaToken'}</span>
