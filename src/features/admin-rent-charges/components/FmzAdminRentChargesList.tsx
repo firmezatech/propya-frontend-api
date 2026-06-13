@@ -58,7 +58,11 @@ const COMPETENCE_MONTH_OPTIONS = buildCompetenceMonthOptions();
 const brlFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
 function parseBrl(value: string): number {
-  const parsed = Number(value.replace(/\./g, '').replace(',', '.'));
+  if (!value || typeof value !== 'string') return 0;
+  const normalized = value.includes(',')
+    ? value.replace(/\./g, '').replace(',', '.')
+    : value;
+  const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 function formatBrl(value: string): string {

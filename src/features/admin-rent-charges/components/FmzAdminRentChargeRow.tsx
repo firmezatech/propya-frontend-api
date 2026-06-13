@@ -18,7 +18,11 @@ const brlFormatter = new Intl.NumberFormat('pt-BR', {
 
 function parseBrl(value: string): number {
   if (!value || typeof value !== 'string') return 0;
-  const normalized = value.replace(/\./g, '').replace(',', '.');
+  // Backend returns standard decimal ("729.14"). Only apply BR normalization
+  // (remove dot thousands-sep, replace comma decimal) when a comma is present.
+  const normalized = value.includes(',')
+    ? value.replace(/\./g, '').replace(',', '.')
+    : value;
   const parsed = Number(normalized);
   return Number.isNaN(parsed) || !Number.isFinite(parsed) ? 0 : parsed;
 }
