@@ -207,7 +207,7 @@ function selectionReducer(state: Set<string>, action: SelectionAction): Set<stri
     }
     case 'remove-many': {
       const next = new Set(state);
-      for (const id of action.ids) next.delete(id);
+      action.ids.forEach(id => next.delete(id));
       return next;
     }
     default:
