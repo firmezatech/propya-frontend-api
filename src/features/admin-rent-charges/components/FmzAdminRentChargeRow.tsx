@@ -81,7 +81,21 @@ function toEditableValues(amounts: FmzAdminRentCharge['amounts']): FmzRentCharge
 
 // ─── Tooltip ─────────────────────────────────────────────────────────────────
 
-function FmzTooltip({ content }: { content: string }) {
+type TooltipPlacement = 'left' | 'center' | 'right';
+
+const TOOLTIP_POSITION: Record<TooltipPlacement, string> = {
+  left:   'left-0',
+  center: 'left-1/2 -translate-x-1/2',
+  right:  'right-0',
+};
+
+const CARET_POSITION: Record<TooltipPlacement, string> = {
+  left:   'left-2',
+  center: 'left-1/2 -translate-x-1/2',
+  right:  'right-2',
+};
+
+function FmzTooltip({ content, placement = 'center' }: { content: string; placement?: TooltipPlacement }) {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -101,10 +115,10 @@ function FmzTooltip({ content }: { content: string }) {
       {visible && (
         <span
           role="tooltip"
-          className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-[7px] bg-[#0D1321] px-3 py-1.5 text-[11px] font-medium leading-5 text-white shadow-lg"
+          className={`pointer-events-none absolute bottom-full z-50 mb-2 max-w-[240px] break-words rounded-[7px] bg-[#0D1321] px-3 py-1.5 text-[11px] font-medium leading-5 text-white shadow-lg ${TOOLTIP_POSITION[placement]}`}
         >
           {content}
-          <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[#0D1321]" />
+          <span className={`absolute top-full border-4 border-transparent border-t-[#0D1321] ${CARET_POSITION[placement]}`} />
         </span>
       )}
     </span>
@@ -136,6 +150,7 @@ function EditableAmountField({
   value,
   hint,
   tooltip,
+  tooltipPlacement,
   onChange,
 }: {
   label: string;
@@ -143,13 +158,14 @@ function EditableAmountField({
   value: string;
   hint: string | null;
   tooltip?: string;
+  tooltipPlacement?: TooltipPlacement;
   onChange: (field: keyof FmzRentChargeEditableValues, value: string) => void;
 }) {
   return (
     <label className="block">
       <span className="mb-1 flex items-center text-[10px] font-semibold uppercase tracking-[0.07em] text-[#9AA3B0]">
         {label}
-        {tooltip ? <FmzTooltip content={tooltip} /> : null}
+        {tooltip ? <FmzTooltip content={tooltip} placement={tooltipPlacement} /> : null}
       </span>
       <div className="relative">
         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-medium text-[#9AA3B0]">
@@ -368,6 +384,7 @@ export function FmzAdminRentChargeRow({
                 value={draft.tokenPurchase}
                 hint={calcDiff(draft.tokenPurchase, charge.amounts.tokenPurchase)}
                 tooltip={tooltipTokens}
+                tooltipPlacement="left"
                 onChange={handleFieldChange}
               />
               <EditableAmountField
@@ -376,6 +393,7 @@ export function FmzAdminRentChargeRow({
                 value={draft.discountedRent}
                 hint={calcDiff(draft.discountedRent, charge.amounts.discountedRent)}
                 tooltip={tooltipDiscountedRent}
+                tooltipPlacement="right"
                 onChange={handleFieldChange}
               />
               <EditableAmountField
@@ -384,6 +402,7 @@ export function FmzAdminRentChargeRow({
                 value={draft.platformAdminFee}
                 hint={calcDiff(draft.platformAdminFee, charge.amounts.platformAdminFee)}
                 tooltip={tooltipPlatformFee}
+                tooltipPlacement="left"
                 onChange={handleFieldChange}
               />
               <EditableAmountField
