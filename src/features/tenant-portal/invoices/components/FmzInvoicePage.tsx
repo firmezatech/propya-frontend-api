@@ -172,7 +172,7 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
             <div className={styles.heroTotal}>
               <span className={styles.heroCurrency}>R$</span>
               {totalDisplay.whole}
-              <span className={styles.heroCents}>,{totalDisplay.cents}</span>
+              <span className={styles.heroCents}>{totalDisplay.cents}</span>
             </div>
             <div className={styles.heroDue}>
               {daysUntilDue !== null && daysUntilDue > 0 && (
