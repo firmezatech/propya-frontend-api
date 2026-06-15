@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
+import QRCode from 'qrcode';
 import { ArrowLeft, Check, ChevronRight, Copy, Download, FileText, List, MessageCircle, QrCode, ReceiptText, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -10,6 +12,9 @@ import type { FmzTenantDashboard } from '../../domain';
 import styles from './FmzInvoicePage.module.css';
 import { formatDateBR } from '../../../../lib/fmz-date';
 
+// react-barcode uses document/window — must be client-only
+const Barcode = dynamic(() => import('react-barcode'), { ssr: false });
+
 const moneyFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const formatMoney = (v?: number | null) => moneyFmt.format(Number(v ?? 0));
@@ -17,28 +22,10 @@ const formatDate = (v?: string | null): string => formatDateBR(v, 'Não informad
 
 function splitMoneyDisplay(v?: number | null): { whole: string; cents: string } {
   const formatted = moneyFmt.format(Number(v ?? 0));
-  // pt-BR produces "R$ X.XXX,XX" — strip currency prefix including non-breaking space
-  const stripped = formatted.replace(/^R\$[\s ]+/, '');
+  const stripped = formatted.replace(/^R\$[\s ]+/, '');
   const commaIndex = stripped.lastIndexOf(',');
   if (commaIndex === -1) return { whole: stripped, cents: '' };
   return { whole: stripped.slice(0, commaIndex), cents: stripped.slice(commaIndex) };
-}
-
-
-const BARCODE_WIDTHS = [3,1,2,3,1,1,2,1,3,2,1,2,1,3,1,2,3,1,2,1,1,3,2,1,2,3,1,1,2,3,1,2,1,1,3,2,1,3,1,2,1];
-
-function BarcodeVisual() {
-  return (
-    <div className={styles.barcodeWrap}>
-      {BARCODE_WIDTHS.map((w, i) => (
-        <div
-          key={i}
-          className={styles.barcodeBar}
-          style={{ width: `${w}px`, opacity: i % 2 === 0 ? 1 : 0 }}
-        />
-      ))}
-    </div>
-  );
 }
 
 type CopyButtonProps = { text: string; label?: string };
@@ -92,8 +79,60 @@ function buildInvoiceLines(summary: FmzTenantDashboard['monthlySummary']): Invoi
   return lines;
 }
 
+// ─── PIX QR Code ─────────────────────────────────────────────────────────────
+
+function PixQrImage({ qrCode }: { qrCode: string | null | undefined }) {
+  const [dataUrl, setDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!qrCode) { setDataUrl(null); return; }
+    void QRCode.toDataURL(qrCode, { width: 200, margin: 1, color: { dark: '#0D1321', light: '#FFFFFF' } })
+      .then(setDataUrl)
+      .catch(() => setDataUrl(null));
+  }, [qrCode]);
+
+  if (dataUrl) {
+    return <img src={dataUrl} alt="QR Code PIX" width={200} height={200} style={{ display: 'block', margin: '0 auto' }} />;
+  }
+
+  return <QrCode size={160} strokeWidth={1.2} color="var(--fmz-navy)" />;
+}
+
+// ─── Boleto Barcode ───────────────────────────────────────────────────────────
+
+function BarcodeDisplay({ barcode }: { barcode: string | null | undefined }) {
+  if (!barcode) {
+    // Decorative placeholder when barcode is unavailable
+    const WIDTHS = [3,1,2,3,1,1,2,1,3,2,1,2,1,3,1,2,3,1,2,1,1,3,2,1,2,3,1,1,2,3,1,2,1,1,3,2,1,3,1,2,1];
+    return (
+      <div className={styles.barcodeWrap}>
+        {WIDTHS.map((w, i) => (
+          <div key={i} className={styles.barcodeBar} style={{ width: `${w}px`, opacity: i % 2 === 0 ? 1 : 0 }} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.barcodeWrap} style={{ justifyContent: 'center' }}>
+      <Barcode
+        value={barcode}
+        format="ITF"
+        width={1.5}
+        height={60}
+        displayValue={false}
+        background="transparent"
+        lineColor="var(--fmz-navy, #0D1321)"
+      />
+    </div>
+  );
+}
+
+// ─── Main content ─────────────────────────────────────────────────────────────
+
 function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
-  const boleto = dashboard.boleto;
+  const boleto  = dashboard.boleto;
+  const pix     = dashboard.pix;
   const summary = dashboard.monthlySummary;
   const competence = dashboard.competence;
 
@@ -101,12 +140,12 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
     if (!summary?.dueDate) return null;
     const due = new Date(summary.dueDate);
     const now = new Date();
-    const diff = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return diff;
+    return Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   }, [summary?.dueDate]);
 
   const digitableLine = boleto?.digitableLine ?? '';
-  const pixCode = 'Código PIX não disponível';
+  const barcodeValue  = boleto?.barcode ?? null;
+  const pixCode       = pix?.qrCode ?? null;
   const lines = buildInvoiceLines(summary);
   const totalDisplay = splitMoneyDisplay(summary?.totalDueAmount);
 
@@ -191,7 +230,7 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
           </div>
 
           <p className={styles.lineLabel}>Código de barras</p>
-          <BarcodeVisual />
+          <BarcodeDisplay barcode={barcodeValue} />
           {digitableLine && <p className={styles.barcodeFoot}>{digitableLine}</p>}
 
           <div className={styles.rowActions}>
@@ -215,13 +254,21 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
           </div>
 
           <div className={styles.qrWrap}>
-            <QrCode size={160} strokeWidth={1.2} color="var(--fmz-navy)" />
+            <PixQrImage qrCode={pixCode} />
           </div>
 
-          <div className={styles.pixCopy}>
-            <span className={styles.pixCode}>{pixCode}</span>
-            <CopyButton text={pixCode} />
-          </div>
+          {pixCode ? (
+            <div className={styles.pixCopy}>
+              <span className={styles.pixCode}>{pixCode}</span>
+              <CopyButton text={pixCode} />
+            </div>
+          ) : (
+            <div className={styles.pixCopy}>
+              <span className={styles.pixCode} style={{ color: 'var(--fmz-gray, #9AA3B0)', fontStyle: 'italic' }}>
+                PIX indisponível no momento
+              </span>
+            </div>
+          )}
 
           <div className={styles.pixInfo}>
             <FileText size={13} />
@@ -242,7 +289,7 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
           <div className={styles.lines}>
             {lines.map((line) => {
               const isToken = line.key?.toLowerCase().includes('token');
-              const isRent = line.key?.toLowerCase().includes('rent') && !line.key?.toLowerCase().includes('fee');
+              const isRent  = line.key?.toLowerCase().includes('rent') && !line.key?.toLowerCase().includes('fee');
               return (
                 <div key={line.key} className={styles.lineItem}>
                   <span className={`${styles.lineLeft} ${isToken ? styles.lineLeftHighlight : ''}`}>

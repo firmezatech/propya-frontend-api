@@ -56,6 +56,7 @@ export type FmzTenantDashboard = {
   monthlySummary?: FmzTenantMonthlySummary | null;
   rentInsight?: FmzTenantRentInsight | null;
   boleto?: FmzTenantBoleto | null;
+  pix?: FmzTenantPix | null;
   documents?: FmzTenantDocument[];
   parameters?: Record<string, unknown> | null;
 };
@@ -216,6 +217,19 @@ export type FmzTenantBoleto = {
   downloadUrl?: string | null;
   digitableLine?: string | null;
   barcode?: string | null;
+  paidAt?: string | null;
+};
+
+export type FmzTenantPix = {
+  rentChargeId?: string | null;
+  paymentTransactionId?: string | null;
+  status?: string | null;
+  paymentProvider?: string | null;
+  externalReference?: string | null;
+  txid?: string | null;
+  qrCode?: string | null;
+  qrCodeImageUrl?: string | null;
+  dueAt?: string | null;
   paidAt?: string | null;
 };
 
