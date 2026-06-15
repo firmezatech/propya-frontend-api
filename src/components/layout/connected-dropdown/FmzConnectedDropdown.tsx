@@ -267,7 +267,7 @@ export function FmzConnectedDropdown({
               type="button"
               onClick={() => {
                 closeAll();
-                router.push(localizeHref('/connected/coming-soon'));
+                router.push(localizeHref('/connected/notifications'));
               }}
               className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-fmz-navy transition hover:text-[#8A6B12]"
             >
