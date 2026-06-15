@@ -13,7 +13,8 @@ const getValidTemplateIds = (): string[] => {
       .readdirSync(TEMPLATES_DIR, { withFileTypes: true })
       .filter((e) => e.isDirectory())
       .map((e) => e.name);
-  } catch {
+  } catch (error) {
+    console.error('[email-templates] Failed to read templates directory:', error);
     return [];
   }
 };
@@ -24,11 +25,16 @@ const substituteVars = (html: string, vars: Record<string, string>): string =>
     html,
   );
 
+const loadTemplateHtml = (id: string): string => {
+  const templatePath = path.join(TEMPLATES_DIR, id, 'template.html');
+  return fs.readFileSync(templatePath, 'utf-8');
+};
+
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = params;
+  const { id } = await params;
 
   const validIds = getValidTemplateIds();
   if (!validIds.includes(id)) {
@@ -42,16 +48,17 @@ export async function POST(
       return NextResponse.json({ error: 'Body must be a JSON object' }, { status: 400 });
     }
     vars = body as Record<string, string>;
-  } catch {
+  } catch (error) {
+    console.error('[email-templates] Failed to parse request body:', error);
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
   try {
-    const templatePath = path.join(TEMPLATES_DIR, id, 'template.html');
-    const html = fs.readFileSync(templatePath, 'utf-8');
+    const html = loadTemplateHtml(id);
     const rendered = substituteVars(html, vars);
     return NextResponse.json({ html: rendered });
-  } catch {
+  } catch (error) {
+    console.error('[email-templates] Failed to render template:', { id, error });
     return NextResponse.json({ error: 'Failed to render template' }, { status: 500 });
   }
 }
