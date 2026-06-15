@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Check, ChevronDown, RotateCcw, X } from 'lucide-react';
+import { Check, ChevronDown, HelpCircle, RotateCcw, X } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
 import type {
   FmzAdminRentCharge,
@@ -18,8 +18,6 @@ const brlFormatter = new Intl.NumberFormat('pt-BR', {
 
 function parseBrl(value: string): number {
   if (!value || typeof value !== 'string') return 0;
-  // Backend returns standard decimal ("729.14"). Only apply BR normalization
-  // (remove dot thousands-sep, replace comma decimal) when a comma is present.
   const normalized = value.includes(',')
     ? value.replace(/\./g, '').replace(',', '.')
     : value;
@@ -73,11 +71,44 @@ function calcDiff(draftVal: string, origVal: string): string | null {
 
 function toEditableValues(amounts: FmzAdminRentCharge['amounts']): FmzRentChargeEditableValues {
   return {
-    tokenPurchase: amounts.tokenPurchase,
-    discountedRent: amounts.discountedRent,
+    tokenPurchase:    amounts.tokenPurchase,
+    discountedRent:   amounts.discountedRent,
     platformAdminFee: amounts.platformAdminFee,
     tokenPurchaseFee: amounts.tokenPurchaseFee,
+    condominiumFee:   amounts.condominiumFee,
   };
+}
+
+// ─── Tooltip ─────────────────────────────────────────────────────────────────
+
+function FmzTooltip({ content }: { content: string }) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <span className="relative inline-flex items-center">
+      <button
+        type="button"
+        onMouseEnter={() => setVisible(true)}
+        onMouseLeave={() => setVisible(false)}
+        onFocus={() => setVisible(true)}
+        onBlur={() => setVisible(false)}
+        className="ml-1 text-[#9AA3B0] transition hover:text-[#5A6478]"
+        aria-label="Mais informações"
+        tabIndex={0}
+      >
+        <HelpCircle size={11} />
+      </button>
+      {visible && (
+        <span
+          role="tooltip"
+          className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-[7px] bg-[#0D1321] px-3 py-1.5 text-[11px] font-medium leading-5 text-white shadow-lg"
+        >
+          {content}
+          <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[#0D1321]" />
+        </span>
+      )}
+    </span>
+  );
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -104,18 +135,21 @@ function EditableAmountField({
   field,
   value,
   hint,
+  tooltip,
   onChange,
 }: {
   label: string;
   field: keyof FmzRentChargeEditableValues;
   value: string;
   hint: string | null;
+  tooltip?: string;
   onChange: (field: keyof FmzRentChargeEditableValues, value: string) => void;
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.07em] text-[#9AA3B0]">
+      <span className="mb-1 flex items-center text-[10px] font-semibold uppercase tracking-[0.07em] text-[#9AA3B0]">
         {label}
+        {tooltip ? <FmzTooltip content={tooltip} /> : null}
       </span>
       <div className="relative">
         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-medium text-[#9AA3B0]">
@@ -145,32 +179,27 @@ export function FmzAdminRentChargeRow({
   onToggleExpand,
   onRequestValidate,
 }: FmzAdminRentChargeRowProps) {
-  // Draft state — initialized from calculatedAmounts (effective billing amounts) on each panel open.
-  // amounts = original system calculation (immutable); calculatedAmounts = current effective.
   const [draft, setDraft] = useState<FmzRentChargeEditableValues>(
     () => toEditableValues(charge.calculatedAmounts),
   );
 
-  // Reset draft every time the panel opens (D-9).
-  // Intentionally omitting charge.calculatedAmounts from deps: we want a snapshot
-  // on open, not live-tracking of server state while the admin is editing.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (isExpanded) setDraft(toEditableValues(charge.calculatedAmounts)); }, [isExpanded]);
 
-  // Live total (D-10).
   const liveTotal =
     parseNum(draft.tokenPurchase) +
     parseNum(draft.discountedRent) +
     parseNum(draft.platformAdminFee) +
-    parseNum(draft.tokenPurchaseFee);
+    parseNum(draft.tokenPurchaseFee) +
+    parseNum(draft.condominiumFee);
   const liveTotalStr = liveTotal.toFixed(2);
 
-  // Whether any field differs from the original system calculation (D-11).
   const anyDirtyFromCalc =
-    parseNum(draft.tokenPurchase) !== parseNum(charge.amounts.tokenPurchase) ||
-    parseNum(draft.discountedRent) !== parseNum(charge.amounts.discountedRent) ||
+    parseNum(draft.tokenPurchase)    !== parseNum(charge.amounts.tokenPurchase)    ||
+    parseNum(draft.discountedRent)   !== parseNum(charge.amounts.discountedRent)   ||
     parseNum(draft.platformAdminFee) !== parseNum(charge.amounts.platformAdminFee) ||
-    parseNum(draft.tokenPurchaseFee) !== parseNum(charge.amounts.tokenPurchaseFee);
+    parseNum(draft.tokenPurchaseFee) !== parseNum(charge.amounts.tokenPurchaseFee) ||
+    parseNum(draft.condominiumFee)   !== parseNum(charge.amounts.condominiumFee);
 
   const handleFieldChange = useCallback(
     (field: keyof FmzRentChargeEditableValues, value: string) => {
@@ -179,12 +208,20 @@ export function FmzAdminRentChargeRow({
     [],
   );
 
-  // Recalculate: reset to original system amounts (D-12).
   const handleRecalculate = useCallback(() => {
     setDraft(toEditableValues(charge.amounts));
   }, [charge.amounts]);
 
   const isPendingValidation = charge.status === 'pending_validation';
+
+  // ── Tooltip content ────────────────────────────────────────────────────────
+  const bd = charge.breakdown;
+  const tooltipDiscountedRent =
+    `${formatBrl(bd.discountedRent.baseRent)} − ${bd.discountedRent.ownershipPct}% de posse (${formatBrl(bd.discountedRent.discountAmount)}) = ${formatBrl(bd.discountedRent.result)}`;
+  const tooltipPlatformFee =
+    `${bd.platformAdminFee.feePct}% × ${formatBrl(bd.platformAdminFee.appliedTo)} (aluguel c/ desconto) = ${formatBrl(bd.platformAdminFee.result)}`;
+  const tooltipTokens =
+    `${charge.tokens.quantity} tokens acordados no contrato`;
 
   return (
     <div
@@ -322,7 +359,7 @@ export function FmzAdminRentChargeRow({
             </button>
           </div>
 
-          {/* Editable fields (D-9) */}
+          {/* Editable fields */}
           <div className="bg-white p-5">
             <div className="grid grid-cols-2 gap-4">
               <EditableAmountField
@@ -330,6 +367,7 @@ export function FmzAdminRentChargeRow({
                 field="tokenPurchase"
                 value={draft.tokenPurchase}
                 hint={calcDiff(draft.tokenPurchase, charge.amounts.tokenPurchase)}
+                tooltip={tooltipTokens}
                 onChange={handleFieldChange}
               />
               <EditableAmountField
@@ -337,6 +375,7 @@ export function FmzAdminRentChargeRow({
                 field="discountedRent"
                 value={draft.discountedRent}
                 hint={calcDiff(draft.discountedRent, charge.amounts.discountedRent)}
+                tooltip={tooltipDiscountedRent}
                 onChange={handleFieldChange}
               />
               <EditableAmountField
@@ -344,6 +383,7 @@ export function FmzAdminRentChargeRow({
                 field="platformAdminFee"
                 value={draft.platformAdminFee}
                 hint={calcDiff(draft.platformAdminFee, charge.amounts.platformAdminFee)}
+                tooltip={tooltipPlatformFee}
                 onChange={handleFieldChange}
               />
               <EditableAmountField
@@ -353,9 +393,16 @@ export function FmzAdminRentChargeRow({
                 hint={calcDiff(draft.tokenPurchaseFee, charge.amounts.tokenPurchaseFee)}
                 onChange={handleFieldChange}
               />
+              <EditableAmountField
+                label="Taxa de Condomínio"
+                field="condominiumFee"
+                value={draft.condominiumFee}
+                hint={calcDiff(draft.condominiumFee, charge.amounts.condominiumFee)}
+                onChange={handleFieldChange}
+              />
             </div>
 
-            {/* Live total bar (D-10) */}
+            {/* Live total bar */}
             <div className="mt-4 flex items-center justify-between rounded-[10px] bg-[#0D1321] px-4 py-3.5">
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-white/50">
@@ -394,7 +441,6 @@ export function FmzAdminRentChargeRow({
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Recalculate button (D-12) */}
               <button
                 type="button"
                 onClick={handleRecalculate}
@@ -402,7 +448,6 @@ export function FmzAdminRentChargeRow({
               >
                 <RotateCcw size={12} /> Recalcular
               </button>
-              {/* Generate boleto (D-13) */}
               <button
                 type="button"
                 onClick={() => onRequestValidate(charge, draft)}

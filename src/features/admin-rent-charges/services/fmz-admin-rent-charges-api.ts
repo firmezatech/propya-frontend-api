@@ -6,6 +6,7 @@ import type {
   FmzRentChargeAdjustPayload,
   FmzRentChargeAdjustResponse,
   FmzRentChargeAmounts,
+  FmzRentChargeBreakdown,
   FmzRentChargeFeeRates,
   FmzRentChargeProperty,
   FmzRentChargeSummary,
@@ -57,19 +58,20 @@ const rentChargeStatusOf = (value: unknown): FmzRentChargeStatus => {
 const normalizeAmounts = (value: unknown): FmzRentChargeAmounts => {
   const r = recordOf(value);
   return {
-    tokenPurchase: str(r.tokenPurchase ?? r.token_purchase, '0.00'),
-    discountedRent: str(r.discountedRent ?? r.discounted_rent, '0.00'),
-    platformAdminFee: str(r.platformAdminFee ?? r.platform_admin_fee, '0.00'),
-    tokenPurchaseFee: str(r.tokenPurchaseFee ?? r.token_purchase_fee, '0.00'),
-    gross: str(r.gross, '0.00'),
+    tokenPurchase:    str(r.tokenPurchase    ?? r.token_purchase,    '0.00'),
+    discountedRent:   str(r.discountedRent   ?? r.discounted_rent,   '0.00'),
+    platformAdminFee: str(r.platformAdminFee ?? r.platform_admin_fee,'0.00'),
+    tokenPurchaseFee: str(r.tokenPurchaseFee ?? r.token_purchase_fee,'0.00'),
+    condominiumFee:   str(r.condominiumFee   ?? r.condominium_fee,   '0.00'),
+    gross:            str(r.gross, '0.00'),
   };
 };
 
 const normalizeProperty = (value: unknown): FmzRentChargeProperty => {
   const r = recordOf(value);
   return {
-    id: str(r.id),
-    address: str(r.address),
+    id:           str(r.id),
+    address:      str(r.address),
     neighborhood: str(r.neighborhood),
   };
 };
@@ -79,9 +81,9 @@ const normalizeTenant = (value: unknown): FmzRentChargeTenant => {
   const name = str(r.name);
   const initials = str(r.initials) || deriveInitials(name);
   return {
-    userId: str(r.userId ?? r.user_id),
+    userId:   str(r.userId ?? r.user_id),
     name,
-    email: str(r.email),
+    email:    str(r.email),
     initials,
   };
 };
@@ -96,8 +98,8 @@ const deriveInitials = (fullName: string): string => {
 const normalizeTokens = (value: unknown): FmzRentChargeTokens => {
   const r = recordOf(value);
   return {
-    quantity: num(r.quantity, 0),
-    unitValueBrl: str(r.unitValueBrl ?? r.unit_value_brl, '0.00'),
+    quantity:         num(r.quantity, 0),
+    unitValueBrl:     str(r.unitValueBrl     ?? r.unit_value_brl,    '0.00'),
     ownershipPercent: str(r.ownershipPercent ?? r.ownership_percent, '0.00'),
   };
 };
@@ -105,8 +107,28 @@ const normalizeTokens = (value: unknown): FmzRentChargeTokens => {
 const normalizeFeeRates = (value: unknown): FmzRentChargeFeeRates => {
   const r = recordOf(value);
   return {
-    rentAdminFeePercent: str(r.rentAdminFeePercent ?? r.rent_admin_fee_percent, '0.00'),
+    rentAdminFeePercent:     str(r.rentAdminFeePercent     ?? r.rent_admin_fee_percent,     '0.00'),
     tokenPurchaseFeePercent: str(r.tokenPurchaseFeePercent ?? r.token_purchase_fee_percent, '0.00'),
+    condominiumFeeAmount:    str(r.condominiumFeeAmount    ?? r.condominium_fee_amount,     '0.00'),
+  };
+};
+
+const normalizeBreakdown = (value: unknown): FmzRentChargeBreakdown => {
+  const r = recordOf(value);
+  const dr = recordOf(r.discountedRent    ?? r.discounted_rent);
+  const pf = recordOf(r.platformAdminFee ?? r.platform_admin_fee);
+  return {
+    discountedRent: {
+      baseRent:       str(dr.baseRent       ?? dr.base_rent,       '0.00'),
+      ownershipPct:   str(dr.ownershipPct   ?? dr.ownership_pct,   '0.00'),
+      discountAmount: str(dr.discountAmount ?? dr.discount_amount, '0.00'),
+      result:         str(dr.result,                               '0.00'),
+    },
+    platformAdminFee: {
+      feePct:    str(pf.feePct    ?? pf.fee_pct,   '0.00'),
+      appliedTo: str(pf.appliedTo ?? pf.applied_to,'0.00'),
+      result:    str(pf.result,                    '0.00'),
+    },
   };
 };
 
@@ -115,20 +137,21 @@ const normalizeFeeRates = (value: unknown): FmzRentChargeFeeRates => {
 export const normalizeAdminRentCharge = (value: unknown): FmzAdminRentCharge => {
   const r = recordOf(value);
   return {
-    id: str(r.id),
-    status: rentChargeStatusOf(r.status),
-    competenceMonth: str(r.competenceMonth ?? r.competence_month),
-    dueDate: str(r.dueDate ?? r.due_date),
+    id:               str(r.id),
+    status:           rentChargeStatusOf(r.status),
+    competenceMonth:  str(r.competenceMonth  ?? r.competence_month),
+    dueDate:          str(r.dueDate          ?? r.due_date),
     rentalContractId: str(r.rentalContractId ?? r.rental_contract_id),
-    contractCode: str(r.contractCode ?? r.contract_code),
-    property: normalizeProperty(r.property),
-    tenant: normalizeTenant(r.tenant),
-    tokens: normalizeTokens(r.tokens),
-    amounts: normalizeAmounts(r.amounts),
-    calculatedAmounts: normalizeAmounts(r.calculatedAmounts ?? r.calculated_amounts),
-    feeRates: normalizeFeeRates(r.feeRates ?? r.fee_rates),
-    baseRentAmount: str(r.baseRentAmount ?? r.base_rent_amount, '0.00'),
-    discountAmount: str(r.discountAmount ?? r.discount_amount, '0.00'),
+    contractCode:     str(r.contractCode     ?? r.contract_code),
+    property:         normalizeProperty(r.property),
+    tenant:           normalizeTenant(r.tenant),
+    tokens:           normalizeTokens(r.tokens),
+    amounts:          normalizeAmounts(r.amounts),
+    calculatedAmounts:normalizeAmounts(r.calculatedAmounts ?? r.calculated_amounts),
+    breakdown:        normalizeBreakdown(r.breakdown),
+    feeRates:         normalizeFeeRates(r.feeRates ?? r.fee_rates),
+    baseRentAmount:   str(r.baseRentAmount  ?? r.base_rent_amount,  '0.00'),
+    discountAmount:   str(r.discountAmount  ?? r.discount_amount,   '0.00'),
     hasManualAdjustment: bool(r.hasManualAdjustment ?? r.has_manual_adjustment, false),
   };
 };
@@ -138,9 +161,9 @@ export const normalizeAdminRentCharge = (value: unknown): FmzAdminRentCharge => 
 const normalizeSummary = (value: unknown): FmzRentChargeSummary => {
   const r = recordOf(value);
   return {
-    pendingCount: num(r.pendingCount ?? r.pending_count, 0),
-    doneCount: num(r.doneCount ?? r.done_count, 0),
-    totalPendingVolumeBrl: str(r.totalPendingVolumeBrl ?? r.total_pending_volume_brl, '0.00'),
+    pendingCount:          num(r.pendingCount          ?? r.pending_count,           0),
+    doneCount:             num(r.doneCount             ?? r.done_count,              0),
+    totalPendingVolumeBrl: str(r.totalPendingVolumeBrl ?? r.total_pending_volume_brl,'0.00'),
   };
 };
 
@@ -153,7 +176,7 @@ export async function listAdminRentCharges(
     competenceMonth: filters.competenceMonth,
   };
   if (filters.propertyId) params.propertyId = filters.propertyId;
-  if (filters.status) params.status = filters.status;
+  if (filters.status)     params.status     = filters.status;
 
   const { data } = await firmezaApiClient.get(ADMIN_RENT_CHARGES_PATH, { params });
   const r = recordOf(data);
@@ -174,10 +197,10 @@ export async function adjustAdminRentCharge(
   );
   const r = recordOf(data);
   return {
-    rentChargeId: str(r.rentChargeId ?? r.rent_charge_id, rentChargeId),
-    grossAmount: str(r.grossAmount ?? r.gross_amount, '0.00'),
+    rentChargeId:        str(r.rentChargeId        ?? r.rent_charge_id,        rentChargeId),
+    grossAmount:         str(r.grossAmount          ?? r.gross_amount,          '0.00'),
     hasManualAdjustment: bool(r.hasManualAdjustment ?? r.has_manual_adjustment, true),
-    adjustmentId: str(r.adjustmentId ?? r.adjustment_id),
+    adjustmentId:        str(r.adjustmentId         ?? r.adjustment_id),
   };
 }
 

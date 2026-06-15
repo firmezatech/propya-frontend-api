@@ -81,7 +81,8 @@ function isDirtyFromServer(draft: FmzRentChargeEditableValues, charge: FmzAdminR
     Math.abs(parseNum(draft.tokenPurchase) - parseNum(src.tokenPurchase)) > 0.005 ||
     Math.abs(parseNum(draft.discountedRent) - parseNum(src.discountedRent)) > 0.005 ||
     Math.abs(parseNum(draft.platformAdminFee) - parseNum(src.platformAdminFee)) > 0.005 ||
-    Math.abs(parseNum(draft.tokenPurchaseFee) - parseNum(src.tokenPurchaseFee)) > 0.005
+    Math.abs(parseNum(draft.tokenPurchaseFee) - parseNum(src.tokenPurchaseFee)) > 0.005 ||
+    Math.abs(parseNum(draft.condominiumFee) - parseNum(src.condominiumFee)) > 0.005
   );
 }
 
@@ -90,7 +91,8 @@ function draftGross(draft: FmzRentChargeEditableValues): string {
     parseNum(draft.tokenPurchase) +
     parseNum(draft.discountedRent) +
     parseNum(draft.platformAdminFee) +
-    parseNum(draft.tokenPurchaseFee)
+    parseNum(draft.tokenPurchaseFee) +
+    parseNum(draft.condominiumFee)
   ).toFixed(2);
 }
 
@@ -158,6 +160,7 @@ function ConfirmValidateModal({ pending, validating, adjusting, onConfirm, onCan
                 { label: 'Aluguel mensal', value: formatBrl(draft.discountedRent) },
                 { label: 'Taxa sobre aluguel', value: formatBrl(draft.platformAdminFee) },
                 { label: 'Taxa compra tokens', value: formatBrl(draft.tokenPurchaseFee) },
+                { label: 'Taxa de condomínio', value: formatBrl(draft.condominiumFee) },
               ] as const
             ).map(({ label, value }) => (
               <div
@@ -255,6 +258,7 @@ export function FmzAdminRentChargesList() {
         discountedRentAmount: draft.discountedRent,
         platformAdminFeeAmount: draft.platformAdminFee,
         tokenPurchaseFeeAmount: draft.tokenPurchaseFee,
+        condominiumFeeAmount: draft.condominiumFee,
         reason: 'Ajuste manual pelo admin',
       });
       if (!adjusted) {

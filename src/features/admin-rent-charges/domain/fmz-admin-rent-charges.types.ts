@@ -17,7 +17,24 @@ export type FmzRentChargeAmounts = {
   discountedRent: string;
   platformAdminFee: string;
   tokenPurchaseFee: string;
+  condominiumFee: string;
   gross: string;
+};
+
+// ─── Breakdown (how each number was calculated) ───────────────────────────────
+
+export type FmzRentChargeBreakdown = {
+  discountedRent: {
+    baseRent: string;       // aluguel base sem desconto
+    ownershipPct: string;   // % de posse do tenant
+    discountAmount: string; // valor descontado em BRL
+    result: string;         // aluguel após desconto
+  };
+  platformAdminFee: {
+    feePct: string;         // % da taxa (ex: "10.00")
+    appliedTo: string;      // base de cálculo (aluguel com desconto)
+    result: string;         // valor da taxa em BRL
+  };
 };
 
 // ─── Property in charge ───────────────────────────────────────────────────────
@@ -50,6 +67,7 @@ export type FmzRentChargeTokens = {
 export type FmzRentChargeFeeRates = {
   rentAdminFeePercent: string;
   tokenPurchaseFeePercent: string;
+  condominiumFeeAmount: string;
 };
 
 // ─── Full charge ─────────────────────────────────────────────────────────────
@@ -66,6 +84,7 @@ export type FmzAdminRentCharge = {
   tokens: FmzRentChargeTokens;
   amounts: FmzRentChargeAmounts;
   calculatedAmounts: FmzRentChargeAmounts;
+  breakdown: FmzRentChargeBreakdown;
   feeRates: FmzRentChargeFeeRates;
   baseRentAmount: string;
   discountAmount: string;
@@ -94,6 +113,7 @@ export type FmzRentChargeAdjustPayload = {
   discountedRentAmount: string;
   platformAdminFeeAmount: string;
   tokenPurchaseFeeAmount: string;
+  condominiumFeeAmount: string;
   reason: string;
 };
 
@@ -107,7 +127,7 @@ export type FmzRentChargeAdjustResponse = {
 };
 
 /**
- * Os 4 campos editáveis pelo admin antes de validar.
+ * Os 5 campos editáveis pelo admin antes de validar.
  * Corresponde a `FmzRentChargeAmounts` sem o `gross` (calculado,
  * nunca editado diretamente).
  */
