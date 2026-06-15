@@ -32,18 +32,10 @@ type UseTenantNotificationsReturn = {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 /**
+ * @deprecated Use `useFmzNotifications` from `features/notifications/hooks/fmz-notifications` instead.
+ * Kept temporarily until UN-3 (deprecated route removal) — do not use in new code.
+ *
  * Manages tenant notification state for the header dropdown.
- *
- * Strategy:
- *   - Fetch unread count on mount (lightweight, drives the badge).
- *   - Fetch full list only when fetchNotifications() is called
- *     (i.e., when the dropdown opens) — avoids loading data before needed.
- *   - After mark-as-read operations, update local state optimistically
- *     and sync the unread count.
- *
- * Responsibility boundary:
- *   - All notification content is owned by the backend.
- *   - This hook never generates, filters, or modifies notification text.
  */
 export function useFmzTenantNotifications(): UseTenantNotificationsReturn {
   const [unreadCount, setUnreadCount] = useState(0);

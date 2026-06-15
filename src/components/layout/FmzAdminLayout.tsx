@@ -25,7 +25,7 @@ import type { FmzConnectedUserSummary } from './connected-user/fmz-connected-use
 import { FmzAdminSidebar } from './FmzAdminSidebar';
 import { FmzAdminContentShell } from './FmzAdminContentShell';
 import { FmzAdminHeader } from './FmzAdminHeader';
-import { useFmzAdminNotifications } from '../../features/admin-notifications/hooks/fmz-admin-notifications';
+import { useFmzNotifications } from '../../features/notifications/hooks/fmz-notifications';
 
 export type FmzAdminLayoutProps = {
   children: ReactNode;
@@ -195,14 +195,13 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
     [currentPrincipal?.permissionKeys],
   );
 
-  // Admin notifications — only admin endpoints are called here.
   const {
     unreadCount: notificationUnreadCount,
     notificationsState,
     fetchNotifications,
     handleMarkAsRead: handleNotificationMarkAsRead,
     handleMarkAllAsRead: handleNotificationMarkAllAsRead,
-  } = useFmzAdminNotifications();
+  } = useFmzNotifications();
 
   return (
     // The admin layout owns its own full-viewport height and overflow strategy.

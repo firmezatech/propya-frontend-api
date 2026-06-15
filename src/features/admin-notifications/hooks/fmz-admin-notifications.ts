@@ -25,14 +25,11 @@ export type AdminNotificationsState =
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 /**
+ * @deprecated Use `useFmzNotifications` from `features/notifications/hooks/fmz-notifications` instead.
+ * Kept temporarily until UN-3 (deprecated route removal) — do not use in new code.
+ *
  * Manages admin notifications: unread count (fetched on mount), full list
  * (fetched lazily on first panel open), and mark-as-read interactions.
- *
- * Responsibilities (SRP):
- *   - Fetch unread count immediately on mount
- *   - Fetch full list only when `fetchNotifications()` is called
- *   - Apply optimistic updates for mark-as-read and mark-all-as-read
- *   - Never fall back to hardcoded notification data
  */
 export function useFmzAdminNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);

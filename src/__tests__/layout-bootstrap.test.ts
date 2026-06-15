@@ -275,9 +275,9 @@ describe('Neutral loading shell — role isolation invariants', () => {
 
 });
 
-// ─── Role isolation — API call gating ─────────────────────────────────────────
+// ─── API module isolation — service modules remain structurally separate ──────
 
-describe('API call isolation — tenant and admin hooks are mutually exclusive', () => {
+describe('API module isolation — admin and tenant service modules are structurally separate', () => {
 
   it('tenant notification hook module exports only tenant-scoped API functions', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports

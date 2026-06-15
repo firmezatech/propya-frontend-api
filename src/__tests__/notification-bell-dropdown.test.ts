@@ -249,7 +249,7 @@ describe('Empty state text contracts', () => {
 
 // ─── Notification bell state bridge ──────────────────────────────────────────
 
-describe('Admin notifications state → NotificationDropdownState bridge', () => {
+describe('NotificationsState → NotificationDropdownState bridge', () => {
 
   it('idle state maps to idle', () => {
     const adminState = { status: 'idle' as const };

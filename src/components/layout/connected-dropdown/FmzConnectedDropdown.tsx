@@ -27,7 +27,7 @@ import { performFirmezaLogout } from '../../../services/auth/fmz-logout';
 import type { FmzConnectedDropdownItem } from './fmz-connected-dropdown.types';
 import type { FmzConnectedUserSummary } from '../connected-user/fmz-connected-user.types';
 import type { TenantNotificationType } from '../../../features/tenant-portal/domain/fmz-tenant-notifications.types';
-import { useFmzTenantNotifications } from '../../../features/tenant-portal/hooks/fmz-tenant-notifications';
+import { useFmzNotifications } from '../../../features/notifications/hooks/fmz-notifications';
 import { FmzNotificationBellDropdown } from '../notifications/FmzNotificationBellDropdown';
 import type {
   DropdownNotification,
@@ -129,14 +129,14 @@ export function FmzConnectedDropdown({
     }),
   );
 
-  // ── Tenant notification hook — tenant endpoints ONLY ──────────────────────
+  // ── Universal notification hook ───────────────────────────────────────────
   const {
     unreadCount,
     notificationsState,
     fetchNotifications,
     handleMarkAsRead,
     handleMarkAllAsRead,
-  } = useFmzTenantNotifications();
+  } = useFmzNotifications();
 
   useEffect(() => {
     // Backend identity wins; localStorage only fills gaps. Re-runs when the principal
@@ -227,7 +227,7 @@ export function FmzConnectedDropdown({
     router.push(localizeHref(item.href));
   };
 
-  // Bridge useFmzTenantNotifications state → NotificationDropdownState
+  // Bridge NotificationsState → NotificationDropdownState
   const notificationDropdownState: NotificationDropdownState =
     notificationsState.status === 'ready'
       ? { status: 'ready', notifications: notificationsState.notifications }
@@ -248,7 +248,7 @@ export function FmzConnectedDropdown({
         Ajuda
       </button>
 
-      {/* Tenant notification bell — tenant endpoints only */}
+      {/* Notification bell */}
       <FmzNotificationBellDropdown
         isOpen={isNotificationsOpen}
         onToggle={handleNotificationToggle}

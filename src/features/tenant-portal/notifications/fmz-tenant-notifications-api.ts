@@ -38,7 +38,7 @@ export async function fetchTenantNotificationsPage(
   if (category) qs.set('category', category);
 
   const { data } = await firmezaApiClient.get<NotificationsListResponse>(
-    `/tenant/notifications?${qs.toString()}`,
+    `/notifications?${qs.toString()}`,
   );
 
   // Backend does not return total yet — derive from current page length.
@@ -50,30 +50,30 @@ export async function fetchTenantNotificationsPage(
 }
 
 export async function fetchTenantUnreadCount(): Promise<number> {
-  const { data } = await firmezaApiClient.get<UnreadCountResponse>('/tenant/notifications/unread-count');
+  const { data } = await firmezaApiClient.get<UnreadCountResponse>('/notifications/unread-count');
   return data.unreadCount ?? 0;
 }
 
 // ─── Mark as read ─────────────────────────────────────────────────────────────
 
 export async function markTenantNotificationRead(id: string): Promise<void> {
-  await firmezaApiClient.patch(`/tenant/notifications/${encodeURIComponent(id)}/read`);
+  await firmezaApiClient.patch(`/notifications/${encodeURIComponent(id)}/read`);
 }
 
 export async function markAllTenantNotificationsRead(): Promise<void> {
-  await firmezaApiClient.patch('/tenant/notifications/read-all');
+  await firmezaApiClient.patch('/notifications/read-all');
 }
 
 // ─── Dismiss ──────────────────────────────────────────────────────────────────
 
 export async function dismissTenantNotification(id: string): Promise<void> {
-  await firmezaApiClient.patch(`/tenant/notifications/${encodeURIComponent(id)}/dismiss`);
+  await firmezaApiClient.patch(`/notifications/${encodeURIComponent(id)}/dismiss`);
 }
 
 export async function dismissAllTenantNotifications(): Promise<void> {
-  await firmezaApiClient.patch('/tenant/notifications/dismiss-all');
+  await firmezaApiClient.patch('/notifications/dismiss-all');
 }
 
 export async function dismissSelectedTenantNotifications(ids: string[]): Promise<void> {
-  await firmezaApiClient.patch('/tenant/notifications/dismiss-selected', { ids });
+  await firmezaApiClient.patch('/notifications/dismiss-selected', { ids });
 }

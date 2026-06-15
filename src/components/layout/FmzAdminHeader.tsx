@@ -20,14 +20,14 @@ import { fmzCn } from '../../lib/fmz-classnames';
 import { FmzBrandMark } from './FmzBrandMark';
 import { FmzConnectedUserIdentity } from './FmzConnectedUserIdentity';
 import { FmzAdminNotificationBell } from './FmzAdminNotificationBell';
-import type { AdminNotificationsState } from '../../features/admin-notifications/hooks/fmz-admin-notifications';
+import type { NotificationsState } from '../../features/notifications/hooks/fmz-notifications';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export type FmzAdminHeaderProps = {
   locale?: string;
   unreadCount: number;
-  notificationsState: AdminNotificationsState;
+  notificationsState: NotificationsState;
   onFetchNotifications: () => Promise<void>;
   onMarkNotificationAsRead: (id: string) => Promise<void>;
   onMarkAllNotificationsAsRead: () => Promise<void>;

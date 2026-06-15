@@ -23,7 +23,7 @@ import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isSafeInternalPath } from '../../lib/fmz-safe-url';
 import type { AdminNotificationType } from '../../features/admin-notifications/domain/fmz-admin-notifications.types';
-import type { AdminNotificationsState } from '../../features/admin-notifications/hooks/fmz-admin-notifications';
+import type { NotificationsState } from '../../features/notifications/hooks/fmz-notifications';
 import { FmzNotificationBellDropdown } from './notifications/FmzNotificationBellDropdown';
 import type {
   DropdownNotification,
@@ -66,7 +66,7 @@ export function resolveAdminNotificationVisual(type: AdminNotificationType): Not
  * Exhaustive switch — any new status added to AdminNotificationsState must be
  * handled here explicitly; TypeScript will flag the gap at compile time.
  */
-function bridgeToDropdownState(state: AdminNotificationsState): NotificationDropdownState {
+function bridgeToDropdownState(state: NotificationsState): NotificationDropdownState {
   switch (state.status) {
     case 'ready':   return { status: 'ready', notifications: state.notifications };
     case 'error':   return { status: 'error', message: state.message };
@@ -79,7 +79,7 @@ function bridgeToDropdownState(state: AdminNotificationsState): NotificationDrop
 
 type FmzAdminNotificationBellProps = {
   unreadCount: number;
-  notificationsState: AdminNotificationsState;
+  notificationsState: NotificationsState;
   onFetchNotifications: () => Promise<void>;
   onMarkAsRead: (notificationId: string) => Promise<void>;
   onMarkAllAsRead: () => Promise<void>;
@@ -129,7 +129,6 @@ export function FmzAdminNotificationBell({
     }
   }, [onMarkAsRead, closePanel, router]);
 
-  // Bridge AdminNotificationsState → NotificationDropdownState.
   // Exhaustive switch — TypeScript will flag any new status not handled here.
   const dropdownState = bridgeToDropdownState(notificationsState);
 
