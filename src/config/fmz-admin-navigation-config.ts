@@ -1,4 +1,4 @@
-import { Activity, Building2, FileText, Home, LucideIcon, ReceiptText, Receipt, ScanFace, ShieldCheck, SlidersHorizontal, UserRound, Wrench } from 'lucide-react';
+import { Activity, Building2, Coins, FileText, Home, LucideIcon, ReceiptText, Receipt, ScanFace, ShieldCheck, SlidersHorizontal, UserRound, Wrench } from 'lucide-react';
 import { fmzPublicLayoutConfig } from './fmz-public-layout-config';
 import { getPublicEnvValue } from '../lib/fmz-env';
 
@@ -27,6 +27,7 @@ export const fmzAdminPageIconByKey: Record<string, LucideIcon> = {
   'admin.gas': Activity,
   'admin.rent_charges': Receipt,
   'admin.kyc': ScanFace,
+  'admin.token_orders': Coins,
 };
 
 export const fmzAdminNavigationConfig = {
@@ -114,6 +115,14 @@ export const fmzAdminNavigationConfig = {
       href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_KYC_PATH', '/connected/admin-kyc'),
       requiredPermissionKey: 'admin.kyc.users.view',
       icon: ScanFace,
+    },
+    {
+      id: 'admin.token_orders',
+      pageKey: 'admin.token_orders',
+      label: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TOKEN_ORDERS_LABEL', 'Compras de Tokens'),
+      href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TOKEN_ORDERS_PATH', '/connected/admin-token-orders'),
+      requiredPermissionKey: 'admin.token_orders.view',
+      icon: Coins,
     },
   ] satisfies FmzAdminNavigationItem[],
 } as const;
