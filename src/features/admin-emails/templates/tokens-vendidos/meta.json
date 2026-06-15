@@ -1,0 +1,14 @@
+{
+  "id": "tokens-vendidos",
+  "name": "Tokens vendidos",
+  "category": "Pagamento",
+  "badge": "transacional",
+  "subject": "Repasse confirmado — você recebeu R$ {{amount}} pela venda",
+  "fields": [
+    { "id": "name", "label": "Nome da pessoa", "type": "text", "placeholder": "Diana Aguilar", "required": true },
+    { "id": "quantity", "label": "Tokens vendidos", "type": "text", "placeholder": "8", "required": true },
+    { "id": "amount", "label": "Valor líquido (R$)", "type": "text", "placeholder": "717,80", "required": true },
+    { "id": "property", "label": "Nome do imóvel", "type": "text", "placeholder": "Residencial Jardim Aurora · 502", "required": true },
+    { "id": "ctaUrl", "label": "Link da carteira", "type": "url", "placeholder": "https://app.firmezatoken.com.br/carteira", "required": true }
+  ]
+}

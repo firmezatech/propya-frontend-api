@@ -1,0 +1,13 @@
+{
+  "id": "extorno",
+  "name": "Extorno / Reembolso",
+  "category": "Pagamento",
+  "badge": "transacional",
+  "subject": "Não foi possível concluir sua compra — reembolso R$ {{amount}}",
+  "fields": [
+    { "id": "name", "label": "Nome da pessoa", "type": "text", "placeholder": "Diana Aguilar", "required": true },
+    { "id": "amount", "label": "Valor a reembolsar (R$)", "type": "text", "placeholder": "1.000,00", "required": true },
+    { "id": "reason", "label": "Motivo", "type": "text", "placeholder": "Pagamento recusado pela operadora", "required": false },
+    { "id": "ctaUrl", "label": "Link para tentar novamente", "type": "url", "placeholder": "https://app.firmezatoken.com.br/tokens", "required": true }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "aluguel-caiu",
+  "name": "Seu aluguel caiu",
+  "category": "Marketing",
+  "badge": "marketing",
+  "subject": "🎉 Seu aluguel acabou de cair, {{name}}!",
+  "fields": [
+    { "id": "name", "label": "Nome da pessoa", "type": "text", "placeholder": "Diana Aguilar", "required": true },
+    { "id": "amount", "label": "Novo valor do aluguel (R$)", "type": "text", "placeholder": "2.353,76", "required": true },
+    { "id": "month", "label": "Mês de referência", "type": "text", "placeholder": "dezembro/2026", "required": true },
+    { "id": "ctaUrl", "label": "Link da plataforma", "type": "url", "placeholder": "https://app.firmezatoken.com.br", "required": true }
+  ]
+}
