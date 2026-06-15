@@ -125,6 +125,33 @@ function FmzTooltip({ content, placement = 'center' }: { content: string; placem
   );
 }
 
+function ReadOnlyAmountField({
+  label,
+  value,
+  tooltip,
+  tooltipPlacement,
+}: {
+  label: string;
+  value: string;
+  tooltip?: string;
+  tooltipPlacement?: TooltipPlacement;
+}) {
+  return (
+    <div>
+      <span className="mb-1 flex items-center text-[10px] font-semibold uppercase tracking-[0.07em] text-[#9AA3B0]">
+        {label}
+        {tooltip ? <FmzTooltip content={tooltip} placement={tooltipPlacement} /> : null}
+      </span>
+      <div className="flex items-center gap-1.5 rounded-[8px] border-[1.5px] border-[#E8EAF0] bg-[#F7F8FA] px-3 py-2">
+        <span className="text-[12px] font-medium text-[#9AA3B0]">R$</span>
+        <span className="font-sans text-[15px] font-bold text-[#0D1321]">
+          {formatBrl(value).replace(/^R\$\s*/, '')}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export type FmzAdminRentChargeRowProps = {
@@ -229,6 +256,12 @@ export function FmzAdminRentChargeRow({
   }, [charge.amounts]);
 
   const isPendingValidation = charge.status === 'pending_validation';
+
+  const PANEL_TITLE: Record<FmzRentChargeStatus, string> = {
+    pending_validation: 'Validar boleto',
+    open: 'Detalhes do boleto',
+    paid: 'Boleto pago',
+  };
 
   // ── Tooltip content ────────────────────────────────────────────────────────
   const bd = charge.breakdown;
@@ -341,25 +374,23 @@ export function FmzAdminRentChargeRow({
           </div>
         </div>
 
-        {isPendingValidation ? (
-          <ChevronDown
-            size={16}
-            className={fmzCn(
-              'flex-shrink-0 text-[#9AA3B0] transition-transform',
-              isExpanded && 'rotate-180',
-            )}
-          />
-        ) : null}
+        <ChevronDown
+          size={16}
+          className={fmzCn(
+            'flex-shrink-0 text-[#9AA3B0] transition-transform',
+            isExpanded && 'rotate-180',
+          )}
+        />
       </button>
 
       {/* ── Detail panel ── */}
-      {isExpanded && isPendingValidation ? (
+      {isExpanded ? (
         <div className="border-t border-[#E8EAF0]">
           {/* Panel header */}
           <div className="flex items-center justify-between bg-[#0D1321] px-5 py-3.5">
             <div>
               <div className="font-sans text-[13.5px] font-bold text-white">
-                Validar boleto — {charge.tenant.name}
+                {PANEL_TITLE[charge.status]} — {charge.tenant.name}
               </div>
               <div className="mt-0.5 text-[11px] text-white/40">
                 {charge.property.address} · Venc. {charge.dueDate} · {charge.contractCode}
@@ -375,112 +406,199 @@ export function FmzAdminRentChargeRow({
             </button>
           </div>
 
-          {/* Editable fields */}
-          <div className="bg-white p-5">
-            <div className="grid grid-cols-2 gap-4">
-              <EditableAmountField
-                label="Valor dos Tokens"
-                field="tokenPurchase"
-                value={draft.tokenPurchase}
-                hint={calcDiff(draft.tokenPurchase, charge.amounts.tokenPurchase)}
-                tooltip={tooltipTokens}
-                tooltipPlacement="left"
-                onChange={handleFieldChange}
-              />
-              <EditableAmountField
-                label="Aluguel Mensal"
-                field="discountedRent"
-                value={draft.discountedRent}
-                hint={calcDiff(draft.discountedRent, charge.amounts.discountedRent)}
-                tooltip={tooltipDiscountedRent}
-                tooltipPlacement="right"
-                onChange={handleFieldChange}
-              />
-              <EditableAmountField
-                label="Taxa sobre Aluguel"
-                field="platformAdminFee"
-                value={draft.platformAdminFee}
-                hint={calcDiff(draft.platformAdminFee, charge.amounts.platformAdminFee)}
-                tooltip={tooltipPlatformFee}
-                tooltipPlacement="left"
-                onChange={handleFieldChange}
-              />
-              <EditableAmountField
-                label="Taxa sobre Compra de Tokens"
-                field="tokenPurchaseFee"
-                value={draft.tokenPurchaseFee}
-                hint={calcDiff(draft.tokenPurchaseFee, charge.amounts.tokenPurchaseFee)}
-                onChange={handleFieldChange}
-              />
-              <EditableAmountField
-                label="Taxa de Condomínio"
-                field="condominiumFee"
-                value={draft.condominiumFee}
-                hint={calcDiff(draft.condominiumFee, charge.amounts.condominiumFee)}
-                onChange={handleFieldChange}
-              />
-            </div>
+          {isPendingValidation ? (
+            <>
+              {/* Editable fields */}
+              <div className="bg-white p-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <EditableAmountField
+                    label="Valor dos Tokens"
+                    field="tokenPurchase"
+                    value={draft.tokenPurchase}
+                    hint={calcDiff(draft.tokenPurchase, charge.amounts.tokenPurchase)}
+                    tooltip={tooltipTokens}
+                    tooltipPlacement="left"
+                    onChange={handleFieldChange}
+                  />
+                  <EditableAmountField
+                    label="Aluguel Mensal"
+                    field="discountedRent"
+                    value={draft.discountedRent}
+                    hint={calcDiff(draft.discountedRent, charge.amounts.discountedRent)}
+                    tooltip={tooltipDiscountedRent}
+                    tooltipPlacement="right"
+                    onChange={handleFieldChange}
+                  />
+                  <EditableAmountField
+                    label="Taxa sobre Aluguel"
+                    field="platformAdminFee"
+                    value={draft.platformAdminFee}
+                    hint={calcDiff(draft.platformAdminFee, charge.amounts.platformAdminFee)}
+                    tooltip={tooltipPlatformFee}
+                    tooltipPlacement="left"
+                    onChange={handleFieldChange}
+                  />
+                  <EditableAmountField
+                    label="Taxa sobre Compra de Tokens"
+                    field="tokenPurchaseFee"
+                    value={draft.tokenPurchaseFee}
+                    hint={calcDiff(draft.tokenPurchaseFee, charge.amounts.tokenPurchaseFee)}
+                    onChange={handleFieldChange}
+                  />
+                  <EditableAmountField
+                    label="Taxa de Condomínio"
+                    field="condominiumFee"
+                    value={draft.condominiumFee}
+                    hint={calcDiff(draft.condominiumFee, charge.amounts.condominiumFee)}
+                    onChange={handleFieldChange}
+                  />
+                </div>
 
-            {/* Live total bar */}
-            <div className="mt-4 flex items-center justify-between rounded-[10px] bg-[#0D1321] px-4 py-3.5">
-              <div>
-                <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-white/50">
-                  Total a Pagar
-                </div>
-                <div className="mt-0.5 text-[10px] text-white/30">
-                  Vencimento {charge.dueDate}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="font-sans text-[20px] font-extrabold text-white">
-                  {formatBrl(liveTotalStr)}
-                </div>
-                {anyDirtyFromCalc ? (
-                  <div className="text-[10px] font-semibold text-[#F5C842]">
-                    ⚠ valor ajustado manualmente
+                {/* Live total bar */}
+                <div className="mt-4 flex items-center justify-between rounded-[10px] bg-[#0D1321] px-4 py-3.5">
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-white/50">
+                      Total a Pagar
+                    </div>
+                    <div className="mt-0.5 text-[10px] text-white/30">
+                      Vencimento {charge.dueDate}
+                    </div>
                   </div>
-                ) : null}
+                  <div className="text-right">
+                    <div className="font-sans text-[20px] font-extrabold text-white">
+                      {formatBrl(liveTotalStr)}
+                    </div>
+                    {anyDirtyFromCalc ? (
+                      <div className="text-[10px] font-semibold text-[#F5C842]">
+                        ⚠ valor ajustado manualmente
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Panel footer */}
-          <div className="flex items-center justify-between gap-3 border-t border-[#E8EAF0] bg-[#F7F8FA] px-5 py-3.5">
-            <div className="flex items-center gap-1.5 text-[11.5px] text-[#9AA3B0]">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.2" />
-                <path
-                  d="M8 5v3.5M8 10.5v.5"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                />
-              </svg>
-              Será enviado para {charge.tenant.email}
-            </div>
+              {/* Panel footer — editable */}
+              <div className="flex items-center justify-between gap-3 border-t border-[#E8EAF0] bg-[#F7F8FA] px-5 py-3.5">
+                <div className="flex items-center gap-1.5 text-[11.5px] text-[#9AA3B0]">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.2" />
+                    <path
+                      d="M8 5v3.5M8 10.5v.5"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  Será enviado para {charge.tenant.email}
+                </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleRecalculate}
-                className="inline-flex items-center gap-1.5 rounded-[8px] border-[1.5px] border-[#E8EAF0] bg-white px-4 py-2 text-[12.5px] font-medium text-[#5A6478] transition hover:border-[#0D1321] hover:text-[#0D1321]"
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleRecalculate}
+                    className="inline-flex items-center gap-1.5 rounded-[8px] border-[1.5px] border-[#E8EAF0] bg-white px-4 py-2 text-[12.5px] font-medium text-[#5A6478] transition hover:border-[#0D1321] hover:text-[#0D1321]"
+                  >
+                    <RotateCcw size={12} /> Recalcular
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onRequestValidate(charge, draft)}
+                    className="inline-flex items-center gap-1.5 rounded-[8px] bg-[#F5C842] px-5 py-2 font-sans text-[12.5px] font-bold uppercase tracking-[0.04em] text-[#0D1321] shadow-[0_3px_12px_rgba(245,200,66,0.25)] transition hover:-translate-y-0.5 hover:bg-[#C8A020]"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                      <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
+                      <path d="M3 9h18" stroke="currentColor" strokeWidth="1.8" />
+                      <path d="M8 14h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                    Gerar boleto
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Read-only fields */}
+              <div className="bg-white p-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <ReadOnlyAmountField
+                    label="Valor dos Tokens"
+                    value={charge.calculatedAmounts.tokenPurchase}
+                    tooltip={tooltipTokens}
+                    tooltipPlacement="left"
+                  />
+                  <ReadOnlyAmountField
+                    label="Aluguel Mensal"
+                    value={charge.calculatedAmounts.discountedRent}
+                    tooltip={tooltipDiscountedRent}
+                    tooltipPlacement="right"
+                  />
+                  <ReadOnlyAmountField
+                    label="Taxa sobre Aluguel"
+                    value={charge.calculatedAmounts.platformAdminFee}
+                    tooltip={tooltipPlatformFee}
+                    tooltipPlacement="left"
+                  />
+                  <ReadOnlyAmountField
+                    label="Taxa sobre Compra de Tokens"
+                    value={charge.calculatedAmounts.tokenPurchaseFee}
+                  />
+                  <ReadOnlyAmountField
+                    label="Taxa de Condomínio"
+                    value={charge.calculatedAmounts.condominiumFee}
+                  />
+                </div>
+
+                {/* Total bar */}
+                <div className="mt-4 flex items-center justify-between rounded-[10px] bg-[#0D1321] px-4 py-3.5">
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-white/50">
+                      Total Cobrado
+                    </div>
+                    <div className="mt-0.5 text-[10px] text-white/30">
+                      Vencimento {charge.dueDate}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-sans text-[20px] font-extrabold text-white">
+                      {formatBrl(charge.calculatedAmounts.gross)}
+                    </div>
+                    {charge.hasManualAdjustment ? (
+                      <div className="text-[10px] font-semibold text-[#F5C842]">
+                        ⚠ valor ajustado manualmente
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              {/* Panel footer — read-only */}
+              <div
+                className={fmzCn(
+                  'flex items-center gap-1.5 border-t px-5 py-3.5 text-[11.5px]',
+                  charge.status === 'paid'
+                    ? 'border-[#A8DFC4] bg-[#F0FAF5] text-[#1A8C5B]'
+                    : 'border-[#E8EAF0] bg-[#F7F8FA] text-[#9AA3B0]',
+                )}
               >
-                <RotateCcw size={12} /> Recalcular
-              </button>
-              <button
-                type="button"
-                onClick={() => onRequestValidate(charge, draft)}
-                className="inline-flex items-center gap-1.5 rounded-[8px] bg-[#F5C842] px-5 py-2 font-sans text-[12.5px] font-bold uppercase tracking-[0.04em] text-[#0D1321] shadow-[0_3px_12px_rgba(245,200,66,0.25)] transition hover:-translate-y-0.5 hover:bg-[#C8A020]"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
-                  <path d="M3 9h18" stroke="currentColor" strokeWidth="1.8" />
-                  <path d="M8 14h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-                Gerar boleto
-              </button>
-            </div>
-          </div>
+                {charge.status === 'paid' ? (
+                  <Check size={12} />
+                ) : (
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.2" />
+                    <path
+                      d="M8 5v3.5M8 10.5v.5"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                )}
+                {charge.status === 'paid'
+                  ? `Pagamento confirmado · ${charge.tenant.email}`
+                  : `Boleto enviado para ${charge.tenant.email}`}
+              </div>
+            </>
+          )}
         </div>
       ) : null}
     </div>
