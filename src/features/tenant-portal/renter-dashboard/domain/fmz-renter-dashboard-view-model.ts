@@ -7,13 +7,12 @@ const DEFAULT_REFERENCE_MONTH = 'Dezembro 2025';
 const DEFAULT_NEXT_MILESTONE_PERCENTAGE = 10;
 
 const JOURNEY_MILESTONES = [
-  { percentage: 0, visualPosition: 0, caption: 'início' },
-  { percentage: 5, visualPosition: 22, caption: 'alcançado' },
-  { percentage: 10, visualPosition: 44, caption: 'próxima meta' },
-  { percentage: 25, visualPosition: 58, caption: '1/4 do imóvel' },
-  { percentage: 50, visualPosition: 72, caption: 'meio caminho' },
-  { percentage: 75, visualPosition: 86, caption: 'reta final' },
-  { percentage: 100, visualPosition: 100, caption: 'casa própria' },
+  { percentage: 0,   caption: 'início' },
+  { percentage: 10,  caption: 'próxima meta' },
+  { percentage: 25,  caption: '1/4 do imóvel' },
+  { percentage: 50,  caption: 'meio caminho' },
+  { percentage: 75,  caption: 'reta final' },
+  { percentage: 100, caption: 'casa própria' },
 ] as const;
 
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
@@ -30,16 +29,6 @@ const numberFormatter = new Intl.NumberFormat('pt-BR', {
 function normalizePercentage(value?: number | null): number {
   if (typeof value !== 'number' || Number.isNaN(value)) return 0;
   return Math.min(Math.max(value, 0), 100);
-}
-
-function parseBrazilianCurrency(value?: string | null): number {
-  if (!value) return 0;
-  const normalized = value
-    .replace(/[^\d,.-]/g, '')
-    .replace(/\./g, '')
-    .replace(',', '.');
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function formatCurrency(value: number): string {
@@ -60,19 +49,7 @@ function normalizeInvoiceLineLabel(label: string, key: string): string {
 }
 
 function getJourneyVisualPosition(percentage: number): number {
-  const value = normalizePercentage(percentage);
-
-  for (let index = 0; index < JOURNEY_MILESTONES.length - 1; index += 1) {
-    const currentMilestone = JOURNEY_MILESTONES[index];
-    const nextMilestone = JOURNEY_MILESTONES[index + 1];
-
-    if (value >= currentMilestone.percentage && value <= nextMilestone.percentage) {
-      const ratio = (value - currentMilestone.percentage) / (nextMilestone.percentage - currentMilestone.percentage);
-      return currentMilestone.visualPosition + ratio * (nextMilestone.visualPosition - currentMilestone.visualPosition);
-    }
-  }
-
-  return 100;
+  return normalizePercentage(percentage);
 }
 
 function buildJourneyMilestones(ownershipPercentage: number, nextMilestonePercentage: number) {
@@ -80,7 +57,7 @@ function buildJourneyMilestones(ownershipPercentage: number, nextMilestonePercen
     percentage: milestone.percentage,
     label: `${numberFormatter.format(milestone.percentage)}%`,
     caption: milestone.caption,
-    visualPosition: milestone.visualPosition,
+    visualPosition: milestone.percentage,
     status: milestone.percentage < ownershipPercentage
       ? 'done' as const
       : milestone.percentage === nextMilestonePercentage
@@ -89,43 +66,45 @@ function buildJourneyMilestones(ownershipPercentage: number, nextMilestonePercen
   }));
 }
 
-function buildInvoiceLinesFromSummary(summary: FmzTenantMonthlySummary | null | undefined): FmzRenterDashboardViewModel['invoice']['lines'] {
-  if (!summary) return [];
+type InvoiceLine = FmzRenterDashboardViewModel['invoice']['lines'][number];
 
-  if (summary.lines && summary.lines.length > 0) {
-    return summary.lines.map((line) => ({
-      key: line.key,
-      label: normalizeInvoiceLineLabel(line.label, line.key),
-      value: formatCurrency(line.amount),
-      tone: line.key === 'current-rent' || line.key === 'rent-with-discount' || line.key === 'discounted_rent' ? 'success' as const
-        : line.key === 'scheduled-token-purchase' || line.key === 'token-purchase' || line.key === 'scheduled_token_purchase' ? 'warning' as const
-        : undefined,
-    }));
-  }
+function resolveInvoiceLineTone(key: string): InvoiceLine['tone'] {
+  if (key === 'current-rent' || key === 'rent-with-discount' || key === 'discounted_rent') return 'success';
+  if (key === 'scheduled-token-purchase' || key === 'token-purchase' || key === 'scheduled_token_purchase') return 'warning';
+  return undefined;
+}
 
-  const lines: FmzRenterDashboardViewModel['invoice']['lines'] = [];
+function buildInvoiceLinesFromStructuredLines(lines: FmzTenantMonthlySummary['lines']): InvoiceLine[] {
+  return lines.map((line) => ({
+    key: line.key,
+    label: normalizeInvoiceLineLabel(line.label, line.key),
+    value: formatCurrency(line.amount),
+    tone: resolveInvoiceLineTone(line.key),
+  }));
+}
+
+function buildInvoiceLinesFromLegacyFields(summary: FmzTenantMonthlySummary): InvoiceLine[] {
   const rentWithDiscount = summary.discountedRentAmount ?? summary.rentWithDiscountAmount ?? 0;
   const adminFee = summary.rentalAdminFeeAmount ?? 0;
   const condominium = summary.condominiumFeeAmount ?? summary.condominiumAmount ?? 0;
   const tokenPurchase = summary.scheduledTokenPurchaseAmount ?? 0;
   const tokenFee = summary.tokenFeeAmount ?? summary.tokenPurchaseFeeAmount ?? 0;
 
-  lines.push({ key: 'current-rent', label: 'Aluguel', value: formatCurrency(rentWithDiscount), tone: 'success' });
-
-  if (adminFee > 0) {
-    lines.push({ key: 'rent-fee', label: 'Taxa Adm Aluguel', value: formatCurrency(adminFee) });
-  }
-  if (condominium > 0) {
-    lines.push({ key: 'condominium', label: 'Condomínio', value: formatCurrency(condominium) });
-  }
-  if (tokenPurchase > 0) {
-    lines.push({ key: 'scheduled-token-purchase', label: 'Compra programada de tokens', value: formatCurrency(tokenPurchase), tone: 'warning' });
-  }
-  if (tokenFee > 0) {
-    lines.push({ key: 'token-purchase-fee', label: 'Taxa de compra de tokens', value: formatCurrency(tokenFee) });
-  }
+  const lines: InvoiceLine[] = [
+    { key: 'current-rent', label: 'Aluguel', value: formatCurrency(rentWithDiscount), tone: 'success' },
+  ];
+  if (adminFee > 0)      lines.push({ key: 'rent-fee',              label: 'Taxa Adm Aluguel',              value: formatCurrency(adminFee) });
+  if (condominium > 0)   lines.push({ key: 'condominium',           label: 'Condomínio',                   value: formatCurrency(condominium) });
+  if (tokenPurchase > 0) lines.push({ key: 'scheduled-token-purchase', label: 'Compra programada de tokens', value: formatCurrency(tokenPurchase), tone: 'warning' });
+  if (tokenFee > 0)      lines.push({ key: 'token-purchase-fee',    label: 'Taxa de compra de tokens',      value: formatCurrency(tokenFee) });
 
   return lines;
+}
+
+function buildInvoiceLinesFromSummary(summary: FmzTenantMonthlySummary | null | undefined): InvoiceLine[] {
+  if (!summary) return [];
+  if (summary.lines && summary.lines.length > 0) return buildInvoiceLinesFromStructuredLines(summary.lines);
+  return buildInvoiceLinesFromLegacyFields(summary);
 }
 
 function computeDaysUntilDue(dueDate?: string | null): number | null {

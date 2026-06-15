@@ -1,4 +1,4 @@
-import { Activity, Building2, Coins, FileText, Home, LucideIcon, ReceiptText, Receipt, ScanFace, ShieldCheck, SlidersHorizontal, UserRound, Wrench } from 'lucide-react';
+import { Activity, Building2, Coins, FileText, Home, LucideIcon, Mail, ReceiptText, Receipt, ScanFace, ShieldCheck, SlidersHorizontal, UserRound, Wrench } from 'lucide-react';
 import { fmzPublicLayoutConfig } from './fmz-public-layout-config';
 import { getPublicEnvValue } from '../lib/fmz-env';
 
@@ -28,6 +28,8 @@ export const fmzAdminPageIconByKey: Record<string, LucideIcon> = {
   'admin.rent_charges': Receipt,
   'admin.kyc': ScanFace,
   'admin.token_orders': Coins,
+  'admin.email_sending': Mail,
+  'admin.email_logs': Mail,
 };
 
 export const fmzAdminNavigationConfig = {
@@ -123,6 +125,22 @@ export const fmzAdminNavigationConfig = {
       href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_TOKEN_ORDERS_PATH', '/connected/admin-token-orders'),
       requiredPermissionKey: 'admin.token_orders.view',
       icon: Coins,
+    },
+    {
+      id: 'admin.email_sending',
+      pageKey: 'admin.email_sending',
+      label: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_EMAIL_SENDING_LABEL', 'E-mails'),
+      href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_EMAIL_SENDING_PATH', '/connected/admin-emails'),
+      requiredPermissionKey: 'admin.emails.send',
+      icon: Mail,
+    },
+    {
+      id: 'admin.email_logs',
+      pageKey: 'admin.email_logs',
+      label: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_EMAIL_LOGS_LABEL', 'Histórico de E-mails'),
+      href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_EMAIL_LOGS_PATH', '/connected/admin-email-logs'),
+      requiredPermissionKey: 'admin.emails.send',
+      icon: Mail,
     },
   ] satisfies FmzAdminNavigationItem[],
 } as const;
