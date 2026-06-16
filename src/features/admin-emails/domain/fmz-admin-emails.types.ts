@@ -44,7 +44,6 @@ export type FmzAdminEmailComposerActions = {
   setRecipients: (recipients: FmzAdminEmailRecipient[]) => void;
   setVar: (fieldId: string, value: string) => void;
   setSubject: (value: string) => void;
-  refreshPreview: () => void;
   setOpenSection: (section: FmzAdminEmailComposerSection | null) => void;
   openSendModal: () => void;
   closeSendModal: () => void;

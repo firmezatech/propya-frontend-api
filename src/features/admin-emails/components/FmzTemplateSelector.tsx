@@ -12,17 +12,23 @@ type Props = {
 };
 
 const BADGE_STYLES: Record<string, string> = {
-  transacional: 'bg-blue-500/15 text-blue-300',
-  marketing:    'bg-purple-500/15 text-purple-300',
-  sistema:      'bg-slate-500/15 text-slate-300',
+  transacional: 'bg-blue-50 text-blue-600',
+  marketing:    'bg-purple-50 text-purple-600',
+  sistema:      'bg-slate-100 text-fmz-text-muted',
+};
+
+const BADGE_LABELS: Record<string, string> = {
+  transacional: 'Trans.',
+  marketing:    'Mkt.',
+  sistema:      'Sis.',
 };
 
 export function FmzTemplateSelector({ templates, loading, selected, onSelect }: Props) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <div className="flex flex-col gap-2 py-1">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-20 animate-pulse rounded-xl bg-white/5" />
+          <div key={i} className="h-12 animate-pulse rounded-lg bg-fmz-border-light" />
         ))}
       </div>
     );
@@ -30,14 +36,14 @@ export function FmzTemplateSelector({ templates, loading, selected, onSelect }: 
 
   if (!templates.length) {
     return (
-      <p className="py-4 text-center text-sm text-fmz-neutral-400">
+      <p className="py-6 text-center text-sm text-fmz-text-hint">
         Nenhum template disponível.
       </p>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+    <div className="flex flex-col gap-1 py-1">
       {templates.map((template) => {
         const isSelected = selected?.id === template.id;
         return (
@@ -46,25 +52,30 @@ export function FmzTemplateSelector({ templates, loading, selected, onSelect }: 
             type="button"
             onClick={() => onSelect(template)}
             className={fmzCn(
-              'flex flex-col gap-1 rounded-xl border p-4 text-left transition-colors',
+              'flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors',
               isSelected
-                ? 'border-fmz-teal bg-fmz-teal/10 text-fmz-teal'
-                : 'border-white/10 bg-white/5 text-fmz-neutral-200 hover:border-white/20 hover:bg-white/10',
+                ? 'border-fmz-gold bg-[#F5C842]/10 text-fmz-navy'
+                : 'border-fmz-border-light bg-fmz-page text-fmz-text-primary hover:border-fmz-border-mid hover:bg-[#E8EAF0]/60',
             )}
           >
-            <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 shrink-0" />
-              <span className="text-sm font-medium leading-tight">{template.name}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-fmz-neutral-400">{template.category}</span>
+            <Mail
+              className={fmzCn(
+                'h-4 w-4 shrink-0',
+                isSelected ? 'text-fmz-gold-dark' : 'text-fmz-text-hint',
+              )}
+            />
+            <span className="min-w-0 flex-1 truncate text-sm font-medium">
+              {template.name}
+            </span>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <span className="text-xs text-fmz-text-hint">{template.category}</span>
               <span
                 className={fmzCn(
-                  'rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide',
+                  'rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
                   BADGE_STYLES[template.badge] ?? BADGE_STYLES.sistema,
                 )}
               >
-                {template.badge}
+                {BADGE_LABELS[template.badge] ?? template.badge}
               </span>
             </div>
           </button>

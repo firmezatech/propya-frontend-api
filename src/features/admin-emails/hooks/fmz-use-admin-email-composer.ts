@@ -25,10 +25,6 @@ function allRequiredVarsFilled(template: FmzEmailTemplateMeta, vars: Record<stri
   return template.fields.every((f) => !f.required || (vars[f.id] ?? '').trim() !== '');
 }
 
-// ─── Initial state ────────────────────────────────────────────────────────────
-
-const INITIAL_VARS: Record<string, string> = {};
-
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
@@ -36,7 +32,7 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState<FmzEmailTemplateMeta | null>(null);
   const [recipients, setRecipientsState]        = useState<FmzAdminEmailRecipient[]>([]);
-  const [vars, setVarsState]                    = useState<Record<string, string>>(INITIAL_VARS);
+  const [vars, setVarsState]                    = useState<Record<string, string>>({});
   const [subject, setSubjectState]              = useState('');
   const [previewHtml, setPreviewHtml]           = useState('');
   const [previewLoading, setPreviewLoading]     = useState(false);
@@ -47,6 +43,7 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
   const [openSection, setOpenSectionState]      = useState<FmzAdminEmailComposerSection | null>('template');
 
   const previewGenerationRef = useRef(0);
+  const previewDebounceRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Load templates on mount ─────────────────────────────────────────────────
 
@@ -60,13 +57,45 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
     return () => { cancelled = true; };
   }, []);
 
+  // ── Auto-preview with 280 ms debounce ──────────────────────────────────────
+
+  useEffect(() => {
+    if (!selectedTemplate) return;
+    if (!allRequiredVarsFilled(selectedTemplate, vars)) return;
+
+    if (previewDebounceRef.current) clearTimeout(previewDebounceRef.current);
+
+    previewDebounceRef.current = setTimeout(() => {
+      const generation = ++previewGenerationRef.current;
+      setPreviewLoading(true);
+      fetchTemplatePreview(selectedTemplate.id, vars)
+        .then((html) => {
+          if (generation !== previewGenerationRef.current) return;
+          setPreviewHtml(html);
+        })
+        .catch(() => {
+          if (generation !== previewGenerationRef.current) return;
+          setPreviewHtml('');
+        })
+        .finally(() => {
+          if (generation === previewGenerationRef.current) setPreviewLoading(false);
+        });
+    }, 280);
+
+    return () => {
+      if (previewDebounceRef.current) clearTimeout(previewDebounceRef.current);
+    };
+  }, [selectedTemplate, vars]);
+
   // ── Actions ─────────────────────────────────────────────────────────────────
 
   const selectTemplate = useCallback((template: FmzEmailTemplateMeta) => {
+    ++previewGenerationRef.current;
     setSelectedTemplate(template);
-    setVarsState(INITIAL_VARS);
+    setVarsState({});
     setSubjectState(template.subject);
     setPreviewHtml('');
+    setPreviewLoading(false);
     setOpenSectionState('recipients');
   }, []);
 
@@ -81,27 +110,6 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
   const setSubject = useCallback((value: string) => {
     setSubjectState(value);
   }, []);
-
-  const refreshPreview = useCallback(() => {
-    if (!selectedTemplate) return;
-    if (!allRequiredVarsFilled(selectedTemplate, vars)) return;
-
-    const generation = ++previewGenerationRef.current;
-    setPreviewLoading(true);
-
-    fetchTemplatePreview(selectedTemplate.id, vars)
-      .then((html) => {
-        if (generation !== previewGenerationRef.current) return;
-        setPreviewHtml(html);
-      })
-      .catch(() => {
-        if (generation !== previewGenerationRef.current) return;
-        setPreviewHtml('');
-      })
-      .finally(() => {
-        if (generation === previewGenerationRef.current) setPreviewLoading(false);
-      });
-  }, [selectedTemplate, vars]);
 
   const setOpenSection = useCallback((section: FmzAdminEmailComposerSection | null) => {
     setOpenSectionState(section);
@@ -140,9 +148,10 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
   }, [selectedTemplate, recipients, vars, subject]);
 
   const reset = useCallback(() => {
+    ++previewGenerationRef.current;
     setSelectedTemplate(null);
     setRecipientsState([]);
-    setVarsState(INITIAL_VARS);
+    setVarsState({});
     setSubjectState('');
     setPreviewHtml('');
     setPreviewLoading(false);
@@ -171,7 +180,6 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
     setRecipients,
     setVar,
     setSubject,
-    refreshPreview,
     setOpenSection,
     openSendModal,
     closeSendModal,
