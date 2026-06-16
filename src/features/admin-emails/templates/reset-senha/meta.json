@@ -5,7 +5,6 @@
   "badge": "transacional",
   "subject": "Redefinir sua senha na FirmezaToken",
   "fields": [
-    { "id": "name", "label": "Nome da pessoa", "type": "text", "placeholder": "Diana Aguilar", "required": true },
-    { "id": "ctaUrl", "label": "Link de redefinição", "type": "url", "placeholder": "https://app.firmezatoken.com.br/reset?t=...", "required": true }
+    { "id": "name", "label": "Nome da pessoa", "type": "text", "placeholder": "Diana Aguilar", "required": true }
   ]
 }

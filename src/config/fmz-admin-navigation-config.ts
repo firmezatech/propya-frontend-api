@@ -30,6 +30,7 @@ export const fmzAdminPageIconByKey: Record<string, LucideIcon> = {
   'admin.token_orders': Coins,
   'admin.email_sending': Mail,
   'admin.email_logs': Mail,
+  'admin.invites': Mail,
 };
 
 export const fmzAdminNavigationConfig = {
@@ -140,6 +141,14 @@ export const fmzAdminNavigationConfig = {
       label: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_EMAIL_LOGS_LABEL', 'Histórico de E-mails'),
       href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_EMAIL_LOGS_PATH', '/connected/admin-email-logs'),
       requiredPermissionKey: 'admin.emails.list',
+      icon: Mail,
+    },
+    {
+      id: 'admin.invites',
+      pageKey: 'admin.invites',
+      label: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_INVITES_LABEL', 'Convites de Locação'),
+      href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_INVITES_PATH', '/connected/admin-invites'),
+      requiredPermissionKey: 'admin.invites.manage',
       icon: Mail,
     },
   ] satisfies FmzAdminNavigationItem[],

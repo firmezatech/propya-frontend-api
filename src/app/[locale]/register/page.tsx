@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { FmzRegisterPage } from '../../../features/auth-access/register/FmzRegisterPage';
 
 export const metadata: Metadata = {
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function RegisterRoute() {
-  return <FmzRegisterPage />;
+  return (
+    <Suspense fallback={null}>
+      <FmzRegisterPage />
+    </Suspense>
+  );
 }

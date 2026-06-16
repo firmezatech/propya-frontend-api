@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const TEMPLATES_DIR = path.join(process.cwd(), 'src', 'features', 'admin-emails', 'templates');
+const PARTIALS_DIR = path.join(process.cwd(), 'src', 'features', 'admin-emails', 'partials');
 
 const getValidTemplateIds = (): string[] => {
   try {
@@ -25,9 +26,19 @@ const substituteVars = (html: string, vars: Record<string, string>): string =>
     html,
   );
 
+const PARTIAL_TAG_PATTERN = /\{\{partial:([a-z-]+)(?::([^}]*))?\}\}/g;
+
+const resolvePartials = (html: string): string =>
+  html.replace(PARTIAL_TAG_PATTERN, (_match, name: string, label?: string) => {
+    const partialPath = path.join(PARTIALS_DIR, `${name}.html`);
+    const partialHtml = fs.readFileSync(partialPath, 'utf-8');
+    return label === undefined ? partialHtml : partialHtml.replaceAll('{{label}}', label);
+  });
+
 const loadTemplateHtml = (id: string): string => {
   const templatePath = path.join(TEMPLATES_DIR, id, 'template.html');
-  return fs.readFileSync(templatePath, 'utf-8');
+  const raw = fs.readFileSync(templatePath, 'utf-8');
+  return resolvePartials(raw);
 };
 
 export async function POST(

@@ -21,6 +21,25 @@ export type FmzAdminEmailRecipient = {
   email: string;
 };
 
+// ─── Personalized vs. generic templates (D-5) ──────────────────────────────────
+// "Personalized" templates carry per-person data (financial values, property data, or an
+// individual action link) — sending one HTML to a batch would apply one person's data to
+// everyone, so the composer restricts selection to exactly 1 recipient. "Generic" templates
+// only vary by name (or not at all) — multi-recipient `to[]` with one shared HTML is safe.
+
+export const FMZ_PERSONALIZED_EMAIL_TEMPLATE_IDS = [
+  'boleto',
+  'tokens-adquiridos',
+  'tokens-vendidos',
+  'extorno',
+  'aluguel-caiu',
+  'invite',
+  'reset-senha',
+] as const;
+
+export const isPersonalizedEmailTemplate = (templateId: string): boolean =>
+  (FMZ_PERSONALIZED_EMAIL_TEMPLATE_IDS as readonly string[]).includes(templateId);
+
 export type FmzAdminEmailComposerSection = 'template' | 'recipients' | 'fields';
 
 export type FmzAdminEmailComposerState = {

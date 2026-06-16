@@ -20,6 +20,9 @@ const buildRegisterPayload = (data: RegisterFormData): RegisterApiPayload => ({
   registrationIntent: data.registrationIntent || 'coOwner',
   acceptedTerms: true,
   acceptedPrivacyPolicy: true,
+  // D-14 / AE-13: optional, best-effort on the backend — omitted entirely when absent
+  // rather than sent as an empty string.
+  ...(data.inviteId ? { inviteId: data.inviteId } : {}),
 });
 
 const recordOf = (value: unknown): Record<string, unknown> =>

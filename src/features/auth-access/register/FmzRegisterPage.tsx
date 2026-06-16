@@ -18,6 +18,7 @@ import {
   TrendingUp,
   User,
 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { useRouter } from '../../../i18n/navigation';
 import { FmzAuthHeader } from '../../../components/layout';
 import { registerUser } from './fmz-register-api';
@@ -110,8 +111,12 @@ function ReviewItem({ icon, title, value, onEdit, mono }: { icon: ReactNode; tit
 
 export function FmzRegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // D-14 / AE-13: carries no other behavior on this page — does not pre-fill any other
+  // field, only forwarded as `inviteId` in the register payload (best-effort on the backend).
+  const inviteId = searchParams.get('invite') || undefined;
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<RegisterFormData>(INITIAL_FORM_DATA);
+  const [formData, setFormData] = useState<RegisterFormData>({ ...INITIAL_FORM_DATA, inviteId });
   const [errors, setErrors] = useState<RegisterAllErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);

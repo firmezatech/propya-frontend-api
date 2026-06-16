@@ -77,6 +77,91 @@ export const sendAdminEmail = async (payload: FmzSendAdminEmailPayload): Promise
   await firmezaApiClient.post('/admin/emails/send', payload);
 };
 
+// ─── Password reset link (D-13 / AE-12, backend API) ─────────────────────────
+
+export type FmzPasswordResetLink = {
+  resetUrl: string;
+  expiresAt: string;
+};
+
+export const fetchPasswordResetLink = async (userId: string): Promise<FmzPasswordResetLink> => {
+  const { data } = await firmezaApiClient.post(
+    `/admin/users/${encodeURIComponent(userId)}/password-reset-link`,
+  );
+  const body = recordOf(data);
+  return {
+    resetUrl:  str(body.resetUrl),
+    expiresAt: str(body.expiresAt),
+  };
+};
+
+// ─── Tenant invites (D-14 / AE-13, backend API) ──────────────────────────────
+
+export type FmzCreateInvitePayload = {
+  email: string;
+  propertySnapshot: Record<string, string>;
+};
+
+export type FmzInviteLink = {
+  inviteId: string;
+  inviteUrl: string;
+  expiresAt: string;
+};
+
+export const createInvite = async (payload: FmzCreateInvitePayload): Promise<FmzInviteLink> => {
+  const { data } = await firmezaApiClient.post('/admin/invites', payload);
+  const body = recordOf(data);
+  return {
+    inviteId:  str(body.inviteId),
+    inviteUrl: str(body.inviteUrl),
+    expiresAt: str(body.expiresAt),
+  };
+};
+
+export type FmzTenantInvite = {
+  id: string;
+  invitedEmail: string;
+  propertySnapshot: Record<string, string>;
+  status: 'pending' | 'accepted' | 'expired';
+  createdAt: string;
+  expiresAt: string;
+  acceptedAt: string | null;
+};
+
+export type FmzFetchInvitesFilters = {
+  page?: number;
+  limit?: number;
+};
+
+const normalizeTenantInvite = (raw: unknown): FmzTenantInvite => {
+  const r = recordOf(raw);
+  const status = str(r.status, 'pending');
+  return {
+    id:               str(r.id),
+    invitedEmail:     str(r.invited_email),
+    propertySnapshot: recordOf(r.property_snapshot) as Record<string, string>,
+    status:           status === 'accepted' || status === 'expired' ? status : 'pending',
+    createdAt:        str(r.created_at),
+    expiresAt:        str(r.expires_at),
+    acceptedAt:       typeof r.accepted_at === 'string' ? r.accepted_at : null,
+  };
+};
+
+export const fetchInvites = async (
+  filters: FmzFetchInvitesFilters = {},
+): Promise<{ invites: FmzTenantInvite[]; total: number }> => {
+  const params = new URLSearchParams();
+  if (filters.page  !== undefined) params.set('page',  String(filters.page));
+  if (filters.limit !== undefined) params.set('limit', String(filters.limit));
+
+  const { data } = await firmezaApiClient.get(`/admin/invites?${params.toString()}`);
+  const body = recordOf(data);
+  return {
+    invites: arr<unknown>(body.invites).map(normalizeTenantInvite),
+    total:   typeof body.total === 'number' ? body.total : 0,
+  };
+};
+
 // ─── Email logs (backend API) ─────────────────────────────────────────────────
 
 export type FmzEmailLog = {

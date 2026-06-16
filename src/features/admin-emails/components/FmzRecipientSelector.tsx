@@ -9,6 +9,8 @@ import type { FmzAdminEmailRecipient } from '../domain/fmz-admin-emails.types';
 type Props = {
   selected: FmzAdminEmailRecipient[];
   onSelect: (recipients: FmzAdminEmailRecipient[]) => void;
+  /** Caps how many recipients can be selected at once. `1` = personalized templates (D-5). `undefined` = no cap. */
+  maxRecipients?: number;
 };
 
 type RecipientTab = 'usuario' | 'imovel' | 'plataforma';
@@ -67,7 +69,7 @@ function RecipientChips({
 
 // ─── Por usuário tab ──────────────────────────────────────────────────────────
 
-function TabUsuario({ selected, onSelect }: Props) {
+function TabUsuario({ selected, onSelect, maxRecipients }: Props) {
   const [query, setQuery]             = useState('');
   const [results, setResults]         = useState<FmzAdminEmailRecipient[]>([]);
   const [searching, setSearching]     = useState(false);
@@ -100,13 +102,15 @@ function TabUsuario({ selected, onSelect }: Props) {
   }, [query, fetchUsers]);
 
   const selectedIds = new Set(selected.map((r) => r.id));
+  const atCap = maxRecipients !== undefined && selected.length >= maxRecipients;
 
   const toggle = (r: FmzAdminEmailRecipient) => {
-    onSelect(
-      selectedIds.has(r.id)
-        ? selected.filter((s) => s.id !== r.id)
-        : [...selected, r],
-    );
+    if (selectedIds.has(r.id)) {
+      onSelect(selected.filter((s) => s.id !== r.id));
+      return;
+    }
+    // Single-recipient templates (D-5): selecting a new person replaces the current one.
+    onSelect(maxRecipients === 1 ? [r] : [...selected, r]);
   };
 
   const addExternal = () => {
@@ -116,7 +120,8 @@ function TabUsuario({ selected, onSelect }: Props) {
       setExtInput('');
       return;
     }
-    onSelect([...selected, { id: `ext:${email}`, name: '', email }]);
+    const external = { id: `ext:${email}`, name: '', email };
+    onSelect(maxRecipients === 1 ? [external] : [...selected, external]);
     setExtInput('');
   };
 
@@ -124,6 +129,12 @@ function TabUsuario({ selected, onSelect }: Props) {
 
   return (
     <div className="flex flex-col gap-3">
+      {maxRecipients === 1 && (
+        <p className="rounded-lg bg-[#F5C842]/10 px-3 py-2 text-xs text-fmz-navy">
+          Este template é personalizado — selecione apenas 1 destinatário por envio.
+        </p>
+      )}
+
       {/* External email input */}
       <div className="flex gap-2">
         <input
@@ -164,16 +175,19 @@ function TabUsuario({ selected, onSelect }: Props) {
         <ul className="max-h-40 overflow-y-auto rounded-lg border border-fmz-border-light bg-fmz-card divide-y divide-fmz-border-light">
           {results.map((user) => {
             const isSel = selectedIds.has(user.id);
+            const isDisabled = !isSel && atCap && maxRecipients !== 1;
             return (
               <li key={user.id}>
                 <button
                   type="button"
                   onClick={() => toggle(user)}
+                  disabled={isDisabled}
                   className={fmzCn(
                     'flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors',
                     isSel
                       ? 'bg-[#F5C842]/10 text-fmz-navy'
                       : 'text-fmz-text-primary hover:bg-fmz-page',
+                    isDisabled && 'cursor-not-allowed opacity-40',
                   )}
                 >
                   <UserRound className="h-3.5 w-3.5 shrink-0 text-fmz-text-hint" />
@@ -310,33 +324,39 @@ function TabPlataforma({ selected, onSelect }: Props) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function FmzRecipientSelector({ selected, onSelect }: Props) {
+export function FmzRecipientSelector({ selected, onSelect, maxRecipients }: Props) {
   const [activeTab, setActiveTab] = useState<RecipientTab>('usuario');
+  const isPersonalized = maxRecipients === 1;
 
   return (
     <div className="flex flex-col gap-3">
       {/* Tab bar */}
       <div className="flex gap-0.5 rounded-lg border border-fmz-border-light bg-fmz-page p-0.5">
-        {TABS.map((tab) => (
-          <button
-            key={tab.value}
-            type="button"
-            onClick={() => setActiveTab(tab.value)}
-            className={fmzCn(
-              'flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors',
-              activeTab === tab.value
-                ? 'border border-fmz-border-light bg-fmz-card text-fmz-navy shadow-sm'
-                : 'text-fmz-text-muted hover:text-fmz-text-primary',
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {TABS.map((tab) => {
+          const disabled = isPersonalized && tab.value === 'plataforma';
+          return (
+            <button
+              key={tab.value}
+              type="button"
+              onClick={() => setActiveTab(tab.value)}
+              disabled={disabled}
+              className={fmzCn(
+                'flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors',
+                activeTab === tab.value
+                  ? 'border border-fmz-border-light bg-fmz-card text-fmz-navy shadow-sm'
+                  : 'text-fmz-text-muted hover:text-fmz-text-primary',
+                disabled && 'cursor-not-allowed opacity-40',
+              )}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
-      {activeTab === 'usuario'    && <TabUsuario    selected={selected} onSelect={onSelect} />}
+      {activeTab === 'usuario'    && <TabUsuario    selected={selected} onSelect={onSelect} maxRecipients={maxRecipients} />}
       {activeTab === 'imovel'     && <TabImovel />}
-      {activeTab === 'plataforma' && <TabPlataforma selected={selected} onSelect={onSelect} />}
+      {activeTab === 'plataforma' && !isPersonalized && <TabPlataforma selected={selected} onSelect={onSelect} />}
     </div>
   );
 }

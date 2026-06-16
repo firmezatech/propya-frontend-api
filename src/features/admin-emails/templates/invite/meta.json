@@ -10,7 +10,6 @@
     { "id": "address",  "label": "Endereço",             "type": "text", "placeholder": "Rua das Flores, 123 — Vila Mariana, SP",    "required": true },
     { "id": "rent",     "label": "Valor do aluguel (R$)","type": "text", "placeholder": "2.800,00",                                  "required": true },
     { "id": "owner",    "label": "Nome do proprietário", "type": "text", "placeholder": "Carlos Mendes",                             "required": true },
-    { "id": "expiry",   "label": "Validade do convite",  "type": "text", "placeholder": "30 de junho de 2026",                      "required": true },
-    { "id": "ctaUrl",   "label": "Link do convite",      "type": "url",  "placeholder": "https://app.firmezatoken.com.br/invite?t=...", "required": true }
+    { "id": "expiry",   "label": "Validade do convite",  "type": "text", "placeholder": "30 de junho de 2026",                      "required": true }
   ]
 }

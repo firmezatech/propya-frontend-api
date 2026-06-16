@@ -8,7 +8,7 @@ import { FmzRecipientSelector } from './FmzRecipientSelector';
 import { FmzFieldsCustomizer } from './FmzFieldsCustomizer';
 import { FmzEmailPreviewPanel } from './FmzEmailPreviewPanel';
 import { FmzSendConfirmModal } from './FmzSendConfirmModal';
-import type { FmzAdminEmailComposerSection } from '../domain/fmz-admin-emails.types';
+import { isPersonalizedEmailTemplate, type FmzAdminEmailComposerSection } from '../domain/fmz-admin-emails.types';
 
 // ─── Accordion section ────────────────────────────────────────────────────────
 
@@ -146,6 +146,11 @@ export function FmzAdminEmailComposerPage() {
               <FmzRecipientSelector
                 selected={hook.recipients}
                 onSelect={hook.setRecipients}
+                maxRecipients={
+                  hook.selectedTemplate && isPersonalizedEmailTemplate(hook.selectedTemplate.id)
+                    ? 1
+                    : undefined
+                }
               />
             </AccordionSection>
 

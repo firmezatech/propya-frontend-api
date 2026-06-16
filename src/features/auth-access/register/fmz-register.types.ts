@@ -17,6 +17,8 @@ export type RegisterFormData = {
   birthdate: string; // display/backend format: DD/MM/AAAA
   cpf: string; // display/backend format: 000.000.000-00
   registrationIntent?: RegistrationIntent;
+  /** D-14 / AE-13: read from the `?invite=` query param on the register page, if present. */
+  inviteId?: string;
   /** Legacy field kept for backward-compatible tests and older callers. */
   accountType?: LegacyAccountType;
 };
@@ -35,6 +37,8 @@ export type RegisterApiPayload = {
   registrationIntent?: RegistrationIntent;
   acceptedTerms: true;
   acceptedPrivacyPolicy: true;
+  /** D-14 / AE-13: optional, read from the `?invite=` query param. Best-effort on the backend. */
+  inviteId?: string;
 };
 
 // ─── API response ─────────────────────────────────────────────────────────────
