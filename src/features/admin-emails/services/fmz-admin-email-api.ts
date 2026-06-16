@@ -13,12 +13,17 @@ const recordOf = (v: unknown): Record<string, unknown> =>
 
 // ─── Template list (Next.js API route) ───────────────────────────────────────
 
+const normalizeFieldType = (raw: unknown): 'text' | 'url' | 'date' | 'property' => {
+  const t = str(raw);
+  return t === 'url' || t === 'date' || t === 'property' ? t : 'text';
+};
+
 const normalizeTemplateField = (raw: unknown) => {
   const f = recordOf(raw);
   return {
     id:          str(f.id),
     label:       str(f.label),
-    type:        (str(f.type) === 'url' ? 'url' : 'text') as 'text' | 'url',
+    type:        normalizeFieldType(f.type),
     placeholder: str(f.placeholder),
     required:    f.required === true,
   };
@@ -99,7 +104,8 @@ export const fetchPasswordResetLink = async (userId: string): Promise<FmzPasswor
 
 export type FmzCreateInvitePayload = {
   email: string;
-  propertySnapshot: Record<string, string>;
+  propertyId: string;
+  expiresAt: string;
 };
 
 export type FmzInviteLink = {

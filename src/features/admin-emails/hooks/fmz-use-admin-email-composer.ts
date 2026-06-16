@@ -37,6 +37,21 @@ function withPlatformVars(
   return { ...vars, ...platformVars };
 }
 
+// D-14: `vars.expiry` holds the raw `YYYY-MM-DD` from the native date input (the
+// value `createInvite` needs as `expiresAt`). The template/preview wants prose,
+// so it's reformatted to pt-BR long form only at the point of preview/send.
+function formatExpiryForDisplay(isoDate: string): string {
+  if (!isoDate) return '';
+  const parsed = new Date(`${isoDate}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return isoDate;
+  return parsed.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function withFormattedExpiry(vars: Record<string, string>): Record<string, string> {
+  if (!vars.expiry) return vars;
+  return { ...vars, expiry: formatExpiryForDisplay(vars.expiry) };
+}
+
 // D-13: only real platform users (not externally-typed emails) have a password reset link.
 function isRealUserRecipient(recipient: FmzAdminEmailRecipient): boolean {
   return !recipient.id.startsWith('ext:');
@@ -125,26 +140,23 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
   // Reuses resetLinkGenerationRef as the staleness guard: only one of reset-senha/invite
   // is ever the active template at a time, so a single ref is sufficient. Debounced (like
   // the preview effect below) because this call creates a new DB row per request — without
-  // debouncing, every keystroke in property/address/rent/owner/expiry would insert a row.
+  // debouncing, every keystroke in name/expiry would insert a row. property/address aren't
+  // typed anymore (selected from a registered property — see FmzFieldsCustomizer); the backend
+  // derives the snapshot from propertyId itself rather than trusting the client for those.
 
   useEffect(() => {
     const recipient = recipients[0];
     const isInvite = selectedTemplate?.id === 'invite';
 
     if (inviteCreationDebounceRef.current) clearTimeout(inviteCreationDebounceRef.current);
-    if (!isInvite || recipients.length !== 1 || !recipient) return;
+    if (!isInvite || recipients.length !== 1 || !recipient || !vars.propertyId) return;
 
     inviteCreationDebounceRef.current = setTimeout(() => {
       const generation = ++resetLinkGenerationRef.current;
       createInvite({
         email: recipient.email,
-        propertySnapshot: {
-          property: vars.property ?? '',
-          address:  vars.address ?? '',
-          rent:     vars.rent ?? '',
-          owner:    vars.owner ?? '',
-          expiry:   vars.expiry ?? '',
-        },
+        propertyId: vars.propertyId ?? '',
+        expiresAt: vars.expiry ?? '',
       })
         .then(({ inviteUrl }) => {
           if (generation !== resetLinkGenerationRef.current) return;
@@ -159,10 +171,10 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
     return () => {
       if (inviteCreationDebounceRef.current) clearTimeout(inviteCreationDebounceRef.current);
     };
-    // Only re-run when the recipient/template changes, or when the property-snapshot
-    // fields themselves change — not on every `vars` update (e.g. typing in `name`).
+    // Only re-run when the recipient/template changes, or when the fields that feed the
+    // invite itself change — not on every `vars` update (e.g. typing in `name`).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTemplate, recipients, vars.property, vars.address, vars.rent, vars.owner, vars.expiry]);
+  }, [selectedTemplate, recipients, vars.propertyId, vars.expiry]);
 
   // ── Auto-preview with 280 ms debounce ──────────────────────────────────────
 
@@ -175,7 +187,7 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
     previewDebounceRef.current = setTimeout(() => {
       const generation = ++previewGenerationRef.current;
       setPreviewLoading(true);
-      fetchTemplatePreview(selectedTemplate.id, withPlatformVars(vars, platformVarsRef.current))
+      fetchTemplatePreview(selectedTemplate.id, withFormattedExpiry(withPlatformVars(vars, platformVarsRef.current)))
         .then((html) => {
           if (generation !== previewGenerationRef.current) return;
           setPreviewHtml(html);
@@ -239,7 +251,7 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
     setIsSending(true);
     setSendError(null);
     try {
-      const finalVars = withPlatformVars(vars, platformVarsRef.current);
+      const finalVars = withFormattedExpiry(withPlatformVars(vars, platformVarsRef.current));
       const html = await fetchTemplatePreview(selectedTemplate.id, finalVars);
       await sendAdminEmail({
         to: recipients.map((r) => r.email),

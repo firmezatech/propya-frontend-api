@@ -10,7 +10,7 @@ const TEMPLATES_DIR = path.join(process.cwd(), 'src', 'features', 'admin-emails'
 type TemplateField = {
   id: string;
   label: string;
-  type: 'text' | 'url';
+  type: 'text' | 'url' | 'date' | 'property';
   placeholder: string;
   required: boolean;
 };
