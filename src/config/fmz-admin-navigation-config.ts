@@ -139,7 +139,7 @@ export const fmzAdminNavigationConfig = {
       pageKey: 'admin.email_logs',
       label: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_EMAIL_LOGS_LABEL', 'Histórico de E-mails'),
       href: getPublicEnvValue('NEXT_PUBLIC_FMZ_ADMIN_EMAIL_LOGS_PATH', '/connected/admin-email-logs'),
-      requiredPermissionKey: 'admin.emails.send',
+      requiredPermissionKey: 'admin.emails.list',
       icon: Mail,
     },
   ] satisfies FmzAdminNavigationItem[],
