@@ -1,0 +1,10 @@
+{
+  "id": "verificar-identidade",
+  "name": "Verificação de identidade",
+  "category": "KYC",
+  "badge": "ação obrigatória",
+  "subject": "Verificação de identidade pendente — FirmezaToken",
+  "fields": [
+    { "id": "ctaUrl", "label": "Link de verificação", "type": "url", "placeholder": "https://app.propya.ai/connected/identity-verification", "required": true }
+  ]
+}

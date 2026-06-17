@@ -15,7 +15,7 @@ export const fmzPublicLayoutConfig = {
   helpUrl: getPublicEnvValue('NEXT_PUBLIC_FMZ_HELP_URL', 'https://wa.me/5511964850279'),
   homePath: getPublicEnvValue('NEXT_PUBLIC_FMZ_HOME_PATH', '/'),
   connectedDashboardPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_DASHBOARD_PATH', '/connected/dashboard'),
-  connectedAccountPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ACCOUNT_PATH', '/connected/account'),
+  connectedAccountPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ACCOUNT_PATH', '/connected/profile'),
   connectedLogoutPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_LOGOUT_PATH', '/connected/logout'),
   connectedAdminRolesPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_ADMIN_ROLES_PATH', '/connected/admin-roles'),
   connectedDashboardLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_DASHBOARD_LABEL', 'Início'),

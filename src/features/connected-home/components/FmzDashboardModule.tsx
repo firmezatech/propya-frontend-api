@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { useProfile } from "../../../app/context/ProfileContext";
@@ -14,59 +15,82 @@ import { FmzRenterDashboardModule } from "../../tenant-portal/renter-dashboard/c
 import { FmzDashboardErrorState } from "../../tenant-portal/components/FmzDashboardFeedback";
 import { FmzRenterDashboardSkeleton } from "../../../components/layout";
 import { FmzConnectedEmptyHome } from "../../tenant-portal/components/FmzConnectedEmptyHome";
-import FmzDashboardAdmin from "./FmzDashboardAdmin";
 
 const PROPERTY_ID = 1;
 
-export function FmzDashboardModule() {
-  const comm = useTranslations("Common");
-  const { setPropertyId: setContextPropertyId } = useProfile();
-  const [tenantDashboardPropertyId, setTenantDashboardPropertyId] = useState<string | null>(null);
-  const [dashboardKind, setDashboardKind] = useState<FmzDashboardKind | null>(null);
-  const [isLoadingAccess, setIsLoadingAccess] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const currentPrincipalRef = useRef<FmzAccessControlPrincipal | null>(null);
+// ─── Access control hook ───────────────────────────────────────────────────────
+// Encapsulates: token check → principal fetch → kind resolution → error state.
+// Returns a stable, read-only snapshot; loading starts as true and resolves once.
 
-  useEffect(() => {
-    setContextPropertyId(PROPERTY_ID);
-    setTenantDashboardPropertyId(getTenantDashboardPropertyIdFromUrl());
-  }, [setContextPropertyId]);
+type DashboardAccessState = {
+  dashboardKind: FmzDashboardKind | null;
+  isLoading:     boolean;
+  error:         string | null;
+};
+
+function useDashboardAccess(): DashboardAccessState {
+  const translations         = useTranslations("Common");
+  const [dashboardKind, setDashboardKind] = useState<FmzDashboardKind | null>(null);
+  const [isLoading, setIsLoading]         = useState(true);
+  const [error, setError]                 = useState<string | null>(null);
+  const principalRef                      = useRef<FmzAccessControlPrincipal | null>(null);
 
   const loadAccess = useCallback(async () => {
     const accessToken = getFirmezaAccessToken();
 
     if (!accessToken) {
       setDashboardKind(null);
-      setError(comm("pleaseLogin"));
-      setIsLoadingAccess(false);
+      setError(translations("pleaseLogin"));
+      setIsLoading(false);
       return;
     }
 
-    setIsLoadingAccess(true);
+    setIsLoading(true);
     setError(null);
 
     try {
-      const principal = currentPrincipalRef.current ?? await getCurrentAccessControlPrincipal();
-      currentPrincipalRef.current = principal;
+      const principal = principalRef.current ?? await getCurrentAccessControlPrincipal();
+      principalRef.current = principal;
       setDashboardKind(resolveDashboardKindFromAccess(principal));
     } catch (err) {
-      if (isFirmezaApiError(err) && err.response?.status === 401) {
-        setError("Sessão expirada ou não autorizada. Faça login novamente para carregar o dashboard.");
-        return;
-      }
-      setError(err instanceof Error ? err.message : "Erro ao carregar permissões do dashboard.");
+      const message = isFirmezaApiError(err) && err.response?.status === 401
+        ? "Sessão expirada ou não autorizada. Faça login novamente para carregar o dashboard."
+        : err instanceof Error ? err.message : "Erro ao carregar permissões do dashboard.";
+      setError(message);
     } finally {
-      setIsLoadingAccess(false);
+      setIsLoading(false);
     }
-  }, [comm]);
+  }, [translations]);
 
   useEffect(() => {
     void loadAccess();
   }, [loadAccess]);
 
-  if (isLoadingAccess) return <FmzRenterDashboardSkeleton />;
-  if (error) return <FmzDashboardErrorState message={error} />;
-  if (dashboardKind === "admin") return <FmzDashboardAdmin />;
+  return { dashboardKind, isLoading, error };
+}
+
+// ─── Module component ──────────────────────────────────────────────────────────
+
+export function FmzDashboardModule() {
+  const router = useRouter();
+  const { setPropertyId: setContextPropertyId } = useProfile();
+  const [tenantDashboardPropertyId, setTenantDashboardPropertyId] = useState<string | null>(null);
+  const { dashboardKind, isLoading, error } = useDashboardAccess();
+
+  useEffect(() => {
+    setContextPropertyId(PROPERTY_ID);
+    setTenantDashboardPropertyId(getTenantDashboardPropertyIdFromUrl());
+  }, [setContextPropertyId]);
+
+  useEffect(() => {
+    if (dashboardKind === "admin") {
+      router.push("/connected/admin-dashboard");
+    }
+  }, [dashboardKind, router]);
+
+  if (isLoading) return <FmzRenterDashboardSkeleton />;
+  if (error)     return <FmzDashboardErrorState message={error} />;
+  if (dashboardKind === "admin")  return <FmzRenterDashboardSkeleton />;
   if (dashboardKind === "renter") return <FmzRenterDashboardModule propertyId={tenantDashboardPropertyId} />;
 
   return <FmzConnectedEmptyHome />;

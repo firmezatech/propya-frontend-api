@@ -253,9 +253,13 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
     try {
       const finalVars = withFormattedExpiry(withPlatformVars(vars, platformVarsRef.current));
       const html = await fetchTemplatePreview(selectedTemplate.id, finalVars);
+      const finalSubject = Object.entries(finalVars).reduce(
+        (s, [key, value]) => s.replaceAll(`{{${key}}}`, value),
+        subject,
+      );
       await sendAdminEmail({
         to: recipients.map((r) => r.email),
-        subject,
+        subject: finalSubject,
         html,
         templateKey: selectedTemplate.id,
       });

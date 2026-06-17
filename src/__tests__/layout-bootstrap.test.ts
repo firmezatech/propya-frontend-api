@@ -69,7 +69,7 @@ describe('hasAdminAccessiblePage() — layout type decision', () => {
   it('returns false for principal with only tenant pages', () => {
     const principal = makePrincipal([
       makePage({ key: 'tenant.dashboard', path: '/connected/dashboard' }),
-      makePage({ key: 'tenant.account', path: '/connected/account', id: 'p2' }),
+      makePage({ key: 'tenant.account', path: '/connected/profile', id: 'p2' }),
     ]);
     expect(hasAdminAccessiblePage(principal)).toBe(false);
   });
@@ -175,9 +175,9 @@ describe('isConnectedLogoutPath() — logout route detection', () => {
   it('returns false for non-logout paths', () => {
     const paths = [
       '/connected/dashboard',
-      '/connected/account',
+      '/connected/profile',
       '/pt/connected/dashboard',
-      '/en/connected/account',
+      '/en/connected/profile',
       '/connected',
       '/',
     ];

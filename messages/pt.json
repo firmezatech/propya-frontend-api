@@ -47,19 +47,5 @@
     "transactionHistory": "Consulte o histórico das transações do seu imóvel registradas na blockchain.",
     "transactionHistoryLink": "Aqui",
     "transactionHistoryContinuation": ", você pode ver todas as movimentações realizadas de forma segura e transparente."
-  },
-  "DashboardAdmin": {
-    "propertyManagement": "Gestão",
-    "adjustRentByIGPM": "Ajustar Aluguel pelo IGPM (Oracle Fact)",
-    "invoices": "Boletos",
-    "maintenances": "Manutenções",
-    "paymentInvestor": "Pagamentos para Investidores",
-    "profileUsers": "Perfil dos Usuários",
-    "receivedFees": "Taxas Recebidas",
-    "gasCost": "Taxas Blockchain (gas)",
-    "internal": "Interno",
-    "users": "Usuários",
-    "contactsCalculator": "Contatos - Calculadora",
-    "gameSystemLink": "Sistema de Recompensas - Ganhe Pontos e Tokens!"
   }
 }
