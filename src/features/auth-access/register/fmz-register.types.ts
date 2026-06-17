@@ -14,8 +14,6 @@ export type RegisterFormData = {
   acceptedTerms: boolean;
   acceptedPrivacyPolicy: boolean;
   fullName: string;
-  birthdate: string; // display/backend format: DD/MM/AAAA
-  cpf: string; // display/backend format: 000.000.000-00
   registrationIntent?: RegistrationIntent;
   /** D-14 / AE-13: read from the `?invite=` query param on the register page, if present. */
   inviteId?: string;
@@ -30,10 +28,8 @@ export type RegisterApiPayload = {
   email: string;
   phone: string;
   phoneCountry?: 'BR';
-  birthdate: string;
   password: string;
   passwordConfirmation: string;
-  cpf: string;
   registrationIntent?: RegistrationIntent;
   acceptedTerms: true;
   acceptedPrivacyPolicy: true;
@@ -49,7 +45,6 @@ export type RegisterApiUser = {
   email: string;
   phone: string;
   phoneCountry?: string;
-  birthdate: string;
   registrationIntent?: RegistrationIntent;
   role: string;
 };
@@ -88,8 +83,6 @@ export type RegisterStep1Errors = {
 
 export type RegisterStep2Errors = {
   fullName?: string;
-  birthdate?: string;
-  cpf?: string;
 };
 
 export type RegisterAllErrors = RegisterStep1Errors &

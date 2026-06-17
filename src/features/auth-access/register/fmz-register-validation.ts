@@ -252,27 +252,13 @@ export function validateStep1(data: Pick<RegisterFormData,
  * Validates all Step 2 fields and returns a map of field → error message.
  * An empty object means the step is valid.
  */
-export function validateStep2(data: Pick<RegisterFormData, 'fullName' | 'birthdate' | 'cpf'>): RegisterStep2Errors {
+export function validateStep2(data: Pick<RegisterFormData, 'fullName'>): RegisterStep2Errors {
   const errors: RegisterStep2Errors = {};
 
   if (!data.fullName.trim()) {
     errors.fullName = 'O nome completo é obrigatório.';
   } else if (!isValidFullName(data.fullName)) {
     errors.fullName = 'Informe o nome e o sobrenome.';
-  }
-
-  if (!data.birthdate) {
-    errors.birthdate = 'A data de nascimento é obrigatória.';
-  } else if (!parseBirthdateBR(data.birthdate)) {
-    errors.birthdate = 'Data inválida. Use o formato DD/MM/AAAA.';
-  } else if (!isAdultBirthdate(data.birthdate)) {
-    errors.birthdate = `Você deve ter ao menos ${MINIMUM_REGISTRATION_AGE} anos para se cadastrar.`;
-  }
-
-  if (!data.cpf) {
-    errors.cpf = 'O CPF é obrigatório.';
-  } else if (!validateCpf(data.cpf)) {
-    errors.cpf = 'CPF inválido. Verifique o número informado.';
   }
 
   return errors;

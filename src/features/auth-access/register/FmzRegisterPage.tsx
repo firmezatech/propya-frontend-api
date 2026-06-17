@@ -2,11 +2,9 @@
 
 import { useMemo, useState, type ReactNode } from 'react';
 import {
-  Calendar,
   Check,
   ChevronLeft,
   ChevronRight,
-  CreditCard,
   Eye,
   EyeOff,
   Home,
@@ -25,9 +23,6 @@ import { registerUser } from './fmz-register-api';
 import {
   computePasswordStrength,
   hasErrors,
-  maskBirthdate,
-  maskCpf,
-  validateCpf,
   validateStep1,
   validateStep2,
 } from './fmz-register-validation';
@@ -39,8 +34,6 @@ const INITIAL_FORM_DATA: RegisterFormData = {
   passwordConfirmation: '',
   phone: '',
   phoneCountry: 'BR',
-  birthdate: '',
-  cpf: '',
   fullName: '',
   registrationIntent: 'coOwner',
   acceptedTerms: false,
@@ -122,6 +115,7 @@ export function FmzRegisterPage() {
   const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successEmail, setSuccessEmail] = useState('você');
+  const [defaultRoute, setDefaultRoute] = useState('/connected/dashboard');
 
   const passwordStrength = useMemo(() => computePasswordStrength(formData.password), [formData.password]);
   const step1Errors = useMemo(() => validateStep1(formData), [formData]);
@@ -129,7 +123,6 @@ export function FmzRegisterPage() {
   const step1Ready = !hasErrors(step1Errors);
   const step2Ready = !hasErrors(step2Errors);
   const isEmailValid = EMAIL_PATTERN.test(formData.email.trim());
-  const isCpfValid = validateCpf(formData.cpf);
   const passwordsMatch = Boolean(formData.passwordConfirmation) && formData.password === formData.passwordConfirmation;
 
   const updateField = <K extends keyof RegisterFormData>(field: K, value: RegisterFormData[K]) => {
@@ -165,19 +158,25 @@ export function FmzRegisterPage() {
     if (hasErrors(allErrors)) return;
 
     setIsSubmitting(true);
-    const result = await registerUser(formData);
-    setIsSubmitting(false);
+    try {
+      const result = await registerUser(formData);
 
-    if (!result.success) {
-      setErrors({
-        ...result.error.fieldErrors,
-        general: result.error.description || result.error.title || 'Não foi possível criar sua conta agora.',
-      });
-      return;
+      if (!result.success) {
+        setErrors({
+          ...result.error.fieldErrors,
+          general: result.error.description || result.error.title || 'Não foi possível criar sua conta agora.',
+        });
+        return;
+      }
+
+      setSuccessEmail(formData.email.trim() || 'você');
+      setDefaultRoute(result.access?.defaultRoute ?? '/connected/dashboard');
+      goToStep(4);
+    } catch {
+      setErrors({ general: 'Não foi possível criar sua conta agora. Tente novamente.' });
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setSuccessEmail(formData.email.trim() || 'você');
-    goToStep(4);
   };
 
   const passwordLabels = ['Use letras maiúsculas, números e símbolos', 'Senha fraca — adicione complexidade', 'Razoável — pode melhorar', 'Boa senha', 'Senha forte'];
@@ -233,7 +232,7 @@ export function FmzRegisterPage() {
               <div className="fh">
                 <span className="fh-eyebrow"><span className="e-ico"><Lock aria-hidden="true" /></span>Passo 1 de 3</span>
                 <h2>Crie seu acesso</h2>
-                <p className="sub">E-mail, senha forte e telefone para verificação em duas etapas. Leva menos de 1 minuto.</p>
+                <p className="sub">E-mail, nome completo e telefone. Leva menos de 1 minuto.</p>
               </div>
 
               <div className="stack">
@@ -297,7 +296,7 @@ export function FmzRegisterPage() {
               <div className="fh">
                 <span className="fh-eyebrow"><span className="e-ico"><User aria-hidden="true" /></span>Passo 2 de 3</span>
                 <h2>Seus dados pessoais</h2>
-                <p className="sub">CPF, nome completo e data de nascimento — exatamente como aparecem no seu documento.</p>
+                <p className="sub">Nome completo como aparece no seu documento de identidade.</p>
               </div>
 
               <div className="stack">
@@ -307,19 +306,7 @@ export function FmzRegisterPage() {
                   <FieldError>{errors.fullName}</FieldError>
                 </div>
 
-                <div className="f">
-                  <label htmlFor="nascimento">Data de nascimento <span className="req">*</span></label>
-                  <div className="iw"><Calendar className="il" aria-hidden="true" /><input id="nascimento" type="text" placeholder="DD/MM/AAAA" maxLength={10} className="mono" value={formData.birthdate} onChange={(event) => updateField('birthdate', maskBirthdate(event.target.value))} /></div>
-                  <FieldError>{errors.birthdate}</FieldError>
-                </div>
-
-                <div className="f">
-                  <label htmlFor="cpf">CPF <span className="req">*</span></label>
-                  <div className="iw"><CreditCard className="il" aria-hidden="true" /><input id="cpf" type="text" placeholder="000.000.000-00" maxLength={14} className={classNames('mono', formData.cpf.length === 14 && isCpfValid && 'valid', formData.cpf.length === 14 && !isCpfValid && 'invalid')} value={formData.cpf} onChange={(event) => updateField('cpf', maskCpf(event.target.value))} /></div>
-                  {formData.cpf.length === 14 && isCpfValid ? <span className="hint ok"><Check aria-hidden="true" /> CPF válido</span> : <FieldError>{errors.cpf}</FieldError>}
-                </div>
-
-                <div className="note gold"><Shield aria-hidden="true" /><span>Seus dados são criptografados, usados apenas para validação de identidade (KYC) e nunca compartilhados com terceiros.</span></div>
+                <div className="note gold"><Shield aria-hidden="true" /><span>Seu nome será usado apenas para identificação na plataforma e nunca compartilhado com terceiros sem sua autorização.</span></div>
               </div>
 
               <div className="btn-row">
@@ -339,11 +326,8 @@ export function FmzRegisterPage() {
                 <ReviewItem icon={<Mail />} title="E-mail" value={formData.email} onEdit={() => goToStep(1)} />
                 <ReviewItem icon={<Phone />} title="Telefone" value={formData.phone} onEdit={() => goToStep(1)} />
                 <ReviewItem icon={<User />} title="Nome completo" value={formData.fullName} onEdit={() => goToStep(2)} />
-                <ReviewItem icon={<Calendar />} title="Data de nascimento" value={formData.birthdate} onEdit={() => goToStep(2)} mono />
-                <ReviewItem icon={<CreditCard />} title="CPF" value={formData.cpf} onEdit={() => goToStep(2)} mono />
               </div>
 
-              <div className="note" style={{ marginTop: 14 }}><Info aria-hidden="true" /><span>Ao criar sua conta, o cadastro será enviado para o backend em <strong>POST /register</strong> com sua intenção inicial como <strong>coOwner</strong>.</span></div>
               {errors.general ? <div className="error-box"><Info aria-hidden="true" /> {errors.general}</div> : null}
 
               <div className="btn-row">
@@ -360,7 +344,7 @@ export function FmzRegisterPage() {
                 <div className="s-items">
                   <ReviewItem icon={<Check />} title="Confirme seu e-mail" value="Clique no link enviado para ativar sua conta e começar a usar a plataforma" />
                 </div>
-                <button className="btn btn-gold btn-full" type="button" onClick={() => router.replace('/connected/dashboard')}>Ir para o dashboard</button>
+                <button className="btn btn-gold btn-full" type="button" onClick={() => router.replace(defaultRoute)}>Ir para o dashboard</button>
               </div>
             </section>
 

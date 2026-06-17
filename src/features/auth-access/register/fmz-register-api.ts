@@ -1,80 +1,102 @@
-/**
- * Registration API — owns only payload assembly, HTTP call and response
- * normalization for the public registration page.
- */
-
 import { firmezaApiClient } from '../../../services/firmeza-api-client';
 import { setFirmezaAuthenticatedUserSession } from '../../../services/auth/auth-storage';
 import { normalizeFmzApiError } from '../../api-errors/domain';
-import type { RegisterApiPayload, RegisterApiResult, RegisterFormData, RegistrationIntent } from './fmz-register.types';
+import type {
+  RegisterApiAccess,
+  RegisterApiPayload,
+  RegisterApiResult,
+  RegisterApiUser,
+  RegisterFormData,
+  RegistrationIntent,
+} from './fmz-register.types';
 
 const buildRegisterPayload = (data: RegisterFormData): RegisterApiPayload => ({
   fullName: data.fullName.trim(),
   email: data.email.trim(),
   phone: data.phone.trim(),
   phoneCountry: data.phoneCountry || 'BR',
-  birthdate: data.birthdate,
   password: data.password,
   passwordConfirmation: data.passwordConfirmation,
-  cpf: data.cpf,
   registrationIntent: data.registrationIntent || 'coOwner',
   acceptedTerms: true,
   acceptedPrivacyPolicy: true,
-  // D-14 / AE-13: optional, best-effort on the backend — omitted entirely when absent
-  // rather than sent as an empty string.
   ...(data.inviteId ? { inviteId: data.inviteId } : {}),
 });
 
-const recordOf = (value: unknown): Record<string, unknown> =>
-  value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+const asRecord = (value: unknown): Record<string, unknown> =>
+  value !== null && typeof value === 'object' ? (value as Record<string, unknown>) : {};
 
-const getString = (value: unknown, fallback = ''): string =>
+const asString = (value: unknown, fallback = ''): string =>
   typeof value === 'string' ? value.trim() : fallback;
 
-const getBoolean = (value: unknown): boolean => Boolean(value);
+const asBoolean = (value: unknown): boolean => Boolean(value);
+
+const extractAccessToken = (
+  access: Record<string, unknown>,
+  user: Record<string, unknown>,
+): string => asString(access.accessToken ?? access.token ?? user.accessToken ?? user.token);
+
+const normalizeUser = (
+  user: Record<string, unknown>,
+  requestIntent?: RegistrationIntent,
+): RegisterApiUser => ({
+  id: asString(user.id ?? user._id),
+  fullName: asString(user.fullName ?? user.full_name ?? user.name),
+  email: asString(user.email),
+  phone: asString(user.phone),
+  phoneCountry: asString(user.phoneCountry ?? user.phone_country) || undefined,
+  registrationIntent:
+    (asString(user.registrationIntent ?? user.registration_intent) as RegistrationIntent) ||
+    requestIntent ||
+    'coOwner',
+  role: asString(user.role),
+});
+
+const normalizeAccess = (
+  access: Record<string, unknown>,
+  accessToken: string,
+): RegisterApiAccess => ({
+  defaultRoute: asString(access.defaultRoute ?? access.default_route, '/connected/dashboard'),
+  canAccessDashboard: asBoolean(access.canAccessDashboard ?? access.can_access_dashboard),
+  onboardingStatus: asString(access.onboardingStatus ?? access.onboarding_status, 'incomplete'),
+  accessToken: accessToken || undefined,
+});
+
+const normalizeRegistrationResponse = (
+  responseData: unknown,
+  requestIntent?: RegistrationIntent,
+): { message: string; user: RegisterApiUser; access: RegisterApiAccess; accessToken: string } => {
+  const body = asRecord(responseData);
+  const user = asRecord(body.user ?? body.data ?? body);
+  const access = asRecord(body.access ?? body);
+  const accessToken = extractAccessToken(access, user);
+
+  return {
+    message: asString(body.message ?? body.msg, 'Cadastro realizado com sucesso.'),
+    user: normalizeUser(user, requestIntent),
+    access: normalizeAccess(access, accessToken),
+    accessToken,
+  };
+};
 
 export async function registerUser(data: RegisterFormData): Promise<RegisterApiResult> {
   try {
     const payload = buildRegisterPayload(data);
     const response = await firmezaApiClient.post('/register', payload);
-
-    const body = recordOf(response.data);
-    const user = recordOf(body.user ?? body.data ?? body);
-    const access = recordOf(body.access ?? body);
-
-    const accessToken = getString(access.accessToken ?? access.token ?? user.accessToken ?? user.token);
-    const defaultRoute = getString(access.defaultRoute ?? access.default_route, '/connected/dashboard');
-    const onboardingStatus = getString(access.onboardingStatus ?? access.onboarding_status, 'incomplete');
+    const { accessToken, ...normalized } = normalizeRegistrationResponse(
+      response.data,
+      data.registrationIntent,
+    );
 
     if (accessToken) {
       setFirmezaAuthenticatedUserSession({
         accessToken,
-        name: getString(user.fullName ?? user.full_name ?? user.name),
-        email: getString(user.email),
+        name: normalized.user.fullName,
+        email: normalized.user.email,
       });
     }
 
-    return {
-      success: true,
-      message: getString(body.message ?? body.msg, 'Cadastro realizado com sucesso.'),
-      user: {
-        id: getString(user.id ?? user._id),
-        fullName: getString(user.fullName ?? user.full_name ?? user.name),
-        email: getString(user.email),
-        phone: getString(user.phone),
-        phoneCountry: getString(user.phoneCountry ?? user.phone_country) || undefined,
-        birthdate: getString(user.birthdate),
-        registrationIntent:
-          (getString(user.registrationIntent ?? user.registration_intent) as RegistrationIntent) || data.registrationIntent || 'coOwner',
-        role: getString(user.role),
-      },
-      access: {
-        defaultRoute,
-        canAccessDashboard: getBoolean(access.canAccessDashboard ?? access.can_access_dashboard),
-        onboardingStatus,
-        accessToken: accessToken || undefined,
-      },
-    };
+    return { success: true, ...normalized };
   } catch (error) {
     return { success: false, error: normalizeFmzApiError(error) };
   }
