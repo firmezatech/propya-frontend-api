@@ -144,7 +144,11 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
 
     formRef.current?.reset();
     setIsRedirectingAfterLogin(true);
-    await router.replace('/connected/dashboard');
+    const returnTo = new URLSearchParams(window.location.search).get('returnTo') ?? '';
+    const destination = /^\/connected\/[a-z][-a-z0-9/]*$/i.test(returnTo)
+      ? returnTo
+      : '/connected/dashboard';
+    await router.replace(destination);
   };
 
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {

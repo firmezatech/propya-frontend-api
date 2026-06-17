@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useMemo } from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import type { FmzAccessControlPrincipal } from '../domain';
-import { buildFmzLocalizedHref, canAccessFmzPath, resolveFirstAccessibleFmzPath } from '../domain/fmz-route-access';
+import { buildFmzLocalizedHref, canAccessFmzPath, normalizeFmzPath, resolveFirstAccessibleFmzPath } from '../domain/fmz-route-access';
 import { clearFirmezaSession } from '../../../services/auth/auth-storage';
 
 export type FmzRouteAccessGuardProps = {
@@ -51,7 +51,12 @@ export function FmzRouteAccessGuard({ children, principal, isLoading }: FmzRoute
 
     if (!principal) {
       clearFirmezaSession();
-      router.replace(buildFmzLocalizedHref(params?.locale, '/'));
+      const localizedLoginPath = buildFmzLocalizedHref(params?.locale, '/');
+      const normalizedPath = normalizeFmzPath(pathname);
+      const loginHref = normalizedPath.startsWith('/connected/')
+        ? `${localizedLoginPath}?returnTo=${encodeURIComponent(normalizedPath)}`
+        : localizedLoginPath;
+      router.replace(loginHref);
       return;
     }
 
