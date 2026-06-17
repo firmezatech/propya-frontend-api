@@ -134,6 +134,16 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
       });
   }, [selectedTemplate, recipients]);
 
+  // ── Auto-fill ctaUrl for verificar-identidade — URL is constant per environment ──
+  // No API call needed: the KYC page is always at origin/connected/identity-verification.
+  // Mirrors the reset-senha / invite pattern: auto-fill without admin typing anything.
+
+  useEffect(() => {
+    if (selectedTemplate?.id !== 'verificar-identidade') return;
+    const kycUrl = `${window.location.origin}/connected/identity-verification`;
+    setVarsState((prev) => ({ ...prev, ctaUrl: kycUrl }));
+  }, [selectedTemplate]);
+
   // ── Auto-generate tenant invite link for invite (D-14), 280 ms debounced ───
   // Single recipient + invite template → create the invite (any email is valid here,
   // unlike reset-senha which needs a real platform userId) and populate vars.ctaUrl.
