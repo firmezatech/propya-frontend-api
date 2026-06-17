@@ -1,0 +1,77 @@
+/* Radiating rings */
+.ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  border: 2px solid;
+  animation: ringout 1s ease-out forwards;
+  opacity: 0;
+}
+.ring1 { width: 100px; height: 100px; border-color: #1A8C5B; animation-delay: .1s; }
+.ring2 { width: 120px; height: 120px; border-color: rgba(26,140,91,.35); animation-delay: .3s; }
+.ring3 { width: 140px; height: 140px; border-color: rgba(26,140,91,.18); animation-delay: .5s; }
+
+@keyframes ringout {
+  0%   { transform: translate(-50%,-50%) scale(.5); opacity: .9; }
+  100% { transform: translate(-50%,-50%) scale(1);  opacity: 0; }
+}
+
+/* Check circle */
+.checkCircle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--fmz-success-bg);
+  border: 2.5px solid var(--fmz-success-border);
+  display: grid;
+  place-items: center;
+  position: relative;
+  z-index: 1;
+  animation: popIn .5s cubic-bezier(.34,1.56,.64,1) .05s both;
+}
+@keyframes popIn {
+  from { transform: scale(.4); opacity: 0; }
+  to   { transform: scale(1);  opacity: 1; }
+}
+
+/* SVG checkmark draw */
+.checkmark {
+  width: 36px;
+  height: 36px;
+  stroke: var(--fmz-success);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+  animation: draw .45s ease-out .4s forwards;
+}
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+/* Staggered slide-up */
+.slideUp1 { animation: slideUp .4s ease-out .6s both; }
+.slideUp2 { animation: slideUp .4s ease-out .8s both; }
+.slideUp3 { animation: slideUp .4s ease-out .95s both; }
+
+@keyframes slideUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Rings are decorative — stay hidden, no animation */
+  .ring { animation: none; }
+
+  .checkCircle, .slideUp1, .slideUp2, .slideUp3 {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  /* Without animation, stroke-dashoffset stays at 50 (path hidden) — reveal it */
+  .checkmark {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

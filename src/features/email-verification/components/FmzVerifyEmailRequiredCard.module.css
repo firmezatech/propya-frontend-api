@@ -1,0 +1,65 @@
+/* Pulsing outer rings around envelope */
+.envelopeWrap {
+  position: relative; /* establishes containing block for ::before/::after and .dot children */
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+}
+.envelopeWrap::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 30px;
+  background: rgba(232,182,32,.08);
+  animation: pulse 2.8s ease-in-out infinite;
+}
+.envelopeWrap::after {
+  content: '';
+  position: absolute;
+  inset: -18px;
+  border-radius: 36px;
+  background: rgba(232,182,32,.04);
+  animation: pulse 2.8s ease-in-out infinite .4s;
+}
+@keyframes pulse {
+  0%,100% { transform: scale(1);    opacity: 1; }
+  50%      { transform: scale(1.06); opacity: .7; }
+}
+
+/* Floating envelope icon */
+.envelopeIcon {
+  animation: float 3.5s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+  color: #8A6B12;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+/* Gold dots flying out of envelope */
+.dot {
+  position: absolute;
+  border-radius: 50%;
+  background: #E8B620;
+  animation: dotfly 1.8s ease-in-out infinite;
+  opacity: 0;
+}
+.dot1 { width: 5px; height: 5px; top: 10px; right: 12px; animation-delay: .1s; }
+.dot2 { width: 4px; height: 4px; top: 4px;  right: 28px; animation-delay: .4s; }
+.dot3 { width: 3px; height: 3px; top: 14px; right: 8px;  animation-delay: .7s; }
+@keyframes dotfly {
+  0%   { opacity: 0; transform: translate(0,0) scale(.5); }
+  40%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-14px,-22px) scale(.2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .envelopeWrap::before,
+  .envelopeWrap::after,
+  .envelopeIcon,
+  .dot { animation: none; }
+  /* Keep dots invisible without motion */
+  .dot { opacity: 0; }
+}

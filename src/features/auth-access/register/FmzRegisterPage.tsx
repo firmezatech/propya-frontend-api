@@ -114,8 +114,6 @@ export function FmzRegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successEmail, setSuccessEmail] = useState('você');
-  const [defaultRoute, setDefaultRoute] = useState('/connected/dashboard');
 
   const passwordStrength = useMemo(() => computePasswordStrength(formData.password), [formData.password]);
   const step1Errors = useMemo(() => validateStep1(formData), [formData]);
@@ -169,9 +167,8 @@ export function FmzRegisterPage() {
         return;
       }
 
-      setSuccessEmail(formData.email.trim() || 'você');
-      setDefaultRoute(result.access?.defaultRoute ?? '/connected/dashboard');
-      goToStep(4);
+      sessionStorage.setItem('ft_pending_email', formData.email.trim());
+      router.replace('/verify-email-required');
     } catch {
       setErrors({ general: 'Não foi possível criar sua conta agora. Tente novamente.' });
     } finally {
@@ -336,19 +333,7 @@ export function FmzRegisterPage() {
               </div>
             </section>
 
-            <section className={classNames('step-body', currentStep === 4 && 'active')}>
-              <div className="success-wrap">
-                <div className="s-ico"><Check aria-hidden="true" /></div>
-                <h2 className="s-title">Sua conta está criada</h2>
-                <p className="s-sub">Bem-vindo à FirmezaToken. Enviamos um e-mail de confirmação para <strong>{successEmail}</strong>. Verifique sua caixa de entrada para ativar a conta.</p>
-                <div className="s-items">
-                  <ReviewItem icon={<Check />} title="Confirme seu e-mail" value="Clique no link enviado para ativar sua conta e começar a usar a plataforma" />
-                </div>
-                <button className="btn btn-gold btn-full" type="button" onClick={() => router.replace(defaultRoute)}>Ir para o dashboard</button>
-              </div>
-            </section>
-
-            {currentStep !== 4 ? <div className="alt-login">Está com problemas? <a href="/">Fale com a gente</a></div> : null}
+            <div className="alt-login">Está com problemas? <a href="/">Fale com a gente</a></div>
           </div>
         </main>
       </div>
