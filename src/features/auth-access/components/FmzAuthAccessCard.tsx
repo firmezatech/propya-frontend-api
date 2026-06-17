@@ -133,6 +133,11 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
     const response = await login(loginData);
 
     if (!response.success) {
+      if (response.error.code === FMZ_API_ERROR_CODES.EMAIL_VERIFICATION_REQUIRED) {
+        sessionStorage.setItem('ft_pending_email', loginData.email);
+        await router.replace('/verify-email-required');
+        return;
+      }
       setAuthErrorWithFields(response.error);
       return;
     }

@@ -139,6 +139,11 @@ export const FMZ_API_ERROR_MESSAGES_PT_BR: Record<FmzApiErrorCode, FmzApiErrorMe
     description: 'Verifique as informações e tente novamente.',
     severity: 'error',
   },
+  [FMZ_API_ERROR_CODES.EMAIL_VERIFICATION_REQUIRED]: {
+    title: 'E-mail não verificado',
+    description: 'Você precisa confirmar seu e-mail antes de acessar a plataforma. Verifique sua caixa de entrada.',
+    severity: 'warning',
+  },
   [FMZ_API_ERROR_CODES.EMAIL_VERIFICATION_TOKEN_REQUIRED]: {
     title: 'Link de verificação inválido',
     description: 'O link que você acessou não contém um token de verificação. Use o link enviado para o seu e-mail.',
