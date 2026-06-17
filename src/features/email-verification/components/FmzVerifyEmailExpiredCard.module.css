@@ -1,0 +1,68 @@
+/* Icon pop-in */
+@keyframes popIn {
+  from { transform: scale(.4); opacity: 0 }
+  to   { transform: scale(1);  opacity: 1 }
+}
+.iconWrap {
+  animation: popIn .5s cubic-bezier(.34,1.56,.64,1) both;
+}
+
+/* Animated clock hands */
+@keyframes tickMinute { from { transform: rotate(0deg) }   to { transform: rotate(360deg) } }
+@keyframes tickHour   { from { transform: rotate(0deg) }   to { transform: rotate(360deg) } }
+.clockMinute { transform-origin: 12px 12px; animation: tickMinute 4s  linear infinite; }
+.clockHour   { transform-origin: 12px 12px; animation: tickHour   48s linear infinite; }
+
+/* Staggered slide-up */
+@keyframes slideUp {
+  from { transform: translateY(10px); opacity: 0 }
+  to   { transform: translateY(0);    opacity: 1 }
+}
+.slideUp1 { animation: slideUp .4s ease-out .20s both; }
+.slideUp2 { animation: slideUp .4s ease-out .35s both; }
+.slideUp3 { animation: slideUp .4s ease-out .45s both; }
+.slideUp4 { animation: slideUp .4s ease-out .55s both; }
+
+/* Toast */
+@keyframes toastIn  {
+  from { transform: translateX(-50%) translateY(16px); opacity: 0 }
+  to   { transform: translateX(-50%) translateY(0);    opacity: 1 }
+}
+@keyframes toastOut {
+  from { transform: translateX(-50%) translateY(0);    opacity: 1 }
+  to   { transform: translateX(-50%) translateY(16px); opacity: 0 }
+}
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1A1612;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 11px 18px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 28px rgba(14,22,38,.22);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 200;
+}
+.toastEnter { animation: toastIn  .25s ease-out both; }
+.toastExit  { animation: toastOut .25s ease-in  both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .iconWrap,
+  .clockMinute,
+  .clockHour,
+  .slideUp1,
+  .slideUp2,
+  .slideUp3,
+  .slideUp4 { animation: none; }
+  /* toast still fades but no slide */
+  .toastEnter { animation: none; opacity: 1; }
+  .toastExit  { animation: none; opacity: 0; }
+}

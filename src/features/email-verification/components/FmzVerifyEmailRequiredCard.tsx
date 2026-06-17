@@ -1,16 +1,50 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { LogIn } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { LogIn, RefreshCw } from 'lucide-react';
 import { Link } from '../../../i18n/navigation';
+import { resendVerificationEmail } from '../services/fmz-email-verification-api';
 import styles from './FmzVerifyEmailRequiredCard.module.css';
+
+type ResendState = 'idle' | 'sending' | 'sent' | 'error';
 
 export function FmzVerifyEmailRequiredCard() {
   const [pendingEmail, setPendingEmail] = useState('');
+  const [resendState, setResendState]   = useState<ResendState>('idle');
+  const [cooldown, setCooldown]         = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     setPendingEmail(sessionStorage.getItem('ft_pending_email') ?? '');
   }, []);
+
+  useEffect(() => {
+    return () => { if (cooldownRef.current) clearInterval(cooldownRef.current); };
+  }, []);
+
+  const handleResend = async () => {
+    if (!pendingEmail || resendState === 'sending' || cooldown > 0) return;
+    setResendState('sending');
+    const result = await resendVerificationEmail(pendingEmail);
+    if (result.success) {
+      setResendState('sent');
+      setCooldown(60);
+      cooldownRef.current = setInterval(() => {
+        setCooldown((prev) => {
+          if (prev <= 1) {
+            clearInterval(cooldownRef.current!);
+            cooldownRef.current = null;
+            setResendState('idle');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      setResendState('error');
+      setTimeout(() => setResendState('idle'), 3000);
+    }
+  };
 
   return (
     <section className="w-full max-w-[480px]" aria-labelledby="fmz-verify-required-title">
@@ -94,12 +128,37 @@ export function FmzVerifyEmailRequiredCard() {
             ))}
           </ol>
 
-          {/* Resend note — button disabled until backend endpoint is available */}
-          <div className="mb-1 flex flex-wrap items-center justify-center gap-1.5 text-[13px] text-fmz-text-muted">
-            <span>Não recebeu?</span>
-            <span className="font-semibold text-fmz-text-hint">
-              Verifique o spam ou faça login para solicitar um novo link.
-            </span>
+          {/* Resend section */}
+          <div className="mb-1 flex flex-col items-center gap-2 text-center">
+            <p className="text-[13px] text-fmz-text-muted">
+              Não recebeu? O link expira em 60 minutos.
+            </p>
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={!pendingEmail || resendState === 'sending' || cooldown > 0}
+              className="inline-flex items-center gap-2 rounded-[11px] border-[1.5px] border-fmz-border-light bg-white px-4 py-[10px] text-[13px] font-semibold text-fmz-navy transition hover:-translate-y-px hover:border-fmz-navy disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+            >
+              <RefreshCw
+                aria-hidden="true"
+                className={`h-3.5 w-3.5 ${resendState === 'sending' ? 'animate-spin' : ''}`}
+              />
+              {resendState === 'sending'
+                ? 'Enviando…'
+                : cooldown > 0
+                ? `Aguarde ${cooldown}s`
+                : 'Reenviar link de verificação'}
+            </button>
+            {resendState === 'sent' && (
+              <p className="text-[12px] text-fmz-success" role="status">
+                Novo link enviado! Verifique sua caixa de entrada.
+              </p>
+            )}
+            {resendState === 'error' && (
+              <p className="text-[12px] text-fmz-error" role="alert">
+                Não foi possível enviar. Tente novamente.
+              </p>
+            )}
           </div>
 
           <div className="my-6 h-px w-full bg-fmz-border-light" aria-hidden="true" />

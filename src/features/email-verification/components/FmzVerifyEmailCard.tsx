@@ -6,6 +6,7 @@ import { LogIn } from 'lucide-react';
 import { useRouter } from '../../../i18n/navigation';
 import { FmzFormAlert } from '../../api-errors/components';
 import type { FmzNormalizedApiError } from '../../api-errors/domain';
+import { FMZ_API_ERROR_CODES } from '../../api-errors/domain';
 import { verifyEmailToken } from '../services/fmz-email-verification-api';
 import styles from './FmzVerifyEmailCard.module.css';
 
@@ -41,6 +42,10 @@ export function FmzVerifyEmailCard() {
         setPendingEmail(email);
         setState('success');
       } else {
+        if (result.error.code === FMZ_API_ERROR_CODES.EXPIRED_EMAIL_VERIFICATION_TOKEN) {
+          router.replace('/verify-email-expired');
+          return;
+        }
         setApiError(result.error);
         setState('error');
       }
