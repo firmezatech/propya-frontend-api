@@ -5,7 +5,8 @@ import { useRouter } from '../../../../i18n/navigation';
 import { useTokenAcquisitionCelebration } from '../hooks/fmz-token-acquisition';
 import { FmzTokenAcquiredCelebration } from './FmzTokenAcquiredCelebration';
 
-const DASHBOARD_PATH = '/connected/dashboard';
+const FALLBACK_PATH = '/connected/dashboard';
+const WALLET_PATH   = '/connected/wallet';
 
 /**
  * Connected route at /connected/tokens-acquired. Loads the pending celebration; if there is none
@@ -17,7 +18,7 @@ export function FmzTokenAcquiredCelebrationPage() {
 
   useEffect(() => {
     if (state.status === 'none' || state.status === 'error') {
-      router.replace(DASHBOARD_PATH);
+      router.replace(FALLBACK_PATH);
     }
   }, [state.status, router]);
 
@@ -29,10 +30,10 @@ export function FmzTokenAcquiredCelebrationPage() {
     );
   }
 
-  const handleContinue = async () => {
+  const handleGoToWallet = async () => {
     await acknowledge();
-    router.replace(DASHBOARD_PATH);
+    router.replace(WALLET_PATH);
   };
 
-  return <FmzTokenAcquiredCelebration celebration={state.celebration} onContinue={handleContinue} />;
+  return <FmzTokenAcquiredCelebration celebration={state.celebration} onContinue={handleGoToWallet} />;
 }

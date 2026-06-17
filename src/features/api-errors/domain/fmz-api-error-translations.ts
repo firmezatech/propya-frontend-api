@@ -139,6 +139,21 @@ export const FMZ_API_ERROR_MESSAGES_PT_BR: Record<FmzApiErrorCode, FmzApiErrorMe
     description: 'Verifique as informações e tente novamente.',
     severity: 'error',
   },
+  [FMZ_API_ERROR_CODES.EMAIL_VERIFICATION_TOKEN_REQUIRED]: {
+    title: 'Link de verificação inválido',
+    description: 'O link que você acessou não contém um token de verificação. Use o link enviado para o seu e-mail.',
+    severity: 'error',
+  },
+  [FMZ_API_ERROR_CODES.INVALID_EMAIL_VERIFICATION_TOKEN]: {
+    title: 'Link de verificação inválido',
+    description: 'Esse link não é válido ou já foi utilizado. Verifique se copiou o link correto do e-mail.',
+    severity: 'error',
+  },
+  [FMZ_API_ERROR_CODES.EXPIRED_EMAIL_VERIFICATION_TOKEN]: {
+    title: 'Link expirado',
+    description: 'O link de verificação expirou. Faça login para receber um novo link por e-mail.',
+    severity: 'warning',
+  },
   [FMZ_API_ERROR_CODES.UNAUTHORIZED]: {
     title: 'Sessão expirada',
     description: 'Faça login novamente para continuar.',
