@@ -62,6 +62,7 @@ export const ORDER_DELIVERY_EVENT_LABELS: Record<string, { type: FmzTokenOrderTi
   delivery_attempt_failed: { type: 'error', title: 'Falha na entrega de tokens' },
   delivery_succeeded:      { type: 'ok',    title: 'Tokens entregues com sucesso' },
   refund_opened:           { type: 'warn',  title: 'Reembolso aberto' },
+  refund_cancelled:        { type: 'ok',    title: 'Reembolso cancelado' },
   refund_processing:       { type: 'info',  title: 'Reembolso em processamento' },
   refund_succeeded:        { type: 'ok',    title: 'Reembolso confirmado' },
   refund_failed:           { type: 'error', title: 'Tentativa de reembolso falhou' },
