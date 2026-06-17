@@ -95,6 +95,57 @@ export function resolveTenantNotificationVisual(type: TenantNotificationType): N
   }
 }
 
+const NOTIFICATIONS_PATH = '/connected/notifications';
+
+// ─── ConnectedMenuItem ────────────────────────────────────────────────────────
+
+type ConnectedMenuItemProps = {
+  item:               FmzConnectedDropdownItem;
+  pathname:           string | null;
+  onClick:            (item: FmzConnectedDropdownItem) => void;
+  showSectionDivider: boolean;
+};
+
+function ConnectedMenuItem({ item, pathname, onClick, showSectionDivider }: ConnectedMenuItemProps) {
+  const Icon = item.icon;
+  const isActive       = isFmzConnectedDropdownItemActive(pathname, item.href);
+  const isDanger       = item.variant === 'danger';
+  const isActiveNavItem = isActive && !isDanger;
+
+  return (
+    <div>
+      {showSectionDivider ? <div className="my-1.5 h-px bg-[#EDEFF4]" /> : null}
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => onClick(item)}
+        className={fmzCn(
+          'group relative flex w-full items-center gap-3 rounded-[9px] border-0 bg-transparent px-3 py-2.5 text-left text-[13.5px] font-medium text-fmz-text-primary transition hover:bg-fmz-page hover:text-fmz-navy',
+          isActiveNavItem && 'bg-fmz-page font-semibold text-fmz-navy before:absolute before:left-1 before:top-1/2 before:h-[18px] before:w-[3px] before:-translate-y-1/2 before:rounded-full before:bg-fmz-gold',
+          isDanger && 'text-fmz-error hover:bg-fmz-error-bg hover:text-fmz-error',
+        )}
+      >
+        <span
+          className={fmzCn(
+            'grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-fmz-page text-fmz-navy transition group-hover:bg-[#FBF3DA] group-hover:text-[#8A6B12]',
+            isActiveNavItem && 'bg-[#FBF3DA] text-[#8A6B12]',
+            isDanger && 'bg-fmz-error-bg text-fmz-error group-hover:bg-fmz-error-bg group-hover:text-fmz-error',
+          )}
+        >
+          <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+        {!isDanger ? (
+          <ChevronRight
+            className="h-3 w-3 shrink-0 text-fmz-text-hint transition group-hover:translate-x-0.5 group-hover:text-fmz-navy"
+            aria-hidden="true"
+          />
+        ) : null}
+      </button>
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function FmzConnectedDropdown({
@@ -210,22 +261,25 @@ export function FmzConnectedDropdown({
       if (!notification.readAt) {
         void handleMarkAsRead(notification.id);
       }
-      // Guard: only navigate to relative paths — never to external URLs.
-      if (isSafeInternalPath(notification.actionUrl)) {
-        router.push(localizeHref(notification.actionUrl));
-      }
+      const destination = isSafeInternalPath(notification.actionUrl)
+        ? notification.actionUrl
+        : NOTIFICATIONS_PATH;
+      router.push(localizeHref(destination));
     },
     [handleMarkAsRead, closeAll, localizeHref, router],
   );
 
-  const handleItemClick = (item: FmzConnectedDropdownItem) => {
-    closeAll();
-    if (item.id === 'logout') {
-      performFirmezaLogout({ router, locale });
-      return;
-    }
-    router.push(localizeHref(item.href));
-  };
+  const handleItemClick = useCallback(
+    (item: FmzConnectedDropdownItem) => {
+      closeAll();
+      if (item.id === 'logout') {
+        performFirmezaLogout({ router, locale });
+        return;
+      }
+      router.push(localizeHref(item.href));
+    },
+    [closeAll, router, locale, localizeHref],
+  );
 
   // Bridge NotificationsState → NotificationDropdownState
   const notificationDropdownState: NotificationDropdownState =
@@ -267,7 +321,7 @@ export function FmzConnectedDropdown({
               type="button"
               onClick={() => {
                 closeAll();
-                router.push(localizeHref('/connected/notifications'));
+                router.push(localizeHref(NOTIFICATIONS_PATH));
               }}
               className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-fmz-navy transition hover:text-[#8A6B12]"
             >
@@ -341,45 +395,15 @@ export function FmzConnectedDropdown({
             Navegar
           </div>
 
-          {items.map((item, index) => {
-            const Icon = item.icon;
-            const isActive = isFmzConnectedDropdownItemActive(pathname, item.href);
-            const hasSectionDivider = index > 0 && item.section !== items[index - 1]?.section;
-            const isDanger = item.variant === 'danger';
-
-            return (
-              <div key={item.id}>
-                {hasSectionDivider ? <div className="my-1.5 h-px bg-[#EDEFF4]" /> : null}
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => handleItemClick(item)}
-                  className={fmzCn(
-                    'group relative flex w-full items-center gap-3 rounded-[9px] border-0 bg-transparent px-3 py-2.5 text-left text-[13.5px] font-medium text-fmz-text-primary transition hover:bg-fmz-page hover:text-fmz-navy',
-                    isActive && !isDanger && 'bg-fmz-page font-semibold text-fmz-navy before:absolute before:left-1 before:top-1/2 before:h-[18px] before:w-[3px] before:-translate-y-1/2 before:rounded-full before:bg-fmz-gold',
-                    isDanger && 'text-fmz-error hover:bg-fmz-error-bg hover:text-fmz-error',
-                  )}
-                >
-                  <span
-                    className={fmzCn(
-                      'grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-fmz-page text-fmz-navy transition group-hover:bg-[#FBF3DA] group-hover:text-[#8A6B12]',
-                      isActive && !isDanger && 'bg-[#FBF3DA] text-[#8A6B12]',
-                      isDanger && 'bg-fmz-error-bg text-fmz-error group-hover:bg-fmz-error-bg group-hover:text-fmz-error',
-                    )}
-                  >
-                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                  {!isDanger ? (
-                    <ChevronRight
-                      className="h-3 w-3 shrink-0 text-fmz-text-hint transition group-hover:translate-x-0.5 group-hover:text-fmz-navy"
-                      aria-hidden="true"
-                    />
-                  ) : null}
-                </button>
-              </div>
-            );
-          })}
+          {items.map((item, index) => (
+            <ConnectedMenuItem
+              key={item.id}
+              item={item}
+              pathname={pathname}
+              onClick={handleItemClick}
+              showSectionDivider={index > 0 && item.section !== items[index - 1]?.section}
+            />
+          ))}
         </div>
       </div>
     </div>
