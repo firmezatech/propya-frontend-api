@@ -1,0 +1,11 @@
+{
+  "id": "convite-investidor",
+  "name": "Convite — investidor",
+  "category": "Onboarding",
+  "badge": "transacional",
+  "subject": "Você foi convidado para investir em imóveis — FirmezaToken",
+  "fields": [
+    { "id": "min_investment", "label": "Investimento mínimo", "type": "text", "placeholder": "R$ 1.000",           "required": true },
+    { "id": "expiry",         "label": "Validade do convite", "type": "date", "placeholder": "30 de junho de 2026", "required": true }
+  ]
+}

@@ -144,6 +144,19 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
     setVarsState((prev) => ({ ...prev, ctaUrl: kycUrl }));
   }, [selectedTemplate]);
 
+  // ── Auto-fill URLs for convite-investidor — both links are fixed platform URLs ──
+  // The registration and property-listing pages live at a known public domain;
+  // the admin never needs to type them.
+
+  useEffect(() => {
+    if (selectedTemplate?.id !== 'convite-investidor') return;
+    setVarsState((prev) => ({
+      ...prev,
+      ctaUrl:        'https://app.propya.ai/cadastro',
+      propertiesUrl: 'https://app.propya.ai/imoveis',
+    }));
+  }, [selectedTemplate]);
+
   // ── Auto-generate tenant invite link for invite (D-14), 280 ms debounced ───
   // Single recipient + invite template → create the invite (any email is valid here,
   // unlike reset-senha which needs a real platform userId) and populate vars.ctaUrl.
