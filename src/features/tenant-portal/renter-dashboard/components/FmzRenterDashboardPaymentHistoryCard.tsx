@@ -13,9 +13,11 @@ type Props = {
 const moneyFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 });
 
 const STATUS_LABEL: Record<string, string> = {
-  paid: 'Pago', received: 'Pago', confirmed: 'Pago',
-  pending: 'Aberto', created: 'Aberto', registered: 'Aberto',
-  overdue: 'Vencido', expired: 'Expirado', canceled: 'Cancelado', cancelled: 'Cancelado',
+  paid: 'Pago',
+  open: 'Aberto',
+  late: 'Aberto',
+  cancelled: 'Cancelado',
+  refunded: 'Estornado',
 };
 
 function normalizeStatus(status?: string | null): string {
@@ -24,13 +26,13 @@ function normalizeStatus(status?: string | null): string {
 
 function getStatusLabel(status?: string | null): string {
   const k = normalizeStatus(status);
-  return STATUS_LABEL[k] ?? status?.trim() ?? 'Não informado';
+  return STATUS_LABEL[k] ?? 'Não informado';
 }
 
 function getHistBadgeClass(status?: string | null): string {
   const k = normalizeStatus(status);
-  if (k === 'paid' || k === 'received' || k === 'confirmed') return styles.histBadgePago;
-  if (k === 'pending' || k === 'created' || k === 'registered') return styles.histBadgeAberto;
+  if (k === 'paid') return styles.histBadgePago;
+  if (k === 'open' || k === 'late') return styles.histBadgeAberto;
   return styles.histBadgeNeutral;
 }
 
@@ -72,7 +74,7 @@ export function FmzRenterDashboardPaymentHistoryCard({ items, maxItems = 4 }: Pr
             {visible.map((item) => (
               <tr key={item.id}>
                 <td className={styles.histMes}>
-                  {item.reference}
+                  {formatDateBR(item.reference)}
                 </td>
                 <td className={styles.histAmount}>{moneyFmt.format(item.amount)}</td>
                 <td className={styles.histDate}>{formatDateBR(item.dueDate)}</td>

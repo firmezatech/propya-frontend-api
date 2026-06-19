@@ -376,25 +376,6 @@ export function FmzConnectedDropdown({
             isUserMenuOpen ? 'pointer-events-auto translate-y-0 scale-100 opacity-100' : '-translate-y-1.5',
           )}
         >
-          {/* User identity section */}
-          <div className="mb-1.5 flex items-center gap-3 border-b border-[#EDEFF4] px-3 pb-3 pt-2.5">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-[1.5px] border-fmz-gold bg-fmz-navy text-xs font-bold tracking-[0.04em] text-fmz-gold shadow-[0_0_0_2px_rgba(232,182,32,0.2)]">
-              {userSummary.initials}
-            </span>
-            <span className="min-w-0">
-              <p className="truncate text-[13.5px] font-semibold leading-tight tracking-[-0.005em] text-fmz-navy">
-                {userSummary.name}
-              </p>
-              <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8A6B12] before:h-1.5 before:w-1.5 before:rounded-full before:bg-fmz-gold before:content-['']">
-                {roleLabel}
-              </p>
-            </span>
-          </div>
-
-          <div className="px-2 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-[0.1em] text-fmz-text-hint">
-            Navegar
-          </div>
-
           {items.map((item, index) => (
             <ConnectedMenuItem
               key={item.id}
