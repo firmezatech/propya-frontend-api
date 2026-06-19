@@ -14,7 +14,7 @@ const moneyFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: '
 
 const STATUS_LABEL: Record<string, string> = {
   paid: 'Pago', received: 'Pago', confirmed: 'Pago',
-  pending: 'Em aberto', created: 'Em aberto', registered: 'Em aberto',
+  pending: 'Aberto', created: 'Aberto', registered: 'Aberto',
   overdue: 'Vencido', expired: 'Expirado', canceled: 'Cancelado', cancelled: 'Cancelado',
 };
 

@@ -9,7 +9,6 @@ import type { TenantOwnershipGoal } from '../../domain/fmz-tenant-portal.types';
 import type { FmzTenantPaymentHistoryItem } from '../../domain';
 import { buildRenterDashboardViewModel, hasRenterDashboardData } from '../domain/fmz-renter-dashboard-view-model';
 import { FmzRenterDashboardPaymentHistoryCard } from './FmzRenterDashboardPaymentHistoryCard';
-import { FmzRenterDashboardRentSimulatorCard } from './FmzRenterDashboardRentSimulatorCard';
 import { buildFmzLocalizedHref } from '../../../../lib/fmz-localize-href';
 import styles from './FmzRenterDashboard.module.css';
 
@@ -293,17 +292,7 @@ export function FmzRenterDashboard({
                 </div>
                 <p className={styles.nextDesc}>{currentGoal.description}</p>
 
-                <div className={styles.nextProgress}>
-                  <div className={styles.nextProgressBar}>
-                    <div className={styles.nextProgressFill} style={{ width: hasAnimated ? `${currentGoal.progressPercentage}%` : '0%' }} />
-                  </div>
-                  <div className={styles.nextProgressText}>
-                    <span>{currentGoal.progressLabel}</span>
-                    <span className={styles.mono}>{formatGoalPercent(currentGoal.progressPercentage)}</span>
-                  </div>
-                </div>
-
-                {currentGoal.rewardDescription ? (
+{currentGoal.rewardDescription ? (
                   <p className={styles.nextDesc} style={{ marginTop: 8, fontStyle: 'italic', opacity: 0.8 }}>
                     🎁 {currentGoal.rewardDescription}
                   </p>
@@ -408,9 +397,8 @@ export function FmzRenterDashboard({
           </button>
         </div>
 
-        {/* Right: simulator + history */}
+        {/* Right: history */}
         <div className={styles.rightStack}>
-          <FmzRenterDashboardRentSimulatorCard viewModel={viewModel} hasAnimated={hasAnimated} />
           <FmzRenterDashboardPaymentHistoryCard items={paymentHistory} />
         </div>
 
