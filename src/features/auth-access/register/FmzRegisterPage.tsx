@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '../../../i18n/navigation';
-import { FmzAuthHeader } from '../../../components/layout';
+import { FmzAuthHeader, FmzPublicFooter } from '../../../components/layout';
 import { registerUser } from './fmz-register-api';
 import {
   computePasswordStrength,
@@ -338,10 +338,7 @@ export function FmzRegisterPage() {
         </main>
       </div>
 
-      <footer>
-        <span>© Propya · A revolução imobiliária começou.</span>
-        <div className="fsoc"><a href="#">TikTok</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">YouTube</a></div>
-      </footer>
+      <FmzPublicFooter />
     </div>
   );
 }

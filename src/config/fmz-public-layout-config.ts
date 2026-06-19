@@ -43,13 +43,13 @@ export const fmzPublicLayoutConfig = {
   instagramFallbackPostCountLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_FALLBACK_POST_COUNT_LABEL', 'Conectar'),
   instagramFallbackFollowerCountLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_FALLBACK_FOLLOWER_COUNT_LABEL', 'Instagram'),
   instagramFallbackFollowingCountLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_FALLBACK_FOLLOWING_COUNT_LABEL', 'Real'),
-  logoPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_LOGO_PATH', '/logo.png'),
+  logoPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_LOGO_PATH', 'https://anxmjbhtutpvalsuamke.supabase.co/storage/v1/object/public/public-assets/email/firmezatoken-logo.png'),
   footerTagline: getPublicEnvValue(
     'NEXT_PUBLIC_FMZ_FOOTER_TAGLINE',
     'A revolução imobiliária começou. Siga Firmeza Token!',
   ),
   socialLinks: [
-    buildSocialLink('TikTok', 'NEXT_PUBLIC_FMZ_TIKTOK_URL', 'https://vm.tiktok.com/ZMBpFWsJ6/'),
+    buildSocialLink('TikTok', 'NEXT_PUBLIC_FMZ_TIKTOK_URL', 'https://www.tiktok.com/@propya-ai'),
     buildSocialLink('Instagram', 'NEXT_PUBLIC_FMZ_INSTAGRAM_URL', 'https://www.instagram.com/firmezatoken/'),
     buildSocialLink('LinkedIn', 'NEXT_PUBLIC_FMZ_LINKEDIN_URL', 'https://www.linkedin.com/company/firmeza-token/'),
     buildSocialLink('YouTube', 'NEXT_PUBLIC_FMZ_YOUTUBE_URL', 'https://www.youtube.com/@propya-ai'),
