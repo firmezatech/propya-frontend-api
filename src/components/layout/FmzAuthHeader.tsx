@@ -5,7 +5,7 @@ import { Link } from '../../i18n/navigation';
 import { FmzBrandMark } from './FmzBrandMark';
 
 type FmzAuthHeaderProps = {
-  contextLabel: string;
+  contextLabel?: string;
   helperText?: string;
   actionHref: string;
   actionLabel: string;
@@ -46,10 +46,12 @@ export function FmzAuthHeader({
           <FmzBrandMark size="header" />
         </Link>
         <span aria-hidden="true" className="!mx-1 hidden h-[22px] w-px shrink-0 bg-fmz-border-light md:block" />
-        <span className="hidden items-center gap-[7px] whitespace-nowrap text-[12.5px] font-medium text-fmz-text-muted md:flex">
-          <span className="h-[5px] w-[5px] shrink-0 rounded-full bg-fmz-gold shadow-[0_0_0_3px_rgba(245,200,66,0.22)]" />
-          <strong className="font-semibold text-fmz-navy">{contextLabel}</strong>
-        </span>
+        {contextLabel ? (
+          <span className="hidden items-center gap-[7px] whitespace-nowrap text-[12.5px] font-medium text-fmz-text-muted md:flex">
+            <span className="h-[5px] w-[5px] shrink-0 rounded-full bg-fmz-gold shadow-[0_0_0_3px_rgba(245,200,66,0.22)]" />
+            <strong className="font-semibold text-fmz-navy">{contextLabel}</strong>
+          </span>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-3.5 text-[13px] text-fmz-text-muted">

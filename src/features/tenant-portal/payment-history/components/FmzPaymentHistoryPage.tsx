@@ -280,7 +280,6 @@ export function FmzPaymentHistoryPage() {
               <p className={styles.eyebrow}>Financeiro</p>
               <h1 className={styles.pageTitle}>Histórico de pagamentos</h1>
               <p className={styles.pageSub}>
-                <span>{history.length} boletos</span>
                 {counts.pago === history.length && history.length > 0 && (
                   <span className={styles.pillOk}><span className={styles.dot} />Conta em dia</span>
                 )}
