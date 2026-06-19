@@ -84,7 +84,7 @@ export function FmzFullPageLoading({
               <Image
                 priority
                 src={fmzPublicLayoutConfig.logoPath}
-                alt="FirmezaToken"
+                alt="Propya"
                 width={74}
                 height={74}
                 className="fmz-loading-logo-image"

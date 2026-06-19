@@ -20,7 +20,7 @@ export const fmzInstagramFeedConfig = {
 export const fmzInstagramFallbackPosts: readonly FmzInstagramPost[] = [
   {
     id: 'fallback-tokenizacao',
-    caption: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_FALLBACK_CAPTION_1', 'Conecte o Instagram oficial para exibir os posts reais da FirmezaToken.'),
+    caption: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_FALLBACK_CAPTION_1', 'Conecte o Instagram oficial para exibir os posts reais da Propya.'),
     imageUrl: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_FALLBACK_IMAGE_1', fmzInstagramFeedConfig.defaultImageUrl),
     permalink: instagramProfileUrl,
     likeCount: 0,

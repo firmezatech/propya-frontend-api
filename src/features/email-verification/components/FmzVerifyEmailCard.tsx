@@ -160,7 +160,7 @@ export function FmzVerifyEmailCard() {
           </h1>
           <p className="mb-8 max-w-[360px] text-[14.5px] leading-[1.65] text-fmz-text-muted [text-wrap:pretty]">
             Verificamos seu endereço com sucesso. Agora você tem acesso completo à plataforma{' '}
-            <strong className="font-semibold text-fmz-navy">FirmezaToken</strong> e pode começar a investir.
+            <strong className="font-semibold text-fmz-navy">Propya</strong> e pode começar a investir.
           </p>
 
           {/* Email chip — shown only when sessionStorage had the email */}

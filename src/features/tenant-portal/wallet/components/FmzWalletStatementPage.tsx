@@ -260,7 +260,7 @@ export function FmzWalletStatementPage() {
               <img src="/logo.png" alt="" width={40} height={40} style={{ objectFit: 'contain', borderRadius: 9 }} />
             </div>
             <div className={styles.brandText}>
-              <span className={styles.brandName}>{platformInfo?.brand_name ?? 'FirmezaToken'}</span>
+              <span className={styles.brandName}>{platformInfo?.brand_name ?? 'Propya'}</span>
               <span className={styles.brandTagline}>A revolução imobiliária começou.</span>
             </div>
           </div>
@@ -380,7 +380,7 @@ export function FmzWalletStatementPage() {
         <footer className={styles.foot}>
           <div className={styles.footLeft}>
             <strong>Documento informativo.</strong> Os valores acima refletem movimentações
-            registradas na plataforma {platformInfo?.brand_name ?? 'FirmezaToken'} até a data de emissão. Em caso de divergência,
+            registradas na plataforma {platformInfo?.brand_name ?? 'Propya'} até a data de emissão. Em caso de divergência,
             fale conosco em <strong>{platformInfo?.support_email ?? 'contato@propya.ai'}</strong>.<br />
             {[
               platformInfo?.company_legal_name ?? 'Propya Gestão Imobiliária',

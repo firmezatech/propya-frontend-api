@@ -278,7 +278,7 @@ export function FmzRegisterPage() {
 
                 <label className="terms-row" htmlFor="terms">
                   <input id="terms" type="checkbox" checked={formData.acceptedTerms && formData.acceptedPrivacyPolicy} onChange={(event) => updateTerms(event.target.checked)} />
-                  <span>Li e concordo com os <a href="/terms" target="_blank" rel="noopener noreferrer">Termos de Uso</a> e a <a href="/privacy" target="_blank" rel="noopener noreferrer">Política de Privacidade</a> da FirmezaToken.</span>
+                  <span>Li e concordo com os <a href="/terms" target="_blank" rel="noopener noreferrer">Termos de Uso</a> e a <a href="/privacy" target="_blank" rel="noopener noreferrer">Política de Privacidade</a> da Propya.</span>
                 </label>
                 <FieldError>{errors.terms}</FieldError>
               </div>
@@ -339,7 +339,7 @@ export function FmzRegisterPage() {
       </div>
 
       <footer>
-        <span>© FirmezaToken · A revolução imobiliária começou.</span>
+        <span>© Propya · A revolução imobiliária começou.</span>
         <div className="fsoc"><a href="#">TikTok</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">YouTube</a></div>
       </footer>
     </div>

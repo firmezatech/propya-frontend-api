@@ -11,7 +11,7 @@ const buildSocialLink = (label: string, envKey: string, fallbackHref: string): F
 });
 
 export const fmzPublicLayoutConfig = {
-  appName: getPublicEnvValue('NEXT_PUBLIC_FMZ_APP_NAME', 'FirmezaToken'),
+  appName: getPublicEnvValue('NEXT_PUBLIC_FMZ_APP_NAME', 'Propya'),
   helpUrl: getPublicEnvValue('NEXT_PUBLIC_FMZ_HELP_URL', 'https://wa.me/5511964850279'),
   homePath: getPublicEnvValue('NEXT_PUBLIC_FMZ_HOME_PATH', '/'),
   connectedDashboardPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_DASHBOARD_PATH', '/connected/dashboard'),
@@ -37,7 +37,7 @@ export const fmzPublicLayoutConfig = {
   connectedUserWalletStorageKey: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_USER_WALLET_STORAGE_KEY', 'wallet'),
   connectedUserProfileStorageKey: getPublicEnvValue('NEXT_PUBLIC_FMZ_CONNECTED_USER_PROFILE_STORAGE_KEY', 'profile'),
   instagramHandle: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_HANDLE', '@firmezatoken_propya'),
-  instagramProfileName: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_PROFILE_NAME', 'FirmezaToken · Imóveis com blockchain'),
+  instagramProfileName: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_PROFILE_NAME', 'Propya · Imóveis com blockchain'),
   instagramProfileUrl: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_PROFILE_URL', 'https://www.instagram.com/firmezatoken_propya/'),
   instagramPostsApiPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_POSTS_API_PATH', '/api/instagram/posts'),
   instagramFallbackPostCountLabel: getPublicEnvValue('NEXT_PUBLIC_FMZ_INSTAGRAM_FALLBACK_POST_COUNT_LABEL', 'Conectar'),
@@ -52,6 +52,6 @@ export const fmzPublicLayoutConfig = {
     buildSocialLink('TikTok', 'NEXT_PUBLIC_FMZ_TIKTOK_URL', 'https://vm.tiktok.com/ZMBpFWsJ6/'),
     buildSocialLink('Instagram', 'NEXT_PUBLIC_FMZ_INSTAGRAM_URL', 'https://www.instagram.com/firmezatoken/'),
     buildSocialLink('LinkedIn', 'NEXT_PUBLIC_FMZ_LINKEDIN_URL', 'https://www.linkedin.com/company/firmeza-token/'),
-    buildSocialLink('YouTube', 'NEXT_PUBLIC_FMZ_YOUTUBE_URL', 'https://www.youtube.com/@FirmezaToken'),
+    buildSocialLink('YouTube', 'NEXT_PUBLIC_FMZ_YOUTUBE_URL', 'https://www.youtube.com/@propya-ai'),
   ],
 } as const;

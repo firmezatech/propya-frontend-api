@@ -311,7 +311,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
 
             <div className="signup-nudge">
               <div className="t">
-                <strong>Primeira vez na FirmezaToken?</strong>
+                <strong>Primeira vez na Propya?</strong>
                 <span>Crie sua conta em menos de 1 minuto e comece com R$ 100.</span>
               </div>
               <Link href="/register">Criar conta <UserPlus aria-hidden="true" /></Link>
@@ -323,7 +323,7 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
       </div>
 
       <footer>
-        <span>© FirmezaToken · A revolução imobiliária começou.</span>
+        <span>© Propya · A revolução imobiliária começou.</span>
         <div className="fsoc"><a href="#">TikTok</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">YouTube</a></div>
       </footer>
     </div>

@@ -3,7 +3,7 @@
   "name": "Boas-vindas",
   "category": "Relacionamento",
   "badge": "transacional",
-  "subject": "Bem-vinda à FirmezaToken, {{name}}! 🎉",
+  "subject": "Bem-vinda à Propya, {{name}}! 🎉",
   "fields": [
     { "id": "name", "label": "Nome da pessoa", "type": "text", "placeholder": "Diana Aguilar", "required": true },
     { "id": "ctaUrl", "label": "Link do botão", "type": "url", "placeholder": "https://app.firmezatoken.com.br", "required": true }

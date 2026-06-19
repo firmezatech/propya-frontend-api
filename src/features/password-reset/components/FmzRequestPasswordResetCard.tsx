@@ -15,13 +15,13 @@ import { buildFmzRequestPasswordResetSchema } from '../domain/fmz-password-reset
 const RESEND_COOLDOWN_SECONDS = 30;
 
 const RECOVERY_STEPS = [
-  { title: 'Informe seu e-mail', description: 'O mesmo que você usa para entrar na FirmezaToken.' },
+  { title: 'Informe seu e-mail', description: 'O mesmo que você usa para entrar na Propya.' },
   { title: 'Receba o link seguro', description: 'Enviado na hora — válido por 30 minutos.' },
   { title: 'Crie uma nova senha', description: 'E volte a acompanhar a sua carteira.' },
 ] as const;
 
 const SUCCESS_STEPS = [
-  <>Abra o e-mail de <b className="font-semibold text-fmz-navy">FirmezaToken</b> e toque em <b className="font-semibold text-fmz-navy">“Redefinir senha”</b>.</>,
+  <>Abra o e-mail de <b className="font-semibold text-fmz-navy">Propya</b> e toque em <b className="font-semibold text-fmz-navy">“Redefinir senha”</b>.</>,
   <>O link é válido por <b className="font-semibold text-fmz-navy">30 minutos</b> e pode ser usado uma única vez.</>,
   <>Não encontrou? Verifique a caixa de <b className="font-semibold text-fmz-navy">spam</b> ou promoções.</>,
 ] as const;
@@ -204,7 +204,7 @@ export function FmzRequestPasswordResetCard() {
             <ShieldCheck className="mt-px h-4 w-4 shrink-0 text-fmz-gold-dark" aria-hidden="true" />
             <span>
               <b className="font-semibold text-fmz-navy">Nunca pedimos sua senha por e-mail ou telefone.</b> O link de
-              recuperação leva apenas para o domínio oficial da FirmezaToken.
+              recuperação leva apenas para o domínio oficial da Propya.
             </span>
           </div>
         </div>

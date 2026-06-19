@@ -42,7 +42,7 @@ export function FmzAuthHeader({
       className="sticky top-0 z-[100] flex h-[68px] items-center justify-between gap-[18px] border-b border-fmz-border-light bg-white/90 !px-[clamp(20px,4vw,40px)] backdrop-blur-md backdrop-saturate-150"
     >
       <div className="flex min-w-0 items-center gap-3.5">
-        <Link href="/" aria-label="FirmezaToken" className="no-underline">
+        <Link href="/" aria-label="Propya" className="no-underline">
           <FmzBrandMark size="header" />
         </Link>
         <span aria-hidden="true" className="!mx-1 hidden h-[22px] w-px shrink-0 bg-fmz-border-light md:block" />

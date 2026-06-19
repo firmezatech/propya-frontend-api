@@ -430,7 +430,7 @@ export function FmzIdentityVerificationPage() {
           <a href="/privacy" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>
           {' '}e os{' '}
           <a href="/terms" target="_blank" rel="noopener noreferrer">Termos de Uso</a>
-          {' '}da FirmezaToken.
+          {' '}da Propya.
         </p>
 
       </div>

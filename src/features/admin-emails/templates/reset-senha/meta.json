@@ -3,7 +3,7 @@
   "name": "Redefinir senha",
   "category": "Segurança",
   "badge": "transacional",
-  "subject": "Redefinir sua senha na FirmezaToken",
+  "subject": "Redefinir sua senha na Propya",
   "fields": [
     { "id": "name", "label": "Nome da pessoa", "type": "text", "placeholder": "Diana Aguilar", "required": true }
   ]
