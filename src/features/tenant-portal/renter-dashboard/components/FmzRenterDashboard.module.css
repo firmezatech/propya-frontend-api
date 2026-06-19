@@ -125,7 +125,7 @@
 
 /* Journey timeline */
 .jTl { margin-top: 30px; padding: 0 6px; }
-.jTlWrap { position: relative; padding-top: 46px; }
+.jTlWrap { position: relative; padding-top: 58px; }
 .jTlTrack {
   position: relative; height: 10px;
   background: var(--page); border-radius: 999px; overflow: hidden;
@@ -143,7 +143,7 @@
   box-shadow: 0 2px 8px rgba(232,182,32,.35); position: relative; z-index: 1;
 }
 .jTlHouse {
-  position: absolute; top: 24px; left: 0%;
+  position: absolute; top: 36px; left: 0%;
   font-size: 26px; transform: translateX(-50%);
   transition: left 1.8s cubic-bezier(.4,0,.2,1);
   animation: houseFloat 3s ease-in-out infinite;
@@ -156,20 +156,22 @@
 .jTlBubble {
   position: absolute; top: 0; left: 0%;
   background: var(--navy); color: #fff;
-  padding: 3px 8px; border-radius: 6px;
-  font-family: var(--font-mono), ui-monospace, monospace; font-weight: 600; font-size: 11px;
+  padding: 4px 8px; border-radius: 6px;
+  font-family: var(--font-inter), sans-serif; font-weight: 600; font-size: 11px;
   white-space: nowrap; transform: translateX(-50%);
   transition: left 1.8s cubic-bezier(.4,0,.2,1);
   z-index: 5;
   box-shadow: 0 4px 12px rgba(14,22,38,.18);
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
 }
+.jTlBubbleAmt { font-size: 9px; font-weight: 400; opacity: 0.82; }
 .jTlBubble::after {
   content: ''; position: absolute; left: 50%; bottom: -4px;
   transform: translateX(-50%);
   border-left: 4px solid transparent; border-right: 4px solid transparent;
   border-top: 4px solid var(--navy);
 }
-.jTlPoints { position: relative; height: 42px; margin-top: 16px; }
+.jTlPoints { position: relative; height: 50px; margin-top: 16px; }
 .jpt {
   position: absolute; top: 0; transform: translateX(-50%);
   display: flex; flex-direction: column; align-items: center; gap: 5px;
@@ -177,7 +179,7 @@
 .jptTick { width: 1.5px; height: 7px; background: var(--line); border-radius: 1px; }
 .jptDone .jptTick { background: var(--gold); }
 .jptNext .jptTick { background: var(--gold); height: 10px; width: 2px; box-shadow: 0 0 0 3px rgba(232,182,32,.18); }
-.jptLabel { font-family: var(--font-mono), ui-monospace, monospace; font-size: 10px; color: var(--hint); font-weight: 500; letter-spacing: .02em; }
+.jptLabel { font-family: var(--font-inter), sans-serif; font-size: 10px; color: var(--hint); font-weight: 500; letter-spacing: .02em; }
 .jptDone .jptLabel { color: var(--ink); font-weight: 600; }
 .jptNext .jptLabel { color: var(--gold-deep); font-weight: 700; }
 .jptCap { font-size: 9.5px; color: var(--hint); font-weight: 500; white-space: nowrap; }

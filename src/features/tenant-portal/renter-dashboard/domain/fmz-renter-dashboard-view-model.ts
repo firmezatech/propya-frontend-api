@@ -4,15 +4,14 @@ import { formatDateBR } from '../../../../lib/fmz-date';
 
 const DEFAULT_RENTER_NAME = 'Diana';
 const DEFAULT_REFERENCE_MONTH = 'Dezembro 2025';
-const DEFAULT_NEXT_MILESTONE_PERCENTAGE = 10;
+const DEFAULT_NEXT_MILESTONE_PERCENTAGE = 25;
 
 const JOURNEY_MILESTONES = [
-  { percentage: 0,   caption: 'início' },
-  { percentage: 10,  caption: 'próxima meta' },
-  { percentage: 25,  caption: '1/4 do imóvel' },
-  { percentage: 50,  caption: 'meio caminho' },
-  { percentage: 75,  caption: 'reta final' },
-  { percentage: 100, caption: 'casa própria' },
+  { percentage: 0   },
+  { percentage: 25  },
+  { percentage: 50  },
+  { percentage: 75  },
+  { percentage: 100 },
 ] as const;
 
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
@@ -48,11 +47,11 @@ function normalizeInvoiceLineLabel(label: string, key: string): string {
   return label.trim().toLowerCase() === 'aluguel com desconto' ? 'Aluguel' : label;
 }
 
-function buildJourneyMilestones(ownershipPercentage: number, nextMilestonePercentage: number) {
+function buildJourneyMilestones(ownershipPercentage: number, nextMilestonePercentage: number, totalPropertyValue: number) {
   return JOURNEY_MILESTONES.map((milestone) => ({
     percentage: milestone.percentage,
     label: `${numberFormatter.format(milestone.percentage)}%`,
-    caption: milestone.caption,
+    amountLabel: formatCurrency(milestone.percentage * totalPropertyValue / 100),
     visualPosition: milestone.percentage,
     status: milestone.percentage < ownershipPercentage
       ? 'done' as const
@@ -272,7 +271,7 @@ export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): Fm
     nextMilestoneRentReductionLabel: formatCurrency(estimatedNextReduction),
     nextMilestoneGapLabel:        formatPercentagePoints(Math.max(nextMilestonePercentage - ownershipPercentage, 0)),
     ownershipVisualPosition:      normalizePercentage(ownershipPercentage),
-    journeyMilestones:            buildJourneyMilestones(ownershipPercentage, nextMilestonePercentage),
+    journeyMilestones:            buildJourneyMilestones(ownershipPercentage, nextMilestonePercentage, totalPropertyValue),
     currentRentLabel:             formatCurrency(currentRentAmount),
     currentRentNumber:            currentRentAmount,
     originalRentLabel:            formatCurrency(originalRentAmount),

@@ -8,7 +8,7 @@ export type FmzDashboardMoneyLine = {
 export type FmzRenterDashboardMilestone = {
   percentage: number;
   label: string;
-  caption: string;
+  amountLabel: string;
   visualPosition: number;
   status: 'done' | 'next' | 'future';
 };

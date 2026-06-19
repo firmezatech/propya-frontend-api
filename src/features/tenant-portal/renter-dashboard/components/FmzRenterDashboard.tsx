@@ -231,15 +231,18 @@ export function FmzRenterDashboard({
             Sua jornada de compra
           </span>
           <h2 className={styles.jTitle}>
-            Você já é dona de <span className={styles.pctBig}>{viewModel.ownershipPercentageLabel}</span> da sua casa
+            Você já conquistou <span className={styles.pctBig}>{viewModel.ownershipPercentageLabel}</span> do seu imóvel
           </h2>
           <p className={styles.jDesc}>
-            No seu ritmo atual de compra, você atinge a próxima meta de {viewModel.nextMilestoneLabel} em breve.
+            No seu ritmo atual, você atinge a próxima meta de {viewModel.nextMilestoneLabel} em breve, continue avançando!
           </p>
 
           <div className={styles.jTl}>
             <div className={styles.jTlWrap}>
-              <div className={styles.jTlBubble} style={timelineStyle}>{viewModel.ownershipPercentageLabel}</div>
+              <div className={styles.jTlBubble} style={timelineStyle}>
+                <span>{viewModel.ownershipPercentageLabel}</span>
+                <span className={styles.jTlBubbleAmt}>{viewModel.acquiredTokensLabel}</span>
+              </div>
               <div className={styles.jTlHouse} style={timelineStyle}>🏡</div>
               <div className={styles.jTlTrack}>
                 <div className={styles.jTlFill} style={{ width: hasAnimated ? `${viewModel.ownershipVisualPosition}%` : '0%' }} />
@@ -253,7 +256,7 @@ export function FmzRenterDashboard({
                   >
                     <div className={styles.jptTick} />
                     <div className={styles.jptLabel}>{m.label}</div>
-                    <div className={styles.jptCap}>{m.caption}</div>
+                    <div className={styles.jptCap}>{m.amountLabel}</div>
                   </div>
                 ))}
               </div>
