@@ -190,10 +190,11 @@
   background: #fff;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  padding: 24px 26px;
+  padding: 18px 20px;
   box-shadow: var(--shadow-md);
   display: flex; flex-direction: column;
-  min-height: 300px;
+  min-height: 0;
+  align-self: start;
   position: relative; overflow: hidden;
 }
 .nextCard::after {
@@ -208,7 +209,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 .nextEyebrow {
   font-size: 11px; font-weight: 700; letter-spacing: .1em;
@@ -248,7 +249,7 @@
   font-weight: 600;
 }
 .goalCarouselBody {
-  min-height: 154px;
+  min-height: 0;
   animation: goalFadeIn .24s ease both;
 }
 @keyframes goalFadeIn {
@@ -283,15 +284,15 @@
 .nbadge svg { width: 10px; height: 10px; }
 .nextTitle {
   font-family: var(--font-inter), sans-serif; font-weight: 700;
-  font-size: clamp(20px,2vw,24px); line-height: 1.2; letter-spacing: -.018em;
-  color: var(--navy); margin-bottom: 6px;
+  font-size: clamp(13px,1.4vw,16px); line-height: 1.2; letter-spacing: -.018em;
+  color: var(--navy); margin-bottom: 4px;
 }
 .nextAmount {
   font-family: var(--font-inter), sans-serif; font-weight: 800;
-  font-size: 36px; color: var(--navy); letter-spacing: -.03em; line-height: 1; margin-bottom: 6px;
+  font-size: 28px; color: var(--navy); letter-spacing: -.03em; line-height: 1; margin-bottom: 4px;
 }
 .currency { font-size: .55em; font-weight: 500; color: var(--muted); margin-right: 4px; }
-.nextDesc { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.55; }
+.nextDesc { font-size: 12px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
 .nextProgress { margin-bottom: 18px; display: flex; flex-direction: column; gap: 6px; }
 .nextProgressBar { height: 6px; background: var(--page); border-radius: 999px; overflow: hidden; }
 .nextProgressFill {
@@ -382,18 +383,18 @@
   display: flex; align-items: center; justify-content: space-between;
   gap: 14px; padding: 7px 0; font-size: 13.5px;
 }
-.blLabel { color: var(--muted); display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.blLabel { color: var(--navy); display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .bli {
   width: 22px; height: 22px; border-radius: 6px;
   background: var(--page); color: var(--navy);
   display: grid; place-items: center; flex-shrink: 0;
 }
 .bli svg { width: 11px; height: 11px; }
-.blLabelHighlight { color: var(--gold-deep); font-weight: 600; }
-.bliHighlight { background: var(--gold-tint); color: var(--gold-deep); }
+.blLabelHighlight { color: var(--navy); font-weight: 600; }
+.bliHighlight { background: var(--page); color: var(--navy); }
 .blVal { font-weight: 600; color: var(--navy); white-space: nowrap; font-family: var(--font-inter), sans-serif; font-size: 13px; }
-.blValGreen { color: var(--green); }
-.blValGold { color: var(--gold-deep); font-weight: 700; }
+.blValGreen { color: var(--navy); }
+.blValGold { color: var(--navy); font-weight: 700; }
 .billTotalRow {
   display: flex; align-items: baseline; justify-content: space-between;
   padding: 8px 0 16px;
