@@ -370,30 +370,110 @@
 /* ─── Success page ───────────────────────────────────────────────────────────── */
 
 .successPage {
-  max-width: 680px;
+  max-width: 540px;
   margin: 0 auto;
   padding: clamp(32px, 5vw, 56px) 0 clamp(40px, 6vw, 72px);
 }
 
 .successCard {
   background: #fff;
-  border: 1px solid var(--fmz-border-light);
-  border-radius: 20px;
-  box-shadow: 0 2px 6px rgba(14, 22, 38, 0.05), 0 10px 30px -12px rgba(14, 22, 38, 0.12);
-  padding: clamp(28px, 5vw, 44px) clamp(24px, 5vw, 40px);
-  text-align: center;
-  position: relative;
+  border: 1.5px solid var(--fmz-border-light);
+  border-radius: 22px;
+  box-shadow: 0 2px 6px rgba(14, 22, 38, 0.05), 0 20px 48px -12px rgba(14, 22, 38, 0.14);
   overflow: hidden;
+  position: relative;
 }
 
-.scBar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--fmz-success);
+.scAccent {
+  height: 5px;
+  background: linear-gradient(90deg, #0D5E3A 0%, #127A4F 50%, #34C985 100%);
 }
+
+.scBody {
+  padding: clamp(32px, 5vw, 48px) clamp(24px, 5vw, 40px) clamp(28px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* ─── Animated shield ────────────────────────────────────────────────────────── */
+
+@keyframes fmzRingout {
+  0%   { transform: scale(0.5); opacity: 0.9; }
+  100% { transform: scale(1);   opacity: 0; }
+}
+
+@keyframes fmzPopIn {
+  from { transform: scale(0.4); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+@keyframes fmzDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fmzSlideUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.checkWrap {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 28px;
+  flex-shrink: 0;
+}
+
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid var(--fmz-success);
+  animation: fmzRingout 1s ease-out forwards;
+  opacity: 0;
+}
+
+.ring1 { width: 100px; height: 100px; animation-delay: 0.1s; }
+.ring2 { width: 120px; height: 120px; animation-delay: 0.3s; border-color: rgba(18, 122, 79, 0.35); }
+.ring3 { width: 140px; height: 140px; animation-delay: 0.5s; border-color: rgba(18, 122, 79, 0.18); }
+
+.checkCircle {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--fmz-success-bg);
+  border: 2.5px solid rgba(18, 122, 79, 0.28);
+  display: grid;
+  place-items: center;
+  position: relative;
+  z-index: 1;
+  animation: fmzPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s both;
+  color: var(--fmz-success);
+}
+
+.shieldSvg {
+  width: 40px;
+  height: 40px;
+}
+
+.shieldOutline {
+  stroke-dasharray: 80;
+  stroke-dashoffset: 80;
+  animation: fmzDraw 0.55s ease-out 0.3s forwards;
+  fill: none;
+}
+
+.shieldTick {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: fmzDraw 0.4s ease-out 0.7s forwards;
+  fill: none;
+}
+
+/* ─── Badge + text ───────────────────────────────────────────────────────────── */
 
 .scBadge {
   display: inline-flex;
@@ -401,13 +481,14 @@
   gap: 7px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--fmz-success);
   background: var(--fmz-success-bg);
-  padding: 6px 13px;
+  border: 1px solid rgba(18, 122, 79, 0.22);
+  padding: 5px 12px;
   border-radius: 999px;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .scBadge::before {
@@ -416,106 +497,189 @@
   height: 6px;
   border-radius: 50%;
   background: currentColor;
+  box-shadow: 0 0 0 2px rgba(18, 122, 79, 0.2);
   flex-shrink: 0;
 }
 
-.scIco {
-  width: 92px;
-  height: 92px;
-  border-radius: 50%;
-  background: var(--fmz-success-bg);
-  color: var(--fmz-success);
-  display: grid;
-  place-items: center;
-  margin: 0 auto 24px;
-  position: relative;
-}
-
-.scIco::before {
-  content: '';
-  position: absolute;
-  inset: -9px;
-  border-radius: 50%;
-  border: 1px dashed rgba(18, 122, 79, 0.32);
-}
-
-.scIcoSvg { width: 42px; height: 42px; }
-
 .scTitle {
-  font-weight: 700;
+  font-weight: 800;
   font-size: clamp(22px, 4vw, 28px);
   color: var(--fmz-navy);
   letter-spacing: -0.03em;
   margin: 0 0 10px;
-  line-height: 1.15;
+  line-height: 1.1;
 }
 
 .scSub {
   font-size: 14px;
   color: var(--fmz-text-muted);
   line-height: 1.65;
-  max-width: 46ch;
-  margin: 0 auto 28px;
+  max-width: 42ch;
+  margin: 0 auto 26px;
 }
 
 .scSub strong { color: var(--fmz-text-primary); font-weight: 600; }
 
-/* ─── Next steps checklist ───────────────────────────────────────────────────── */
+/* ─── Identity chip ──────────────────────────────────────────────────────────── */
 
-.nextList {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  text-align: left;
-  margin-bottom: 28px;
-}
-
-.nextItem {
+.idChip {
   display: flex;
   align-items: center;
-  gap: 13px;
-  padding: 14px 16px;
-  border: 1px solid var(--fmz-border-light);
+  gap: 12px;
+  background: var(--fmz-success-bg);
+  border: 1.5px solid rgba(18, 122, 79, 0.22);
   border-radius: 13px;
-  background: #fff;
+  padding: 13px 16px;
+  margin-bottom: 12px;
+  width: 100%;
+  text-align: left;
+  animation: fmzSlideUp 0.4s ease-out 0.6s both;
 }
 
-.niIc {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  flex-shrink: 0;
+.idAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: var(--fmz-success);
+  color: #fff;
   display: grid;
   place-items: center;
-  background: var(--fmz-warning-bg);
-  color: var(--fmz-gold-dark);
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
 }
 
-.niIcDone {
+.idInfo { flex: 1; min-width: 0; }
+
+.idName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fmz-navy);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.idDoc {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fmz-success);
+  margin-top: 2px;
+  opacity: 0.8;
+}
+
+.verifiedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--fmz-success);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 4px 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.verifiedBadge svg { width: 10px; height: 10px; }
+
+/* ─── Meta row ───────────────────────────────────────────────────────────────── */
+
+.idMeta {
+  display: flex;
+  width: 100%;
+  margin-bottom: 24px;
+  border: 1.5px solid var(--fmz-border-light);
+  border-radius: 13px;
+  overflow: hidden;
+  animation: fmzSlideUp 0.4s ease-out 0.7s both;
+}
+
+.idMetaCell {
+  flex: 1;
+  padding: 12px 14px;
+  text-align: left;
+  border-right: 1.5px solid var(--fmz-border-light);
+}
+
+.idMetaCell:last-child { border-right: none; }
+
+.idMetaLbl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--fmz-text-hint);
+  margin-bottom: 4px;
+}
+
+.idMetaVal {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--fmz-navy);
+}
+
+/* ─── Unlocked features ──────────────────────────────────────────────────────── */
+
+.unlocked {
+  width: 100%;
+  text-align: left;
+  margin-bottom: 28px;
+  animation: fmzSlideUp 0.4s ease-out 0.8s both;
+}
+
+.unlockedHead {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--fmz-text-muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unlockedHead::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--fmz-border-light);
+}
+
+.ulItem {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 0;
+}
+
+.ulItem + .ulItem { border-top: 1px solid var(--fmz-border-light); }
+
+.ulIco {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  flex-shrink: 0;
   background: var(--fmz-success-bg);
   color: var(--fmz-success);
+  display: grid;
+  place-items: center;
 }
 
-.niBody {
+.ulIco svg { width: 15px; height: 15px; }
+
+.ulText {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--fmz-text-primary);
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
 }
 
-.niBody strong { font-size: 13.5px; font-weight: 600; color: var(--fmz-text-primary); }
-.niBody span   { font-size: 12px; color: var(--fmz-text-muted); }
-
-.niStep {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--fmz-text-hint);
-  flex-shrink: 0;
-  min-width: 20px;
-  text-align: right;
-}
-
-.niStepDone { color: var(--fmz-success); }
+.ulCheck { width: 17px; height: 17px; color: var(--fmz-success); flex-shrink: 0; }
 
 /* ─── Gold CTA button ────────────────────────────────────────────────────────── */
 
@@ -525,39 +689,30 @@
   justify-content: center;
   gap: 9px;
   font-family: inherit;
-  font-size: 14.5px;
-  font-weight: 600;
-  letter-spacing: -0.005em;
-  padding: 14px 24px;
-  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding: 15px 24px;
+  border-radius: 13px;
   cursor: pointer;
-  border: 1.5px solid var(--fmz-gold);
+  border: 1.5px solid #C8A020;
   width: 100%;
-  background: var(--fmz-gold);
+  background: #F5C842;
   color: var(--fmz-navy);
-  box-shadow: 0 4px 14px rgba(232, 182, 32, 0.32);
-  transition: background 0.16s, border-color 0.16s, transform 0.14s, box-shadow 0.16s;
-  margin-bottom: 16px;
+  box-shadow: 0 4px 14px rgba(245, 200, 66, 0.35);
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+  animation: fmzSlideUp 0.4s ease-out 0.9s both;
 }
 
 .sBtnGold:hover {
-  background: #F5D26B;
-  border-color: #F5D26B;
+  background: #f0c030;
   transform: translateY(-1px);
-  box-shadow: 0 8px 22px rgba(232, 182, 32, 0.4);
+  box-shadow: 0 8px 24px rgba(245, 200, 66, 0.45);
 }
 
 .sBtnGold:active { transform: scale(0.98); }
 
-.sBtnGold svg { width: 16px; height: 16px; flex-shrink: 0; }
-
-/* ─── Countdown ──────────────────────────────────────────────────────────────── */
-
-.successCountdown {
-  margin: 0;
-  font-size: 13px;
-  color: var(--fmz-text-hint);
-}
+.sBtnGold svg { width: 17px; height: 17px; flex-shrink: 0; }
 
 /* ─── Responsive ─────────────────────────────────────────────────────────────── */
 
@@ -566,12 +721,15 @@
   .trust { grid-template-columns: 1fr; }
   .statusBody { flex-direction: column; }
   .title { font-size: 22px; }
-
-  .scIco { width: 72px; height: 72px; }
-  .scIcoSvg { width: 32px; height: 32px; }
-  .scIco::before { inset: -7px; }
+  .scTitle { font-size: 22px; }
+  .idMeta { flex-direction: column; }
+  .idMetaCell { border-right: none; border-bottom: 1.5px solid var(--fmz-border-light); }
+  .idMetaCell:last-child { border-bottom: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ring { display: none; }
+  .checkCircle, .idChip, .idMeta, .unlocked, .sBtnGold { animation: none; }
+  .shieldOutline, .shieldTick { stroke-dashoffset: 0; animation: none; }
   .sBtnGold { transition: none; }
 }

@@ -6,6 +6,7 @@ export type FmzPlatformInfo = {
   company_cnpj: string | null;
   company_address: string | null;
   support_email: string | null;
+  support_whatsapp_url: string | null;
 };
 
 const FALLBACK_PLATFORM_INFO: FmzPlatformInfo = {
@@ -14,6 +15,7 @@ const FALLBACK_PLATFORM_INFO: FmzPlatformInfo = {
   company_cnpj: null,
   company_address: null,
   support_email: null,
+  support_whatsapp_url: null,
 };
 
 const recordOf = (value: unknown): Record<string, unknown> =>
@@ -25,11 +27,12 @@ const optionalStr = (value: unknown): string | null =>
 const normalizePlatformInfo = (raw: unknown): FmzPlatformInfo => {
   const r = recordOf(raw);
   return {
-    brand_name:         optionalStr(r.brand_name),
-    company_legal_name: optionalStr(r.company_legal_name),
-    company_cnpj:       optionalStr(r.company_cnpj),
-    company_address:    optionalStr(r.company_address),
-    support_email:      optionalStr(r.support_email),
+    brand_name:           optionalStr(r.brand_name),
+    company_legal_name:   optionalStr(r.company_legal_name),
+    company_cnpj:         optionalStr(r.company_cnpj),
+    company_address:      optionalStr(r.company_address),
+    support_email:        optionalStr(r.support_email),
+    support_whatsapp_url: optionalStr(r.support_whatsapp_url),
   };
 };
 

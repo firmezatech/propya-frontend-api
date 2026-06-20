@@ -48,6 +48,7 @@ type FmzConnectedDropdownProps = {
   principalInitials?: string | null;
   locale?: string;
   roleLabel?: string;
+  supportWhatsappUrl?: string | null;
 };
 
 // ─── Active route helper ──────────────────────────────────────────────────────
@@ -158,6 +159,7 @@ export function FmzConnectedDropdown({
   principalInitials = null,
   locale,
   roleLabel = 'Inquilina',
+  supportWhatsappUrl = null,
 }: FmzConnectedDropdownProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -295,7 +297,13 @@ export function FmzConnectedDropdown({
       <button
         type="button"
         aria-label="Ajuda"
-        onClick={() => router.push(localizeHref('/connected/coming-soon'))}
+        onClick={() => {
+          if (supportWhatsappUrl) {
+            window.open(supportWhatsappUrl, '_blank', 'noopener,noreferrer');
+          } else {
+            router.push(localizeHref('/connected/coming-soon'));
+          }
+        }}
         className="hidden items-center gap-1.5 rounded-lg bg-transparent px-3 py-2 text-[13px] font-medium text-fmz-text-muted transition hover:bg-fmz-page hover:text-fmz-navy sm:inline-flex"
       >
         <Shield className="h-3.5 w-3.5" aria-hidden="true" />

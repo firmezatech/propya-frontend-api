@@ -1,0 +1,1 @@
+export { FmzAdminCoOwnerPayoutsList } from './FmzAdminCoOwnerPayoutsList';

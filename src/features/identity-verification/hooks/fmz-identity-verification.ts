@@ -47,6 +47,11 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
   const pollAttemptsRef = useRef(0);
   // Tracks whether we've already set the user name so refetchKyc stays stable (no userName dep).
   const userNameSetRef = useRef(false);
+  // Tracks whether the Didit iframe is open. Read synchronously inside poll callbacks so the
+  // poll keeps running while the user is verifying, even if the current KYC status is a
+  // terminal value from a prior failed attempt. Refs don't trigger re-renders and are safe
+  // to read inside useCallback without adding them as deps.
+  const sessionOpenRef = useRef(false);
 
   const clearPollTimer = useCallback(() => {
     if (pollTimerRef.current !== null) {
@@ -72,10 +77,11 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
     }
   }, []);
 
-  // Polls every POLL_INTERVAL_MS after the Didit session closes. Didit's webhook reaches
-  // the backend within a few seconds; we poll until verified, another terminal state,
-  // or POLL_MAX_ATTEMPTS is exceeded. runPoll lives inside schedulePoll so each invocation
-  // creates a fresh closure — safe to call again without stale state.
+  // Polls every POLL_INTERVAL_MS. Starts as soon as the Didit session opens (so the page
+  // updates even if the user never clicks X) and restarts if closeSession is called manually.
+  // Continues while status is pending or under_review — both can still resolve to verified.
+  // Didit's webhook typically arrives within seconds; the 30-attempt cap (60 s) guards
+  // against infinite loops when a session goes to manual review.
   const schedulePoll = useCallback(() => {
     clearPollTimer();
     pollAttemptsRef.current = 0;
@@ -102,7 +108,9 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
           if (kycStatus === 'verified') {
             clearPollTimer();
             setJustVerified(true);
-          } else if (kycStatus === 'pending') {
+          } else if (sessionOpenRef.current || kycStatus === 'pending' || kycStatus === 'under_review') {
+            // Keep polling while the iframe is open (status may still be a stale terminal
+            // value from a prior attempt) or while status is genuinely transient.
             runPoll();
           } else {
             clearPollTimer();
@@ -124,16 +132,19 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
     setSessionState({ status: 'starting' });
     try {
       const session = await startDiditSession();
+      sessionOpenRef.current = true;
       setSessionState({ status: 'open', verificationUrl: session.verificationUrl });
+      schedulePoll();
     } catch (error) {
       const message = error instanceof Error
         ? error.message
         : 'Não foi possível iniciar a sessão de verificação.';
       setSessionState({ status: 'error', message });
     }
-  }, []);
+  }, [schedulePoll]);
 
   const closeSession = useCallback(() => {
+    sessionOpenRef.current = false;
     setSessionState({ status: 'idle' });
     schedulePoll();
   }, [schedulePoll]);

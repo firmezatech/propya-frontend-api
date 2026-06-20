@@ -22,8 +22,9 @@ import {
   WalletCards,
   Wrench,
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
+import { getPlatformInfo } from '../../features/tenant-portal/services/fmz-platform-info-api';
 import { buildFmzLocalizedHref } from '../../lib/fmz-localize-href';
 import type { FmzAccessControlPage, FmzAccessControlPrincipal } from '../../features/access-control/domain';
 import { normalizeFmzPath } from '../../features/access-control/domain';
@@ -158,6 +159,12 @@ const buildConnectedDropdownItems = (
 export function FmzConnectedHeader({ principal = null }: FmzConnectedHeaderProps) {
   const params = useParams<{ locale?: string }>();
 
+  const [supportWhatsappUrl, setSupportWhatsappUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    getPlatformInfo().then((info) => setSupportWhatsappUrl(info.support_whatsapp_url));
+  }, []);
+
   const localizeHref = useMemo(
     () => (href: string) => buildFmzLocalizedHref(params?.locale, href),
     [params?.locale],
@@ -180,10 +187,6 @@ export function FmzConnectedHeader({ principal = null }: FmzConnectedHeaderProps
           >
             <FmzBrandMark size="header" />
           </Link>
-          <span className="hidden h-[22px] w-px shrink-0 bg-fmz-border-light md:inline-block" />
-          <span className="hidden items-center gap-2 whitespace-nowrap text-[12.5px] font-medium leading-none text-fmz-text-muted before:h-1.5 before:w-1.5 before:rounded-full before:bg-fmz-gold before:shadow-[0_0_0_3px_rgba(232,182,32,0.22)] before:content-[''] md:inline-flex">
-            <strong className="font-semibold text-fmz-navy">Painel da {roleLabel}</strong>
-          </span>
         </div>
 
         {/* Actions area — reserved min-width prevents layout shift */}
@@ -198,6 +201,7 @@ export function FmzConnectedHeader({ principal = null }: FmzConnectedHeaderProps
             principalInitials={principal?.initials}
             locale={params?.locale}
             roleLabel={roleLabel}
+            supportWhatsappUrl={supportWhatsappUrl}
           />
         </div>
       </div>
