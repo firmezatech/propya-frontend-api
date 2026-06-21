@@ -17,9 +17,9 @@ type StatusPill = { value: FmzKycDisplayStatus | ''; label: string };
 const STATUS_PILLS: StatusPill[] = [
   { value: '', label: 'Todos' },
   { value: 'pending', label: 'Aguardando' },
-  { value: 'in_review', label: 'Em análise' },
+  { value: 'under_review', label: 'Em análise' },
   { value: 'verified', label: 'Aprovado' },
-  { value: 'declined', label: 'Negado' },
+  { value: 'rejected', label: 'Negado' },
   { value: 'released', label: 'Liberado' },
 ];
 

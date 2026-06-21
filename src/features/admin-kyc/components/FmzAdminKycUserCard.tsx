@@ -9,19 +9,19 @@ import type { FmzAdminKycUser, FmzKycDisplayStatus, FmzKycDocumentType } from '.
 // ─── Label maps ───────────────────────────────────────────────────────────────
 
 const STATUS_LABEL: Record<FmzKycDisplayStatus, string> = {
-  pending: 'Aguardando',
-  in_review: 'Em análise',
-  verified: 'Aprovado',
-  declined: 'Negado',
-  released: 'Liberado p/ nova tentativa',
+  pending:      'Aguardando',
+  under_review: 'Em análise',
+  verified:     'Aprovado',
+  rejected:     'Negado',
+  released:     'Liberado p/ nova tentativa',
 };
 
 const STATUS_CLASSES: Record<FmzKycDisplayStatus, string> = {
-  pending: 'border-[#FDE68A] bg-[#FFFBEB] text-[#B45309]',
-  in_review: 'border-[#BFDBFE] bg-[#EFF6FF] text-[#2563EB]',
-  verified: 'border-[#A7F3D0] bg-[#F0FAF5] text-[#1A8C5B]',
-  declined: 'border-[#F5C4BF] bg-[#FEF5F4] text-[#D94F3D]',
-  released: 'border-[#DDD6FE] bg-[#F5F3FF] text-[#7C3AED]',
+  pending:      'border-[#FDE68A] bg-[#FFFBEB] text-[#B45309]',
+  under_review: 'border-[#BFDBFE] bg-[#EFF6FF] text-[#2563EB]',
+  verified:     'border-[#A7F3D0] bg-[#F0FAF5] text-[#1A8C5B]',
+  rejected:     'border-[#F5C4BF] bg-[#FEF5F4] text-[#D94F3D]',
+  released:     'border-[#DDD6FE] bg-[#F5F3FF] text-[#7C3AED]',
 };
 
 const DOCUMENT_LABEL: Record<FmzKycDocumentType, string> = {
@@ -71,8 +71,8 @@ export function FmzAdminKycUserCard({ user, releasing, onReleaseClick }: Props) 
   const [open, setOpen] = useState(false);
   const displayStatus = resolveKycDisplayStatus(user);
 
-  // 'declined' (not yet released) is the only actionable state
-  const canRelease = displayStatus === 'declined';
+  // 'rejected' (not yet released) is the only actionable state
+  const canRelease = displayStatus === 'rejected';
 
   return (
     <div className="overflow-hidden rounded-xl border-[1.5px] border-[#E8EAF0] bg-white transition hover:border-[#CBD0DC]">

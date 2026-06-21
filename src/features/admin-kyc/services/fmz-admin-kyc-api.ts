@@ -42,9 +42,9 @@ const arr = <T>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) :
 
 const kycStatusOf = (value: unknown): FmzKycStatus => {
   const raw = str(value).toLowerCase();
-  if (raw === 'verified') return 'verified';
-  if (raw === 'in_review') return 'in_review';
-  if (raw === 'declined') return 'declined';
+  if (raw === 'verified')                                  return 'verified';
+  if (raw === 'under_review')                              return 'under_review';
+  if (raw === 'rejected' || raw === 'needs_resubmission') return 'rejected';
   return 'pending';
 };
 
@@ -122,7 +122,7 @@ export async function listAdminKycUsers(
   if (filters.status) {
     // 'released' is a frontend-only display status — map to backend params
     if (filters.status === 'released') {
-      params.status = 'declined';
+      params.status = 'rejected';
       params.releasedForResubmission = 'true';
     } else {
       params.status = filters.status;

@@ -1,6 +1,6 @@
 // ─── KYC status (backend values) ─────────────────────────────────────────────
 
-export type FmzKycStatus = 'pending' | 'in_review' | 'verified' | 'declined';
+export type FmzKycStatus = 'pending' | 'under_review' | 'verified' | 'rejected';
 
 /**
  * Display status derivado no frontend.
@@ -87,6 +87,6 @@ export type FmzAdminKycFilters = {
  * 'released' is a frontend-only concept: declined + releasedForResubmission=true.
  */
 export function resolveKycDisplayStatus(user: Pick<FmzAdminKycUser, 'kycStatus' | 'releasedForResubmission'>): FmzKycDisplayStatus {
-  if (user.kycStatus === 'declined' && user.releasedForResubmission) return 'released';
+  if (user.kycStatus === 'rejected' && user.releasedForResubmission) return 'released';
   return user.kycStatus;
 }
