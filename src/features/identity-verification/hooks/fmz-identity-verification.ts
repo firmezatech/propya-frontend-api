@@ -67,7 +67,7 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
       setKycState({ status: 'ready', kycStatus: response.profile.kyc.status });
       if (!userNameSetRef.current) {
         userNameSetRef.current = true;
-        setUserName(response.profile.user.firstName ?? null);
+        setUserName(response.profile.user.fullName ?? response.profile.user.firstName ?? null);
       }
     } catch (error) {
       const message = error instanceof Error
@@ -102,7 +102,7 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
 
           if (!userNameSetRef.current) {
             userNameSetRef.current = true;
-            setUserName(response.profile.user.firstName ?? null);
+            setUserName(response.profile.user.fullName ?? response.profile.user.firstName ?? null);
           }
 
           if (kycStatus === 'verified') {

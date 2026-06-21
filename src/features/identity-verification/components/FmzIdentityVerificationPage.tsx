@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   Shield, ShieldCheck, ShieldAlert, Clock, RefreshCw,
   Loader2, Lock, X, IdCard, User, FileText,
-  Check, Home, LayoutDashboard,
+  Home, Coins, Wallet, Target,
 } from 'lucide-react';
 import { FmzConnectedPageShell } from '../../../components/layout';
 import { fmzPublicLayoutConfig } from '../../../config/fmz-public-layout-config';
@@ -92,97 +92,127 @@ function resolveStatusConfig(kycStatus: TenantKycStatus): StatusConfig {
 
 // ─── Success view ─────────────────────────────────────────────────────────────
 
-const REDIRECT_COUNTDOWN_START = 10;
-
 type SuccessViewProps = {
   userName: string | null;
 };
 
 function SuccessView({ userName }: SuccessViewProps) {
   const router = useRouter();
-  const [countdown, setCountdown] = useState(REDIRECT_COUNTDOWN_START);
-  const hasRedirectedRef = useRef(false);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => Math.max(0, prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+  const [verifiedAt] = useState(() => {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    return `${pad(now.getDate())} ${months[now.getMonth()]} ${now.getFullYear()} · ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  });
 
-  // Separated from the interval so router.push never runs inside a setState updater.
-  useEffect(() => {
-    if (countdown > 0 || hasRedirectedRef.current) return;
-    hasRedirectedRef.current = true;
-    router.push(fmzPublicLayoutConfig.connectedDashboardPath);
-  }, [countdown, router]);
+  const firstName = userName?.split(' ')[0] ?? null;
+  const initials = userName
+    ? userName.trim().split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
+    : '✓';
 
   return (
     <FmzConnectedPageShell width="tenant">
       <div className={styles.successPage}>
         <div className={styles.successCard}>
-          <div className={styles.scBar} />
+          <div className={styles.scAccent} />
+          <div className={styles.scBody}>
 
-          <span className={styles.scBadge}>Identidade verificada</span>
+            {/* Animated shield */}
+            <div className={styles.checkWrap} aria-hidden="true">
+              <div className={`${styles.ring} ${styles.ring1}`} />
+              <div className={`${styles.ring} ${styles.ring2}`} />
+              <div className={`${styles.ring} ${styles.ring3}`} />
+              <div className={styles.checkCircle}>
+                <svg className={styles.shieldSvg} viewBox="0 0 24 24" fill="none">
+                  <path
+                    className={styles.shieldOutline}
+                    stroke="currentColor"
+                    strokeWidth="1.9"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 3l8 3v5c0 4.6-3.2 7.7-8 8.9C7.2 18.7 4 15.6 4 11V6z"
+                  />
+                  <polyline
+                    className={styles.shieldTick}
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    points="8.5 11.8 11 14.3 15.6 9"
+                  />
+                </svg>
+              </div>
+            </div>
 
-          <div className={styles.scIco}>
-            <ShieldCheck className={styles.scIcoSvg} aria-hidden="true" />
+            <span className={styles.scBadge}>Identidade verificada</span>
+
+            <h1 className={styles.scTitle}>
+              Tudo certo{firstName ? `, ${firstName}` : ''}!
+            </h1>
+            <p className={styles.scSub}>
+              Confirmamos sua identidade com sucesso. Sua conta na{' '}
+              <strong>Propya</strong> está totalmente liberada para comprar e
+              movimentar tokens sem restrições.
+            </p>
+
+            {/* Identity chip */}
+            <div className={styles.idChip}>
+              <div className={styles.idAvatar} aria-hidden="true">{initials}</div>
+              <div className={styles.idInfo}>
+                <div className={styles.idName}>{userName ?? 'Usuária verificada'}</div>
+                <div className={styles.idDoc}>Identidade confirmada</div>
+              </div>
+              <span className={styles.verifiedBadge}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Verificada
+              </span>
+            </div>
+
+            {/* Meta row */}
+            <div className={styles.idMeta}>
+              <div className={styles.idMetaCell}>
+                <div className={styles.idMetaLbl}>Verificada em</div>
+                <div className={styles.idMetaVal}>{verifiedAt}</div>
+              </div>
+              <div className={styles.idMetaCell}>
+                <div className={styles.idMetaLbl}>Status</div>
+                <div className={styles.idMetaVal}>Aprovada</div>
+              </div>
+            </div>
+
+            {/* Unlocked features */}
+            <div className={styles.unlocked}>
+              <div className={styles.unlockedHead}>Liberado para você</div>
+              <div className={styles.ulItem}>
+                <span className={styles.ulIco}><Coins style={{ width: 15, height: 15 }} aria-hidden="true" /></span>
+                <span className={styles.ulText}>Comprar tokens de imóveis</span>
+                <ShieldCheck className={styles.ulCheck} aria-hidden="true" />
+              </div>
+              <div className={styles.ulItem}>
+                <span className={styles.ulIco}><Wallet style={{ width: 15, height: 15 }} aria-hidden="true" /></span>
+                <span className={styles.ulText}>Movimentar valores na carteira</span>
+                <ShieldCheck className={styles.ulCheck} aria-hidden="true" />
+              </div>
+              <div className={styles.ulItem}>
+                <span className={styles.ulIco}><Target style={{ width: 15, height: 15 }} aria-hidden="true" /></span>
+                <span className={styles.ulText}>Acompanhar sua meta de imóvel</span>
+                <ShieldCheck className={styles.ulCheck} aria-hidden="true" />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className={styles.sBtnGold}
+              onClick={() => router.push(fmzPublicLayoutConfig.connectedDashboardPath)}
+            >
+              <Home style={{ width: 17, height: 17 }} aria-hidden="true" />
+              Ir para o Dashboard
+            </button>
+
           </div>
-
-          <h1 className={styles.scTitle}>
-            Pronto{userName ? `, ${userName}` : ''} — você está verificado!
-          </h1>
-          <p className={styles.scSub}>
-            Sua identidade foi confirmada com sucesso. Seu cadastro está{' '}
-            <strong>100% completo</strong> e o painel do inquilino já está liberado.
-          </p>
-
-          <div className={styles.nextList}>
-            <div className={styles.nextItem}>
-              <span className={`${styles.niIc} ${styles.niIcDone}`}>
-                <Check style={{ width: 17, height: 17 }} aria-hidden="true" />
-              </span>
-              <div className={styles.niBody}>
-                <strong>Conta criada e e-mail confirmado</strong>
-                <span>Acesso ativo</span>
-              </div>
-              <span className={`${styles.niStep} ${styles.niStepDone}`}>✓</span>
-            </div>
-            <div className={styles.nextItem}>
-              <span className={`${styles.niIc} ${styles.niIcDone}`}>
-                <Check style={{ width: 17, height: 17 }} aria-hidden="true" />
-              </span>
-              <div className={styles.niBody}>
-                <strong>Identidade verificada</strong>
-                <span>Carteira e compras liberadas</span>
-              </div>
-              <span className={`${styles.niStep} ${styles.niStepDone}`}>✓</span>
-            </div>
-            <div className={styles.nextItem}>
-              <span className={styles.niIc}>
-                <Home style={{ width: 17, height: 17 }} aria-hidden="true" />
-              </span>
-              <div className={styles.niBody}>
-                <strong>Acompanhe seu imóvel</strong>
-                <span>Contrato, aluguel e tokens</span>
-              </div>
-              <span className={styles.niStep}>→</span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className={styles.sBtnGold}
-            onClick={() => router.push(fmzPublicLayoutConfig.connectedDashboardPath)}
-          >
-            <LayoutDashboard style={{ width: 16, height: 16 }} aria-hidden="true" />
-            Acessar meu painel
-          </button>
-
-          <p className={styles.successCountdown}>
-            Redirecionando em <strong>{countdown}</strong>{' '}
-            {countdown === 1 ? 'segundo' : 'segundos'}...
-          </p>
         </div>
       </div>
     </FmzConnectedPageShell>
