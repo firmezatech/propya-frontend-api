@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
+import { FmzSelect } from '../../../components/design-system';
 import type { FmzAdminPaginationMeta } from '../domain/fmz-admin-pagination.types';
 
 type FmzAdminPaginationProps = FmzAdminPaginationMeta & {
@@ -36,14 +37,15 @@ export function FmzAdminPagination({
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         <label className="flex items-center gap-2">
           <span>Itens por página</span>
-          <select
+          <FmzSelect
             value={limit}
             disabled={disabled}
             onChange={(event) => onLimitChange(Number(event.target.value))}
-            className="rounded-[9px] border border-[#E8EAF0] bg-[#F7F8FA] px-2.5 py-2 text-[12px] font-semibold text-[#0D1321] outline-none transition focus:border-[#F5C842]"
+            wrapperClassName="h-auto rounded-[9px] border border-[#E8EAF0] bg-[#F7F8FA] px-2.5 py-2 focus-within:border-[#F5C842]"
+            className="text-[12px] font-semibold text-[#0D1321]"
           >
             {limitOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-          </select>
+          </FmzSelect>
         </label>
 
         <div className="flex items-center gap-2">

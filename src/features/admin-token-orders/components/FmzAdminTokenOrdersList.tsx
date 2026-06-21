@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { useFmzAdminTokenOrders } from '../hooks/fmz-admin-token-orders';
+import { FmzSelect } from '../../../components/design-system';
 import { FmzAdminTokenOrderRow } from './FmzAdminTokenOrderRow';
 import { FmzTokenPurchaseReceiptModal } from './FmzTokenPurchaseReceiptModal';
 import { FmzFormAlert } from '../../api-errors/components';
 import { FmzAdminListSkeleton } from '../../../components/layout';
-import { fmzCn } from '../../../lib/fmz-classnames';
 import type { FmzAdminTokenOrder, FmzAdminOrderStatus } from '../domain';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -71,15 +71,16 @@ function FiltersBar({
       </div>
 
       {/* Status */}
-      <select
+      <FmzSelect
         value={status}
         onChange={(e) => onStatusChange(e.target.value as FmzAdminOrderStatus | '')}
-        className="py-2 px-3 text-sm border border-[#E8EAF0] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#3B5BDB] text-[#1E2A3B] bg-white"
+        wrapperClassName="h-auto py-2 px-3 border border-[#E8EAF0] rounded-lg bg-white focus-within:ring-1 focus-within:ring-[#3B5BDB]"
+        className="text-sm text-[#1E2A3B]"
       >
         {STATUS_OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>
         ))}
-      </select>
+      </FmzSelect>
     </div>
   );
 }

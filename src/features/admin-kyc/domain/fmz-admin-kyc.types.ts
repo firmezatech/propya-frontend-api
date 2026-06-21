@@ -48,6 +48,8 @@ export type FmzAdminKycUser = {
   diditDecision: FmzKycDiditDecision | null;
   property: FmzKycProperty | null;
   documents: FmzKycDocumentType[];
+  identityDocumentType: string | null;
+  identityDocumentCountry: string | null;
 };
 
 // ─── Summary strip ────────────────────────────────────────────────────────────

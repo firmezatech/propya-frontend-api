@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
+import { FmzSelect, FmzDateInput } from '../../../components/design-system';
 
 type RentAdjustmentIndex = '' | 'IGPM' | 'IPCA' | 'INPC' | 'IPC' | 'FIXO';
 
@@ -128,19 +129,33 @@ function TextInput({
   onChange: (value: string) => void;
   type?: 'text' | 'date' | 'number';
 }) {
+  // focus-within (em vez de focus) porque esta classe também é usada como wrapperClassName de
+  // FmzDateInput (type === 'date') — para o <input> puro abaixo isso é equivalente a :focus:
+  // :focus-within também casa quando o próprio elemento (sem descendentes) está focado, por spec.
+  const wrapperClassName = fmzCn(
+    'h-auto rounded-[9px] border-[1.5px] border-fmz-border-light bg-fmz-page px-3.5 py-2.5 focus-within:border-fmz-gold focus-within:bg-white focus-within:ring-4 focus-within:ring-[#F5C842]/15',
+    ai && value && 'border-[#D4C8FF] bg-[#F3F0FF] focus-within:border-[#6C47FF] focus-within:ring-[#6C47FF]/10',
+  );
+
   return (
     <div className="mb-5 min-w-0">
       <FieldLabel ai={ai}>{label}</FieldLabel>
-      <input
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        onChange={(event) => onChange(event.target.value)}
-        className={fmzCn(
-          'w-full rounded-[9px] border-[1.5px] border-fmz-border-light bg-fmz-page px-3.5 py-2.5 text-sm text-fmz-navy outline-none transition placeholder:text-fmz-text-hint focus:border-fmz-gold focus:bg-white focus:ring-4 focus:ring-[#F5C842]/15',
-          ai && value && 'border-[#D4C8FF] bg-[#F3F0FF] focus:border-[#6C47FF] focus:ring-[#6C47FF]/10',
-        )}
-      />
+      {type === 'date' ? (
+        <FmzDateInput
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          wrapperClassName={wrapperClassName}
+          className="text-sm text-fmz-navy"
+        />
+      ) : (
+        <input
+          type={type}
+          value={value}
+          placeholder={placeholder}
+          onChange={(event) => onChange(event.target.value)}
+          className={fmzCn('w-full text-sm text-fmz-navy outline-none placeholder:text-fmz-text-hint', wrapperClassName)}
+        />
+      )}
     </div>
   );
 }
@@ -163,19 +178,20 @@ function SelectInput({
   return (
     <div className="mb-5 min-w-0">
       <FieldLabel ai={ai}>{label}</FieldLabel>
-      <select
+      <FmzSelect
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={fmzCn(
-          'w-full rounded-[9px] border-[1.5px] border-fmz-border-light bg-fmz-page px-3.5 py-2.5 text-sm text-fmz-navy outline-none transition focus:border-fmz-gold focus:bg-white focus:ring-4 focus:ring-[#F5C842]/15',
-          ai && value && 'border-[#D4C8FF] bg-[#F3F0FF] focus:border-[#6C47FF] focus:ring-[#6C47FF]/10',
+        wrapperClassName={fmzCn(
+          'h-auto rounded-[9px] border-[1.5px] border-fmz-border-light bg-fmz-page px-3.5 py-2.5 focus-within:border-fmz-gold focus-within:bg-white focus-within:ring-4 focus-within:ring-[#F5C842]/15',
+          ai && value && 'border-[#D4C8FF] bg-[#F3F0FF] focus-within:border-[#6C47FF] focus-within:ring-[#6C47FF]/10',
         )}
+        className="text-sm"
       >
         <option value="">{placeholder}</option>
         {options.map((option) => (
           <option key={option} value={option}>{option}</option>
         ))}
-      </select>
+      </FmzSelect>
     </div>
   );
 }

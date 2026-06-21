@@ -94,6 +94,8 @@ export const normalizeAdminKycUser = (value: unknown): FmzAdminKycUser => {
     diditDecision: normalizeDiditDecision(r.diditDecision ?? r.didit_decision),
     property: normalizeProperty(r.property),
     documents: arr<unknown>(r.documents).map(docTypeOf).filter((d): d is FmzKycDocumentType => d !== null),
+    identityDocumentType:    strOrNull(r.identityDocumentType    ?? r.identity_document_type),
+    identityDocumentCountry: strOrNull(r.identityDocumentCountry ?? r.identity_document_country),
   };
 };
 

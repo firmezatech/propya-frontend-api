@@ -419,27 +419,33 @@
   line-height: 1;
 }
 
+/* Borda/raio/fundo vivem só aqui (rule do FieldWrapper) — nunca no input/select nativo dentro
+   dele. overflow:hidden garante que o canto nunca "quadra" quando o select abre ou o input
+   ganha um fundo próprio (ex.: estado :disabled). */
 .fieldInput {
   position: relative;
+  overflow: hidden;
+  border: 1px solid var(--fmz-border-light);
+  border-radius: 10px;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .fieldInput input,
 .fieldInput select {
   width: 100%;
-  border: 1px solid var(--fmz-border-light);
-  border-radius: 10px;
-  background: #fff;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   padding: 11px 14px;
   color: var(--fmz-navy);
   font-size: 13.5px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
   appearance: none;
 }
 
-.fieldInput input:focus,
-.fieldInput select:focus {
+.fieldInput:focus-within {
   border-color: #E8B620;
   box-shadow: 0 0 0 3px rgba(232, 182, 32, 0.18);
 }
@@ -448,7 +454,6 @@
   background: var(--fmz-page);
   color: var(--fmz-text-hint);
   cursor: not-allowed;
-  border-color: var(--fmz-border-light);
 }
 
 .hasIcon {

@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { AlertTriangle, Calculator, Plus, Trash2 } from 'lucide-react';
 import { FmzConnectedPageShell } from '../../../components/layout/FmzConnectedPageShell';
+import { FmzSelect } from '../../../components/design-system';
 import { calculateTokenomicsDistribution } from '../services/fmz-tokenomics-calculator-api';
 import type {
   FmzTokenomicsDistributionPayload,
@@ -236,14 +237,15 @@ export function FmzTokenomicsCalculatorPage() {
 
               <label className="grid gap-2 text-sm font-bold text-[#5A6478]">
                 Modo da taxa administrativa
-                <select
+                <FmzSelect
                   value={formState.admin_fee_mode}
                   onChange={(event) => setFormState((currentState) => ({ ...currentState, admin_fee_mode: event.target.value as CalculatorFormState['admin_fee_mode'] }))}
-                  className="min-h-11 rounded-2xl border border-[#E8EAF0] bg-white px-3 text-[#0D1321] outline-none focus:border-[#F5C842]"
+                  wrapperClassName="h-11 rounded-2xl border border-[#E8EAF0] bg-white px-3 focus-within:border-[#F5C842]"
+                  className="text-[#0D1321]"
                 >
                   <option value="deduct_from_distribution">Deduzir do repasse</option>
                   <option value="add_to_tenant_boleto">Adicionar no boleto da inquilina</option>
-                </select>
+                </FmzSelect>
               </label>
             </div>
 
@@ -285,9 +287,9 @@ export function FmzTokenomicsCalculatorPage() {
                     <tr key={participant.id} className="border-t border-[#E8EAF0]">
                       <td className="px-3 py-3"><input value={participant.name} onChange={(event) => updateParticipant(participant.id, 'name', event.target.value)} className="min-h-10 w-full rounded-xl border border-[#E8EAF0] px-3 outline-none focus:border-[#F5C842]" /></td>
                       <td className="px-3 py-3">
-                        <select value={participant.role} onChange={(event) => updateParticipant(participant.id, 'role', event.target.value as FmzTokenomicsParticipantRole)} className="min-h-10 w-full rounded-xl border border-[#E8EAF0] px-3 outline-none focus:border-[#F5C842]">
+                        <FmzSelect value={participant.role} onChange={(event) => updateParticipant(participant.id, 'role', event.target.value as FmzTokenomicsParticipantRole)} wrapperClassName="h-10 w-full rounded-xl border border-[#E8EAF0] px-3 focus-within:border-[#F5C842]">
                           {Object.entries(roleLabels).map(([role, label]) => <option key={role} value={role}>{label}</option>)}
-                        </select>
+                        </FmzSelect>
                       </td>
                       <td className="px-3 py-3"><input type="number" step="0.0001" value={participant.ownership_percent} onChange={(event) => updateParticipant(participant.id, 'ownership_percent', normalizeNumber(event.target.value))} className="min-h-10 w-full rounded-xl border border-[#E8EAF0] px-3 outline-none focus:border-[#F5C842]" /></td>
                       <td className="px-3 py-3"><input type="number" step="0.01" value={participant.tokens_purchased} onChange={(event) => updateParticipant(participant.id, 'tokens_purchased', normalizeNumber(event.target.value))} className="min-h-10 w-full rounded-xl border border-[#E8EAF0] px-3 outline-none focus:border-[#F5C842]" /></td>

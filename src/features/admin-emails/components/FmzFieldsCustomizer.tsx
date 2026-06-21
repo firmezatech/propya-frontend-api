@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { FmzEmailTemplateMeta } from '../domain/fmz-admin-emails.types';
 import { getAdminProperties } from '../../admin-properties/services/fmz-admin-properties-api';
 import type { FmzAdminProperty } from '../../admin-properties/domain';
+import { FmzSelect, FmzDateInput } from '../../../components/design-system';
 
 type Props = {
   template: FmzEmailTemplateMeta;
@@ -12,8 +13,11 @@ type Props = {
   onVarChange: (fieldId: string, value: string) => void;
 };
 
+// focus-within (além de focus) porque também é usada como wrapperClassName de FmzSelect/
+// FmzDateInput abaixo — :focus-within dispara igual a :focus quando o próprio elemento (o
+// <input> puro de texto/url) está focado, então o comportamento dele não muda.
 const inputCls =
-  'w-full rounded-lg border border-fmz-border-light bg-fmz-page px-3 py-2 text-sm text-fmz-text-primary placeholder-fmz-text-hint outline-none focus:border-fmz-border-mid focus:ring-1 focus:ring-[#0D1321]/10';
+  'h-auto w-full rounded-lg border border-fmz-border-light bg-fmz-page px-3 py-2 text-sm text-fmz-text-primary placeholder-fmz-text-hint outline-none focus:border-fmz-border-mid focus:ring-1 focus:ring-[#0D1321]/10 focus-within:border-fmz-border-mid focus-within:ring-1 focus-within:ring-[#0D1321]/10';
 
 const composePropertyAddress = (property: FmzAdminProperty): string =>
   [
@@ -47,14 +51,14 @@ function FmzPropertySelectField({
   }, []);
 
   return (
-    <select
+    <FmzSelect
       value={value}
       onChange={(e) => {
         const property = properties.find((p) => p.id === e.target.value);
         if (property) onSelect(property.id, property.name, composePropertyAddress(property));
       }}
       disabled={loading}
-      className={inputCls}
+      wrapperClassName={inputCls}
     >
       <option value="">{loading ? 'Carregando imóveis…' : 'Selecione um imóvel'}</option>
       {properties.map((property) => (
@@ -62,7 +66,7 @@ function FmzPropertySelectField({
           {property.name} — {composePropertyAddress(property)}
         </option>
       ))}
-    </select>
+    </FmzSelect>
   );
 }
 
@@ -93,9 +97,15 @@ export function FmzFieldsCustomizer({ template, vars, previewLoading, onVarChang
                 onVarChange('address', address);
               }}
             />
+          ) : field.type === 'date' ? (
+            <FmzDateInput
+              value={vars[field.id] ?? ''}
+              onChange={(e) => onVarChange(field.id, e.target.value)}
+              wrapperClassName={inputCls}
+            />
           ) : (
             <input
-              type={field.type === 'url' ? 'url' : field.type === 'date' ? 'date' : 'text'}
+              type={field.type === 'url' ? 'url' : 'text'}
               value={vars[field.id] ?? ''}
               onChange={(e) => onVarChange(field.id, e.target.value)}
               placeholder={field.placeholder || field.label}

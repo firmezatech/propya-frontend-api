@@ -33,6 +33,13 @@ const DOCUMENT_LABEL: Record<FmzKycDocumentType, string> = {
   cpf: 'CPF',
 };
 
+const IDENTITY_DOCUMENT_LABEL: Record<string, string> = {
+  passport:    'Passaporte',
+  national_id: 'Documento Nacional',
+  cpf:         'CPF',
+  other:       'Outro',
+};
+
 const DIDIT_WARNING_LABEL: Record<string, string> = {
   DOCUMENT_EXPIRED: 'Documento expirado',
   DOCUMENT_NOT_SUPPORTED: 'Documento não suportado',
@@ -174,8 +181,17 @@ export function FmzAdminKycUserCard({ user, releasing, onReleaseClick }: Props) 
               </div>
             </div>
 
-            {/* Column 3 — Didit decision */}
+            {/* Column 3 — Didit decision + identity */}
             <div className="space-y-2">
+              {user.identityDocumentType && (
+                <DetailRow
+                  label="Tipo de documento"
+                  value={IDENTITY_DOCUMENT_LABEL[user.identityDocumentType] ?? user.identityDocumentType}
+                />
+              )}
+              {user.identityDocumentCountry && (
+                <DetailRow label="País do documento" value={user.identityDocumentCountry} />
+              )}
               {user.diditDecision ? (
                 <>
                   <DetailRow label="Decisão Didit" value={user.diditDecision.status} />

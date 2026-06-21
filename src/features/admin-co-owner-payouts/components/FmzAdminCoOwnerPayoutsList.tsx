@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { CheckCheck, Loader2 } from 'lucide-react';
 import { useFmzAdminCoOwnerPayouts } from '../hooks/fmz-admin-co-owner-payouts';
+import { FmzSelect } from '../../../components/design-system';
 import { FmzAdminCoOwnerPayoutsSummary } from './FmzAdminCoOwnerPayoutsSummary';
 import { FmzAdminCoOwnerPayoutTransactionCard } from './FmzAdminCoOwnerPayoutTransactionCard';
 import { FmzAdminCoOwnerPayoutConfirmModal } from './FmzAdminCoOwnerPayoutConfirmModal';
@@ -128,25 +129,27 @@ export function FmzAdminCoOwnerPayoutsList() {
       <FmzAdminCoOwnerPayoutsSummary summary={hook.summary} />
 
       <div className="mb-5 flex flex-wrap items-center gap-2.5">
-        <select
+        <FmzSelect
           value={hook.filters.competenceMonth}
           onChange={(e) => hook.setFilter({ competenceMonth: e.target.value })}
-          className="appearance-none rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white py-2.5 pl-3.5 pr-9 text-[13px] font-medium text-[#0D1321] outline-none transition focus:border-[#F5C842]"
+          wrapperClassName="h-auto rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white py-2.5 pl-3.5 focus-within:border-[#F5C842]"
+          className="text-[13px] font-medium text-[#0D1321]"
         >
           {COMPETENCE_MONTH_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
-        </select>
+        </FmzSelect>
 
-        <select
+        <FmzSelect
           value={hook.filters.status ?? ''}
           onChange={(e) => hook.setFilter({ status: (e.target.value || undefined) as FmzPayoutRequestStatus | undefined })}
-          className="appearance-none rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white py-2.5 pl-3.5 pr-9 text-[13px] text-[#5A6478] outline-none transition focus:border-[#F5C842]"
+          wrapperClassName="h-auto rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white py-2.5 pl-3.5 focus-within:border-[#F5C842]"
+          className="text-[13px] text-[#5A6478]"
         >
           {STATUS_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
-        </select>
+        </FmzSelect>
 
         {hook.listLoading && <Loader2 size={16} className="animate-spin text-[#9AA3B0]" />}
       </div>

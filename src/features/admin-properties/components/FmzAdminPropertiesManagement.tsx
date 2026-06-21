@@ -14,6 +14,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
+import { FmzSelect } from '../../../components/design-system';
 import { FmzAdminListSkeleton } from '../../../components/layout';
 import { FmzFormAlert } from '../../api-errors/components';
 import { FmzAdminPagination, useFmzAdminPagination } from '../../admin-pagination';
@@ -141,13 +142,14 @@ function TextInput(props: InputHTMLAttributes<HTMLInputElement> & { error?: bool
 function SelectInput(props: SelectHTMLAttributes<HTMLSelectElement> & { error?: boolean }) {
   const { className, error, ...rest } = props;
   return (
-    <select
+    <FmzSelect
       {...rest}
-      className={fmzCn(
-        'w-full rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-[#F7F8FA] px-[14px] py-[11px] text-sm text-[#0D1321] outline-none transition focus:border-[#F5C842] focus:bg-white focus:shadow-[0_0_0_3px_rgba(245,200,66,0.13)]',
-        error && 'border-[#F5C4BF] bg-[#FEF5F4]',
+      hasError={error}
+      wrapperClassName={fmzCn(
+        'h-auto w-full rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-[#F7F8FA] px-[14px] py-[11px] focus-within:border-[#F5C842] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(245,200,66,0.13)]',
         className,
       )}
+      className="text-sm text-[#0D1321]"
     />
   );
 }
@@ -396,10 +398,10 @@ export function FmzAdminPropertiesManagement() {
               <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9AA3B0]" />
               <input value={query} onChange={(event) => { setQuery(event.target.value); pagination.setSearch(event.target.value); }} className="w-full rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white py-2.5 pl-[38px] pr-3.5 text-[13.5px] text-[#0D1321] outline-none transition focus:border-[#F5C842] focus:shadow-[0_0_0_3px_rgba(245,200,66,0.12)]" placeholder="Buscar por nome, endereço ou cidade..." />
             </label>
-            <select value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value as FmzAdminPropertyStatus | ''); pagination.setPage(1); }} className="rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white px-3.5 py-2.5 text-[13px] text-[#5A6478] outline-none transition focus:border-[#F5C842]">
+            <FmzSelect value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value as FmzAdminPropertyStatus | ''); pagination.setPage(1); }} wrapperClassName="h-auto rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white px-3.5 py-2.5 focus-within:border-[#F5C842]" className="text-[13px] text-[#5A6478]">
               <option value="">Todos os status</option>
               {STATUS_OPTIONS.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}
-            </select>
+            </FmzSelect>
           </div>
 
           {loading ? (

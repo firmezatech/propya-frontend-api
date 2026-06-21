@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Loader2, Pencil, Plus, X } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
+import { FmzSelect } from '../../../components/design-system';
 import { FmzAdminFormSkeleton } from '../../../components/layout';
 import { FmzFieldErrorMessage, FmzFormAlert } from '../../api-errors/components';
 import { normalizeFmzApiError, type FmzNormalizedApiError } from '../../api-errors/domain';
@@ -203,9 +204,12 @@ function InputSuffix({ suffix, children }: { suffix: string; children: React.Rea
   );
 }
 
+// focus-within (não focus) porque também envolve o <select> migrado para FmzSelect — o raio/
+// borda agora vivem no wrapper, e :focus-within dispara igual a :focus quando o próprio
+// elemento (input/textarea) está focado, então o comportamento para eles não muda.
 const inputClass = (hasError?: boolean) =>
   fmzCn(
-    'w-full rounded-[9px] border-[1.5px] bg-[#F7F8FA] px-3.5 py-[11px] font-sans text-[14px] text-[#0D1321] outline-none transition placeholder:text-[#9AA3B0] focus:border-[#F5C842] focus:bg-white focus:shadow-[0_0_0_3px_rgba(245,200,66,0.13)]',
+    'w-full rounded-[9px] border-[1.5px] bg-[#F7F8FA] px-3.5 py-[11px] font-sans text-[14px] text-[#0D1321] outline-none transition placeholder:text-[#9AA3B0] focus-within:border-[#F5C842] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(245,200,66,0.13)]',
     hasError ? 'border-[#F5C4BF] bg-[#FEF5F4]' : 'border-[#E8EAF0]',
   );
 
@@ -1205,8 +1209,8 @@ export function FmzAdminTenantSettings() {
                     Nenhuma inquilina com imóvel e tokenização ativos encontrada.
                   </div>
                 ) : (
-                  <select
-                    className={fmzCn(inputClass(Boolean(goalErrors.tenantUserId)), 'cursor-pointer')}
+                  <FmzSelect
+                    wrapperClassName={fmzCn(inputClass(Boolean(goalErrors.tenantUserId)), 'h-auto')}
                     value={goalForm.tenantUserId}
                     onChange={(e) => {
                       const tenant = eligibleTenants.find((t) => t.tenantUserId === e.target.value) ?? null;
@@ -1225,7 +1229,7 @@ export function FmzAdminTenantSettings() {
                         {t.tenantName} — {t.tenantEmail}
                       </option>
                     ))}
-                  </select>
+                  </FmzSelect>
                 )}
               </FormField>
 

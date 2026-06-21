@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { AlertTriangle, Check, ChevronDown, FileText, Loader2 } from 'lucide-react';
+import { AlertTriangle, Check, FileText, Loader2 } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
+import { FmzSelect } from '../../../components/design-system';
 import { FmzAdminListSkeleton } from '../../../components/layout';
 import { FmzFormAlert } from '../../api-errors/components';
 import { useFmzAdminRentCharges } from '../hooks/fmz-admin-rent-charges';
@@ -316,41 +317,31 @@ export function FmzAdminRentChargesList() {
 
       {/* Filters */}
       <div className="mb-5 flex flex-wrap items-center gap-2.5">
-        <div className="relative">
-          <select
-            value={hook.filters.competenceMonth}
-            onChange={(e) => handleCompetenceMonthChange(e.target.value)}
-            className="appearance-none rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white py-2.5 pl-3.5 pr-9 text-[13px] font-medium text-[#0D1321] outline-none transition focus:border-[#F5C842]"
-          >
-            {COMPETENCE_MONTH_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            size={13}
-            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9AA3B0]"
-          />
-        </div>
+        <FmzSelect
+          value={hook.filters.competenceMonth}
+          onChange={(e) => handleCompetenceMonthChange(e.target.value)}
+          wrapperClassName="h-auto rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white py-2.5 pl-3.5 focus-within:border-[#F5C842]"
+          className="text-[13px] font-medium text-[#0D1321]"
+        >
+          {COMPETENCE_MONTH_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </FmzSelect>
 
-        <div className="relative">
-          <select
-            value={hook.filters.status ?? ''}
-            onChange={(e) => handleStatusChange(e.target.value as FmzRentChargeStatus | '')}
-            className="appearance-none rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white py-2.5 pl-3.5 pr-9 text-[13px] text-[#5A6478] outline-none transition focus:border-[#F5C842]"
-          >
-            {STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            size={13}
-            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9AA3B0]"
-          />
-        </div>
+        <FmzSelect
+          value={hook.filters.status ?? ''}
+          onChange={(e) => handleStatusChange(e.target.value as FmzRentChargeStatus | '')}
+          wrapperClassName="h-auto rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white py-2.5 pl-3.5 focus-within:border-[#F5C842]"
+          className="text-[13px] text-[#5A6478]"
+        >
+          {STATUS_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </FmzSelect>
 
         {hook.listLoading ? (
           <Loader2 size={16} className="animate-spin text-[#9AA3B0]" />

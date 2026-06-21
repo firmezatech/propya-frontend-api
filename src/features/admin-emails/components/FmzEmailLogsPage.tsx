@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
+import { FmzSelect, FmzDateInput } from '../../../components/design-system';
 import { useFmzAdminEmailLogs } from '../hooks/fmz-use-admin-email-logs';
 import type { FmzEmailLog } from '../services/fmz-admin-email-api';
 
@@ -68,16 +69,19 @@ type FilterBarProps = {
   onSetFilter: ReturnType<typeof useFmzAdminEmailLogs>['setFilter'];
 };
 
+// focus-within (além de focus) porque a mesma classe também é usada como wrapperClassName de
+// FmzSelect/FmzDateInput abaixo — :focus-within dispara igual a :focus quando o próprio
+// elemento (o <input type="text"> puro) está focado, então o comportamento dele não muda.
 const inputCls =
-  'rounded-lg border border-fmz-border-light bg-fmz-page px-3 py-2 text-sm text-fmz-text-primary placeholder-fmz-text-hint outline-none focus:border-fmz-border-mid';
+  'rounded-lg border border-fmz-border-light bg-fmz-page px-3 py-2 text-sm text-fmz-text-primary placeholder-fmz-text-hint outline-none focus:border-fmz-border-mid focus-within:border-fmz-border-mid';
 
 function FilterBar({ filters, onSetFilter }: FilterBarProps) {
   return (
     <div className="flex flex-wrap gap-2">
-      <select
+      <FmzSelect
         value={filters.status ?? ''}
         onChange={(e) => onSetFilter({ status: e.target.value || undefined })}
-        className={inputCls}
+        wrapperClassName={fmzCn(inputCls, 'h-auto')}
       >
         <option value="">Todos os status</option>
         <option value="sent">Enviado</option>
@@ -87,18 +91,18 @@ function FilterBar({ filters, onSetFilter }: FilterBarProps) {
         <option value="bounced">Bounce</option>
         <option value="failed">Falhou</option>
         <option value="pending">Pendente</option>
-      </select>
+      </FmzSelect>
 
-      <select
+      <FmzSelect
         value={filters.source ?? ''}
         onChange={(e) => onSetFilter({ source: e.target.value || undefined })}
-        className={inputCls}
+        wrapperClassName={fmzCn(inputCls, 'h-auto')}
       >
         <option value="">Todas as origens</option>
         <option value="admin">Admin</option>
         <option value="job">Job</option>
         <option value="system">Sistema</option>
-      </select>
+      </FmzSelect>
 
       <input
         type="text"
@@ -108,18 +112,16 @@ function FilterBar({ filters, onSetFilter }: FilterBarProps) {
         className={inputCls}
       />
 
-      <input
-        type="date"
+      <FmzDateInput
         value={filters.dateFrom ?? ''}
         onChange={(e) => onSetFilter({ dateFrom: e.target.value || undefined })}
-        className={inputCls}
+        wrapperClassName={fmzCn(inputCls, 'h-auto')}
       />
 
-      <input
-        type="date"
+      <FmzDateInput
         value={filters.dateTo ?? ''}
         onChange={(e) => onSetFilter({ dateTo: e.target.value || undefined })}
-        className={inputCls}
+        wrapperClassName={fmzCn(inputCls, 'h-auto')}
       />
     </div>
   );
