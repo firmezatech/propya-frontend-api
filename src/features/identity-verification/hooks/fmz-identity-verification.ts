@@ -24,6 +24,7 @@ export type UseFmzIdentityVerificationReturn = {
   kycState: KycState;
   sessionState: SessionState;
   justVerified: boolean;
+  justFailed: boolean;
   userName: string | null;
   startVerification: () => Promise<void>;
   closeSession: () => void;
@@ -41,6 +42,7 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
   const [kycState, setKycState] = useState<KycState>({ status: 'loading' });
   const [sessionState, setSessionState] = useState<SessionState>({ status: 'idle' });
   const [justVerified, setJustVerified] = useState(false);
+  const [justFailed, setJustFailed] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
 
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -108,6 +110,9 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
           if (kycStatus === 'verified') {
             clearPollTimer();
             setJustVerified(true);
+          } else if (kycStatus === 'rejected' || kycStatus === 'needs_resubmission') {
+            clearPollTimer();
+            setJustFailed(true);
           } else if (sessionOpenRef.current || kycStatus === 'pending' || kycStatus === 'under_review') {
             // Keep polling while the iframe is open (status may still be a stale terminal
             // value from a prior attempt) or while status is genuinely transient.
@@ -130,6 +135,7 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
 
   const startVerification = useCallback(async () => {
     setSessionState({ status: 'starting' });
+    setJustFailed(false);
     try {
       const session = await startDiditSession();
       sessionOpenRef.current = true;
@@ -157,5 +163,5 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
     return () => clearPollTimer();
   }, [clearPollTimer]);
 
-  return { kycState, sessionState, justVerified, userName, startVerification, closeSession, refetchKyc };
+  return { kycState, sessionState, justVerified, justFailed, userName, startVerification, closeSession, refetchKyc };
 }

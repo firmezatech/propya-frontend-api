@@ -2,11 +2,19 @@
 
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { FMZ_AUTH_SESSION_CHANGED_EVENT, hasFirmezaSession } from '../../services/auth/auth-storage';
 
 interface FmzAuthenticatedRouteProps {
   children: ReactNode;
+}
+
+// Strips the `/<locale>` prefix so the result matches the locale-less path the
+// login form expects in its `returnTo` param (see FmzAuthAccessCard).
+function stripLocalePrefix(pathname: string, locale: string | undefined): string {
+  if (!locale) return pathname;
+  const prefix = `/${locale}`;
+  return pathname === prefix ? '/' : pathname.startsWith(`${prefix}/`) ? pathname.slice(prefix.length) : pathname;
 }
 
 /**
@@ -27,17 +35,22 @@ interface FmzAuthenticatedRouteProps {
 export function FmzAuthenticatedRoute({ children }: FmzAuthenticatedRouteProps) {
   const router = useRouter();
   const params = useParams<{ locale?: string }>();
+  const pathname = usePathname();
 
   // Synchronous init — no useEffect needed to determine the initial state.
   const [isAuthenticated, setIsAuthenticated] = useState(() => hasFirmezaSession());
 
   useEffect(() => {
     const loginPath = params?.locale ? `/${params.locale}` : '/';
+    // Preserves the page the user was trying to reach (e.g. a deep link from an email)
+    // so the login form can send them back here instead of the default dashboard.
+    const returnTo = stripLocalePrefix(pathname, params?.locale);
+    const loginPathWithReturnTo = `${loginPath}?returnTo=${encodeURIComponent(returnTo)}`;
 
     // If the synchronous check already returned false, redirect now.
     if (!hasFirmezaSession()) {
       setIsAuthenticated(false);
-      router.replace(loginPath);
+      router.replace(loginPathWithReturnTo);
       return;
     }
 
@@ -45,7 +58,7 @@ export function FmzAuthenticatedRoute({ children }: FmzAuthenticatedRouteProps) 
     const revalidateSession = () => {
       const hasSession = hasFirmezaSession();
       setIsAuthenticated(hasSession);
-      if (!hasSession) router.replace(loginPath);
+      if (!hasSession) router.replace(loginPathWithReturnTo);
     };
 
     window.addEventListener('storage', revalidateSession);
@@ -55,7 +68,7 @@ export function FmzAuthenticatedRoute({ children }: FmzAuthenticatedRouteProps) 
       window.removeEventListener('storage', revalidateSession);
       window.removeEventListener(FMZ_AUTH_SESSION_CHANGED_EVENT, revalidateSession);
     };
-  }, [params?.locale, router]);
+  }, [params?.locale, pathname, router]);
 
   if (!isAuthenticated) return null;
 

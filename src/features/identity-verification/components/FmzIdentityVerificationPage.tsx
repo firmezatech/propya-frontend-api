@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Shield, ShieldCheck, ShieldAlert, Clock, RefreshCw,
-  Loader2, Lock, X, IdCard, User, FileText,
+  Loader2, Lock, X, IdCard, User, FileText, MessageCircle,
   Home, Coins, Wallet, Target,
 } from 'lucide-react';
 import { FmzConnectedPageShell } from '../../../components/layout';
@@ -219,10 +219,157 @@ function SuccessView({ userName }: SuccessViewProps) {
   );
 }
 
+// ─── Failure view ─────────────────────────────────────────────────────────────
+
+type FailureViewProps = {
+  userName: string | null;
+  kycStatus: TenantKycStatus;
+  isRetrying: boolean;
+  onRetry: () => void;
+};
+
+const FAILURE_TEXT: Partial<Record<TenantKycStatus, { title: string; subtitle: string }>> = {
+  needs_resubmission: {
+    title: 'Precisamos que você reenvie seus documentos',
+    subtitle: 'Algumas informações não puderam ser confirmadas pela Didit. Inicie uma nova verificação reenviando seus documentos.',
+  },
+};
+
+const DEFAULT_FAILURE_TEXT = {
+  title: 'Não conseguimos verificar sua identidade',
+  subtitle: 'Não foi possível confirmar sua identidade nesta tentativa. Sua conta na Propya permanece com acesso restrito até a verificação ser concluída.',
+};
+
+function FailureView({ userName, kycStatus, isRetrying, onRetry }: FailureViewProps) {
+  const [evaluatedAt] = useState(() => {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    return `${pad(now.getDate())} ${months[now.getMonth()]} ${now.getFullYear()} · ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  });
+
+  const initials = userName
+    ? userName.trim().split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
+    : '!';
+
+  const { title, subtitle } = FAILURE_TEXT[kycStatus] ?? DEFAULT_FAILURE_TEXT;
+
+  return (
+    <FmzConnectedPageShell width="tenant">
+      <div className={styles.successPage}>
+        <div className={styles.successCard}>
+          <div className={`${styles.scAccent} ${styles.scAccentRed}`} />
+          <div className={styles.scBody}>
+
+            {/* Animated shield (X mark) */}
+            <div className={styles.checkWrap} aria-hidden="true">
+              <div className={`${styles.ring} ${styles.ring1} ${styles.ringRed}`} />
+              <div className={`${styles.ring} ${styles.ring2} ${styles.ring2Red}`} />
+              <div className={`${styles.ring} ${styles.ring3} ${styles.ring3Red}`} />
+              <div className={`${styles.checkCircle} ${styles.checkCircleRed}`}>
+                <svg className={styles.shieldSvg} viewBox="0 0 24 24" fill="none">
+                  <path
+                    className={styles.shieldOutline}
+                    stroke="currentColor"
+                    strokeWidth="1.9"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 3l8 3v5c0 4.6-3.2 7.7-8 8.9C7.2 18.7 4 15.6 4 11V6z"
+                  />
+                  <line className={styles.shieldTick} x1="9.5" y1="9.5" x2="14.5" y2="14.5" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+                  <line className={styles.shieldTick} x1="14.5" y1="9.5" x2="9.5" y2="14.5" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+                </svg>
+              </div>
+            </div>
+
+            <span className={`${styles.scBadge} ${styles.scBadgeRed}`}>Identidade não verificada</span>
+
+            <h1 className={styles.scTitle}>{title}</h1>
+            <p className={styles.scSub}>
+              {subtitle}
+            </p>
+
+            {/* Identity chip */}
+            <div className={`${styles.idChip} ${styles.idChipRed}`}>
+              <div className={`${styles.idAvatar} ${styles.idAvatarRed}`} aria-hidden="true">{initials}</div>
+              <div className={styles.idInfo}>
+                <div className={styles.idName}>{userName ?? 'Usuária'}</div>
+                <div className={`${styles.idDoc} ${styles.idDocRed}`}>Identidade não confirmada</div>
+              </div>
+              <span className={styles.notVerifiedBadge}>
+                <X aria-hidden="true" />
+                Não verificada
+              </span>
+            </div>
+
+            {/* Meta row */}
+            <div className={styles.idMeta}>
+              <div className={styles.idMetaCell}>
+                <div className={styles.idMetaLbl}>Avaliada em</div>
+                <div className={styles.idMetaVal}>{evaluatedAt}</div>
+              </div>
+              <div className={styles.idMetaCell}>
+                <div className={styles.idMetaLbl}>Status</div>
+                <div className={styles.idMetaVal}>
+                  {kycStatus === 'needs_resubmission' ? 'Reenvio necessário' : 'Reprovada'}
+                </div>
+              </div>
+            </div>
+
+            {/* What to do now */}
+            <div className={styles.reason}>
+              <div className={styles.reasonHead}>
+                <ShieldAlert aria-hidden="true" />
+                O que fazer agora
+              </div>
+              <div className={styles.reasonBody}>
+                <p>Por segurança, não conseguimos concluir a verificação automaticamente. Você pode tentar novamente ou falar com o nosso suporte.</p>
+                <ul className={styles.rsteps}>
+                  <li className={styles.rstep}>
+                    <span className={styles.rstepNum}>1</span>
+                    <span>Tenha em mãos um documento oficial com foto (RG ou CNH), legível e dentro da validade.</span>
+                  </li>
+                  <li className={styles.rstep}>
+                    <span className={styles.rstepNum}>2</span>
+                    <span>Garanta boa iluminação e que todos os dados do documento estejam visíveis.</span>
+                  </li>
+                  <li className={styles.rstep}>
+                    <span className={styles.rstepNum}>3</span>
+                    <span>Se o problema persistir, nosso suporte pode revisar seu caso manualmente.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className={styles.sBtnGold}
+              disabled={isRetrying}
+              onClick={onRetry}
+            >
+              {isRetrying ? (
+                <Loader2 style={{ width: 17, height: 17, animation: 'spin 1s linear infinite' }} aria-hidden="true" />
+              ) : (
+                <RefreshCw style={{ width: 17, height: 17 }} aria-hidden="true" />
+              )}
+              {isRetrying ? 'Iniciando...' : 'Tentar verificar novamente'}
+            </button>
+            <a href={fmzPublicLayoutConfig.helpUrl} target="_blank" rel="noopener noreferrer" className={styles.sBtnGhost}>
+              <MessageCircle aria-hidden="true" />
+              Falar com o suporte
+            </a>
+
+          </div>
+        </div>
+      </div>
+    </FmzConnectedPageShell>
+  );
+}
+
 // ─── Main page component ──────────────────────────────────────────────────────
 
 export function FmzIdentityVerificationPage() {
-  const { kycState, sessionState, justVerified, userName, startVerification, closeSession, refetchKyc } =
+  const { kycState, sessionState, justVerified, justFailed, userName, startVerification, closeSession, refetchKyc } =
     useFmzIdentityVerification();
 
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -248,12 +395,24 @@ export function FmzIdentityVerificationPage() {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [sessionState.status, handleClose]);
 
+  const isStarting = sessionState.status === 'starting';
+  const sessionError = sessionState.status === 'error' ? sessionState.message : null;
+
   if (justVerified) {
     return <SuccessView userName={userName} />;
   }
 
-  const isStarting = sessionState.status === 'starting';
-  const sessionError = sessionState.status === 'error' ? sessionState.message : null;
+  if (justFailed) {
+    const failedStatus = kycState.status === 'ready' ? kycState.kycStatus : 'rejected';
+    return (
+      <FailureView
+        userName={userName}
+        kycStatus={failedStatus}
+        isRetrying={isStarting}
+        onRetry={() => void startVerification()}
+      />
+    );
+  }
 
   // ── Status panel ───────────────────────────────────────────────────────────
 
