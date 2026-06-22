@@ -197,21 +197,7 @@ export function FmzRegisterPage() {
             <span className="eyebrow-dark">Plataforma de Tokenização</span>
             <h1>Sua casa, sua<br />parte, sua<br /><em>liberdade</em>.</h1>
             <p className="lede">Compre frações tokenizadas do imóvel onde mora ou invista a partir de R$ 100. Reduza seu aluguel a cada token e construa patrimônio no seu ritmo.</p>
-
-            <div className="kpi-row" aria-label="Indicadores da plataforma">
-              <div className="kpi"><div className="kpi-v">4.800+</div><div className="kpi-k">Investidores</div></div>
-              <div className="kpi"><div className="kpi-v">R$ 48M</div><div className="kpi-k">Tokenizado</div></div>
-              <div className="kpi"><div className="kpi-v">12+</div><div className="kpi-k">Imóveis</div></div>
-            </div>
-
-            <div className="feats">
-              <div className="feat"><div className="feat-ico"><Shield aria-hidden="true" /></div><div><h4>Segurança em blockchain</h4><p>Cada token é um registro auditável da sua fração do imóvel.</p></div></div>
-              <div className="feat"><div className="feat-ico"><TrendingUp aria-hidden="true" /></div><div><h4>Aluguel que diminui</h4><p>A cada token, sua mensalidade cai proporcionalmente à posse.</p></div></div>
-              <div className="feat"><div className="feat-ico"><Home aria-hidden="true" /></div><div><h4>Caminho para a casa própria</h4><p>Construa patrimônio token a token até alcançar 100% do imóvel.</p></div></div>
-            </div>
           </div>
-
-          <div className="side-foot"><Lock aria-hidden="true" /> Criptografia ponta-a-ponta · LGPD</div>
         </aside>
 
         <main className="form-col">

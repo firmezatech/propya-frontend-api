@@ -164,9 +164,7 @@ export function FmzAdminKycUserCard({ user, releasing, onReleaseClick }: Props) 
                 <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-[0.07em] text-[#9AA3B0]">
                   Documentos enviados
                 </div>
-                {user.documents.length === 0 ? (
-                  <span className="text-[12px] text-[#9AA3B0]">Nenhum</span>
-                ) : (
+                {user.documents.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
                     {user.documents.map((doc) => (
                       <span
@@ -177,6 +175,13 @@ export function FmzAdminKycUserCard({ user, releasing, onReleaseClick }: Props) 
                       </span>
                     ))}
                   </div>
+                ) : user.identityDocumentType ? (
+                  // No manual upload review row — fall back to the document type captured by Didit.
+                  <span className="rounded-md border border-[#E8EAF0] bg-[#F7F8FA] px-2 py-0.5 text-[10.5px] font-medium text-[#5A6478]">
+                    {IDENTITY_DOCUMENT_LABEL[user.identityDocumentType] ?? user.identityDocumentType}
+                  </span>
+                ) : (
+                  <span className="text-[12px] text-[#9AA3B0]">Nenhum</span>
                 )}
               </div>
             </div>
