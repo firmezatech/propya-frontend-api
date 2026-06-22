@@ -11,6 +11,12 @@ export type FmzCoOwnerPayoutTransaction = {
   property: FmzCoOwnerPayoutRow['property'];
   cycleLabel: string | null;
   eventDate: string;
+  // Idênticos em toda linha do mesmo evento (D-12 do doc de backend) — copiados da primeira
+  // linha vista, mesmo padrão de cycleLabel/eventDate acima.
+  tenantName: string | null;
+  rentTotalBrl: string | null;
+  tokenQuantity: number | null;
+  tokenUnitValueBrl: string | null;
   rows: FmzCoOwnerPayoutRow[];
 };
 
@@ -42,6 +48,10 @@ export function groupRowsByTransaction(
       property: row.property,
       cycleLabel: row.cycleLabel,
       eventDate: row.eventDate,
+      tenantName: row.tenantName,
+      rentTotalBrl: row.rentTotalBrl,
+      tokenQuantity: row.tokenQuantity,
+      tokenUnitValueBrl: row.tokenUnitValueBrl,
       rows: [row],
     });
   }

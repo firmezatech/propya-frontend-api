@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { Banknote, Clock, ListChecks, TriangleAlert } from 'lucide-react';
+import { fmzCn } from '../../../lib/fmz-classnames';
 import type { FmzCoOwnerPayoutsSummary } from '../domain';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -21,27 +22,33 @@ function formatBrl(value: string): string {
 
 // ─── Sub-component ────────────────────────────────────────────────────────────
 
+type SummaryCardNoteTone = 'default' | 'green' | 'warn';
+
+const NOTE_TONE_CLASS: Record<SummaryCardNoteTone, string> = {
+  default: 'text-[#9AA3B0]',
+  green: 'text-[#1A8C5B]',
+  warn: 'text-[#D97706]',
+};
+
 type SummaryCardProps = {
   label: string;
   value: string;
   subtext?: string;
+  noteTone?: SummaryCardNoteTone;
   iconBg: string;
   icon: ReactNode;
 };
 
-function SummaryCard({ label, value, subtext, iconBg, icon }: SummaryCardProps) {
+// Layout vertical (ícone no topo, valor grande abaixo) — mockup de referência, D-15.
+function SummaryCard({ label, value, subtext, noteTone = 'default', iconBg, icon }: SummaryCardProps) {
   return (
-    <article className="flex items-center gap-3 rounded-xl border-[1.5px] border-[#E8EAF0] bg-white p-4">
-      <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[9px] ${iconBg}`}>
+    <article className="rounded-[13px] border-[1.5px] border-[#E8EAF0] bg-white p-4 transition-colors hover:border-[#C8CCD8]">
+      <div className={fmzCn('mb-3 flex h-[34px] w-[34px] items-center justify-center rounded-[9px]', iconBg)}>
         {icon}
       </div>
-      <div>
-        <div className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#9AA3B0]">
-          {label}
-        </div>
-        <div className="font-sans text-[20px] font-extrabold text-[#0D1321]">{value}</div>
-        {subtext && <div className="text-[11px] text-[#9AA3B0]">{subtext}</div>}
-      </div>
+      <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#9AA3B0]">{label}</div>
+      <div className="mb-[5px] text-[23px] font-extrabold leading-none tracking-[-0.03em] text-[#0D1321]">{value}</div>
+      {subtext && <div className={fmzCn('text-[11.5px]', NOTE_TONE_CLASS[noteTone])}>{subtext}</div>}
     </article>
   );
 }
@@ -62,12 +69,15 @@ export function FmzAdminCoOwnerPayoutsSummary({ summary }: FmzAdminCoOwnerPayout
       <SummaryCard
         label="Saldo pendente total"
         value={formatBrl(summary.totalPendingBrl)}
+        subtext={summary.coOwnersAwaitingCount > 0 ? 'em repasses pendentes' : 'nenhum repasse pendente'}
+        noteTone="green"
         iconBg="bg-[#EFF6FF]"
         icon={<Banknote size={18} className="text-[#2563EB]" />}
       />
       <SummaryCard
         label="Co-owners aguardando"
         value={String(summary.coOwnersAwaitingCount)}
+        subtext="aguardando aprovação"
         iconBg="bg-[#FFF9E6]"
         icon={<Clock size={18} className="text-[#C8A020]" />}
       />
@@ -80,7 +90,8 @@ export function FmzAdminCoOwnerPayoutsSummary({ summary }: FmzAdminCoOwnerPayout
       <SummaryCard
         label="Abaixo do mínimo"
         value={String(summary.belowMinimumCount)}
-        subtext={summary.belowMinimumCount > 0 ? formatBrl(summary.belowMinimumTotalBrl) : undefined}
+        subtext={summary.belowMinimumCount > 0 ? `${formatBrl(summary.belowMinimumTotalBrl)} acumulado` : 'nenhum saldo retido'}
+        noteTone={summary.belowMinimumCount > 0 ? 'warn' : 'default'}
         iconBg="bg-[#F3F4F6]"
         icon={<TriangleAlert size={18} className="text-[#6B7280]" />}
       />

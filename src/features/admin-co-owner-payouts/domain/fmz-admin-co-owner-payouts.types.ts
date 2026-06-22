@@ -35,6 +35,14 @@ export type FmzCoOwnerPayoutRow = {
   accruedBalanceBrl: string;
   readyForPayout: boolean;
   payoutRequest: FmzCoOwnerPayoutRequestRef | null;
+  /** Inquilina do ciclo (rent_distribution) ou compradora dos tokens (token_sale). */
+  tenantName: string | null;
+  /** Valor total da cobrança de aluguel do ciclo — null em linhas token_sale. */
+  rentTotalBrl: string | null;
+  /** Quantidade de tokens vendidos — null em linhas rent_distribution. */
+  tokenQuantity: number | null;
+  /** Valor unitário do token na venda — null em linhas rent_distribution. */
+  tokenUnitValueBrl: string | null;
 };
 
 // ─── Summary (KPI strip) ─────────────────────────────────────────────────────────
@@ -57,6 +65,8 @@ export type FmzCoOwnerPayoutsListResponse = {
 export type FmzCoOwnerPayoutsFilters = {
   competenceMonth: string; // 'YYYY-MM-01', obrigatório na API
   status?: FmzPayoutRequestStatus;
+  /** Aceito pela API desde a entrega original (D-3); opções vêm de rows já carregadas (D-12). */
+  propertyTokenizationId?: string;
 };
 
 // ─── Mutation result shapes ──────────────────────────────────────────────────────

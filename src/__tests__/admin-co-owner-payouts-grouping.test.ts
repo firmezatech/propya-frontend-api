@@ -25,6 +25,10 @@ const buildRow = (overrides: Partial<FmzCoOwnerPayoutRow> = {}): FmzCoOwnerPayou
   accruedBalanceBrl: '480.00',
   readyForPayout: true,
   payoutRequest: null,
+  tenantName: 'Diana Aguilar',
+  rentTotalBrl: '2800.00',
+  tokenQuantity: null,
+  tokenUnitValueBrl: null,
   ...overrides,
 });
 
@@ -46,6 +50,20 @@ describe('groupRowsByTransaction', () => {
     expect(result[0].sourceReferenceId).toBe('run-1');
     expect(result[0].rows).toHaveLength(2);
     expect(result[0].rows.map((r) => r.ownerUserId)).toEqual(['owner-1', 'owner-2']);
+  });
+
+  it('carries tenantName/rentTotalBrl/tokenQuantity/tokenUnitValueBrl from the first row (D-12)', () => {
+    const rows = [
+      buildRow({ sourceType: 'token_sale', sourceReferenceId: 'order-1', tenantName: 'Jorge Nunes', rentTotalBrl: null, tokenQuantity: 67, tokenUnitValueBrl: '100.00' }),
+      buildRow({ sourceType: 'token_sale', sourceReferenceId: 'order-1', ownerUserId: 'owner-2' }),
+    ];
+
+    const result = groupRowsByTransaction(rows);
+
+    expect(result[0].tenantName).toBe('Jorge Nunes');
+    expect(result[0].rentTotalBrl).toBeNull();
+    expect(result[0].tokenQuantity).toBe(67);
+    expect(result[0].tokenUnitValueBrl).toBe('100.00');
   });
 
   it('keeps rent_distribution and token_sale events in separate cards even for the same owner', () => {

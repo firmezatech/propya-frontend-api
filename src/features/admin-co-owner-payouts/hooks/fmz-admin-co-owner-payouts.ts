@@ -48,6 +48,8 @@ export type FmzAdminCoOwnerPayoutsState = {
   rows: FmzCoOwnerPayoutRow[];
   transactions: FmzCoOwnerPayoutTransaction[];
   summary: FmzCoOwnerPayoutsSummary;
+  /** Imóveis distintos vistos nas rows já carregadas — opções do filtro de imóvel (D-12). */
+  availableProperties: Array<{ tokenizationId: string; name: string }>;
   listLoading: boolean;
   listError: FmzNormalizedApiError | null;
   approving: boolean;
@@ -63,7 +65,9 @@ export type FmzAdminCoOwnerPayoutsActions = {
   setFilter: (patch: Partial<FmzCoOwnerPayoutsFilters>) => void;
   approve: (requestId: string) => Promise<boolean>;
   reject: (requestId: string, reason?: string) => Promise<boolean>;
-  approveSelected: () => Promise<FmzApproveBatchItemResult[] | null>;
+  /** Sem argumento, aprova selectedRequestIds (D-5). Com lista, aprova exatamente esses ids —
+   * usado pelo rodapé "Aprovar N elegíveis" do card e pelo botão global do header (D-14). */
+  approveEligible: (ids?: string[]) => Promise<FmzApproveBatchItemResult[] | null>;
   toggleSelected: (requestId: string) => void;
   clearSelection: () => void;
 };
@@ -168,14 +172,16 @@ export function useFmzAdminCoOwnerPayouts(): FmzAdminCoOwnerPayoutsHook {
 
   const clearSelection = useCallback(() => setSelectedRequestIds(new Set()), []);
 
-  const approveSelected = useCallback(async (): Promise<FmzApproveBatchItemResult[] | null> => {
-    const ids = [...selectedRequestIds];
-    if (ids.length === 0) return null;
+  // D-14: generalização de approveSelected — sem args, usa selectedRequestIds (D-5, barra fixa);
+  // com lista explícita, aprova exatamente esses ids (rodapé do card / botão global do header).
+  const approveEligible = useCallback(async (ids?: string[]): Promise<FmzApproveBatchItemResult[] | null> => {
+    const targetIds = ids ?? [...selectedRequestIds];
+    if (targetIds.length === 0) return null;
 
     setBatchApproving(true);
     setBatchApproveError(null);
     try {
-      const results = await approvePayoutRequestsBatch(ids);
+      const results = await approvePayoutRequestsBatch(targetIds);
       await fetchList(filters);
       return results;
     } catch (err) {
@@ -186,11 +192,24 @@ export function useFmzAdminCoOwnerPayouts(): FmzAdminCoOwnerPayoutsHook {
     }
   }, [selectedRequestIds, fetchList, filters]);
 
+  // ── Filtro de imóvel (D-12) — opções derivadas das rows já carregadas, sem nova chamada ──────
+
+  const availableProperties = useMemo(() => {
+    const seen = new Map<string, { tokenizationId: string; name: string }>();
+    for (const row of rows) {
+      const tokenizationId = row.property.tokenizationId;
+      if (!tokenizationId || seen.has(tokenizationId)) continue;
+      seen.set(tokenizationId, { tokenizationId, name: row.property.name ?? 'Imóvel sem nome' });
+    }
+    return [...seen.values()];
+  }, [rows]);
+
   return {
     filters,
     rows,
     transactions,
     summary,
+    availableProperties,
     listLoading,
     listError,
     approving,
@@ -203,7 +222,7 @@ export function useFmzAdminCoOwnerPayouts(): FmzAdminCoOwnerPayoutsHook {
     setFilter,
     approve,
     reject,
-    approveSelected,
+    approveEligible,
     toggleSelected,
     clearSelection,
   };

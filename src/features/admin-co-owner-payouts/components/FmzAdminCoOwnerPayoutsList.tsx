@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { CheckCheck, Loader2 } from 'lucide-react';
+import { CheckCheck, Loader2, Send } from 'lucide-react';
 import { useFmzAdminCoOwnerPayouts } from '../hooks/fmz-admin-co-owner-payouts';
 import { FmzSelect } from '../../../components/design-system';
 import { FmzAdminCoOwnerPayoutsSummary } from './FmzAdminCoOwnerPayoutsSummary';
@@ -9,7 +9,8 @@ import { FmzAdminCoOwnerPayoutTransactionCard } from './FmzAdminCoOwnerPayoutTra
 import { FmzAdminCoOwnerPayoutConfirmModal } from './FmzAdminCoOwnerPayoutConfirmModal';
 import { FmzFormAlert } from '../../api-errors/components';
 import { FmzAdminListSkeleton } from '../../../components/layout';
-import type { FmzCoOwnerPayoutRow, FmzPayoutRequestStatus } from '../domain';
+import { deriveRowState } from '../domain/fmz-admin-co-owner-payouts-row-state';
+import type { FmzCoOwnerPayoutRow, FmzCoOwnerPayoutTransaction, FmzPayoutRequestStatus } from '../domain';
 
 // ─── Filter options ─────────────────────────────────────────────────────────────
 
@@ -30,12 +31,24 @@ function buildCompetenceMonthOptions(): Array<{ value: string; label: string }> 
 const COMPETENCE_MONTH_OPTIONS = buildCompetenceMonthOptions();
 
 const STATUS_OPTIONS: Array<{ value: FmzPayoutRequestStatus | ''; label: string }> = [
-  { value: '', label: 'Todos' },
+  { value: '', label: 'Todos os status' },
   { value: 'pending_approval', label: 'Aguardando aprovação' },
   { value: 'approved', label: 'Em processamento' },
   { value: 'paid', label: 'Pago' },
   { value: 'rejected', label: 'Rejeitado' },
 ];
+
+// D-13: filtro de tipo é 100% client-side — sourceType já vem em toda linha, sem parâmetro de API.
+type FmzAdminCoOwnerPayoutsTypeFilter = '' | FmzCoOwnerPayoutTransaction['sourceType'];
+
+const TYPE_OPTIONS: Array<{ value: FmzAdminCoOwnerPayoutsTypeFilter; label: string }> = [
+  { value: '', label: 'Todos os tipos' },
+  { value: 'rent_distribution', label: 'Ciclo Mensal' },
+  { value: 'token_sale', label: 'Compra Avulsa' },
+];
+
+const FILTER_SELECT_WRAPPER_CLASS = 'h-auto rounded-[8px] border-[1.5px] border-[#E8EAF0] bg-white px-2.5 py-[6px] focus-within:border-fmz-navy';
+const FILTER_SELECT_TEXT_CLASS = 'text-[12.5px] font-medium text-fmz-navy';
 
 const TOAST_DURATION_MS = 2800;
 
@@ -47,21 +60,49 @@ function parseBrl(value: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+// Soma accruedBalanceBrl das linhas cujo payoutRequest.id está no conjunto informado — usado
+// tanto para o total da seleção (D-5) quanto para o total do lote pendente de confirmação (D-14).
+function sumAccruedBalanceForRequestIds(rows: FmzCoOwnerPayoutRow[], requestIds: Iterable<string>): number {
+  const ids = requestIds instanceof Set ? requestIds : new Set(requestIds);
+  return rows
+    .filter((row) => row.payoutRequest && ids.has(row.payoutRequest.id))
+    .reduce((sum, row) => sum + parseBrl(row.accruedBalanceBrl), 0);
+}
+
+// Ids de payoutRequest aprovaveis (estado 'pending_approval' com pedido real) entre as
+// transações informadas — mesma regra usada dentro de cada card (D-14), aqui aplicada ao
+// conjunto inteiro para o botão global do header.
+function collectApprovableRequestIds(transactions: FmzCoOwnerPayoutTransaction[]): string[] {
+  return transactions.flatMap((transaction) =>
+    transaction.rows
+      .filter((row) => deriveRowState(row) === 'pending_approval' && row.payoutRequest)
+      .map((row) => row.payoutRequest!.id),
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function FmzAdminCoOwnerPayoutsList() {
   const hook = useFmzAdminCoOwnerPayouts();
 
+  const [typeFilter, setTypeFilter] = useState<FmzAdminCoOwnerPayoutsTypeFilter>('');
   const [pendingApprove, setPendingApprove] = useState<FmzCoOwnerPayoutRow | null>(null);
   const [pendingReject, setPendingReject] = useState<FmzCoOwnerPayoutRow | null>(null);
   const [rejectReason, setRejectReason] = useState('');
-  const [pendingBatch, setPendingBatch] = useState(false);
+  const [pendingBatchIds, setPendingBatchIds] = useState<string[] | null>(null);
   const [toast, setToast] = useState<{ message: string; ok: boolean } | null>(null);
 
   const notify = useCallback((message: string, ok: boolean) => {
     setToast({ message, ok });
     window.setTimeout(() => setToast(null), TOAST_DURATION_MS);
   }, []);
+
+  // ── Filtro de tipo (D-13) — aplicado sobre os cards já agrupados ────────────
+
+  const filteredTransactions = useMemo(
+    () => hook.transactions.filter((transaction) => !typeFilter || transaction.sourceType === typeFilter),
+    [hook.transactions, typeFilter],
+  );
 
   // ── Approve (D-4) ────────────────────────────────────────────────────────────
 
@@ -82,19 +123,26 @@ export function FmzAdminCoOwnerPayoutsList() {
     notify(ok ? 'Pedido de pagamento rejeitado.' : 'Falha ao rejeitar o pedido.', ok);
   }, [pendingReject, rejectReason, hook, notify]);
 
-  // ── Approve batch (D-5) ──────────────────────────────────────────────────────
+  // ── Approve em lote (D-5/D-14) — 3 gatilhos (seleção, rodapé do card, botão global), ────────
+  // ── mesmo destino: pendingBatchIds abre o modal único de confirmação ─────────────────────────
 
   const selectedCount = hook.selectedRequestIds.size;
-  const selectedTotalBrl = useMemo(() => {
-    const total = hook.rows
-      .filter((row) => row.payoutRequest && hook.selectedRequestIds.has(row.payoutRequest.id))
-      .reduce((sum, row) => sum + parseBrl(row.accruedBalanceBrl), 0);
-    return brlFormatter.format(total);
-  }, [hook.rows, hook.selectedRequestIds]);
+  const selectedTotalBrl = useMemo(
+    () => brlFormatter.format(sumAccruedBalanceForRequestIds(hook.rows, hook.selectedRequestIds)),
+    [hook.rows, hook.selectedRequestIds],
+  );
+
+  const globalEligibleIds = useMemo(() => collectApprovableRequestIds(filteredTransactions), [filteredTransactions]);
+
+  const pendingBatchTotalBrl = useMemo(
+    () => brlFormatter.format(sumAccruedBalanceForRequestIds(hook.rows, pendingBatchIds ?? [])),
+    [pendingBatchIds, hook.rows],
+  );
 
   const handleConfirmBatch = useCallback(async () => {
-    const results = await hook.approveSelected();
-    setPendingBatch(false);
+    if (!pendingBatchIds) return;
+    const results = await hook.approveEligible(pendingBatchIds);
+    setPendingBatchIds(null);
     if (!results) {
       notify('Falha ao aprovar os pagamentos selecionados.', false);
       return;
@@ -105,7 +153,7 @@ export function FmzAdminCoOwnerPayoutsList() {
     } else {
       notify(`${results.length - failed.length} aprovado(s), ${failed.length} falhou(aram). Veja a lista atualizada.`, false);
     }
-  }, [hook, notify]);
+  }, [pendingBatchIds, hook, notify]);
 
   return (
     <div className="relative pb-10">
@@ -119,23 +167,50 @@ export function FmzAdminCoOwnerPayoutsList() {
         </div>
       )}
 
-      <h1 className="mb-1 text-[22px] font-bold text-fmz-navy">Pagamentos a co-owners</h1>
-      <p className="mb-6 text-[13px] text-fmz-text-muted">
-        Aluguel e venda de tokens — aprove ou rejeite os pedidos de PIX gerados pelo job mensal.
-      </p>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="mb-1 text-[22px] font-bold text-fmz-navy">Pagamentos a co-owners</h1>
+          <p className="text-[13px] text-fmz-text-muted">
+            Aluguel e venda de tokens — aprove ou rejeite os pedidos de PIX gerados pelo job mensal.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setPendingBatchIds(globalEligibleIds)}
+          disabled={globalEligibleIds.length === 0}
+          className="inline-flex items-center gap-1.5 rounded-[10px] border-[1.5px] border-[#C8A020] bg-[#F5C842] px-3.5 py-2 text-[13px] font-bold text-fmz-navy shadow-[0_2px_8px_rgba(245,200,66,0.25)] transition-all hover:-translate-y-0.5 hover:bg-[#f0c030] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:-translate-y-0"
+        >
+          <Send size={14} />
+          {globalEligibleIds.length === 0 ? 'Todos processados' : `Processar ${globalEligibleIds.length} PIX elegíve${globalEligibleIds.length === 1 ? 'l' : 'is'}`}
+        </button>
+      </div>
 
       <FmzFormAlert error={hook.listError ?? hook.approveError ?? hook.rejectError ?? hook.batchApproveError} />
 
       <FmzAdminCoOwnerPayoutsSummary summary={hook.summary} />
 
       <div className="mb-5 flex flex-wrap items-center gap-2.5">
+        <span className="text-[12px] font-medium text-fmz-text-muted">Filtrar:</span>
+
         <FmzSelect
-          value={hook.filters.competenceMonth}
-          onChange={(e) => hook.setFilter({ competenceMonth: e.target.value })}
-          wrapperClassName="h-auto rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white py-2.5 pl-3.5 focus-within:border-[#F5C842]"
-          className="text-[13px] font-medium text-[#0D1321]"
+          value={hook.filters.propertyTokenizationId ?? ''}
+          onChange={(e) => hook.setFilter({ propertyTokenizationId: e.target.value || undefined })}
+          wrapperClassName={FILTER_SELECT_WRAPPER_CLASS}
+          className={FILTER_SELECT_TEXT_CLASS}
         >
-          {COMPETENCE_MONTH_OPTIONS.map((opt) => (
+          <option value="">Todos os imóveis</option>
+          {hook.availableProperties.map((property) => (
+            <option key={property.tokenizationId} value={property.tokenizationId}>{property.name}</option>
+          ))}
+        </FmzSelect>
+
+        <FmzSelect
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value as FmzAdminCoOwnerPayoutsTypeFilter)}
+          wrapperClassName={FILTER_SELECT_WRAPPER_CLASS}
+          className={FILTER_SELECT_TEXT_CLASS}
+        >
+          {TYPE_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </FmzSelect>
@@ -143,10 +218,23 @@ export function FmzAdminCoOwnerPayoutsList() {
         <FmzSelect
           value={hook.filters.status ?? ''}
           onChange={(e) => hook.setFilter({ status: (e.target.value || undefined) as FmzPayoutRequestStatus | undefined })}
-          wrapperClassName="h-auto rounded-[9px] border-[1.5px] border-[#E8EAF0] bg-white py-2.5 pl-3.5 focus-within:border-[#F5C842]"
-          className="text-[13px] text-[#5A6478]"
+          wrapperClassName={FILTER_SELECT_WRAPPER_CLASS}
+          className={FILTER_SELECT_TEXT_CLASS}
         >
           {STATUS_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </FmzSelect>
+
+        <span className="h-5 w-px bg-fmz-border-light" aria-hidden="true" />
+
+        <FmzSelect
+          value={hook.filters.competenceMonth}
+          onChange={(e) => hook.setFilter({ competenceMonth: e.target.value })}
+          wrapperClassName={FILTER_SELECT_WRAPPER_CLASS}
+          className={FILTER_SELECT_TEXT_CLASS}
+        >
+          {COMPETENCE_MONTH_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </FmzSelect>
@@ -156,20 +244,22 @@ export function FmzAdminCoOwnerPayoutsList() {
 
       {hook.listLoading ? (
         <FmzAdminListSkeleton rows={5} />
-      ) : hook.transactions.length === 0 ? (
+      ) : filteredTransactions.length === 0 ? (
         <div className="rounded-2xl border border-fmz-border-light bg-white p-8 text-center text-[13.5px] text-fmz-text-muted">
-          Nenhum evento de pagamento neste mês de competência.
+          Nenhuma transação encontrada com os filtros selecionados.
         </div>
       ) : (
-        <div className="space-y-4">
-          {hook.transactions.map((transaction) => (
+        <div className="space-y-3">
+          {filteredTransactions.map((transaction, index) => (
             <FmzAdminCoOwnerPayoutTransactionCard
               key={`${transaction.sourceType}:${transaction.sourceReferenceId}`}
               transaction={transaction}
+              defaultOpen={index === 0}
               selectedRequestIds={hook.selectedRequestIds}
               onToggleSelect={hook.toggleSelected}
               onApproveClick={setPendingApprove}
               onRejectClick={setPendingReject}
+              onApproveEligible={setPendingBatchIds}
             />
           ))}
         </div>
@@ -189,7 +279,7 @@ export function FmzAdminCoOwnerPayoutsList() {
           </button>
           <button
             type="button"
-            onClick={() => setPendingBatch(true)}
+            onClick={() => setPendingBatchIds([...hook.selectedRequestIds])}
             className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#1A8C5B] px-4 py-2 text-[13px] font-semibold text-white transition-all hover:bg-[#157048]"
           >
             <CheckCheck size={14} /> Aprovar selecionados
@@ -222,14 +312,14 @@ export function FmzAdminCoOwnerPayoutsList() {
       />
 
       <FmzAdminCoOwnerPayoutConfirmModal
-        isOpen={pendingBatch}
+        isOpen={pendingBatchIds !== null}
         variant="batch"
         busy={hook.batchApproving}
-        title={`Aprovar ${selectedCount} pagamento(s)?`}
-        description={`Isto envia ${selectedCount} PIX real(is) via Asaas, totalizando ${selectedTotalBrl}.`}
+        title={`Aprovar ${pendingBatchIds?.length ?? 0} pagamento(s)?`}
+        description={`Isto envia ${pendingBatchIds?.length ?? 0} PIX real(is) via Asaas, totalizando ${pendingBatchTotalBrl}.`}
         confirmLabel="Aprovar todos"
         onConfirm={handleConfirmBatch}
-        onCancel={() => setPendingBatch(false)}
+        onCancel={() => setPendingBatchIds(null)}
       />
     </div>
   );

@@ -22,6 +22,10 @@ const buildRow = (overrides: Partial<FmzCoOwnerPayoutRow> = {}): FmzCoOwnerPayou
   accruedBalanceBrl: '480.00',
   readyForPayout: false,
   payoutRequest: null,
+  tenantName: 'Diana Aguilar',
+  rentTotalBrl: '2800.00',
+  tokenQuantity: null,
+  tokenUnitValueBrl: null,
   ...overrides,
 });
 

@@ -95,6 +95,10 @@ const normalizeRow = (value: unknown): FmzCoOwnerPayoutRow => {
     accruedBalanceBrl: str(r.accruedBalanceBrl ?? r.accrued_balance_brl, '0'),
     readyForPayout: bool(r.readyForPayout ?? r.ready_for_payout, false),
     payoutRequest: normalizePayoutRequest(r.payoutRequest ?? r.payout_request),
+    tenantName: strOrNull(r.tenantName ?? r.tenant_name),
+    rentTotalBrl: strOrNull(r.rentTotalBrl ?? r.rent_total_brl),
+    tokenQuantity: numOrNull(r.tokenQuantity ?? r.token_quantity),
+    tokenUnitValueBrl: strOrNull(r.tokenUnitValueBrl ?? r.token_unit_value_brl),
   };
 };
 
@@ -116,6 +120,7 @@ export async function listCoOwnerPayouts(
 ): Promise<FmzCoOwnerPayoutsListResponse> {
   const params: Record<string, string> = { competenceMonth: filters.competenceMonth };
   if (filters.status) params.status = filters.status;
+  if (filters.propertyTokenizationId) params.propertyTokenizationId = filters.propertyTokenizationId;
 
   const { data } = await firmezaApiClient.get(ADMIN_CO_OWNER_PAYOUTS_PATH, { params });
   const r = recordOf(data);
