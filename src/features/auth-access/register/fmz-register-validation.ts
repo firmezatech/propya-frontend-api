@@ -12,6 +12,7 @@
  *   - Cross-step error presence check
  */
 
+import { getFmzPhoneCountry, isValidFmzPhoneNumber, type FmzPhoneCountryCode } from '../../../lib/fmz-phone-country-format';
 import type { RegisterFormData, RegisterStep1Errors, RegisterStep2Errors } from './fmz-register.types';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -211,7 +212,7 @@ export function isValidFullName(name: string): boolean {
  * An empty object means the step is valid.
  */
 export function validateStep1(data: Pick<RegisterFormData,
-  'accountType' | 'email' | 'password' | 'passwordConfirmation' | 'phone' | 'acceptedTerms' | 'acceptedPrivacyPolicy'
+  'accountType' | 'email' | 'password' | 'passwordConfirmation' | 'acceptedTerms' | 'acceptedPrivacyPolicy'
 >): RegisterStep1Errors {
   const errors: RegisterStep1Errors = {};
 
@@ -237,10 +238,6 @@ export function validateStep1(data: Pick<RegisterFormData,
     errors.passwordConfirmation = 'As senhas não conferem.';
   }
 
-  if (!data.phone.trim()) {
-    errors.phone = 'O telefone é obrigatório.';
-  }
-
   if (!data.acceptedTerms || !data.acceptedPrivacyPolicy) {
     errors.terms = 'Aceite os termos e a política de privacidade para continuar.';
   }
@@ -248,17 +245,28 @@ export function validateStep1(data: Pick<RegisterFormData,
   return errors;
 }
 
+/** Only countries the masking lib knows (BR/US/PT) get a digit-count check. */
+const hasNationalMask = (countryCode: string): countryCode is FmzPhoneCountryCode =>
+  getFmzPhoneCountry(countryCode).code === countryCode;
+
 /**
  * Validates all Step 2 fields and returns a map of field → error message.
  * An empty object means the step is valid.
  */
-export function validateStep2(data: Pick<RegisterFormData, 'fullName'>): RegisterStep2Errors {
+export function validateStep2(data: Pick<RegisterFormData, 'fullName' | 'phone' | 'phoneCountry'>): RegisterStep2Errors {
   const errors: RegisterStep2Errors = {};
 
   if (!data.fullName.trim()) {
     errors.fullName = 'O nome completo é obrigatório.';
   } else if (!isValidFullName(data.fullName)) {
     errors.fullName = 'Informe o nome e o sobrenome.';
+  }
+
+  const countryCode = data.phoneCountry ?? '';
+  if (!data.phone.trim()) {
+    errors.phone = 'O telefone é obrigatório.';
+  } else if (hasNationalMask(countryCode) && !isValidFmzPhoneNumber(data.phone, countryCode)) {
+    errors.phone = 'Número de telefone incompleto.';
   }
 
   return errors;

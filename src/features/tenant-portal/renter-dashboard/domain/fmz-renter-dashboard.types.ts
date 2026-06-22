@@ -15,6 +15,8 @@ export type FmzRenterDashboardMilestone = {
 
 export type FmzRenterDashboardViewModel = {
   renterName: string;
+  contractStatusLabel: string;
+  propertyAddressLabel: string | null;
   referenceMonthLabel: string;
   ownershipPercentage: number;
   ownershipPercentageLabel: string;

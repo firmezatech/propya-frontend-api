@@ -308,7 +308,6 @@ const validStep1: Parameters<typeof validateStep1>[0] = {
   email: 'user@example.com',
   password: 'Secure1!',
   passwordConfirmation: 'Secure1!',
-  phone: '+5511912345678',
   acceptedTerms: true,
   acceptedPrivacyPolicy: true,
 };
@@ -344,11 +343,6 @@ describe('validateStep1', () => {
     expect(result.passwordConfirmation).toBeTruthy();
   });
 
-  it('requires phone', () => {
-    const result = validateStep1({ ...validStep1, phone: '' });
-    expect(result.phone).toBeTruthy();
-  });
-
   it('requires both terms to be accepted', () => {
     const result = validateStep1({ ...validStep1, acceptedTerms: false });
     expect(result.terms).toBeTruthy();
@@ -363,10 +357,10 @@ describe('validateStep1', () => {
     const result = validateStep1({
       ...validStep1,
       email: '',
-      phone: '',
+      password: '',
     });
     expect(result.email).toBeTruthy();
-    expect(result.phone).toBeTruthy();
+    expect(result.password).toBeTruthy();
   });
 
 });
@@ -377,6 +371,8 @@ const validStep2: Parameters<typeof validateStep2>[0] = {
   fullName: 'João Silva',
   birthdate: '15/03/1990',
   cpf: '529.982.247-25',
+  phone: '(11) 91234-5678',
+  phoneCountry: 'BR',
 };
 
 describe('validateStep2', () => {
@@ -423,6 +419,21 @@ describe('validateStep2', () => {
   it('rejects invalid CPF', () => {
     const result = validateStep2({ ...validStep2, cpf: '000.000.000-00' });
     expect(result.cpf).toBeTruthy();
+  });
+
+  it('requires phone', () => {
+    const result = validateStep2({ ...validStep2, phone: '' });
+    expect(result.phone).toBeTruthy();
+  });
+
+  it('rejects an incomplete phone number for a country with a known mask', () => {
+    const result = validateStep2({ ...validStep2, phone: '(11) 1234', phoneCountry: 'BR' });
+    expect(result.phone).toBeTruthy();
+  });
+
+  it('accepts any non-empty phone number for a country without a known mask', () => {
+    const result = validateStep2({ ...validStep2, phone: '123', phoneCountry: 'FR' });
+    expect(result.phone).toBeUndefined();
   });
 
 });

@@ -92,12 +92,21 @@ function resolveStatusConfig(kycStatus: TenantKycStatus): StatusConfig {
 
 // ─── Success view ─────────────────────────────────────────────────────────────
 
+const SUCCESS_REDIRECT_MS = 10_000;
+
 type SuccessViewProps = {
   userName: string | null;
 };
 
 function SuccessView({ userName }: SuccessViewProps) {
   const router = useRouter();
+
+  useEffect(() => {
+    const redirectTimer = setTimeout(() => {
+      router.push(fmzPublicLayoutConfig.connectedDashboardPath);
+    }, SUCCESS_REDIRECT_MS);
+    return () => clearTimeout(redirectTimer);
+  }, [router]);
 
   const [verifiedAt] = useState(() => {
     const now = new Date();

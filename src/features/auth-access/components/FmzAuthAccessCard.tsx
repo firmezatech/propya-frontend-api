@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { z } from 'zod';
 import { Link, useRouter } from '../../../i18n/navigation';
+import { consumeFirmezaPostAuthRedirect, isFirmezaRedirectablePath } from '../../../services/auth/auth-storage';
 import { login, type LoginType } from '../services/fmz-login-api';
 import { FmzAuthHeader, FmzFullPageLoading, FmzPublicFooter } from '../../../components/layout';
 import { FMZ_API_ERROR_CODES, type FmzFieldErrorMap, type FmzNormalizedApiError } from '../../api-errors/domain';
@@ -141,9 +142,11 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
     formRef.current?.reset();
     setIsRedirectingAfterLogin(true);
     const returnTo = new URLSearchParams(window.location.search).get('returnTo') ?? '';
-    const destination = /^\/connected\/[a-z][-a-z0-9/]*$/i.test(returnTo)
-      ? returnTo
-      : '/connected/dashboard';
+    // returnTo (deep link to a protected page) takes priority; the post-auth redirect
+    // covers any flow — e-mail verification, a billing link, an invite, etc. — where the
+    // destination was set before login and can't be carried as a query param through it.
+    const postAuthRedirect = consumeFirmezaPostAuthRedirect() ?? '';
+    const destination = [returnTo, postAuthRedirect].find(isFirmezaRedirectablePath) ?? '/connected/dashboard';
     await router.replace(destination);
   };
 

@@ -10,7 +10,7 @@ export type RegisterFormData = {
   password: string;
   passwordConfirmation: string;
   phone: string;
-  phoneCountry?: 'BR';
+  phoneCountry?: string;
   acceptedTerms: boolean;
   acceptedPrivacyPolicy: boolean;
   fullName: string;
@@ -27,7 +27,7 @@ export type RegisterApiPayload = {
   fullName: string;
   email: string;
   phone: string;
-  phoneCountry?: 'BR';
+  phoneCountry?: string;
   password: string;
   passwordConfirmation: string;
   registrationIntent?: RegistrationIntent;
@@ -76,13 +76,13 @@ export type RegisterStep1Errors = {
   email?: string;
   password?: string;
   passwordConfirmation?: string;
-  phone?: string;
   terms?: string;
   accountType?: string;
 };
 
 export type RegisterStep2Errors = {
   fullName?: string;
+  phone?: string;
 };
 
 export type RegisterAllErrors = RegisterStep1Errors &

@@ -7,6 +7,7 @@ import { useRouter } from '../../../i18n/navigation';
 import { FmzFormAlert } from '../../api-errors/components';
 import type { FmzNormalizedApiError } from '../../api-errors/domain';
 import { FMZ_API_ERROR_CODES } from '../../api-errors/domain';
+import { setFirmezaPostAuthRedirect } from '../../../services/auth/auth-storage';
 import { verifyEmailToken } from '../services/fmz-email-verification-api';
 import styles from './FmzVerifyEmailCard.module.css';
 
@@ -16,10 +17,18 @@ const REDIRECT_TOTAL_MS = 5000;
 const TICK_MS = 100;
 const REDIRECT_DELAY_START_MS = 1200;
 
+// Plain signup verification (no `redirect` param) sends the user to KYC next, since a
+// freshly verified account hasn't done identity verification yet.
+const DEFAULT_POST_AUTH_REDIRECT = '/connected/identity-verification';
+
 export function FmzVerifyEmailCard() {
   const router      = useRouter();
   const searchParams = useSearchParams();
   const token       = searchParams.get('token') ?? '';
+  // Lets any e-mail link reuse this same verification page but send the user somewhere
+  // else after they log in (e.g. a billing page), by appending `&redirect=/connected/...`
+  // to the verification URL instead of hardcoding the destination here.
+  const requestedRedirect = searchParams.get('redirect') ?? '';
 
   const [state, setState]       = useState<VerifyState>('loading');
   const [apiError, setApiError] = useState<FmzNormalizedApiError | null>(null);
@@ -40,6 +49,7 @@ export function FmzVerifyEmailCard() {
         const email = sessionStorage.getItem('ft_pending_email') ?? '';
         if (email) sessionStorage.removeItem('ft_pending_email');
         setPendingEmail(email);
+        setFirmezaPostAuthRedirect(requestedRedirect || DEFAULT_POST_AUTH_REDIRECT);
         setState('success');
       } else {
         if (result.error.code === FMZ_API_ERROR_CODES.EXPIRED_EMAIL_VERIFICATION_TOKEN) {

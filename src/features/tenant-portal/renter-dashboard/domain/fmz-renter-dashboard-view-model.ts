@@ -5,6 +5,16 @@ import { formatDateBR } from '../../../../lib/fmz-date';
 const DEFAULT_RENTER_NAME = 'Diana';
 const DEFAULT_REFERENCE_MONTH = 'Dezembro 2025';
 const DEFAULT_NEXT_MILESTONE_PERCENTAGE = 25;
+const DEFAULT_CONTRACT_STATUS_LABEL = 'Contrato ativo';
+
+const CONTRACT_STATUS_LABELS: Record<string, string> = {
+  active: 'Contrato ativo',
+  signed: 'Contrato ativo',
+  pending: 'Contrato pendente',
+  expired: 'Contrato vencido',
+  canceled: 'Contrato cancelado',
+  cancelled: 'Contrato cancelado',
+};
 
 const JOURNEY_MILESTONES = [
   { percentage: 0   },
@@ -102,6 +112,18 @@ function buildInvoiceLinesFromSummary(summary: FmzTenantMonthlySummary | null | 
   if (!summary) return [];
   if (summary.lines && summary.lines.length > 0) return buildInvoiceLinesFromStructuredLines(summary.lines);
   return buildInvoiceLinesFromLegacyFields(summary);
+}
+
+function resolveContractStatusLabel(status?: string | null): string {
+  const normalized = (status ?? '').trim().toLowerCase();
+  return CONTRACT_STATUS_LABELS[normalized] ?? DEFAULT_CONTRACT_STATUS_LABEL;
+}
+
+function buildPropertyAddressLabel(property: FmzTenantDashboard['property']): string | null {
+  if (!property) return null;
+  const unitAndBuilding = [property.addressLine2, property.name].filter(Boolean).join(' · ');
+  const composed = property.city ? [unitAndBuilding, property.city].filter(Boolean).join(', ') : unitAndBuilding;
+  return composed || null;
 }
 
 function computeDaysUntilDue(dueDate?: string | null): number | null {
@@ -253,6 +275,8 @@ export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): Fm
 
   return {
     renterName:                   dashboard.tenant?.name || DEFAULT_RENTER_NAME,
+    contractStatusLabel:          resolveContractStatusLabel(dashboard.contract?.status),
+    propertyAddressLabel:         buildPropertyAddressLabel(dashboard.property),
     referenceMonthLabel:          formatDateBR(dashboard.competence?.label ?? dashboard.competence?.month, DEFAULT_REFERENCE_MONTH),
     ownershipPercentage,
     ownershipPercentageLabel:     formatPercentage(ownershipPercentage),

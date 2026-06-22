@@ -151,3 +151,46 @@ export function clearFirmezaSession(): void {
 export function hasFirmezaSession(): boolean {
   return Boolean(getFirmezaAccessToken());
 }
+
+const FMZ_POST_AUTH_REDIRECT_KEY = readPublicEnvValue('NEXT_PUBLIC_FMZ_POST_AUTH_REDIRECT_STORAGE_KEY', 'fmz_post_auth_redirect');
+
+// An abandoned intent (link clicked, login never finished) must not hijack some
+// later, unrelated login on the same browser. 30 minutes covers a realistic
+// click-link-then-login gap without lingering indefinitely in localStorage.
+const FMZ_POST_AUTH_REDIRECT_TTL_MS = 30 * 60 * 1000;
+
+// Any internal `/connected/...` page is a legal redirect target. Shared by every caller
+// that accepts a redirect destination from an untrusted source (URL query params,
+// localStorage) so the validation rule lives in exactly one place.
+const CONNECTED_PATH_PATTERN = /^\/connected\/[a-z][-a-z0-9/]*$/i;
+
+export function isFirmezaRedirectablePath(path: string): boolean {
+  return CONNECTED_PATH_PATTERN.test(path);
+}
+
+type FmzPostAuthRedirectRecord = { path: string; expiresAt: number };
+
+// Persists the page a logged-out user should land on once they authenticate. Generic
+// by design — any entry point reached while logged out (e-mail verification, a billing
+// link, an invite, etc.) can call this with its own intended destination; login reads it
+// back via consumeFirmezaPostAuthRedirect, regardless of which flow set it.
+export function setFirmezaPostAuthRedirect(path: string): void {
+  if (!isBrowser() || !isFirmezaRedirectablePath(path)) return;
+  const record: FmzPostAuthRedirectRecord = { path, expiresAt: Date.now() + FMZ_POST_AUTH_REDIRECT_TTL_MS };
+  localStorage.setItem(FMZ_POST_AUTH_REDIRECT_KEY, JSON.stringify(record));
+}
+
+export function consumeFirmezaPostAuthRedirect(): string | null {
+  if (!isBrowser()) return null;
+  const raw = localStorage.getItem(FMZ_POST_AUTH_REDIRECT_KEY);
+  if (!raw) return null;
+  localStorage.removeItem(FMZ_POST_AUTH_REDIRECT_KEY);
+
+  try {
+    const record = JSON.parse(raw) as FmzPostAuthRedirectRecord;
+    if (record.expiresAt < Date.now()) return null;
+    return record.path;
+  } catch {
+    return null;
+  }
+}
