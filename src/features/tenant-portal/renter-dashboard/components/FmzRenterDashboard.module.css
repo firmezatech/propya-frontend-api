@@ -379,19 +379,27 @@
   border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line);
   margin-bottom: 14px;
 }
+.billGroup { margin-bottom: 14px; }
+.billGroup:last-child { margin-bottom: 0; }
+.billGroupLabel {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--hint);
+  margin-bottom: 6px; display: flex; align-items: center; gap: 7px;
+}
+.billGroupDot { width: 6px; height: 6px; border-radius: 2px; background: var(--hint); }
+.billGroupInvest .billGroupLabel { color: var(--navy); }
+.billGroupInvest .billGroupDot {
+  background: var(--gold); border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--gold-tint);
+}
 .billLine {
   display: flex; align-items: center; justify-content: space-between;
   gap: 14px; padding: 7px 0; font-size: 13.5px;
+  border-bottom: 1px solid var(--line-2);
 }
-.blLabel { color: var(--navy); display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
-.bli {
-  width: 22px; height: 22px; border-radius: 6px;
-  background: var(--page); color: var(--navy);
-  display: grid; place-items: center; flex-shrink: 0;
-}
-.bli svg { width: 11px; height: 11px; }
-.blLabelHighlight { color: var(--navy); font-weight: 600; }
-.bliHighlight { background: var(--page); color: var(--navy); }
+.billLine:last-child { border-bottom: none; }
+.blLabel { color: var(--muted); min-width: 0; }
+.blLabelAccent { color: var(--navy); font-weight: 600; }
 .blVal { font-weight: 600; color: var(--navy); white-space: nowrap; font-family: var(--font-inter), sans-serif; font-size: 13px; }
 .blValGreen { color: var(--navy); }
 .blValGold { color: var(--navy); font-weight: 700; }

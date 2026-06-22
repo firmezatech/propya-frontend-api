@@ -42,12 +42,33 @@ const HOUSING_LINE_KEYS = new Set([
 ]);
 
 function groupInvoiceLines(lines: FmzDashboardMoneyLine[]): { housing: FmzDashboardMoneyLine[]; investment: FmzDashboardMoneyLine[] } {
-  const housing: InvoiceLine[] = [];
-  const investment: InvoiceLine[] = [];
+  const housing: FmzDashboardMoneyLine[] = [];
+  const investment: FmzDashboardMoneyLine[] = [];
   for (const line of lines) {
     (HOUSING_LINE_KEYS.has(line.key) ? housing : investment).push(line);
   }
   return { housing, investment };
+}
+
+function renderInvoiceLineGroup(title: string, isInvestmentGroup: boolean, lines: FmzDashboardMoneyLine[]) {
+  if (lines.length === 0) return null;
+  return (
+    <div className={`${styles.billGroup} ${isInvestmentGroup ? styles.billGroupInvest : ''}`}>
+      <div className={styles.billGroupLabel}>
+        <span className={styles.billGroupDot} />
+        {title}
+      </div>
+      {lines.map((line) => {
+        const isAccent = line.tone === 'warning';
+        return (
+          <div key={line.key} className={styles.billLine}>
+            <span className={`${styles.blLabel} ${isAccent ? styles.blLabelAccent : ''}`}>{line.label}</span>
+            <span className={styles.blVal}>{line.value}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 const BUY_TOKENS_PATH = '/connected/tokens-to-purchase-pix';
@@ -363,23 +384,8 @@ export function FmzRenterDashboard({
           </div>
 
           <div className={styles.billLines}>
-            {viewModel.invoice.lines.map((line) => {
-              const Icon = LINE_ICON[line.key] ?? CreditCard;
-              const isHighlight = line.tone === 'warning';
-              return (
-                <div key={line.key} className={styles.billLine}>
-                  <span className={`${styles.blLabel} ${isHighlight ? styles.blLabelHighlight : ''}`}>
-                    <span className={`${styles.bli} ${isHighlight ? styles.bliHighlight : ''}`}>
-                      <Icon size={11} />
-                    </span>
-                    {line.label}
-                  </span>
-                  <span className={`${styles.blVal} ${line.tone === 'success' ? styles.blValGreen : ''} ${line.tone === 'warning' ? styles.blValGold : ''}`}>
-                    {line.value}
-                  </span>
-                </div>
-              );
-            })}
+            {renderInvoiceLineGroup('Moradia', false, groupedInvoiceLines.housing)}
+            {renderInvoiceLineGroup('Sua compra do imóvel', true, groupedInvoiceLines.investment)}
           </div>
 
           <div className={styles.billTotalRow}>
@@ -400,26 +406,6 @@ export function FmzRenterDashboard({
           <FmzRenterDashboardPaymentHistoryCard items={paymentHistory} />
         </div>
 
-      </div>
-
-      {/* Quick actions */}
-      <div className={styles.quickGrid}>
-        {quickActions.map((action) => (
-          <Link key={action.title} href={action.href} className={styles.quickCard}>
-            <div className={styles.quickIco}>
-              <action.icon size={18} />
-            </div>
-            <div className={styles.quickBody}>
-              <div className={styles.quickTitle}>
-                {action.title}
-              </div>
-              <div className={styles.quickSub}>{action.description}</div>
-            </div>
-            <svg className={styles.quickArrow} width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Link>
-        ))}
       </div>
 
     </main>
