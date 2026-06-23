@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { DiditSdk } from '@didit-protocol/sdk-web';
 import { getTenantProfile } from '../../tenant-portal/services/fmz-tenant-profile-api';
 import { startDiditSession } from '../services/fmz-identity-verification-api';
 import type { TenantKycStatus } from '../../tenant-portal/domain/fmz-tenant-profile.types';
@@ -12,10 +13,13 @@ type KycState =
   | { status: 'error'; message: string }
   | { status: 'ready'; kycStatus: TenantKycStatus };
 
+// The SDK owns its own modal UI (it embeds Didit's hosted flow correctly — see
+// node_modules/@didit-protocol/sdk-web — a plain <iframe src={verificationUrl}> doesn't
+// work because Didit's hosted page won't render itself inside an unmanaged frame). 'starting'
+// only covers our own POST /kyc/didit/start round trip, not the multi-step verification flow.
 type SessionState =
   | { status: 'idle' }
   | { status: 'starting' }
-  | { status: 'open'; verificationUrl: string }
   | { status: 'error'; message: string };
 
 // ─── Hook return ──────────────────────────────────────────────────────────────
@@ -49,7 +53,7 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
   const pollAttemptsRef = useRef(0);
   // Tracks whether we've already set the user name so refetchKyc stays stable (no userName dep).
   const userNameSetRef = useRef(false);
-  // Tracks whether the Didit iframe is open. Read synchronously inside poll callbacks so the
+  // Tracks whether the Didit SDK modal is open. Read synchronously inside poll callbacks so the
   // poll keeps running while the user is verifying, even if the current KYC status is a
   // terminal value from a prior failed attempt. Refs don't trigger re-renders and are safe
   // to read inside useCallback without adding them as deps.
@@ -79,11 +83,12 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
     }
   }, []);
 
-  // Polls every POLL_INTERVAL_MS. Starts as soon as the Didit session opens (so the page
-  // updates even if the user never clicks X) and restarts if closeSession is called manually.
-  // Continues while status is pending or under_review — both can still resolve to verified.
-  // Didit's webhook typically arrives within seconds; the 30-attempt cap (60 s) guards
-  // against infinite loops when a session goes to manual review.
+  // Polls every POLL_INTERVAL_MS. Starts once the Didit SDK reports the verification flow
+  // completed (so the page updates as soon as the webhook lands — Didit's own onComplete only
+  // tells us the user finished the steps, not the final Approved/Declined decision, which
+  // always arrives async via webhook per docs/DIDIT_INTEGRATION_GUIDE.md). Continues while
+  // status is pending or under_review — both can still resolve to verified. The 30-attempt
+  // cap (60 s) guards against infinite loops when a session goes to manual review.
   const schedulePoll = useCallback(() => {
     clearPollTimer();
     pollAttemptsRef.current = 0;
@@ -114,8 +119,8 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
             clearPollTimer();
             setJustFailed(true);
           } else if (sessionOpenRef.current || kycStatus === 'pending' || kycStatus === 'under_review') {
-            // Keep polling while the iframe is open (status may still be a stale terminal
-            // value from a prior attempt) or while status is genuinely transient.
+            // Keep polling while a session just completed (status may still be a stale
+            // terminal value from a prior attempt) or while status is genuinely transient.
             runPoll();
           } else {
             clearPollTimer();
@@ -138,9 +143,24 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
     setJustFailed(false);
     try {
       const session = await startDiditSession();
-      sessionOpenRef.current = true;
-      setSessionState({ status: 'open', verificationUrl: session.verificationUrl });
-      schedulePoll();
+
+      // Re-assigned on every call (matches the SDK's own documented usage pattern) so the
+      // callbacks always close over the current schedulePoll/setSessionState identities.
+      DiditSdk.shared.onComplete = (result) => {
+        if (result.type === 'completed') {
+          sessionOpenRef.current = true;
+          schedulePoll();
+        } else if (result.type === 'failed') {
+          setSessionState({ status: 'error', message: result.error?.message ?? 'A verificação falhou. Tente novamente.' });
+        }
+        // 'cancelled' — user closed the modal mid-flow, nothing to do, stays idle.
+      };
+
+      await DiditSdk.shared.startVerification({
+        url: session.verificationUrl,
+        configuration: { showCloseButton: true, showExitConfirmation: true },
+      });
+      setSessionState({ status: 'idle' });
     } catch (error) {
       const message = error instanceof Error
         ? error.message
@@ -150,17 +170,19 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
   }, [schedulePoll]);
 
   const closeSession = useCallback(() => {
+    DiditSdk.shared.close();
     sessionOpenRef.current = false;
-    setSessionState({ status: 'idle' });
-    schedulePoll();
-  }, [schedulePoll]);
+  }, []);
 
   useEffect(() => {
     void refetchKyc();
   }, [refetchKyc]);
 
   useEffect(() => {
-    return () => clearPollTimer();
+    return () => {
+      clearPollTimer();
+      DiditSdk.shared.destroy();
+    };
   }, [clearPollTimer]);
 
   return { kycState, sessionState, justVerified, justFailed, userName, startVerification, closeSession, refetchKyc };

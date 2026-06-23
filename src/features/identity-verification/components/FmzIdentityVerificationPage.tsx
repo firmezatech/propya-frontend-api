@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Shield, ShieldCheck, ShieldAlert, Clock, RefreshCw,
@@ -378,31 +378,8 @@ function FailureView({ userName, kycStatus, isRetrying, onRetry }: FailureViewPr
 // ─── Main page component ──────────────────────────────────────────────────────
 
 export function FmzIdentityVerificationPage() {
-  const { kycState, sessionState, justVerified, justFailed, userName, startVerification, closeSession, refetchKyc } =
+  const { kycState, sessionState, justVerified, justFailed, userName, startVerification, refetchKyc } =
     useFmzIdentityVerification();
-
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const triggerButtonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (sessionState.status === 'open') {
-      closeButtonRef.current?.focus();
-    }
-  }, [sessionState.status]);
-
-  const handleClose = useCallback(() => {
-    closeSession();
-    triggerButtonRef.current?.focus();
-  }, [closeSession]);
-
-  useEffect(() => {
-    if (sessionState.status !== 'open') return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [sessionState.status, handleClose]);
 
   const isStarting = sessionState.status === 'starting';
   const sessionError = sessionState.status === 'error' ? sessionState.message : null;
@@ -477,7 +454,6 @@ export function FmzIdentityVerificationPage() {
             {config.canStart ? (
               <div className={styles.statusActions}>
                 <button
-                  ref={triggerButtonRef}
                   type="button"
                   className={`${styles.btn} ${styles.btnPrimary}`}
                   disabled={isStarting}
@@ -632,40 +608,6 @@ export function FmzIdentityVerificationPage() {
         </p>
 
       </div>
-
-      {sessionState.status === 'open' ? (
-        <div className={styles.overlay} role="presentation">
-          <div
-            className={styles.modal}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Verificação segura — Didit"
-          >
-            <div className={styles.modalChrome}>
-              <span className={styles.modalLock}>
-                <Lock aria-hidden="true" />
-              </span>
-              <span className={styles.modalHost}>verify.didit.me</span>
-              <button
-                ref={closeButtonRef}
-                type="button"
-                className={styles.modalClose}
-                onClick={handleClose}
-                aria-label="Fechar verificação"
-              >
-                <X aria-hidden="true" />
-              </button>
-            </div>
-            <iframe
-              className={styles.modalIframe}
-              src={sessionState.verificationUrl}
-              title="Verificação de identidade — Didit"
-              allow="camera; microphone; fullscreen"
-              referrerPolicy="strict-origin-when-cross-origin"
-            />
-          </div>
-        </div>
-      ) : null}
 
     </FmzConnectedPageShell>
   );

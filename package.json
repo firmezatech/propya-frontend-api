@@ -12,6 +12,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@didit-protocol/sdk-web": "^0.2.1",
     "@emailjs/browser": "^4.4.1",
     "@heroicons/react": "^2.2.0",
     "@popperjs/core": "^2.11.8",

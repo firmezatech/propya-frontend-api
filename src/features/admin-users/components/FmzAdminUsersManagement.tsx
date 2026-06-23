@@ -43,6 +43,7 @@ import {
   requestAdminUserPasswordResetLink,
   setAdminUserActiveStatus,
   updateAdminUser,
+  updateAdminUserContact,
 } from '../services';
 import type {
   FmzAdminCoOwnerProperty,
@@ -171,12 +172,28 @@ const propertyAddress = (property?: FmzAdminProperty | null): string => {
   return [property.addressLine1, property.addressLine2, property.district, property.city, property.state, property.postalCode].filter(Boolean).join(' · ') || 'Endereço não informado';
 };
 const monthYearFormatter = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' });
+const shortMonthYearFormatter = new Intl.DateTimeFormat('pt-BR', { month: 'short', year: 'numeric' });
 const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 const formatMonthYear = (value: string | null | undefined): string => {
   if (!value) return '—';
   const date = new Date(`${value}T00:00:00`);
   return Number.isNaN(date.getTime()) ? value : monthYearFormatter.format(date);
 };
+// Reference uses long month for "mais antigo desde" (ex: "maio/2026") but abbreviated
+// month for "inquilino desde" (ex: "mar/2025") — two distinct literal formats, not a typo.
+const formatAbbrevMonthYear = (value: string | null | undefined): string => {
+  if (!value) return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : shortMonthYearFormatter.format(date).replace('.', '');
+};
+// Exact 4 color pairs cycled by the reference's mock data for hold-row property initials.
+const HOLD_INITIALS_PALETTE = [
+  { bg: '#EBF0FA', fg: '#3B5EA6' },
+  { bg: '#E5F4EB', fg: '#3BA66B' },
+  { bg: '#EDE9FA', fg: '#6B4FA6' },
+  { bg: '#FAE8E0', fg: '#A6503B' },
+] as const;
+const propertyInitials = (name: string): string => name.split(' ').filter(Boolean).slice(0, 2).map((word) => word[0]).join('').toUpperCase() || 'IM';
 const formatDateTime = (value: string | null | undefined): string => {
   if (!value) return '—';
   const date = new Date(value);
@@ -257,6 +274,8 @@ export function FmzAdminUsersManagement() {
   const [statusToggling, setStatusToggling] = useState(false);
   const [resetLinkLoading, setResetLinkLoading] = useState(false);
   const [resetLink, setResetLink] = useState<ResetLinkState>(null);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [contactSaving, setContactSaving] = useState(false);
   const pagination = useFmzAdminPagination();
 
   useEffect(() => {
@@ -438,7 +457,24 @@ export function FmzAdminUsersManagement() {
   };
   const closeDrawer = () => { setDrawerUser(null); setResetLink(null); };
 
-  const editFromDrawer = (user: FmzAdminUser) => { closeDrawer(); void openEdit(user); };
+  // "Editar dados" in the drawer opens the small reference-matching modal (name/email/phone
+  // only) instead of the full create/edit wizard — role/address editing still goes through
+  // the wizard, but that's a separate entry point the reference doesn't define.
+  const saveContactFromDrawer = async (contact: { name: string; email: string; phone: string }) => {
+    if (!drawerUser) return;
+    setContactSaving(true); setError(null);
+    try {
+      const updated = await updateAdminUserContact(drawerUser.id, contact);
+      setDrawerUser(updated);
+      await loadData();
+      setContactModalOpen(false);
+      notify('Dados atualizados.');
+    } catch (err) {
+      setError(normalizeFmzApiError(err));
+    } finally {
+      setContactSaving(false);
+    }
+  };
 
   const toggleDrawerUserActive = async () => {
     if (!drawerUser) return;
@@ -510,11 +546,17 @@ export function FmzAdminUsersManagement() {
         resetLinkLoading={resetLinkLoading}
         resetLink={resetLink}
         onClose={closeDrawer}
-        onEdit={editFromDrawer}
+        onEdit={() => setContactModalOpen(true)}
         onToggleActive={() => void toggleDrawerUserActive()}
         onRequestPasswordReset={() => void requestPasswordReset()}
         onDelete={() => drawerUser && void removeUserById(drawerUser.id, drawerUser.name)}
         onDismissResetLink={() => setResetLink(null)}
+      />
+      <ContactEditModal
+        user={contactModalOpen ? drawerUser : null}
+        saving={contactSaving}
+        onSave={(contact) => void saveContactFromDrawer(contact)}
+        onDismiss={() => setContactModalOpen(false)}
       />
       <ToastView toast={toast} />
     </section>
@@ -613,17 +655,29 @@ function UserList({ users, roles, roleOptions, query, onQuery, statusFilter, onS
         <FmzAdminPagination {...pagination} disabled={loading} onPageChange={pagination.setPage} onLimitChange={pagination.setLimit} />
       </div>
 
-      <div className="relative mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
+      <div className="relative mt-4 min-h-0 flex-1 overflow-y-auto rounded-[14px] border border-[#E8EAF0] bg-white">
         {isInitialLoading ? (
           <FmzAdminListSkeleton />
+        ) : users.length ? (
+          <table className="w-full border-collapse">
+            <thead className="sticky top-0 z-[1] bg-[#FCFCFD]">
+              <tr>
+                <th className="border-b border-[#F0F1F5] px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[.07em] text-[#9AA3B0]">Usuário</th>
+                <th className="hidden border-b border-[#F0F1F5] px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[.07em] text-[#9AA3B0] lg:table-cell">Idade</th>
+                <th className="hidden border-b border-[#F0F1F5] px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[.07em] text-[#9AA3B0] sm:table-cell">Telefone</th>
+                <th className="hidden border-b border-[#F0F1F5] px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[.07em] text-[#9AA3B0] md:table-cell">Tokens</th>
+                <th className="hidden border-b border-[#F0F1F5] px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[.07em] text-[#9AA3B0] md:table-cell">Inquilino</th>
+                <th className="hidden border-b border-[#F0F1F5] px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[.07em] text-[#9AA3B0] xl:table-cell">Última ação</th>
+                <th className="border-b border-[#F0F1F5] px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[.07em] text-[#9AA3B0]">Status</th>
+                <th className="w-8 border-b border-[#F0F1F5] px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody className={fmzCn('transition-opacity', loading && 'opacity-60')}>
+              {users.map((user) => <UserTableRow key={user.id || user.email} user={user} roles={roles} onOpen={() => onOpen(user)} />)}
+            </tbody>
+          </table>
         ) : (
-          <div className={fmzCn('flex flex-col gap-3 transition-opacity', loading && 'opacity-60')}>
-            {users.length ? users.map((user) => (
-              <UserRow key={user.id || user.email} user={user} roles={roles} onOpen={() => onOpen(user)} />
-            )) : (
-              <EmptyUsers hasQuery={Boolean(query.trim())} onCreate={onCreate} />
-            )}
-          </div>
+          <EmptyUsers hasQuery={Boolean(query.trim())} onCreate={onCreate} />
         )}
 
         {loading && !isInitialLoading && (
@@ -638,11 +692,46 @@ function UserList({ users, roles, roleOptions, query, onQuery, statusFilter, onS
 
 const isUserOverdue = (user: FmzAdminUser): boolean => user.tenantContracts.some((contract) => contract.overdue);
 
-function UserRow({ user, roles, onOpen }: { user: FmzAdminUser; roles: Map<string, FmzAccessControlRole>; onOpen: () => void }) {
+function UserTableRow({ user, onOpen }: { user: FmzAdminUser; roles: Map<string, FmzAccessControlRole>; onOpen: () => void }) {
   const [bg, fg] = avatarColor(user.id || user.email);
-  const walletLabel = user.walletAddress || user.wallet || user.wallets[0]?.walletAddress;
   const overdue = isUserOverdue(user);
-  return <button onClick={onOpen} className="group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 rounded-2xl border border-[#E8EAF0] bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-transparent hover:shadow-[0_10px_28px_rgba(13,19,33,.08)] sm:px-5 lg:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto]"><span className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-[13px] font-bold" style={{ background: bg, color: fg }}>{initials(user.name)}</span><span className="min-w-0 flex-1"><span className="block truncate text-[14.5px] font-bold text-[#0D1321]">{user.name || 'Usuário sem nome'}</span><span className="mt-0.5 block truncate text-xs text-[#5A6478]">{[user.email, user.phone, walletLabel].filter(Boolean).join(' · ') || 'Sem dados de contato'}</span><span className="mt-2 flex flex-wrap gap-1.5">{overdue && <span className="inline-flex items-center gap-1 rounded-md border border-[#F5C4BF] bg-[#FEF5F4] px-2.5 py-0.5 text-[10.5px] font-bold text-[#D94F3D]"><AlertTriangle className="h-3 w-3" />Atrasado</span>}{user.roleKeys.length ? user.roleKeys.map((key) => { const role = roles.get(normalizeKey(key)); const color = role?.color || '#7F8C8D'; return <span key={key} className="rounded-md border px-2.5 py-0.5 text-[10.5px] font-semibold" style={{ background: `${color}18`, borderColor: `${color}30`, color }}>{role ? roleLabel(role) : key}</span>; }) : <span className="text-[11.5px] italic text-[#9AA3B0]">Sem tipos de acesso</span>}</span></span><span className="hidden items-center gap-5 whitespace-nowrap text-xs text-[#5A6478] lg:flex"><span>{user.wallets.length} wallet{user.wallets.length === 1 ? '' : 's'}</span><span>{user.tenantContracts.length} contrato{user.tenantContracts.length === 1 ? '' : 's'}</span><span>{user.coOwnerProperties.length} propriedade{user.coOwnerProperties.length === 1 ? '' : 's'}</span></span><span className="hidden items-center gap-1.5 whitespace-nowrap text-xs text-[#5A6478] lg:flex"><span className={fmzCn('h-2 w-2 rounded-full', user.status === 'active' ? 'bg-[#1A8C5B]' : 'bg-[#9AA3B0]')} />{user.status === 'active' ? 'Ativo' : 'Inativo'}</span><ChevronRight className="h-5 w-5 shrink-0 text-[#9AA3B0] transition group-hover:translate-x-0.5 group-hover:text-[#0D1321]" /></button>;
+  const age = calculateAge(user.birthdate);
+  const totalTokens = user.coOwnerProperties.reduce((sum, item) => sum + valueAsNumber(item.tokenBalance), 0);
+  return (
+    <tr onClick={onOpen} className="cursor-pointer border-b border-[#F0F1F5] transition hover:bg-[#F7F8FA] last:border-0">
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[12px] font-bold" style={{ background: bg, color: fg }}>{initials(user.name)}</span>
+          <div className="min-w-0">
+            <p className="truncate text-[13.5px] font-bold text-[#0D1321]">{user.name || 'Usuário sem nome'}</p>
+            <p className="truncate text-[11.5px] text-[#9AA3B0]">{user.email}</p>
+          </div>
+        </div>
+      </td>
+      <td className="hidden px-4 py-3 text-[13px] text-[#5A6478] lg:table-cell">{age !== null ? `${age} anos` : '—'}</td>
+      <td className="hidden px-4 py-3 text-[13px] text-[#5A6478] sm:table-cell">{user.phone || '—'}</td>
+      <td className="hidden px-4 py-3 text-right text-[13px] font-semibold text-[#0D1321] md:table-cell">
+        {user.coOwnerProperties.length ? <>{formatTokenAmount(totalTokens)} <span className="text-[11px] font-normal text-[#9AA3B0]">· {user.coOwnerProperties.length} imóv.</span></> : '—'}
+      </td>
+      <td className="hidden px-4 py-3 md:table-cell">
+        {overdue ? (
+          <span className="inline-flex items-center gap-1 rounded-md border border-[#F5C4BF] bg-[#FEF5F4] px-2.5 py-0.5 text-[10.5px] font-bold text-[#D94F3D]">Atraso</span>
+        ) : user.tenantContracts.length ? (
+          <span className="inline-flex items-center gap-1 rounded-md border border-[#9DC0FF]/30 bg-[#2563EB]/10 px-2.5 py-0.5 text-[10.5px] font-bold text-[#2563EB]">Inquilino</span>
+        ) : (
+          <span className="text-[11.5px] text-[#9AA3B0]">—</span>
+        )}
+      </td>
+      <td className="hidden px-4 py-3 xl:table-cell">
+        <p className="text-[12.5px] text-[#0D1321]">{user.lastLoginAt ? 'Login na plataforma' : '—'}</p>
+        <p className="mt-0.5 text-[11px] text-[#9AA3B0]">{user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Sem registro'}</p>
+      </td>
+      <td className="px-4 py-3">
+        <span className={fmzCn('inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-[10.5px] font-bold', user.isActive ? 'border-[#A8DFC4] bg-[#F0FAF5] text-[#1A8C5B]' : 'border-[#E8EAF0] bg-[#F7F8FA] text-[#9AA3B0]')}><span className={fmzCn('h-1.5 w-1.5 rounded-full', user.isActive ? 'bg-[#1A8C5B]' : 'bg-[#9AA3B0]')} />{user.isActive ? 'Ativo' : 'Inativo'}</span>
+      </td>
+      <td className="px-4 py-3"><ChevronRight className="h-4 w-4 text-[#9AA3B0]" /></td>
+    </tr>
+  );
 }
 
 type UserDrawerProps = {
@@ -721,7 +810,7 @@ function DrawerHeader({ user, onClose }: { user: FmzAdminUser; onClose: () => vo
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className={fmzCn('inline-flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-[11px] font-bold', user.isActive ? 'border-[#7EE3B0]/30 bg-[#1A8C5B]/20 text-[#7EE3B0]' : 'border-white/20 bg-white/10 text-white/70')}>● {user.isActive ? 'Ativo' : 'Inativo'}</span>
+        <span className={fmzCn('inline-flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-[11px] font-bold', user.isActive ? 'border-[#7EE3B0]/30 bg-[#1A8C5B]/[.22] text-[#7EE3B0]' : 'border-white/[.18] bg-white/10 text-white/70')}>● {user.isActive ? 'Ativo' : 'Inativo'}</span>
         {user.coOwnerProperties.length > 0 && <span className="inline-flex items-center gap-1 rounded-md border border-[#F5C842]/30 bg-[#F5C842]/20 px-2.5 py-0.5 text-[11px] font-bold text-[#F5C842]">Co-proprietário</span>}
         {user.tenantContracts.length > 0 && <span className="inline-flex items-center gap-1 rounded-md border border-[#9DC0FF]/30 bg-[#2563EB]/25 px-2.5 py-0.5 text-[11px] font-bold text-[#9DC0FF]">Inquilino</span>}
         {overdue && <span className="inline-flex items-center gap-1 rounded-md border border-[#F5A99E]/30 bg-[#D94F3D]/25 px-2.5 py-0.5 text-[11px] font-bold text-[#F5A99E]">● Aluguel atrasado</span>}
@@ -733,19 +822,22 @@ function DrawerHeader({ user, onClose }: { user: FmzAdminUser; onClose: () => vo
 function TenantStatusCard({ contracts }: { contracts: FmzAdminTenantContract[] }) {
   const overdueContract = contracts.find((contract) => contract.overdue);
   return (
-    <DetailCard icon={<Home className="h-4 w-4" />} title="Situação de inquilino" subtitle="Contrato e atraso de aluguel, se houver">
+    <DetailCard icon={<Home className="h-4 w-4" />} title="Situação de inquilino" flush={contracts.length > 0}>
       {!contracts.length ? (
         <p className="text-[13px] italic text-[#9AA3B0]">Este usuário não é inquilino de nenhum imóvel.</p>
       ) : (
-        <div className="flex flex-col gap-3">
+        <>
           {contracts.map((contract) => (
-            <div key={contract.id} className="rounded-xl border border-[#E8EAF0] bg-[#F7F8FA] p-3">
-              <p className="text-[13.5px] font-bold text-[#0D1321]">{contract.property?.name || contract.contractNumber || 'Contrato'}</p>
-              <p className="mt-1 text-[11.5px] text-[#5A6478]">{propertyAddress(contract.property)} · {formatMoney(contract.baseMonthlyRent, contract.currency || 'BRL')}/mês</p>
+            <div key={contract.id} className="flex gap-3 border-b border-[#F0F1F5] px-4 py-3 last:border-0">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-[#EFF6FF] text-[#2563EB]"><Home className="h-4 w-4" /></span>
+              <div className="min-w-0">
+                <p className="text-[13px] font-bold text-[#0D1321]">{contract.property?.addressLine1 || contract.property?.name || contract.contractNumber || 'Contrato'}</p>
+                <p className="mt-0.5 text-[11.5px] text-[#9AA3B0]">{contract.property?.district || '—'} · inquilino desde {formatAbbrevMonthYear(contract.startDate)} · {formatMoney(contract.baseMonthlyRent, contract.currency || 'BRL')}/mês</p>
+              </div>
             </div>
           ))}
           {overdueContract?.overdue ? (
-            <div className="flex items-start gap-2.5 rounded-[10px] border border-[#F5C4BF] bg-[#FEF5F4] p-3">
+            <div className="mx-4 mb-3.5 flex items-start gap-2.5 rounded-[10px] border border-[#F5C4BF] bg-[#FEF5F4] p-3">
               <AlertTriangle className="mt-0.5 h-[15px] w-[15px] shrink-0 text-[#D94F3D]" />
               <div className="min-w-0">
                 <p className="text-[12.5px] font-bold text-[#D94F3D]">Aluguel em atraso — {overdueContract.overdue.months} {overdueContract.overdue.months > 1 ? 'meses' : 'mês'}</p>
@@ -753,9 +845,9 @@ function TenantStatusCard({ contracts }: { contracts: FmzAdminTenantContract[] }
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 text-[11.5px] font-semibold text-[#1A8C5B]"><CheckCircle2 className="h-3.5 w-3.5" />Aluguel em dia</div>
+            <div className="mx-4 mb-3.5 flex items-center gap-1.5 text-[11.5px] font-semibold text-[#1A8C5B]"><CheckCircle2 className="h-3.5 w-3.5" />Aluguel em dia</div>
           )}
-        </div>
+        </>
       )}
     </DetailCard>
   );
@@ -763,8 +855,9 @@ function TenantStatusCard({ contracts }: { contracts: FmzAdminTenantContract[] }
 
 function LastActionCard({ user }: { user: FmzAdminUser }) {
   return (
-    <DetailCard icon={<Clock className="h-4 w-4" />} title="Última ação na plataforma" subtitle="Último login registrado">
-      <p className="text-[13px] text-[#0D1321]">{user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Nenhum login registrado ainda.'}</p>
+    <DetailCard icon={<Clock className="h-4 w-4" />} title="Última ação na plataforma">
+      <FieldRow label="Atividade" value={user.lastLoginAt ? 'Login na plataforma' : 'Nenhum login registrado'} />
+      <FieldRow label="Quando" value={user.lastLoginAt ? formatDateTime(user.lastLoginAt) : '—'} />
     </DetailCard>
   );
 }
@@ -776,6 +869,44 @@ function DrawerActions({ user, statusToggling, onEdit, onToggleActive, onRequest
       <button onClick={onRequestPasswordReset} className="inline-flex items-center justify-center gap-2 rounded-[9px] border border-[#E8EAF0] bg-white px-4 py-2.5 text-[12px] font-semibold text-[#0D1321] transition hover:border-[#0D1321]"><KeyRound className="h-3.5 w-3.5" />Resetar senha</button>
       <button disabled={statusToggling} onClick={onToggleActive} className="col-span-2 inline-flex items-center justify-center gap-2 rounded-[9px] border border-[#E8EAF0] bg-white px-4 py-2.5 text-[12px] font-semibold text-[#0D1321] transition hover:border-[#0D1321] disabled:opacity-50">{statusToggling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Power className="h-3.5 w-3.5" />}{user.isActive ? 'Desativar usuário' : 'Reativar usuário'}</button>
       <button onClick={onDelete} className="col-span-2 inline-flex items-center justify-center gap-2 rounded-[9px] border border-[#F5C4BF] bg-[#FEF5F4] px-4 py-2.5 text-[12px] font-semibold text-[#D94F3D] transition hover:bg-[#FDEDEC]"><Trash2 className="h-3.5 w-3.5" />Deletar usuário</button>
+    </div>
+  );
+}
+
+// Reference's "Editar dados" is a small modal with only name/email/phone — role/address
+// editing stays on the wizard, which the reference doesn't define a UI for at all.
+function ContactEditModal({ user, saving, onSave, onDismiss }: { user: FmzAdminUser | null; saving: boolean; onSave: (contact: { name: string; email: string; phone: string }) => void; onDismiss: () => void }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const isOpen = Boolean(user);
+
+  useEffect(() => {
+    if (!user) return;
+    setName(user.name || '');
+    setEmail(user.email || '');
+    setPhone(user.phone || '');
+  }, [user]);
+
+  return (
+    <div className={fmzCn('fixed inset-0 z-[400] grid place-items-center bg-[#0D1321]/40 p-6 transition-opacity', isOpen ? 'opacity-100' : 'pointer-events-none opacity-0')}>
+      {isOpen && (
+        <div className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-white shadow-[0_24px_60px_rgba(13,19,33,.3)]">
+          <div className="px-[22px] pt-5">
+            <h2 className="text-[17px] font-extrabold tracking-[-.02em]">Editar dados</h2>
+            <p className="mt-1 text-[13px] leading-[1.5] text-[#5A6478]">Atualize as informações de contato deste usuário.</p>
+          </div>
+          <div className="px-[22px] pt-4">
+            <Field label="Nome completo" value={name} placeholder="Ex: Mirella Souza" onChange={setName} />
+            <Field label="E-mail" type="email" value={email} placeholder="email@exemplo.com" onChange={setEmail} />
+            <Field label="Telefone" value={phone} placeholder="+55 11 9 0000-0000" onChange={setPhone} />
+          </div>
+          <div className="flex justify-end gap-2.5 px-[22px] py-[22px] pt-2">
+            <button onClick={onDismiss} className="inline-flex items-center justify-center gap-2 rounded-[9px] border border-[#E8EAF0] bg-white px-4 py-2.5 text-[12px] font-semibold text-[#5A6478]">Cancelar</button>
+            <button disabled={saving} onClick={() => onSave({ name, email, phone })} className="inline-flex items-center justify-center gap-2 rounded-[9px] bg-[#0D1321] px-4 py-2.5 text-[12px] font-semibold text-white disabled:opacity-50">{saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}Salvar</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -835,8 +966,20 @@ function ReadOnlyUserDetails({ user }: { user: FmzAdminUser }) {
   );
 }
 
-function DetailCard({ icon, title, subtitle, children }: { icon: ReactNode; title: string; subtitle: string; children: ReactNode }) {
-  return <section className="rounded-2xl border border-[#E8EAF0] bg-white p-5 shadow-sm"><div className="mb-4 flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F7F8FA] text-[#0D1321]">{icon}</span><span><h2 className="text-[15px] font-bold">{title}</h2><p className="mt-0.5 text-[12px] text-[#9AA3B0]">{subtitle}</p></span></div>{children}</section>;
+// Mirrors reference's `.dr-sec`/`.dr-sec-head`/`.dr-sec-body` exactly — no subtitle line
+// (the reference's section head is icon + title only). `flush` skips dr-sec-body's padding
+// for sections whose content (wallet-total/hold-row) is self-padded and meant to bleed edge
+// to edge, same as the reference markup.
+function DetailCard({ icon, title, flush = false, children }: { icon: ReactNode; title: string; flush?: boolean; children: ReactNode }) {
+  return (
+    <section className="overflow-hidden rounded-[13px] border border-[#E8EAF0] bg-white">
+      <div className="flex items-center gap-2.5 border-b border-[#E8EAF0] px-4 py-[13px]">
+        <span className="text-[#5A6478]">{icon}</span>
+        <h2 className="text-[13px] font-extrabold text-[#0D1321]">{title}</h2>
+      </div>
+      {flush ? children : <div className="px-4 py-3">{children}</div>}
+    </section>
+  );
 }
 
 function FieldRow({ label, value }: { label: string; value: ReactNode }) {
@@ -846,46 +989,82 @@ function FieldRow({ label, value }: { label: string; value: ReactNode }) {
 function PersonalDataCard({ user }: { user: FmzAdminUser }) {
   const age = calculateAge(user.birthdate);
   return (
-    <DetailCard icon={<Users className="h-4 w-4" />} title="Dados pessoais" subtitle="Identificação e contato do usuário">
+    <DetailCard icon={<Users className="h-4 w-4" />} title="Dados pessoais">
       <FieldRow label="Nome completo" value={user.name || '—'} />
       <FieldRow label="E-mail" value={user.email || '—'} />
       <FieldRow label="Telefone" value={user.phone || '—'} />
-      <FieldRow label="Nascimento" value={user.birthdate ? `${formatDateOnly(user.birthdate)}${age !== null ? ` · ${age} anos` : ''}` : '—'} />
       <FieldRow label="CPF" value={<span className="italic text-[#9AA3B0]">Não disponível via API</span>} />
+      <FieldRow label="Nascimento" value={user.birthdate ? `${formatDateOnly(user.birthdate)}${age !== null ? ` · ${age} anos` : ''}` : '—'} />
     </DetailCard>
   );
 }
 
 function AddressCard({ user }: { user: FmzAdminUser }) {
-  const lines = [user.addressLine1, user.addressLine2, user.district, [user.city, user.state].filter(Boolean).join(' / '), user.postalCode, user.country].filter(Boolean);
-  return <DetailCard icon={<MapPin className="h-4 w-4" />} title="Endereço do usuário" subtitle="Informação editável do cadastro"><div className="grid gap-2 text-[13px] text-[#5A6478]">{lines.length ? lines.map((line) => <p key={line}>{line}</p>) : <p className="italic text-[#9AA3B0]">Endereço não informado.</p>}{user.address && <p className="rounded-lg bg-[#F7F8FA] px-3 py-2 text-[#0D1321]">{user.address}</p>}</div></DetailCard>;
-}
-
-function WalletsCard({ wallets }: { wallets: FmzAdminUserWallet[] }) {
-  return <DetailCard icon={<WalletCards className="h-4 w-4" />} title="Wallets" subtitle="Somente leitura: o administrador não edita wallets"><div className="flex flex-col gap-3">{wallets.length ? wallets.map((wallet, index) => <div key={wallet.id || wallet.walletAddress} className="rounded-xl border border-[#E8EAF0] bg-[#F7F8FA] p-3"><div className="mb-2 flex items-center justify-between gap-3"><span className="text-[10.5px] font-bold uppercase tracking-[.08em] text-[#9AA3B0]">Wallet {index + 1}</span><span className="rounded-full bg-white px-2.5 py-1 text-[10.5px] font-semibold text-[#5A6478]">Chain {wallet.chainId}</span></div><p className="break-all text-[12px] text-[#0D1321]">{wallet.walletAddress}</p><div className="mt-2 flex flex-wrap gap-1.5 text-[10.5px]"><Badge>{wallet.walletType}</Badge><Badge>{wallet.custodyType}</Badge><Badge>{wallet.verificationStatus}</Badge><Badge>{wallet.status}</Badge></div></div>) : <p className="text-[13px] italic text-[#9AA3B0]">Nenhuma wallet vinculada.</p>}</div></DetailCard>;
-}
-
-function PropertiesCard({ user }: { user: FmzAdminUser }) {
-  const totalTokens = user.coOwnerProperties.reduce((sum, item) => sum + valueAsNumber(item.tokenBalance), 0);
+  const street = [user.addressLine1, user.addressLine2].filter(Boolean).join(' · ');
+  const neighCity = [user.district, user.city].filter(Boolean).join(' · ');
+  const hasAddress = street || neighCity || user.postalCode;
   return (
-    <DetailCard icon={<Building2 className="h-4 w-4" />} title="Imóveis e tokens" subtitle="Relações tenant/co-owner e percentuais são somente leitura">
-      {user.coOwnerProperties.length > 0 && (
-        <div className="mb-3 flex items-center justify-between rounded-lg bg-[#FFFBEB] px-3.5 py-3">
-          <span className="text-[11px] font-bold uppercase tracking-[.06em] text-[#9A7D0A]">Saldo total</span>
-          <span className="font-mono text-[16px] font-bold text-[#0D1321]">{formatTokenAmount(totalTokens)} <span className="text-[12px] font-semibold text-[#9A7D0A]">FRMZ</span></span>
-        </div>
+    <DetailCard icon={<MapPin className="h-4 w-4" />} title="Endereço">
+      {hasAddress ? (
+        <p className="text-[13px] leading-[1.6] text-[#0D1321]">
+          {street}{street && <br />}
+          {neighCity}{neighCity && <br />}
+          {user.postalCode && <span className="text-[12px] text-[#9AA3B0]">CEP {user.postalCode}</span>}
+        </p>
+      ) : (
+        <p className="text-[13px] italic text-[#9AA3B0]">Endereço não informado.</p>
       )}
-      <div className="flex flex-col gap-3">
-        {user.coOwnerProperties.length ? user.coOwnerProperties.map((item) => <OwnershipView key={item.id || item.propertyId} item={item} />) : null}
-        {user.propertyRelations.length ? user.propertyRelations.map((relation) => <RelationView key={relation.id || `${relation.propertyId}-${relation.relationType}`} relation={relation} />) : null}
-        {!user.coOwnerProperties.length && !user.propertyRelations.length ? <p className="text-[13px] italic text-[#9AA3B0]">Nenhuma propriedade vinculada.</p> : null}
-      </div>
     </DetailCard>
   );
 }
 
-function OwnershipView({ item }: { item: FmzAdminCoOwnerProperty }) {
-  return <div className="rounded-xl border border-[#E8EAF0] bg-[#F7F8FA] p-3"><div className="flex items-start justify-between gap-3"><div><p className="text-[13.5px] font-bold text-[#0D1321]">{item.property?.name || 'Propriedade'}</p><p className="mt-1 text-[11.5px] leading-5 text-[#5A6478]">{propertyAddress(item.property)}</p></div><span className="rounded-full border border-[#A8DFC4] bg-[#F0FAF5] px-2.5 py-1 text-[10.5px] font-bold text-[#1A8C5B]">{formatPercentage(item.ownershipPercentage)}</span></div><div className="mt-3 grid gap-2 text-[11.5px] text-[#5A6478] sm:grid-cols-3"><Metric label="Tokens" value={`${formatTokenAmount(item.tokenBalance)} ${item.tokenization?.tokenSymbol ?? ''}`.trim()} /><Metric label="Pendente" value={formatTokenAmount(item.pendingTokenBalance)} /><Metric label="Token ID" value={String(item.tokenization?.tokenId ?? '—')} /></div></div>;
+function WalletsCard({ wallets }: { wallets: FmzAdminUserWallet[] }) {
+  return <DetailCard icon={<WalletCards className="h-4 w-4" />} title="Wallets"><div className="flex flex-col gap-3">{wallets.length ? wallets.map((wallet, index) => <div key={wallet.id || wallet.walletAddress} className="rounded-xl border border-[#E8EAF0] bg-[#F7F8FA] p-3"><div className="mb-2 flex items-center justify-between gap-3"><span className="text-[10.5px] font-bold uppercase tracking-[.08em] text-[#9AA3B0]">Wallet {index + 1}</span><span className="rounded-full bg-white px-2.5 py-1 text-[10.5px] font-semibold text-[#5A6478]">Chain {wallet.chainId}</span></div><p className="break-all text-[12px] text-[#0D1321]">{wallet.walletAddress}</p><div className="mt-2 flex flex-wrap gap-1.5 text-[10.5px]"><Badge>{wallet.walletType}</Badge><Badge>{wallet.custodyType}</Badge><Badge>{wallet.verificationStatus}</Badge><Badge>{wallet.status}</Badge></div></div>) : <p className="text-[13px] italic text-[#9AA3B0]">Nenhuma wallet vinculada.</p>}</div></DetailCard>;
+}
+
+// Mirrors reference's "Carteira de tokens" exactly: wallet-total bar + hold-row list are both
+// full-bleed (edge to edge, self-padded), not wrapped in the generic padded card body —
+// hence `flush`. Falls back to RelationView's plain list when there's no co-ownership at all.
+function PropertiesCard({ user }: { user: FmzAdminUser }) {
+  const totalTokens = user.coOwnerProperties.reduce((sum, item) => sum + valueAsNumber(item.tokenBalance), 0);
+  const hasHoldings = user.coOwnerProperties.length > 0;
+  return (
+    <DetailCard icon={<Building2 className="h-4 w-4" />} title="Carteira de tokens" flush={hasHoldings}>
+      {hasHoldings ? (
+        <>
+          <div className="flex items-center justify-between border-b border-[#F0D870] bg-[#FFFBEB] px-4 py-3">
+            <span className="text-[11px] font-bold uppercase tracking-[.05em] text-[#9A7D0A]">Saldo total</span>
+            <span className="font-mono text-[16px] font-bold text-[#0D1321]">{formatTokenAmount(totalTokens)} FRMZ</span>
+          </div>
+          {user.coOwnerProperties.map((item, index) => <OwnershipView key={item.id || item.propertyId} item={item} colorIndex={index} />)}
+        </>
+      ) : user.propertyRelations.length ? (
+        <div className="flex flex-col gap-3">
+          {user.propertyRelations.map((relation) => <RelationView key={relation.id || `${relation.propertyId}-${relation.relationType}`} relation={relation} />)}
+        </div>
+      ) : (
+        <p className="text-[13px] italic text-[#9AA3B0]">Nenhuma propriedade vinculada.</p>
+      )}
+    </DetailCard>
+  );
+}
+
+function OwnershipView({ item, colorIndex }: { item: FmzAdminCoOwnerProperty; colorIndex: number }) {
+  const palette = HOLD_INITIALS_PALETTE[colorIndex % HOLD_INITIALS_PALETTE.length];
+  const street = item.property?.addressLine1 || item.property?.name || 'Imóvel';
+  return (
+    <div className="flex items-center gap-3 border-b border-[#F0F1F5] px-4 py-3 last:border-0">
+      <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[9px] text-[12px] font-extrabold" style={{ background: palette.bg, color: palette.fg }}>{propertyInitials(item.property?.name || street)}</span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] font-bold text-[#0D1321]">{street}</p>
+        <p className="mt-0.5 truncate text-[11.5px] text-[#9AA3B0]">{item.property?.district || item.property?.city || '—'}</p>
+      </div>
+      <div className="shrink-0 text-right">
+        <p className="font-mono text-[13px] font-extrabold text-[#0D1321]">{formatTokenAmount(item.tokenBalance)} FRMZ</p>
+        <p className="mt-0.5 text-[11px] text-[#9AA3B0]">{formatPercentage(item.ownershipPercentage)} do imóvel</p>
+      </div>
+    </div>
+  );
 }
 
 function RelationView({ relation }: { relation: FmzAdminPropertyRelation }) {
@@ -893,7 +1072,7 @@ function RelationView({ relation }: { relation: FmzAdminPropertyRelation }) {
 }
 
 function ContractsCard({ contracts }: { contracts: FmzAdminTenantContract[] }) {
-  return <DetailCard icon={<Home className="h-4 w-4" />} title="Contratos de inquilino" subtitle="Contratos ativos ou históricos retornados pelo backend"><div className="flex flex-col gap-3">{contracts.length ? contracts.map((contract) => <div key={contract.id} className="rounded-xl border border-[#E8EAF0] bg-[#F7F8FA] p-3"><div className="flex items-start justify-between gap-3"><div><p className="text-[13.5px] font-bold text-[#0D1321]">{contract.property?.name || contract.contractNumber || 'Contrato'}</p><p className="mt-1 text-[11.5px] text-[#5A6478]">{propertyAddress(contract.property)}</p></div><Badge>{contract.status || 'sem status'}</Badge></div><div className="mt-3 grid gap-2 text-[11.5px] text-[#5A6478] sm:grid-cols-3"><Metric label="Aluguel" value={formatMoney(contract.baseMonthlyRent, contract.currency || 'BRL')} /><Metric label="Vencimento" value={contract.paymentDay ? `Dia ${contract.paymentDay}` : '—'} /><Metric label="Índice" value={contract.rentAdjustmentIndex || '—'} /></div></div>) : <p className="text-[13px] italic text-[#9AA3B0]">Nenhum contrato como inquilino.</p>}</div></DetailCard>;
+  return <DetailCard icon={<Home className="h-4 w-4" />} title="Contratos de inquilino"><div className="flex flex-col gap-3">{contracts.length ? contracts.map((contract) => <div key={contract.id} className="rounded-xl border border-[#E8EAF0] bg-[#F7F8FA] p-3"><div className="flex items-start justify-between gap-3"><div><p className="text-[13.5px] font-bold text-[#0D1321]">{contract.property?.name || contract.contractNumber || 'Contrato'}</p><p className="mt-1 text-[11.5px] text-[#5A6478]">{propertyAddress(contract.property)}</p></div><Badge>{contract.status || 'sem status'}</Badge></div><div className="mt-3 grid gap-2 text-[11.5px] text-[#5A6478] sm:grid-cols-3"><Metric label="Aluguel" value={formatMoney(contract.baseMonthlyRent, contract.currency || 'BRL')} /><Metric label="Vencimento" value={contract.paymentDay ? `Dia ${contract.paymentDay}` : '—'} /><Metric label="Índice" value={contract.rentAdjustmentIndex || '—'} /></div></div>) : <p className="text-[13px] italic text-[#9AA3B0]">Nenhum contrato como inquilino.</p>}</div></DetailCard>;
 }
 
 function Metric({ label, value }: { label: string; value: string }) {

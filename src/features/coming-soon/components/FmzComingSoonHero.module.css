@@ -1,0 +1,204 @@
+/* ── LOCAL TOKENS — brand lime/plum, matches references/Em Breve.html ───── */
+.shell {
+  --gold: #C8ED5E;
+  --gold-soft: #BCE54A;
+  --gold-tint: #F3FADD;
+  --gold-deep: #2A1A22;
+  --navy: #2A1A22;
+  --ink: #2A1A22;
+  --muted: #6F6168;
+  --hint: #9B9097;
+  --line: #EAE7E5;
+  --line-2: #F1EEEC;
+  --page: #F6F5F2;
+  --green: #3E8E5A;
+  --shadow-md: 0 2px 6px rgba(42,26,34,.05), 0 8px 24px -8px rgba(42,26,34,.08);
+
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: clamp(32px, 6vw, 72px) clamp(20px, 4vw, 48px);
+  width: 100%;
+  font-family: var(--font-inter), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  color: var(--ink);
+  background: var(--page);
+}
+
+.soon {
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* ── RING + BADGE ────────────────────────── */
+.art {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  margin-bottom: 32px;
+  display: grid;
+  place-items: center;
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px dashed var(--line);
+  animation: fmzComingSoonSpin 28s linear infinite;
+}
+
+.ringInner {
+  inset: 16px;
+  border-style: solid;
+  border-color: var(--line-2);
+  animation-duration: 20s;
+  animation-direction: reverse;
+}
+
+@keyframes fmzComingSoonSpin {
+  to { transform: rotate(360deg); }
+}
+
+.badge {
+  position: relative;
+  z-index: 1;
+  width: 70px;
+  height: 70px;
+  border-radius: 20px;
+  background: var(--gold);
+  display: grid;
+  place-items: center;
+  color: var(--navy);
+  box-shadow: 0 12px 28px rgba(200,237,94,.45), inset 0 -2px 0 rgba(42,26,34,.06);
+}
+
+/* ── TAG ─────────────────────────────────── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--gold-tint);
+  border: 1px solid #DCEFA8;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+  margin-bottom: 20px;
+}
+
+.pulse {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.pulse::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1.5px solid var(--green);
+  opacity: .5;
+  animation: fmzComingSoonPing 1.9s ease-out infinite;
+}
+
+@keyframes fmzComingSoonPing {
+  0% { transform: scale(.6); opacity: .6; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+/* ── COPY ────────────────────────────────── */
+.title {
+  font-weight: 700;
+  font-size: clamp(28px, 4.4vw, 40px);
+  letter-spacing: -.035em;
+  line-height: 1.08;
+  color: var(--navy);
+  margin-bottom: 16px;
+}
+
+.sub {
+  font-size: clamp(14.5px, 1.6vw, 16px);
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 440px;
+  margin-bottom: 30px;
+}
+
+.sub strong {
+  color: var(--navy);
+  font-weight: 600;
+}
+
+/* ── ACTIONS ─────────────────────────────── */
+.actions {
+  display: flex;
+  gap: 11px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1.5px solid;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+  background: none;
+  text-decoration: none;
+}
+
+.btnPrimary {
+  background: var(--gold);
+  color: var(--navy);
+  border-color: var(--gold-soft);
+  box-shadow: 0 6px 16px rgba(200,237,94,.4);
+}
+
+.btnPrimary:hover {
+  background: var(--gold-soft);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(200,237,94,.5);
+}
+
+.btnOutline {
+  background: #fff;
+  border-color: var(--line);
+  color: var(--navy);
+}
+
+.btnOutline:hover {
+  border-color: var(--navy);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.foot {
+  font-size: 12.5px;
+  color: var(--hint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring,
+  .pulse::after {
+    animation: none;
+  }
+}

@@ -430,6 +430,13 @@ export async function setAdminUserActiveStatus(userId: string, isActive: boolean
   return normalizeAdminUser(recordOf(data).user ?? recordOf(data).data ?? data);
 }
 
+// Drawer's "Editar dados" small modal (reference: only name/email/phone) — only those 3
+// fields, no need to round-trip the rest of the editable form like the create/edit wizard does.
+export async function updateAdminUserContact(userId: string, contact: { name: string; email: string; phone: string }): Promise<FmzAdminUser> {
+  const { data } = await firmezaApiClient.patch(`${ADMIN_USERS_PATH}/${encodeURIComponent(userId)}`, contact);
+  return normalizeAdminUser(recordOf(data).user ?? recordOf(data).data ?? data);
+}
+
 export type FmzAdminPasswordResetLink = { resetUrl: string; expiresAt: string | null };
 
 // Backend mints the token and persists it but never sends an email — the admin is expected
