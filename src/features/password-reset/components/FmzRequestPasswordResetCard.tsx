@@ -42,7 +42,7 @@ const buildValidationError = (error: z.ZodError): { fieldErrors: FmzFieldErrorMa
 };
 
 export function FmzRequestPasswordResetCard() {
-  const authAccessConfig = useMemo(() => getFmzPasswordResetConfig(), []);
+  const passwordResetConfig = useMemo(() => getFmzPasswordResetConfig(), []);
   const [apiError, setApiError] = useState<FmzNormalizedApiError | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FmzFieldErrorMap>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -106,7 +106,16 @@ export function FmzRequestPasswordResetCard() {
         const validationError = buildValidationError(error);
         setApiError(validationError.alertError);
         setFieldErrors(validationError.fieldErrors);
+        return;
       }
+
+      setApiError({
+        code: FMZ_API_ERROR_CODES.UNKNOWN_ERROR,
+        title: 'Não foi possível concluir a solicitação',
+        description: 'Tente novamente em instantes. Se o problema continuar, entre em contato com o suporte.',
+        severity: 'error',
+        fieldErrors: {},
+      });
     }
   };
 
@@ -118,14 +127,14 @@ export function FmzRequestPasswordResetCard() {
   return (
     <main className="grid grid-cols-1 lg:grid-cols-2" aria-labelledby="fmz-request-password-reset-title">
       {/* ── LEFT: brand panel ─────────────────────────────────────── */}
-      <aside className="relative flex flex-col justify-center gap-8 overflow-hidden border-b border-fmz-border-light bg-gradient-to-b from-[#FBF7EE] to-[#F4EEDF] px-6 py-12 sm:px-10 lg:items-end lg:border-b-0 lg:border-r lg:py-16 lg:pl-14 lg:pr-[clamp(48px,6vw,92px)]">
+      <aside className="relative flex flex-col justify-center gap-8 overflow-hidden border-b border-fmz-border-light bg-gradient-to-b from-[#FBFAF6] to-[#F1EEE8] px-6 py-12 sm:px-10 lg:items-end lg:border-b-0 lg:border-r lg:py-16 lg:pl-14 lg:pr-[clamp(48px,6vw,92px)]">
         {/* faint dotted grid, masked toward the top-left */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              'linear-gradient(to right, rgba(13,19,33,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(13,19,33,0.04) 1px, transparent 1px)',
+              'linear-gradient(to right, rgba(42,26,34,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(42,26,34,0.04) 1px, transparent 1px)',
             backgroundSize: '42px 42px',
             maskImage: 'radial-gradient(circle at 30% 40%, black 0%, transparent 80%)',
             WebkitMaskImage: 'radial-gradient(circle at 30% 40%, black 0%, transparent 80%)',
@@ -137,7 +146,7 @@ export function FmzRequestPasswordResetCard() {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              'radial-gradient(60% 50% at 110% -10%, rgba(245,200,66,0.22) 0%, transparent 60%), radial-gradient(50% 50% at -10% 110%, rgba(245,200,66,0.10) 0%, transparent 60%)',
+              'radial-gradient(60% 50% at 110% -10%, rgba(200,237,94,0.22) 0%, transparent 60%), radial-gradient(50% 50% at -10% 110%, rgba(200,237,94,0.10) 0%, transparent 60%)',
           }}
         />
         {/* geometric mark, bottom-right */}
@@ -163,7 +172,10 @@ export function FmzRequestPasswordResetCard() {
           <h2 className="mb-5 max-w-[480px] font-sans text-[clamp(30px,3.4vw,44px)] font-extrabold leading-[1.05] tracking-[-0.035em] text-fmz-navy">
             Sem pânico.<br />
             Vamos{' '}
-            <span className="bg-gradient-to-br from-fmz-gold-dark to-fmz-gold bg-clip-text text-transparent">
+            <span
+              className="rounded-[2px] px-0.5 text-fmz-navy"
+              style={{ background: 'linear-gradient(transparent 60%, var(--fmz-gold) 60%, var(--fmz-gold) 94%, transparent 94%)' }}
+            >
               recuperar
             </span>
             <br />
@@ -176,7 +188,7 @@ export function FmzRequestPasswordResetCard() {
 
           <div className="mt-9 rounded-2xl border border-fmz-border-light bg-white/65 p-5 backdrop-blur-sm">
             <div className="mb-4 flex items-center gap-2.5">
-              <span className="h-2 w-2 rounded-full bg-fmz-gold shadow-[0_0_0_3px_rgba(245,200,66,0.25)]" />
+              <span className="h-2 w-2 rounded-full bg-fmz-gold shadow-[0_0_0_3px_rgba(200,237,94,0.22)]" />
               <span className="text-xs font-semibold text-fmz-navy">Como funciona a recuperação</span>
             </div>
             <ol className="space-y-4">
@@ -185,7 +197,7 @@ export function FmzRequestPasswordResetCard() {
                   <span
                     className={`grid h-7 w-7 shrink-0 place-items-center rounded-[9px] border-[1.5px] font-sans text-[13px] font-bold ${
                       index === 0
-                        ? 'border-fmz-gold bg-fmz-gold text-fmz-navy shadow-[0_4px_12px_rgba(245,200,66,0.35)]'
+                        ? 'border-fmz-gold bg-fmz-gold text-fmz-navy shadow-[0_4px_12px_rgba(200,237,94,0.32)]'
                         : 'border-fmz-border-light bg-white text-fmz-text-muted'
                     }`}
                   >
@@ -232,7 +244,7 @@ export function FmzRequestPasswordResetCard() {
               <p className="mb-2 text-[13.5px] leading-relaxed text-fmz-text-muted">
                 {successMessage || 'Se houver uma conta associada, enviamos um link de recuperação para:'}
               </p>
-              <span className="my-2 inline-flex items-center gap-2.5 rounded-xl border border-fmz-border-light bg-[#FBF7EE] px-3.5 py-2.5 text-[13px] font-semibold text-fmz-navy">
+              <span className="my-2 inline-flex items-center gap-2.5 rounded-xl border border-fmz-border-light bg-[#FBFAF6] px-3.5 py-2.5 text-[13px] font-semibold text-fmz-navy">
                 <Mail className="h-3.5 w-3.5 text-fmz-gold-dark" aria-hidden="true" />
                 <span className="break-all">{submittedEmail}</span>
               </span>
@@ -240,7 +252,7 @@ export function FmzRequestPasswordResetCard() {
               <ol className="my-6 space-y-3 rounded-2xl border border-fmz-border-light bg-fmz-page p-5">
                 {SUCCESS_STEPS.map((content, index) => (
                   <li key={index} className="flex items-start gap-3 text-[12.5px] leading-snug text-fmz-text-muted">
-                    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-[#FBF3DA] font-sans text-[11px] font-bold text-fmz-gold-dark">
+                    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-[#F3FADD] font-sans text-[11px] font-bold text-fmz-gold-dark">
                       {index + 1}
                     </span>
                     <span>{content}</span>
@@ -250,7 +262,7 @@ export function FmzRequestPasswordResetCard() {
 
               <Link
                 href={fmzPublicLayoutConfig.homePath}
-                className="flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-fmz-gold bg-fmz-gold px-4 py-3.5 font-sans text-sm font-bold uppercase tracking-[0.05em] text-fmz-navy no-underline transition hover:-translate-y-0.5 hover:bg-[#F5D26B] hover:shadow-[0_8px_22px_rgba(245,200,66,0.4)]"
+                className="flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-fmz-gold bg-fmz-gold px-4 py-3.5 font-sans text-sm font-bold uppercase tracking-[0.05em] text-fmz-navy no-underline transition hover:-translate-y-0.5 hover:bg-[#BCE54A] hover:shadow-[0_8px_22px_rgba(200,237,94,0.4)]"
               >
                 Voltar para o login
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -285,7 +297,7 @@ export function FmzRequestPasswordResetCard() {
 
               <div className="mb-7">
                 <span className="mb-3 inline-flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.12em] text-fmz-gold-dark">
-                  <span className="grid h-[18px] w-[18px] place-items-center rounded-[5px] bg-[#FBF3DA] text-fmz-gold-dark">
+                  <span className="grid h-[18px] w-[18px] place-items-center rounded-[5px] bg-[#F3FADD] text-fmz-gold-dark">
                     <Lock className="h-2.5 w-2.5" aria-hidden="true" />
                   </span>
                   Esqueci minha senha
@@ -310,7 +322,7 @@ export function FmzRequestPasswordResetCard() {
                   name="email"
                   placeholder="seu@email.com.br"
                   ariaLabel="Digite seu e-mail"
-                  autocompleteDomains={authAccessConfig.emailAutocompleteDomains}
+                  autocompleteDomains={passwordResetConfig.emailAutocompleteDomains}
                   errorMessage={fieldErrors.email}
                 />
                 <FmzButton type="submit" variant="primary" className="mt-6 gap-2" disabled={isSubmitting}>
@@ -328,7 +340,7 @@ export function FmzRequestPasswordResetCard() {
                 </FmzButton>
               </form>
 
-              <div className="mt-6 flex items-center justify-between gap-3 rounded-xl border border-dashed border-fmz-border-light bg-[#FBF7EE] px-4 py-3.5">
+              <div className="mt-6 flex items-center justify-between gap-3 rounded-xl border border-dashed border-fmz-border-light bg-[#FBFAF6] px-4 py-3.5">
                 <p className="text-[12.5px] leading-snug text-fmz-text-muted">
                   <strong className="block text-[13px] font-semibold text-fmz-navy">Ainda não tem conta?</strong>
                   Crie a sua em menos de 1 minuto e comece a investir em imóveis tokenizados.

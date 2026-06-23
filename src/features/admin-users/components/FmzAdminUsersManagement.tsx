@@ -170,6 +170,18 @@ const propertyAddress = (property?: FmzAdminProperty | null): string => {
   if (!property) return 'Endereço não informado';
   return [property.addressLine1, property.addressLine2, property.district, property.city, property.state, property.postalCode].filter(Boolean).join(' · ') || 'Endereço não informado';
 };
+const monthYearFormatter = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' });
+const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const formatMonthYear = (value: string | null | undefined): string => {
+  if (!value) return '—';
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? value : monthYearFormatter.format(date);
+};
+const formatDateTime = (value: string | null | undefined): string => {
+  if (!value) return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : dateTimeFormatter.format(date);
+};
 
 const formFromUser = (user: FmzAdminUser): UserFormState => ({
   id: user.id,
@@ -487,7 +499,27 @@ function EditHeader({ isEditing, userName, onBack }: { isEditing: boolean; userN
   );
 }
 
-function UserList({ users, roles, query, onQuery, onCreate, onEdit, pagination, loading }: { users: FmzAdminUser[]; roles: Map<string, FmzAccessControlRole>; query: string; onQuery: (query: string) => void; onCreate: () => void; onEdit: (user: FmzAdminUser) => void; pagination: FmzAdminPaginationMeta & { setPage: (page: number) => void; setLimit: (limit: number) => void }; loading: boolean }) {
+function UserKpiStrip({ kpis }: { kpis: UserKpis | null }) {
+  const cards = [
+    { label: 'Total de usuários', value: kpis?.total, icon: <Users className="h-4 w-4" />, tone: '#2563EB', bg: '#EFF6FF' },
+    { label: 'Ativos', value: kpis?.active, icon: <CheckCircle2 className="h-4 w-4" />, tone: '#1A8C5B', bg: '#F0FAF5' },
+    { label: 'Co-proprietários', value: kpis?.owners, icon: <Building2 className="h-4 w-4" />, tone: '#1A8C5B', bg: '#F0FAF5' },
+    { label: 'Inquilinos', value: kpis?.tenants, icon: <Home className="h-4 w-4" />, tone: '#2563EB', bg: '#EFF6FF' },
+  ];
+  return (
+    <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {cards.map((card) => (
+        <div key={card.label} className="rounded-[13px] border border-[#E8EAF0] bg-white p-4">
+          <span className="mb-3 flex h-[34px] w-[34px] items-center justify-center rounded-[9px]" style={{ background: card.bg, color: card.tone }}>{card.icon}</span>
+          <p className="text-[10px] font-bold uppercase tracking-[.08em] text-[#9AA3B0]">{card.label}</p>
+          <p className="mt-1 text-[23px] font-extrabold tracking-[-.03em] text-[#0D1321]">{card.value ?? <Loader2 className="inline h-4 w-4 animate-spin text-[#9AA3B0]" />}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function UserList({ users, roles, query, onQuery, onCreate, onOpen, pagination, loading }: { users: FmzAdminUser[]; roles: Map<string, FmzAccessControlRole>; query: string; onQuery: (query: string) => void; onCreate: () => void; onOpen: (user: FmzAdminUser) => void; pagination: FmzAdminPaginationMeta & { setPage: (page: number) => void; setLimit: (limit: number) => void }; loading: boolean }) {
   const isInitialLoading = loading && users.length === 0;
 
   return (
@@ -523,7 +555,7 @@ function UserList({ users, roles, query, onQuery, onCreate, onEdit, pagination, 
         ) : (
           <div className={fmzCn('flex flex-col gap-3 transition-opacity', loading && 'opacity-60')}>
             {users.length ? users.map((user) => (
-              <UserRow key={user.id || user.email} user={user} roles={roles} onEdit={() => onEdit(user)} />
+              <UserRow key={user.id || user.email} user={user} roles={roles} onOpen={() => onOpen(user)} />
             )) : (
               <EmptyUsers hasQuery={Boolean(query.trim())} onCreate={onCreate} />
             )}
@@ -540,10 +572,185 @@ function UserList({ users, roles, query, onQuery, onCreate, onEdit, pagination, 
   );
 }
 
-function UserRow({ user, roles, onEdit }: { user: FmzAdminUser; roles: Map<string, FmzAccessControlRole>; onEdit: () => void }) {
+const isUserOverdue = (user: FmzAdminUser): boolean => user.tenantContracts.some((contract) => contract.overdue);
+
+function UserRow({ user, roles, onOpen }: { user: FmzAdminUser; roles: Map<string, FmzAccessControlRole>; onOpen: () => void }) {
   const [bg, fg] = avatarColor(user.id || user.email);
   const walletLabel = user.walletAddress || user.wallet || user.wallets[0]?.walletAddress;
-  return <button onClick={onEdit} className="group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 rounded-2xl border border-[#E8EAF0] bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-transparent hover:shadow-[0_10px_28px_rgba(13,19,33,.08)] sm:px-5 lg:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto]"><span className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-[13px] font-bold" style={{ background: bg, color: fg }}>{initials(user.name)}</span><span className="min-w-0 flex-1"><span className="block truncate text-[14.5px] font-bold text-[#0D1321]">{user.name || 'Usuário sem nome'}</span><span className="mt-0.5 block truncate text-xs text-[#5A6478]">{[user.email, user.phone, walletLabel].filter(Boolean).join(' · ') || 'Sem dados de contato'}</span><span className="mt-2 flex flex-wrap gap-1.5">{user.roleKeys.length ? user.roleKeys.map((key) => { const role = roles.get(normalizeKey(key)); const color = role?.color || '#7F8C8D'; return <span key={key} className="rounded-md border px-2.5 py-0.5 text-[10.5px] font-semibold" style={{ background: `${color}18`, borderColor: `${color}30`, color }}>{role ? roleLabel(role) : key}</span>; }) : <span className="text-[11.5px] italic text-[#9AA3B0]">Sem tipos de acesso</span>}</span></span><span className="hidden items-center gap-5 whitespace-nowrap text-xs text-[#5A6478] lg:flex"><span>{user.wallets.length} wallet{user.wallets.length === 1 ? '' : 's'}</span><span>{user.tenantContracts.length} contrato{user.tenantContracts.length === 1 ? '' : 's'}</span><span>{user.coOwnerProperties.length} propriedade{user.coOwnerProperties.length === 1 ? '' : 's'}</span></span><span className="hidden items-center gap-1.5 whitespace-nowrap text-xs text-[#5A6478] lg:flex"><span className={fmzCn('h-2 w-2 rounded-full', user.status === 'active' ? 'bg-[#1A8C5B]' : 'bg-[#9AA3B0]')} />{user.status === 'active' ? 'Ativo' : 'Inativo'}</span><ChevronRight className="h-5 w-5 shrink-0 text-[#9AA3B0] transition group-hover:translate-x-0.5 group-hover:text-[#0D1321]" /></button>;
+  const overdue = isUserOverdue(user);
+  return <button onClick={onOpen} className="group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 rounded-2xl border border-[#E8EAF0] bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-transparent hover:shadow-[0_10px_28px_rgba(13,19,33,.08)] sm:px-5 lg:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto]"><span className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-[13px] font-bold" style={{ background: bg, color: fg }}>{initials(user.name)}</span><span className="min-w-0 flex-1"><span className="block truncate text-[14.5px] font-bold text-[#0D1321]">{user.name || 'Usuário sem nome'}</span><span className="mt-0.5 block truncate text-xs text-[#5A6478]">{[user.email, user.phone, walletLabel].filter(Boolean).join(' · ') || 'Sem dados de contato'}</span><span className="mt-2 flex flex-wrap gap-1.5">{overdue && <span className="inline-flex items-center gap-1 rounded-md border border-[#F5C4BF] bg-[#FEF5F4] px-2.5 py-0.5 text-[10.5px] font-bold text-[#D94F3D]"><AlertTriangle className="h-3 w-3" />Atrasado</span>}{user.roleKeys.length ? user.roleKeys.map((key) => { const role = roles.get(normalizeKey(key)); const color = role?.color || '#7F8C8D'; return <span key={key} className="rounded-md border px-2.5 py-0.5 text-[10.5px] font-semibold" style={{ background: `${color}18`, borderColor: `${color}30`, color }}>{role ? roleLabel(role) : key}</span>; }) : <span className="text-[11.5px] italic text-[#9AA3B0]">Sem tipos de acesso</span>}</span></span><span className="hidden items-center gap-5 whitespace-nowrap text-xs text-[#5A6478] lg:flex"><span>{user.wallets.length} wallet{user.wallets.length === 1 ? '' : 's'}</span><span>{user.tenantContracts.length} contrato{user.tenantContracts.length === 1 ? '' : 's'}</span><span>{user.coOwnerProperties.length} propriedade{user.coOwnerProperties.length === 1 ? '' : 's'}</span></span><span className="hidden items-center gap-1.5 whitespace-nowrap text-xs text-[#5A6478] lg:flex"><span className={fmzCn('h-2 w-2 rounded-full', user.status === 'active' ? 'bg-[#1A8C5B]' : 'bg-[#9AA3B0]')} />{user.status === 'active' ? 'Ativo' : 'Inativo'}</span><ChevronRight className="h-5 w-5 shrink-0 text-[#9AA3B0] transition group-hover:translate-x-0.5 group-hover:text-[#0D1321]" /></button>;
+}
+
+type UserDrawerProps = {
+  user: FmzAdminUser | null;
+  loading: boolean;
+  statusToggling: boolean;
+  resetLinkLoading: boolean;
+  resetLink: ResetLinkState;
+  onClose: () => void;
+  onEdit: (user: FmzAdminUser) => void;
+  onToggleActive: () => void;
+  onRequestPasswordReset: () => void;
+  onDelete: () => void;
+  onDismissResetLink: () => void;
+};
+
+function UserDrawer({ user, loading, statusToggling, resetLinkLoading, resetLink, onClose, onEdit, onToggleActive, onRequestPasswordReset, onDelete, onDismissResetLink }: UserDrawerProps) {
+  const isOpen = Boolean(user);
+  return (
+    <>
+      <div
+        className={fmzCn('fixed inset-0 z-[300] bg-[#0D1321]/30 transition-opacity', isOpen ? 'opacity-100' : 'pointer-events-none opacity-0')}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <aside
+        className={fmzCn(
+          'fixed right-0 top-0 z-[310] flex h-full w-full max-w-[480px] flex-col bg-[#F7F8FA] shadow-[-12px_0_40px_rgba(13,19,33,.18)] transition-transform duration-300',
+          isOpen ? 'translate-x-0' : 'translate-x-full',
+        )}
+        aria-hidden={!isOpen}
+      >
+        {user && (
+          <>
+            <DrawerHeader user={user} onClose={onClose} />
+            <div className="flex-1 overflow-y-auto px-[22px] py-[18px]">
+              {loading && <p className="mb-4 flex items-center gap-2 text-[12.5px] text-[#5A6478]"><Loader2 className="h-3.5 w-3.5 animate-spin" />Atualizando detalhes...</p>}
+              <div className="flex flex-col gap-3.5">
+                <AddressCard user={user} />
+                <WalletsCard wallets={user.wallets} />
+                <PropertiesCard user={user} />
+                <TenantStatusCard contracts={user.tenantContracts.length ? user.tenantContracts : user.contracts} />
+                <LastActionCard user={user} />
+              </div>
+            </div>
+            <DrawerActions
+              user={user}
+              statusToggling={statusToggling}
+              onEdit={() => onEdit(user)}
+              onToggleActive={onToggleActive}
+              onRequestPasswordReset={onRequestPasswordReset}
+              onDelete={onDelete}
+            />
+          </>
+        )}
+      </aside>
+      <ResetLinkModal resetLink={resetLink} loading={resetLinkLoading} onDismiss={onDismissResetLink} />
+    </>
+  );
+}
+
+function DrawerHeader({ user, onClose }: { user: FmzAdminUser; onClose: () => void }) {
+  const [bg, fg] = avatarColor(user.id || user.email);
+  const overdue = isUserOverdue(user);
+  return (
+    <div className="relative flex-shrink-0 bg-[#0D1321] px-[22px] pb-5 pt-[22px] text-white">
+      <button onClick={onClose} aria-label="Fechar" className="absolute right-4 top-4 flex h-[30px] w-[30px] items-center justify-center rounded-lg border border-white/20 bg-white/10 transition hover:bg-white/20">
+        <X className="h-3.5 w-3.5" />
+      </button>
+      <div className="mb-3.5 flex items-center gap-3.5">
+        <span className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-full border-2 border-white/20 text-[16px] font-bold" style={{ background: bg, color: fg }}>{initials(user.name)}</span>
+        <div className="min-w-0">
+          <p className="truncate text-[18px] font-bold tracking-[-.02em]">{user.name || 'Usuário sem nome'}</p>
+          <p className="text-[12px] text-white/60">Cadastrado em {user.createdAt ? formatDateTime(user.createdAt) : '—'}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className={fmzCn('inline-flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-[11px] font-bold', user.isActive ? 'border-[#7EE3B0]/30 bg-[#1A8C5B]/20 text-[#7EE3B0]' : 'border-white/20 bg-white/10 text-white/70')}>● {user.isActive ? 'Ativo' : 'Inativo'}</span>
+        {user.coOwnerProperties.length > 0 && <span className="inline-flex items-center gap-1 rounded-md border border-[#F5C842]/30 bg-[#F5C842]/20 px-2.5 py-0.5 text-[11px] font-bold text-[#F5C842]">Co-proprietário</span>}
+        {user.tenantContracts.length > 0 && <span className="inline-flex items-center gap-1 rounded-md border border-[#9DC0FF]/30 bg-[#2563EB]/25 px-2.5 py-0.5 text-[11px] font-bold text-[#9DC0FF]">Inquilino</span>}
+        {overdue && <span className="inline-flex items-center gap-1 rounded-md border border-[#F5A99E]/30 bg-[#D94F3D]/25 px-2.5 py-0.5 text-[11px] font-bold text-[#F5A99E]">● Aluguel atrasado</span>}
+      </div>
+    </div>
+  );
+}
+
+function TenantStatusCard({ contracts }: { contracts: FmzAdminTenantContract[] }) {
+  const overdueContract = contracts.find((contract) => contract.overdue);
+  return (
+    <DetailCard icon={<Home className="h-4 w-4" />} title="Situação de inquilino" subtitle="Contrato e atraso de aluguel, se houver">
+      {!contracts.length ? (
+        <p className="text-[13px] italic text-[#9AA3B0]">Este usuário não é inquilino de nenhum imóvel.</p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {contracts.map((contract) => (
+            <div key={contract.id} className="rounded-xl border border-[#E8EAF0] bg-[#F7F8FA] p-3">
+              <p className="text-[13.5px] font-bold text-[#0D1321]">{contract.property?.name || contract.contractNumber || 'Contrato'}</p>
+              <p className="mt-1 text-[11.5px] text-[#5A6478]">{propertyAddress(contract.property)} · {formatMoney(contract.baseMonthlyRent, contract.currency || 'BRL')}/mês</p>
+            </div>
+          ))}
+          {overdueContract?.overdue ? (
+            <div className="flex items-start gap-2.5 rounded-[10px] border border-[#F5C4BF] bg-[#FEF5F4] p-3">
+              <AlertTriangle className="mt-0.5 h-[15px] w-[15px] shrink-0 text-[#D94F3D]" />
+              <div className="min-w-0">
+                <p className="text-[12.5px] font-bold text-[#D94F3D]">Aluguel em atraso — {overdueContract.overdue.months} {overdueContract.overdue.months > 1 ? 'meses' : 'mês'}</p>
+                <p className="text-[11.5px] leading-[1.45] text-[#9a4030]">Total devido <strong>{formatMoney(overdueContract.overdue.amount, overdueContract.currency || 'BRL')}</strong> · mais antigo desde {formatMonthYear(overdueContract.overdue.oldestMonth)}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 text-[11.5px] font-semibold text-[#1A8C5B]"><CheckCircle2 className="h-3.5 w-3.5" />Aluguel em dia</div>
+          )}
+        </div>
+      )}
+    </DetailCard>
+  );
+}
+
+function LastActionCard({ user }: { user: FmzAdminUser }) {
+  return (
+    <DetailCard icon={<Clock className="h-4 w-4" />} title="Última ação na plataforma" subtitle="Último login registrado">
+      <p className="text-[13px] text-[#0D1321]">{user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Nenhum login registrado ainda.'}</p>
+    </DetailCard>
+  );
+}
+
+function DrawerActions({ user, statusToggling, onEdit, onToggleActive, onRequestPasswordReset, onDelete }: { user: FmzAdminUser; statusToggling: boolean; onEdit: () => void; onToggleActive: () => void; onRequestPasswordReset: () => void; onDelete: () => void }) {
+  return (
+    <div className="grid flex-shrink-0 grid-cols-2 gap-2.5 border-t border-[#E8EAF0] bg-white p-[14px_22px]">
+      <button onClick={onEdit} className="inline-flex items-center justify-center gap-2 rounded-[9px] border border-[#E8EAF0] bg-white px-4 py-2.5 text-[12px] font-semibold text-[#0D1321] transition hover:border-[#0D1321]"><Pencil className="h-3.5 w-3.5" />Editar dados</button>
+      <button onClick={onRequestPasswordReset} className="inline-flex items-center justify-center gap-2 rounded-[9px] border border-[#E8EAF0] bg-white px-4 py-2.5 text-[12px] font-semibold text-[#0D1321] transition hover:border-[#0D1321]"><KeyRound className="h-3.5 w-3.5" />Resetar senha</button>
+      <button disabled={statusToggling} onClick={onToggleActive} className="col-span-2 inline-flex items-center justify-center gap-2 rounded-[9px] border border-[#E8EAF0] bg-white px-4 py-2.5 text-[12px] font-semibold text-[#0D1321] transition hover:border-[#0D1321] disabled:opacity-50">{statusToggling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Power className="h-3.5 w-3.5" />}{user.isActive ? 'Desativar usuário' : 'Reativar usuário'}</button>
+      <button onClick={onDelete} className="col-span-2 inline-flex items-center justify-center gap-2 rounded-[9px] border border-[#F5C4BF] bg-[#FEF5F4] px-4 py-2.5 text-[12px] font-semibold text-[#D94F3D] transition hover:bg-[#FDEDEC]"><Trash2 className="h-3.5 w-3.5" />Deletar usuário</button>
+    </div>
+  );
+}
+
+function ResetLinkModal({ resetLink, loading, onDismiss }: { resetLink: ResetLinkState; loading: boolean; onDismiss: () => void }) {
+  const isOpen = loading || Boolean(resetLink);
+  const [copied, setCopied] = useState(false);
+  const copyLink = async () => {
+    if (!resetLink) return;
+    await navigator.clipboard.writeText(resetLink.resetUrl);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div className={fmzCn('fixed inset-0 z-[400] grid place-items-center bg-[#0D1321]/40 p-6 transition-opacity', isOpen ? 'opacity-100' : 'pointer-events-none opacity-0')}>
+      {isOpen && (
+        <div className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-white shadow-[0_24px_60px_rgba(13,19,33,.3)]">
+          <div className="px-[22px] pt-5">
+            <span className="mb-3 flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-[#FFFBEB] text-[#D97706]"><KeyRound className="h-5 w-5" /></span>
+            <h2 className="text-[17px] font-extrabold tracking-[-.02em]">Link de redefinição de senha</h2>
+            <p className="mt-1 text-[13px] leading-[1.5] text-[#5A6478]">O backend não envia e-mail automaticamente — copie o link abaixo e envie pelo composer de e-mails.</p>
+          </div>
+          <div className="px-[22px] pt-4">
+            {loading ? (
+              <div className="flex items-center gap-2 text-[12.5px] text-[#5A6478]"><Loader2 className="h-3.5 w-3.5 animate-spin" />Gerando link...</div>
+            ) : resetLink ? (
+              <>
+                <div className="break-all rounded-[9px] border border-[#E8EAF0] bg-[#F7F8FA] px-3 py-2.5 font-mono text-[12px] text-[#0D1321]">{resetLink.resetUrl}</div>
+                {resetLink.expiresAt && <p className="mt-2 text-[11.5px] text-[#9AA3B0]">Expira em {formatDateTime(resetLink.expiresAt)}.</p>}
+              </>
+            ) : null}
+          </div>
+          <div className="flex justify-end gap-2.5 px-[22px] py-[22px] pt-4">
+            <button onClick={onDismiss} className="inline-flex items-center justify-center gap-2 rounded-[9px] border border-[#E8EAF0] bg-white px-4 py-2.5 text-[12px] font-semibold text-[#5A6478]">Fechar</button>
+            {resetLink && <button onClick={() => void copyLink()} className="inline-flex items-center justify-center gap-2 rounded-[9px] bg-[#0D1321] px-4 py-2.5 text-[12px] font-semibold text-white"><Copy className="h-3.5 w-3.5" />{copied ? 'Copiado!' : 'Copiar link'}</button>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function EmptyUsers({ hasQuery, onCreate }: { hasQuery: boolean; onCreate: () => void }) {
