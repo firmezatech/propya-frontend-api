@@ -152,7 +152,7 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
     if (selectedTemplate?.id !== 'convite-investidor') return;
     setVarsState((prev) => ({
       ...prev,
-      ctaUrl:        'https://app.propya.ai/cadastro',
+      ctaUrl:        'https://app.propya.ai/pt/register',
       propertiesUrl: 'https://app.propya.ai/imoveis',
     }));
   }, [selectedTemplate]);
