@@ -1457,18 +1457,18 @@ margin-top: 20px;
 
 /* ── FirmezaToken unified loading page ─────────────────────────────────────── */
 .fmz-loading-page {
-  --fmz-loading-gold: #e8b620;
-  --fmz-loading-gold-soft: #f5d26b;
-  --fmz-loading-gold-deep: #8a6b12;
-  --fmz-loading-navy: #0e1626;
-  --fmz-loading-ink: #2a344a;
-  --fmz-loading-muted: #5a6478;
-  --fmz-loading-hint: #8893a6;
-  --fmz-loading-line: #e6e8ee;
-  --fmz-loading-line-2: #edeff4;
-  --fmz-loading-page-bg: #f4f5f8;
+  --fmz-loading-gold: var(--fmz-gold);
+  --fmz-loading-gold-soft: #bce54a;
+  --fmz-loading-gold-deep: var(--fmz-gold-dark);
+  --fmz-loading-navy: var(--fmz-navy);
+  --fmz-loading-ink: #2a1a22;
+  --fmz-loading-muted: #6f6168;
+  --fmz-loading-hint: #9b9097;
+  --fmz-loading-line: #eae7e5;
+  --fmz-loading-line-2: #f1eeec;
+  --fmz-loading-page-bg: #f6f5f2;
   --fmz-loading-white: #ffffff;
-  --fmz-loading-green: #127a4f;
+  --fmz-loading-green: #3e8e5a;
   position: relative;
   min-height: 100dvh;
   width: 100%;
@@ -1483,7 +1483,7 @@ margin-top: 20px;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: radial-gradient(circle at 1px 1px, rgba(14, 22, 38, .06) 1px, transparent 0);
+  background-image: radial-gradient(circle at 1px 1px, rgba(42, 26, 34, .06) 1px, transparent 0);
   background-size: 22px 22px;
 }
 
@@ -1492,8 +1492,8 @@ margin-top: 20px;
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(60% 50% at 30% 20%, rgba(232, 182, 32, .10) 0%, transparent 60%),
-    radial-gradient(50% 50% at 70% 80%, rgba(14, 22, 38, .04) 0%, transparent 60%);
+    radial-gradient(60% 50% at 30% 20%, rgba(200, 237, 94, .10) 0%, transparent 60%),
+    radial-gradient(50% 50% at 70% 80%, rgba(42, 26, 34, .04) 0%, transparent 60%);
 }
 
 .fmz-loading-geo {
@@ -1549,7 +1549,7 @@ margin-top: 20px;
   place-items: center;
   overflow: hidden;
   border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(14, 22, 38, .10);
+  box-shadow: 0 4px 10px rgba(42, 26, 34, .10);
 }
 
 .fmz-loading-logo-image {
@@ -1659,8 +1659,8 @@ margin-top: 20px;
   border-radius: 16px;
   box-shadow:
     0 0 0 6px rgba(255, 255, 255, .7),
-    0 12px 32px -8px rgba(14, 22, 38, .30),
-    inset 0 -2px 0 rgba(14, 22, 38, .10);
+    0 12px 32px -8px rgba(42, 26, 34, .30),
+    inset 0 -2px 0 rgba(42, 26, 34, .10);
   animation: fmz-loading-mark-pulse 2.4s ease-in-out infinite;
 }
 
@@ -1727,12 +1727,22 @@ margin-top: 20px;
   font-weight: 600;
   opacity: 0;
   transform: translateY(6px);
-  animation: fmz-loading-status-cycle 7.25s ease-in-out infinite;
+  animation: fmz-loading-status-cycle 7.2s ease-in-out infinite;
+}
+
+.fmz-loading-status-row--done {
+  color: var(--fmz-loading-ink);
 }
 
 .fmz-loading-status-icon {
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
   color: var(--fmz-loading-gold-deep);
-  font-size: 9px;
+}
+
+.fmz-loading-status-row--done .fmz-loading-status-icon {
+  color: var(--fmz-loading-green);
 }
 
 .fmz-loading-dots {
@@ -1773,7 +1783,7 @@ margin-top: 20px;
   width: 0;
   border-radius: 2px;
   background: linear-gradient(90deg, var(--fmz-loading-navy) 0%, var(--fmz-loading-gold) 60%, var(--fmz-loading-gold-soft) 100%);
-  animation: fmz-loading-progress 7.25s ease-in-out infinite;
+  animation: fmz-loading-progress 7.2s ease-in-out infinite;
 }
 
 .fmz-loading-progress-fill::after {
@@ -1813,7 +1823,7 @@ margin-top: 20px;
   padding: 10px 14px;
   color: var(--fmz-loading-muted);
   font-size: 12px;
-  box-shadow: 0 8px 24px -8px rgba(14, 22, 38, .10);
+  box-shadow: 0 8px 24px -8px rgba(42, 26, 34, .10);
   white-space: nowrap;
 }
 
@@ -1829,10 +1839,13 @@ margin-top: 20px;
   flex: 0 0 auto;
   place-items: center;
   border-radius: 999px;
-  background: rgba(232, 182, 32, .14);
+  background: rgba(200, 237, 94, .14);
   color: var(--fmz-loading-gold-deep);
-  font-size: 11px;
-  font-weight: 900;
+}
+
+.fmz-loading-tip-icon svg {
+  width: 11px;
+  height: 11px;
 }
 
 @keyframes fmz-loading-dot-pulse {
@@ -1855,8 +1868,8 @@ margin-top: 20px;
 
 @keyframes fmz-loading-status-cycle {
   0% { opacity: 0; transform: translateY(6px); }
-  8%, 18% { opacity: 1; transform: translateY(0); }
-  26%, 100% { opacity: 0; transform: translateY(-6px); }
+  7%, 15% { opacity: 1; transform: translateY(0); }
+  22%, 100% { opacity: 0; transform: translateY(-6px); }
 }
 
 @keyframes fmz-loading-dot-jump {

@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { CheckCheck, Cpu, DollarSign, FileText, Lock, PieChart, Receipt } from 'lucide-react';
 import { fmzCn } from '../../lib/fmz-classnames';
 import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
 
@@ -10,13 +11,22 @@ type FmzFullPageLoadingProps = {
   statusLabel?: string;
 };
 
-const loadingStages = [
-  'autenticando sessão',
-  'lendo contrato do imóvel',
-  'sincronizando carteira de tokens',
-  'calculando posse atual',
-  'preparando dados do painel',
+type FmzLoadingStage = {
+  label: string;
+  icon: typeof Lock;
+  done?: boolean;
+};
+
+const loadingStages: FmzLoadingStage[] = [
+  { label: 'autenticando sessão', icon: Lock },
+  { label: 'lendo contrato do imóvel', icon: FileText },
+  { label: 'sincronizando carteira de tokens', icon: Cpu },
+  { label: 'calculando posse atual', icon: PieChart },
+  { label: 'preparando dados do painel', icon: Receipt },
+  { label: 'pronto — abrindo painel', icon: CheckCheck, done: true },
 ];
+
+const loadingStageDelaySeconds = 7.2 / loadingStages.length;
 
 const tickIndexes = Array.from({ length: 24 }, (_, index) => index);
 
@@ -27,7 +37,7 @@ export function FmzFullPageLoading({
   withBrand = true,
   statusLabel,
 }: FmzFullPageLoadingProps) {
-  const effectiveStatusLabel = statusLabel ?? loadingStages[0];
+  const effectiveStatusLabel = statusLabel ?? loadingStages[0].label;
 
   return (
     <section className={fmzCn('fmz-loading-page', className)} aria-busy="true" aria-live="polite">
@@ -99,14 +109,20 @@ export function FmzFullPageLoading({
 
         <div className="fmz-loading-status" aria-hidden="true">
           {loadingStages.map((stage, index) => (
-            <div key={stage} className="fmz-loading-status-row" style={{ animationDelay: `${index * 1.45}s` }}>
-              <span className="fmz-loading-status-icon">●</span>
-              <span>{stage}</span>
-              <span className="fmz-loading-dots">
-                <span />
-                <span />
-                <span />
-              </span>
+            <div
+              key={stage.label}
+              className={fmzCn('fmz-loading-status-row', stage.done && 'fmz-loading-status-row--done')}
+              style={{ animationDelay: `${index * loadingStageDelaySeconds}s` }}
+            >
+              <stage.icon className="fmz-loading-status-icon" strokeWidth={2} />
+              <span>{stage.label}</span>
+              {stage.done ? null : (
+                <span className="fmz-loading-dots">
+                  <span />
+                  <span />
+                  <span />
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -121,7 +137,9 @@ export function FmzFullPageLoading({
       </main>
 
       <div className="fmz-loading-tip">
-        <span className="fmz-loading-tip-icon" aria-hidden="true">$</span>
+        <span className="fmz-loading-tip-icon" aria-hidden="true">
+          <DollarSign strokeWidth={2.5} />
+        </span>
         <span><strong>Sabia?</strong> Cada token reduz seu próximo aluguel proporcionalmente.</span>
       </div>
     </section>
