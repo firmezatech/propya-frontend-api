@@ -262,6 +262,9 @@ export function FmzRenterDashboard({
         </div>
 
         <div className={styles.trail}>
+          <div className={styles.tmBadge} style={timelineStyle}>
+            {viewModel.ownershipPercentageLabel} · {viewModel.acquiredTokensLabel}
+          </div>
           <div className={styles.trailTrack}>
             <div className={styles.trailFill} style={{ width: hasAnimated ? `${viewModel.ownershipVisualPosition}%` : '0%' }} />
             <div className={styles.trailMarker} style={timelineStyle} />
@@ -278,9 +281,6 @@ export function FmzRenterDashboard({
                 <div className={styles.val}>{m.amountLabel}</div>
               </div>
             ))}
-            <div className={styles.tmBadge} style={timelineStyle}>
-              {viewModel.ownershipPercentageLabel} · {viewModel.acquiredTokensLabel}
-            </div>
           </div>
         </div>
       </section>
