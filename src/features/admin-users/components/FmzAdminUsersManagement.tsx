@@ -2,21 +2,29 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
+  AlertTriangle,
   ArrowLeft,
   Building2,
   Check,
+  CheckCircle2,
   ChevronRight,
+  Clock,
+  Copy,
   Home,
   Info,
+  KeyRound,
   Loader2,
   MapPin,
+  Pencil,
   Plus,
+  Power,
   Search,
   ShieldCheck,
   Trash2,
-  UserRound,
+  Users,
   UsersRound,
   WalletCards,
+  X,
 } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
 import { FmzPasswordField } from '../../../components/design-system';
@@ -26,7 +34,16 @@ import { FmzFormAlert } from '../../api-errors/components';
 import { FmzAdminPagination, useFmzAdminPagination, type FmzAdminPaginationMeta } from '../../admin-pagination';
 import { normalizeFmzApiError, type FmzNormalizedApiError } from '../../api-errors/domain';
 import type { FmzAccessControlRole } from '../../access-control/domain';
-import { createAdminUser, deleteAdminUser, getAdminUser, getAdminUserRoles, getAdminUsers, updateAdminUser } from '../services';
+import {
+  createAdminUser,
+  deleteAdminUser,
+  getAdminUser,
+  getAdminUserRoles,
+  getAdminUsers,
+  requestAdminUserPasswordResetLink,
+  setAdminUserActiveStatus,
+  updateAdminUser,
+} from '../services';
 import type {
   FmzAdminCoOwnerProperty,
   FmzAdminProperty,
@@ -41,6 +58,8 @@ import type {
 type Step = 1 | 2 | 3;
 type ViewMode = 'list' | 'edit';
 type Toast = { message: string; ok: boolean } | null;
+type UserKpis = { total: number; active: number; owners: number; tenants: number };
+type ResetLinkState = { resetUrl: string; expiresAt: string | null } | null;
 
 type UserFormState = {
   id?: string;
@@ -204,6 +223,12 @@ export function FmzAdminUsersManagement() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<FmzNormalizedApiError | null>(null);
   const [toast, setToast] = useState<Toast>(null);
+  const [kpis, setKpis] = useState<UserKpis | null>(null);
+  const [drawerUser, setDrawerUser] = useState<FmzAdminUser | null>(null);
+  const [drawerLoading, setDrawerLoading] = useState(false);
+  const [statusToggling, setStatusToggling] = useState(false);
+  const [resetLinkLoading, setResetLinkLoading] = useState(false);
+  const [resetLink, setResetLink] = useState<ResetLinkState>(null);
   const pagination = useFmzAdminPagination();
 
   useEffect(() => {
@@ -256,6 +281,32 @@ export function FmzAdminUsersManagement() {
   }, [pagination.request, pagination.applyMeta]);
 
   useEffect(() => { void loadData(); }, [loadData]);
+
+  // KPI strip (reference: 4 cards). No dedicated backend aggregate exists yet — each card
+  // is a `limit:1` lookup reusing the same filters the list already supports, reading only
+  // `pagination.total`. "Co-proprietários"/"Inquilinos" reflect the RBAC role assignment
+  // (role=co-owner/tenant), the same filter values the list's own dropdown would use.
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadKpis() {
+      try {
+        const [total, active, owners, tenants] = await Promise.all([
+          getAdminUsers({ page: 1, limit: 1 }),
+          getAdminUsers({ page: 1, limit: 1, filters: { status: 'active' } }),
+          getAdminUsers({ page: 1, limit: 1, filters: { role: 'co-owner' } }),
+          getAdminUsers({ page: 1, limit: 1, filters: { role: 'tenant' } }),
+        ]);
+        if (!isMounted) return;
+        setKpis({ total: total.total, active: active.total, owners: owners.total, tenants: tenants.total });
+      } catch {
+        if (isMounted) setKpis(null);
+      }
+    }
+
+    void loadKpis();
+    return () => { isMounted = false; };
+  }, [users]);
 
   const filteredUsers = users;
 
@@ -319,19 +370,65 @@ export function FmzAdminUsersManagement() {
     }
   };
 
-  const removeUser = async () => {
-    if (!form.id) return;
-    if (!window.confirm(`Excluir ${form.name}? Esta ação não pode ser desfeita.`)) return;
+  const removeUserById = async (userId: string, userName: string) => {
+    if (!window.confirm(`Excluir ${userName}? Esta ação não pode ser desfeita.`)) return;
     setSaving(true); setError(null);
     try {
-      await deleteAdminUser(form.id);
+      await deleteAdminUser(userId);
       await loadData();
       notify('Usuário excluído.');
+      setDrawerUser(null);
       backToList();
     } catch (err) {
       setError(normalizeFmzApiError(err));
     } finally {
       setSaving(false);
+    }
+  };
+  const removeUser = () => removeUserById(form.id ?? '', form.name);
+
+  const openDrawer = async (user: FmzAdminUser) => {
+    setDrawerUser(user);
+    setResetLink(null);
+    setDrawerLoading(true);
+    try {
+      setDrawerUser(await getAdminUser(user.id));
+    } catch {
+      // Keep the row's already-loaded summary if the detail fetch fails — better a
+      // partial drawer than none, the user can still act on what's visible.
+    } finally {
+      setDrawerLoading(false);
+    }
+  };
+  const closeDrawer = () => { setDrawerUser(null); setResetLink(null); };
+
+  const editFromDrawer = (user: FmzAdminUser) => { closeDrawer(); void openEdit(user); };
+
+  const toggleDrawerUserActive = async () => {
+    if (!drawerUser) return;
+    const nextIsActive = !drawerUser.isActive;
+    setStatusToggling(true); setError(null);
+    try {
+      const updated = await setAdminUserActiveStatus(drawerUser.id, nextIsActive);
+      setDrawerUser(updated);
+      await loadData();
+      notify(nextIsActive ? 'Usuário reativado.' : 'Usuário desativado.');
+    } catch (err) {
+      setError(normalizeFmzApiError(err));
+    } finally {
+      setStatusToggling(false);
+    }
+  };
+
+  const requestPasswordReset = async () => {
+    if (!drawerUser) return;
+    setResetLinkLoading(true); setError(null);
+    try {
+      setResetLink(await requestAdminUserPasswordResetLink(drawerUser.id));
+    } catch (err) {
+      setError(normalizeFmzApiError(err));
+    } finally {
+      setResetLinkLoading(false);
     }
   };
 
@@ -340,7 +437,10 @@ export function FmzAdminUsersManagement() {
       <div className="w-full">
         <FmzFormAlert error={error} />
         {view === 'list' ? (
-          <UserList users={filteredUsers} roles={roleByKey} query={query} onQuery={setQuery} onCreate={openCreate} onEdit={(user) => void openEdit(user)} pagination={pagination} loading={loading} />
+          <>
+            <UserKpiStrip kpis={kpis} />
+            <UserList users={filteredUsers} roles={roleByKey} query={query} onQuery={setQuery} onCreate={openCreate} onOpen={(user) => void openDrawer(user)} pagination={pagination} loading={loading} />
+          </>
         ) : (
           <div className="animate-[fmzFadeIn_.25s_ease]">
             <EditHeader isEditing={isEditing} userName={form.name} onBack={backToList} />
@@ -353,6 +453,19 @@ export function FmzAdminUsersManagement() {
           </div>
         )}
       </div>
+      <UserDrawer
+        user={drawerUser}
+        loading={drawerLoading}
+        statusToggling={statusToggling}
+        resetLinkLoading={resetLinkLoading}
+        resetLink={resetLink}
+        onClose={closeDrawer}
+        onEdit={editFromDrawer}
+        onToggleActive={() => void toggleDrawerUserActive()}
+        onRequestPasswordReset={() => void requestPasswordReset()}
+        onDelete={() => drawerUser && void removeUserById(drawerUser.id, drawerUser.name)}
+        onDismissResetLink={() => setResetLink(null)}
+      />
       <ToastView toast={toast} />
     </section>
   );

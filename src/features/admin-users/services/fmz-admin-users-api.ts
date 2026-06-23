@@ -182,6 +182,16 @@ const normalizeWallet = (wallet: unknown, fallbackUserId = ''): FmzAdminUserWall
   };
 };
 
+const normalizeOverdue = (overdue: unknown): FmzAdminTenantContract['overdue'] => {
+  const record = recordOf(overdue);
+  if (!Object.keys(record).length) return null;
+  return {
+    months: num(record.months),
+    amount: num(record.amount),
+    oldestMonth: optionalStr(record.oldestMonth ?? record.oldest_month),
+  };
+};
+
 const normalizeTenantContract = (contract: unknown): FmzAdminTenantContract | null => {
   const record = recordOf(contract);
   const id = str(record.id);
@@ -207,6 +217,7 @@ const normalizeTenantContract = (contract: unknown): FmzAdminTenantContract | nu
     createdAt: optionalStr(record.createdAt ?? record.created_at) ?? undefined,
     updatedAt: optionalStr(record.updatedAt ?? record.updated_at) ?? undefined,
     property: normalizeProperty(record.property),
+    overdue: normalizeOverdue(record.overdue),
   };
 };
 
@@ -410,4 +421,24 @@ export async function updateAdminUser(draft: FmzAdminUserDraft): Promise<FmzAdmi
 
 export async function deleteAdminUser(userId: string): Promise<void> {
   await firmezaApiClient.delete(`${ADMIN_USERS_PATH}/${encodeURIComponent(userId)}`);
+}
+
+// Drawer's "Desativar/Reativar" toggle — only the status field, no need to round-trip the
+// rest of the editable form (name/email/phone/address) like the create/edit wizard does.
+export async function setAdminUserActiveStatus(userId: string, isActive: boolean): Promise<FmzAdminUser> {
+  const { data } = await firmezaApiClient.patch(`${ADMIN_USERS_PATH}/${encodeURIComponent(userId)}`, { isActive, status: isActive ? 'active' : 'inactive' });
+  return normalizeAdminUser(recordOf(data).user ?? recordOf(data).data ?? data);
+}
+
+export type FmzAdminPasswordResetLink = { resetUrl: string; expiresAt: string | null };
+
+// Backend mints the token and persists it but never sends an email — the admin is expected
+// to copy resetUrl into the composer themselves (see propya-backend-api decision D-13).
+export async function requestAdminUserPasswordResetLink(userId: string): Promise<FmzAdminPasswordResetLink> {
+  const { data } = await firmezaApiClient.post(`${ADMIN_USERS_PATH}/${encodeURIComponent(userId)}/password-reset-link`);
+  const record = recordOf(data);
+  return {
+    resetUrl: str(record.resetUrl ?? record.reset_url),
+    expiresAt: optionalStr(record.expiresAt ?? record.expires_at),
+  };
 }

@@ -73,6 +73,12 @@ export type FmzAdminPropertyTokenization = {
   metadata?: Record<string, unknown>;
 };
 
+export type FmzAdminTenantContractOverdue = {
+  months: number;
+  amount: number;
+  oldestMonth: string | null;
+};
+
 export type FmzAdminTenantContract = {
   id: string;
   propertyId: string;
@@ -94,6 +100,7 @@ export type FmzAdminTenantContract = {
   createdAt?: string;
   updatedAt?: string;
   property?: FmzAdminProperty | null;
+  overdue: FmzAdminTenantContractOverdue | null;
 };
 
 export type FmzAdminCoOwnerProperty = {

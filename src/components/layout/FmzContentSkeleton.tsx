@@ -257,8 +257,12 @@ export function FmzContractSkeleton() {
 }
 
 // ── Renter (tenant) dashboard skeleton ──────────────────────────────────────────
-// Mirrors the real FmzRenterDashboard layout: page title, hero (journey + goal
-// cards), content grid (bill card + simulator/history stack), and quick actions.
+// Mirrors the real FmzRenterDashboard layout: page head (title + status pill/
+// address line), hero (journey card + goal card), and content grid (bill card +
+// payment history table). There is no rent-simulator card or quick-actions strip
+// here — neither is rendered by the real page anymore (see FmzRenterDashboard.tsx
+// and FmzRenterDashboardPaymentHistoryCard.tsx), so the skeleton must not show
+// placeholders for them either.
 //
 // The outer wrapper reproduces the real `.dashboard` container exactly — max-width
 // 1280px, centered (mx-auto), and the same responsive horizontal padding
@@ -274,6 +278,13 @@ export function FmzContractSkeleton() {
 
 const SKELETON_CARD = 'rounded-2xl border border-fmz-border-light bg-white';
 
+// 0% / 25% / 50% / 75% / 100% — fixed count, mirrors JOURNEY_MILESTONES in
+// fmz-renter-dashboard-view-model.ts.
+const JOURNEY_MILESTONE_COUNT = 5;
+
+// Competência / Total / Vencimento / Status — mirrors FmzRenterDashboardPaymentHistoryCard's table columns.
+const PAYMENT_HISTORY_ROW_COUNT = 4;
+
 export function FmzRenterDashboardSkeleton() {
   return (
     <div
@@ -281,8 +292,14 @@ export function FmzRenterDashboardSkeleton() {
       aria-label="Carregando painel"
       aria-busy="true"
     >
-      {/* Page title */}
-      <SkBox height="h-8" width="w-56" />
+      {/* Page head: title + status pill/address line */}
+      <div className="space-y-2">
+        <SkBox height="h-8" width="w-72" className="max-w-full" />
+        <div className="flex items-center gap-2">
+          <SkBox height="h-5" width="w-28" className="rounded-full" />
+          <SkBox height="h-3" width="w-40" />
+        </div>
+      </div>
 
       {/* Hero: journey card + goal card */}
       <div className="grid grid-cols-1 gap-[18px] min-[1081px]:grid-cols-[1.55fr_1fr]">
@@ -296,31 +313,25 @@ export function FmzRenterDashboardSkeleton() {
           <div className="pt-6 space-y-3">
             <SkBox height="h-2.5" width="w-full" className="rounded-full" />
             <div className="flex items-center justify-between">
-              {Array.from({ length: 4 }).map((_, i) => (
+              {Array.from({ length: JOURNEY_MILESTONE_COUNT }).map((_, i) => (
                 <SkBox key={i} height="h-2.5" width="w-10" />
               ))}
             </div>
           </div>
         </div>
 
-        {/* Goal / next milestone card */}
-        <div className={`${SKELETON_CARD} p-6 space-y-4`}>
+        {/* Goal / next milestone card — label, amount, description, CTA.
+            No progress bar: the real heroGoal box never renders one. */}
+        <div className={`${SKELETON_CARD} p-6 space-y-3`}>
           <SkBox height="h-3" width="w-28" />
-          <SkBox height="h-3" width="w-24" />
-          <SkBox height="h-9" width="w-40" />
+          <SkBox height="h-8" width="w-36" />
           <SkBox height="h-3" width="w-full" />
-          <div className="space-y-2 pt-2">
-            <SkBox height="h-2.5" width="w-full" className="rounded-full" />
-            <div className="flex justify-between">
-              <SkBox height="h-2.5" width="w-28" />
-              <SkBox height="h-2.5" width="w-12" />
-            </div>
-          </div>
-          <SkBox height="h-11" width="w-full" className="rounded-xl" />
+          <SkBox height="h-3" width="w-2/3" />
+          <SkBox height="h-11" width="w-full" className="rounded-xl !mt-4" />
         </div>
       </div>
 
-      {/* Content grid: bill card + right stack (simulator + history) */}
+      {/* Content grid: bill card + payment history table */}
       <div className="grid grid-cols-1 gap-[18px] min-[1081px]:grid-cols-[0.85fr_1.15fr] items-start">
         {/* Bill card */}
         <div className={`${SKELETON_CARD} p-6 space-y-4`}>
@@ -349,49 +360,29 @@ export function FmzRenterDashboardSkeleton() {
           <SkBox height="h-11" width="w-full" className="rounded-xl" />
         </div>
 
-        {/* Right stack */}
-        <div className="flex flex-col gap-[18px]">
-          {/* Rent simulator card */}
-          <div className={`${SKELETON_CARD} p-6 space-y-4`}>
-            <SkBox height="h-4" width="w-40" />
-            <div className="grid grid-cols-3 gap-2">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <SkBox key={i} height="h-9" width="w-full" className="rounded-lg" />
-              ))}
-            </div>
-            <SkBox height="h-24" width="w-full" className="rounded-xl" />
+        {/* Payment history card — mirrors the real table: header row with
+            "Ver tudo" action, column labels, then Competência/Total/Vencimento/
+            Status rows. */}
+        <div className={`${SKELETON_CARD} p-6`}>
+          <div className="mb-4 flex items-center justify-between">
+            <SkBox height="h-4" width="w-44" />
+            <SkBox height="h-3" width="w-16" />
           </div>
-
-          {/* Payment history card */}
-          <div className={`${SKELETON_CARD} overflow-hidden`}>
-            <div className="border-b border-fmz-border-light px-5 py-4">
-              <SkBox height="h-4" width="w-36" />
-            </div>
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 border-b border-fmz-border-light px-5 py-4 last:border-0">
-                <SkBox height="h-9" width="w-9" className="rounded-full shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <SkBox height="h-3" width="w-32" />
-                  <SkBox height="h-3" width="w-20" />
-                </div>
-                <SkBox height="h-4" width="w-20" className="shrink-0" />
-              </div>
-            ))}
+          <div className="mb-1 flex items-center justify-between border-b border-fmz-border-light pb-3">
+            <SkBox height="h-2.5" width="w-20" />
+            <SkBox height="h-2.5" width="w-12" />
+            <SkBox height="h-2.5" width="w-16" />
+            <SkBox height="h-2.5" width="w-12" />
           </div>
+          {Array.from({ length: PAYMENT_HISTORY_ROW_COUNT }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between border-b border-fmz-border-light py-3 last:border-0">
+              <SkBox height="h-3" width="w-16" />
+              <SkBox height="h-3" width="w-14" />
+              <SkBox height="h-3" width="w-14" />
+              <SkBox height="h-5" width="w-16" className="rounded-full" />
+            </div>
+          ))}
         </div>
-      </div>
-
-      {/* Quick actions */}
-      <div className="grid grid-cols-1 gap-[14px] md:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className={`${SKELETON_CARD} p-5 flex items-center gap-4`}>
-            <SkBox height="h-10" width="w-10" className="rounded-xl shrink-0" />
-            <div className="flex-1 space-y-2">
-              <SkBox height="h-3.5" width="w-28" />
-              <SkBox height="h-3" width="w-36" />
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );
