@@ -20,8 +20,8 @@
   --page: #F6F5F2;
   --green: #3E8E5A;
   --green-tint: #E8F2EB;
-  --shadow-sm: 0 1px 2px rgba(14,22,38,.04), 0 1px 0 rgba(14,22,38,.02);
-  --shadow-md: 0 2px 6px rgba(14,22,38,.05), 0 8px 24px -8px rgba(14,22,38,.08);
+  --shadow-sm: 0 1px 2px rgba(42,26,34,.04), 0 1px 0 rgba(42,26,34,.02);
+  --shadow-md: 0 2px 6px rgba(42,26,34,.05), 0 8px 24px -8px rgba(42,26,34,.08);
   --radius: 14px;
   --radius-lg: 20px;
 
@@ -84,16 +84,16 @@
   content: '';
   position: absolute; inset: 0;
   background-image:
-    radial-gradient(circle at 95% 5%, rgba(232,182,32,.22) 0%, transparent 45%),
-    radial-gradient(circle at 5% 100%, rgba(232,182,32,.08) 0%, transparent 40%);
+    radial-gradient(circle at 95% 5%, rgba(200,237,94,.22) 0%, transparent 45%),
+    radial-gradient(circle at 5% 100%, rgba(200,237,94,.08) 0%, transparent 40%);
   pointer-events: none;
 }
 .journeyCard::after {
   content: '';
   position: absolute; inset: 0;
   background-image:
-    linear-gradient(to right, rgba(14,22,38,.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(14,22,38,.025) 1px, transparent 1px);
+    linear-gradient(to right, rgba(42,26,34,.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(42,26,34,.025) 1px, transparent 1px);
   background-size: 32px 32px;
   pointer-events: none;
   mask-image: radial-gradient(circle at 50% 50%, black 0%, transparent 75%);
@@ -120,9 +120,9 @@
   color: var(--navy); margin-bottom: 8px; max-width: 560px;
 }
 .pctBig {
-  font-size: 1.1em; font-weight: 800; letter-spacing: -.03em;
-  background: linear-gradient(135deg, var(--gold-deep) 0%, var(--gold) 100%);
-  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  font-style: normal; color: var(--navy);
+  background: linear-gradient(transparent 62%, var(--gold) 62%, var(--gold) 92%, transparent 92%);
+  padding: 0 2px; border-radius: 2px;
 }
 .jDesc {
   font-size: 13.5px; color: var(--muted); line-height: 1.55;
@@ -135,25 +135,25 @@
 .jTlTrack {
   position: relative; height: 10px;
   background: var(--page); border-radius: 999px; overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(14,22,38,.06);
+  box-shadow: inset 0 1px 2px rgba(42,26,34,.06);
 }
 .jTlTrack::after {
   content: ''; position: absolute; inset: 0; border-radius: 999px;
-  background: repeating-linear-gradient(90deg, transparent 0, transparent calc(10% - 1px), rgba(14,22,38,.05) calc(10% - 1px), rgba(14,22,38,.05) 10%);
+  background: repeating-linear-gradient(90deg, transparent 0, transparent calc(10% - 1px), rgba(42,26,34,.05) calc(10% - 1px), rgba(42,26,34,.05) 10%);
   pointer-events: none;
 }
 .jTlFill {
   height: 100%; border-radius: 999px;
   background: linear-gradient(90deg, var(--gold) 0%, var(--gold-soft) 100%);
   width: 0%; transition: width 1.8s cubic-bezier(.4,0,.2,1);
-  box-shadow: 0 2px 8px rgba(232,182,32,.35); position: relative; z-index: 1;
+  box-shadow: 0 2px 8px rgba(200,237,94,.35); position: relative; z-index: 1;
 }
 .jTlHouse {
   position: absolute; top: 36px; left: 0%;
   font-size: 26px; transform: translateX(-50%);
   transition: left 1.8s cubic-bezier(.4,0,.2,1);
   animation: houseFloat 3s ease-in-out infinite;
-  z-index: 4; filter: drop-shadow(0 4px 6px rgba(14,22,38,.18)); line-height: 1;
+  z-index: 4; filter: drop-shadow(0 4px 6px rgba(42,26,34,.18)); line-height: 1;
 }
 @keyframes houseFloat {
   0%, 100% { transform: translateX(-50%) translateY(0); }
@@ -167,7 +167,7 @@
   white-space: nowrap; transform: translateX(-50%);
   transition: left 1.8s cubic-bezier(.4,0,.2,1);
   z-index: 5;
-  box-shadow: 0 4px 12px rgba(14,22,38,.18);
+  box-shadow: 0 4px 12px rgba(42,26,34,.18);
   display: flex; flex-direction: column; align-items: center; gap: 1px;
 }
 .jTlBubbleAmt { font-size: 9px; font-weight: 400; opacity: 0.82; }
@@ -184,7 +184,7 @@
 }
 .jptTick { width: 1.5px; height: 7px; background: var(--line); border-radius: 1px; }
 .jptDone .jptTick { background: var(--gold); }
-.jptNext .jptTick { background: var(--gold); height: 10px; width: 2px; box-shadow: 0 0 0 3px rgba(232,182,32,.18); }
+.jptNext .jptTick { background: var(--gold); height: 10px; width: 2px; box-shadow: 0 0 0 3px rgba(200,237,94,.18); }
 .jptLabel { font-family: var(--font-inter), sans-serif; font-size: 10px; color: var(--hint); font-weight: 500; letter-spacing: .02em; }
 .jptDone .jptLabel { color: var(--ink); font-weight: 600; }
 .jptNext .jptLabel { color: var(--gold-deep); font-weight: 700; }
@@ -206,7 +206,7 @@
 .nextCard::after {
   content: ''; position: absolute;
   width: 200px; height: 200px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(232,182,32,.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(200,237,94,.12) 0%, transparent 70%);
   right: -60px; bottom: -60px; pointer-events: none;
 }
 .nextCard > * { position: relative; z-index: 1; }
@@ -227,31 +227,31 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #6B5E38;
+  color: var(--muted);
   flex-shrink: 0;
 }
 .goalNavButton {
   width: 28px;
   height: 28px;
   border-radius: 999px;
-  border: 1px solid #D0C8A8;
+  border: 1px solid var(--line);
   background: transparent;
-  color: #6B5E38;
+  color: var(--muted);
   cursor: pointer;
   display: grid;
   place-items: center;
   transition: background .15s, border-color .15s, transform .15s;
 }
 .goalNavButton:hover {
-  background: #EDE8D8;
-  border-color: #C4B990;
+  background: var(--gold-tint);
+  border-color: var(--gold);
   transform: translateY(-1px);
 }
 .goalCounter {
   min-width: 32px;
   text-align: center;
   font-size: 12px;
-  color: #9A7C3A;
+  color: var(--gold-deep);
   font-weight: 600;
 }
 .goalCarouselBody {
@@ -273,14 +273,14 @@
   height: 6px;
   border: none;
   border-radius: 999px;
-  background: #D6CCB0;
+  background: var(--line);
   cursor: pointer;
   padding: 0;
   transition: width .25s, background .25s;
 }
 .goalDotActive {
   width: 18px;
-  background: #C9A84C;
+  background: var(--gold);
 }
 .nbadge {
   display: inline-grid; place-items: center;
@@ -320,8 +320,10 @@
   font-size: 13.5px; font-weight: 600; letter-spacing: .005em; font-family: inherit;
   cursor: pointer; transition: all .15s; text-decoration: none; margin-top: auto;
 }
-.btnCta:hover { background: var(--navy-2); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(14,22,38,.18); }
+.btnCta:hover { background: var(--navy-2); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(42,26,34,.18); }
 .btnCta svg { width: 14px; height: 14px; }
+.btnCtaLime { background: var(--gold); color: var(--navy); }
+.btnCtaLime:hover { background: var(--gold-soft); box-shadow: 0 6px 20px rgba(200,237,94,.40); }
 
 /* ── CONTENT GRID ────────────────────────── */
 .contentGrid {
@@ -474,7 +476,7 @@
   -webkit-appearance: none; appearance: none;
   width: 18px; height: 18px; border-radius: 50%;
   background: #fff; border: 2px solid var(--gold);
-  box-shadow: 0 2px 6px rgba(232,182,32,.4);
+  box-shadow: 0 2px 6px rgba(200,237,94,.4);
   cursor: pointer; transition: transform .15s;
 }
 .simSlider::-webkit-slider-thumb:hover { transform: scale(1.15); }
@@ -488,7 +490,7 @@
 }
 .simResult {
   background: linear-gradient(135deg, var(--gold-tint) 0%, #FFFDF2 100%);
-  border: 1px solid #F0E2B0; border-radius: 12px; padding: 14px 16px;
+  border: 1px solid rgba(200,237,94,.45); border-radius: 12px; padding: 14px 16px;
 }
 .simResultK {
   font-size: 10px; font-weight: 700; letter-spacing: .1em;
