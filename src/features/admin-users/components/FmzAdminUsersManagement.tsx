@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Clock,
   Copy,
+  Download,
   Home,
   Info,
   KeyRound,
@@ -20,6 +21,7 @@ import {
   Power,
   Search,
   ShieldCheck,
+  Target,
   Trash2,
   Users,
   UsersRound,
@@ -337,10 +339,12 @@ export function FmzAdminUsersManagement() {
 
   useEffect(() => { void loadData(); }, [loadData]);
 
-  // KPI strip (reference: 4 cards). No dedicated backend aggregate exists yet — each card
-  // is a `limit:1` lookup reusing the same filters the list already supports, reading only
-  // `pagination.total`. "Co-proprietários"/"Inquilinos" reflect the RBAC role assignment
-  // (role=co-owner/tenant), the same filter values the list's own dropdown would use.
+  // KPI strip (reference: 4 cards) — global totals, independent of the list's own
+  // filter/search/page (matching the reference, where these numbers don't move when you
+  // filter the table). No dedicated backend aggregate exists yet — each card is a `limit:1`
+  // lookup reusing the same filters the list already supports, reading only `pagination.total`.
+  // Runs once on mount: depending on `users` re-triggered (and cancelled, via the `isMounted`
+  // guard) on every filter/search/page change, so it never had a chance to resolve.
   useEffect(() => {
     let isMounted = true;
 
@@ -349,7 +353,7 @@ export function FmzAdminUsersManagement() {
         const [total, active, owners, tenants] = await Promise.all([
           getAdminUsers({ page: 1, limit: 1 }),
           getAdminUsers({ page: 1, limit: 1, filters: { status: 'active' } }),
-          getAdminUsers({ page: 1, limit: 1, filters: { role: 'co-owner' } }),
+          getAdminUsers({ page: 1, limit: 1, filters: { role: 'co_owner' } }),
           getAdminUsers({ page: 1, limit: 1, filters: { role: 'tenant' } }),
         ]);
         if (!isMounted) return;
@@ -361,7 +365,8 @@ export function FmzAdminUsersManagement() {
 
     void loadKpis();
     return () => { isMounted = false; };
-  }, [users]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filteredUsers = users;
 
@@ -580,11 +585,15 @@ function EditHeader({ isEditing, userName, onBack }: { isEditing: boolean; userN
 }
 
 function UserKpiStrip({ kpis }: { kpis: UserKpis | null }) {
+  // "Total de usuários" has no sub-caption: the reference's "+38 este mês" needs a
+  // signups-this-month aggregate that doesn't exist in any endpoint yet — showing a made-up
+  // number would be worse than showing none. The other 3 captions are either computable
+  // (active/total) or static descriptive text, same as the reference.
   const cards = [
-    { label: 'Total de usuários', value: kpis?.total, icon: <Users className="h-4 w-4" />, tone: '#2563EB', bg: '#EFF6FF' },
-    { label: 'Ativos', value: kpis?.active, icon: <CheckCircle2 className="h-4 w-4" />, tone: '#1A8C5B', bg: '#F0FAF5' },
-    { label: 'Co-proprietários', value: kpis?.owners, icon: <Building2 className="h-4 w-4" />, tone: '#1A8C5B', bg: '#F0FAF5' },
-    { label: 'Inquilinos', value: kpis?.tenants, icon: <Home className="h-4 w-4" />, tone: '#2563EB', bg: '#EFF6FF' },
+    { label: 'Total de usuários', value: kpis?.total, caption: null, icon: <Users className="h-4 w-4" />, tone: '#2563EB', bg: '#EFF6FF' },
+    { label: 'Ativos', value: kpis?.active, caption: kpis && kpis.total > 0 ? `${Math.round((kpis.active / kpis.total) * 100)}% da base` : null, icon: <CheckCircle2 className="h-4 w-4" />, tone: '#1A8C5B', bg: '#F0FAF5' },
+    { label: 'Co-proprietários', value: kpis?.owners, caption: 'com tokens ativos', icon: <Target className="h-4 w-4" />, tone: '#1A8C5B', bg: '#F0FAF5' },
+    { label: 'Inquilinos', value: kpis?.tenants, caption: 'contratos ativos', icon: <Home className="h-4 w-4" />, tone: '#2563EB', bg: '#EFF6FF' },
   ];
   return (
     <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -593,6 +602,7 @@ function UserKpiStrip({ kpis }: { kpis: UserKpis | null }) {
           <span className="mb-3 flex h-[34px] w-[34px] items-center justify-center rounded-[9px]" style={{ background: card.bg, color: card.tone }}>{card.icon}</span>
           <p className="text-[10px] font-bold uppercase tracking-[.08em] text-[#9AA3B0]">{card.label}</p>
           <p className="mt-1 text-[23px] font-extrabold tracking-[-.03em] text-[#0D1321]">{card.value ?? <Loader2 className="inline h-4 w-4 animate-spin text-[#9AA3B0]" />}</p>
+          {card.caption && <p className="mt-0.5 text-[11px] text-[#9AA3B0]">{card.caption}</p>}
         </div>
       ))}
     </div>
@@ -619,15 +629,20 @@ function UserList({ users, roles, roleOptions, query, onQuery, statusFilter, onS
   return (
     <div className="flex h-[calc(100dvh-152px)] min-h-[560px] min-w-0 animate-[fmzFadeIn_.25s_ease] flex-col overflow-hidden">
       <div className="shrink-0">
+        <p className="mb-2 text-[12px] text-[#9AA3B0]">Admin <span className="px-1">›</span> Usuários</p>
         <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="mb-1 text-[10px] font-bold uppercase tracking-[.1em] text-[#9AA3B0]">Controle de Acesso</p>
-            <h1 className="text-[clamp(24px,4vw,34px)] font-extrabold tracking-[-.025em]">Usuários</h1>
-            <p className="mt-1 max-w-2xl text-[13px] leading-6 text-[#5A6478]">Cadastre, edite e defina quais acessos cada usuário possui.</p>
+            <h1 className="text-[clamp(24px,4vw,34px)] font-extrabold tracking-[-.025em]">Gerenciar usuários</h1>
+            <p className="mt-1 max-w-2xl text-[13px] leading-6 text-[#5A6478]">Dados cadastrais, carteira de tokens, imóveis e ações administrativas.</p>
           </div>
-          <button onClick={onCreate} className="inline-flex w-full items-center justify-center gap-2 rounded-[9px] bg-[#0D1321] px-6 py-3 text-[13px] font-bold uppercase tracking-[.04em] text-white transition hover:-translate-y-0.5 hover:bg-[#162030] sm:w-auto">
-            <Plus className="h-3.5 w-3.5" />Novo usuário
-          </button>
+          <div className="flex gap-2.5">
+            <button onClick={() => exportUsersToCsv(users)} className="inline-flex items-center justify-center gap-2 rounded-[9px] border border-[#E8EAF0] bg-white px-5 py-3 text-[13px] font-semibold text-[#0D1321] transition hover:border-[#0D1321]">
+              <Download className="h-3.5 w-3.5" />Exportar
+            </button>
+            <button onClick={onCreate} className="inline-flex items-center justify-center gap-2 rounded-[9px] bg-[#F5C842] px-6 py-3 text-[13px] font-bold text-[#0D1321] transition hover:-translate-y-0.5 hover:bg-[#E8B620]">
+              <Plus className="h-3.5 w-3.5" />Novo usuário
+            </button>
+          </div>
         </div>
 
         <div className="mb-3 flex flex-col gap-2.5 sm:flex-row">
@@ -636,7 +651,7 @@ function UserList({ users, roles, roleOptions, query, onQuery, statusFilter, onS
             <input
               value={query}
               onChange={(event) => onQuery(event.target.value)}
-              placeholder="Buscar por nome, e-mail, telefone, wallet, imóvel ou role..."
+              placeholder="Buscar por nome, e-mail ou telefone..."
               className="w-full rounded-[9px] border border-[#E8EAF0] bg-white py-3 pl-10 pr-4 text-[13.5px] outline-none transition focus:border-[#F5C842] focus:shadow-[0_0_0_3px_rgba(245,200,66,.12)]"
             />
           </label>
@@ -686,11 +701,38 @@ function UserList({ users, roles, roleOptions, query, onQuery, statusFilter, onS
           </div>
         )}
       </div>
+      <div className="mt-3 flex shrink-0 items-center justify-between text-[11px] text-[#9AA3B0]">
+        <span>FirmezaToken Admin · v2.4.1</span>
+        <span>Usuários · {formatAbbrevMonthYear(new Date().toISOString())}</span>
+      </div>
     </div>
   );
 }
 
 const isUserOverdue = (user: FmzAdminUser): boolean => user.tenantContracts.some((contract) => contract.overdue);
+
+// Exports exactly the rows currently loaded in the table (real backend data, current page) —
+// no separate export endpoint exists yet, so this can't include rows outside the active page.
+const csvCell = (value: string): string => `"${value.replace(/"/g, '""')}"`;
+function exportUsersToCsv(users: FmzAdminUser[]): void {
+  const header = ['Nome', 'E-mail', 'Telefone', 'Status', 'Perfis', 'Atrasado'];
+  const rows = users.map((user) => [
+    user.name || '',
+    user.email || '',
+    user.phone || '',
+    user.isActive ? 'Ativo' : 'Inativo',
+    user.roleKeys.join('; '),
+    isUserOverdue(user) ? 'Sim' : 'Não',
+  ]);
+  const csv = [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n');
+  const blob = new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `usuarios-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 function UserTableRow({ user, onOpen }: { user: FmzAdminUser; roles: Map<string, FmzAccessControlRole>; onOpen: () => void }) {
   const [bg, fg] = avatarColor(user.id || user.email);
