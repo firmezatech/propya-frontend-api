@@ -51,13 +51,13 @@ export function FmzVerifyEmailRequiredCard() {
       <div className="overflow-hidden rounded-[22px] border-[1.5px] border-fmz-border-light bg-white shadow-[0_4px_12px_rgba(14,22,38,.06),0_20px_48px_-12px_rgba(14,22,38,.14)]">
 
         {/* Gold accent bar */}
-        <div className="h-[5px] bg-gradient-to-r from-[#8A6B12] via-fmz-gold to-[#F5D26B]" />
+        <div className="h-[5px] bg-gradient-to-r from-[#2A1A22] via-fmz-gold to-[#BCE54A]" />
 
         <div className="flex flex-col items-center px-[clamp(28px,5vw,44px)] pb-[clamp(32px,4vw,44px)] pt-[clamp(32px,5vw,48px)] text-center">
 
           {/* Animated envelope — flex centering ensures SVG is centered vertically */}
           <div
-            className={`${styles.envelopeWrap} mb-7 flex items-center justify-center rounded-3xl border-[1.5px] border-[rgba(232,182,32,.25)] bg-[#FBF3DA]`}
+            className={`${styles.envelopeWrap} mb-7 flex items-center justify-center rounded-3xl border-[1.5px] border-[rgba(200,237,94,.25)] bg-[#F3FADD]`}
             aria-hidden="true"
           >
             <div className={`${styles.dot} ${styles.dot1}`} />
@@ -68,9 +68,9 @@ export function FmzVerifyEmailRequiredCard() {
               viewBox="0 0 44 44"
               fill="none"
             >
-              <rect x="4" y="10" width="36" height="26" rx="4" fill="rgba(232,182,32,.15)" stroke="#8A6B12" strokeWidth="2"/>
-              <path d="M4 14l18 12 18-12" stroke="#8A6B12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <circle cx="33" cy="12" r="7" fill="#E8B620" stroke="white" strokeWidth="2"/>
+              <rect x="4" y="10" width="36" height="26" rx="4" fill="rgba(200,237,94,.15)" stroke="#2A1A22" strokeWidth="2"/>
+              <path d="M4 14l18 12 18-12" stroke="#2A1A22" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="33" cy="12" r="7" fill="#C8ED5E" stroke="white" strokeWidth="2"/>
               <path d="M30 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
@@ -88,7 +88,7 @@ export function FmzVerifyEmailRequiredCard() {
           {/* Email chip */}
           <div className="mb-7 flex w-full items-center justify-between gap-2.5 rounded-[11px] border-[1.5px] border-fmz-border-light bg-fmz-input px-4 py-2.5">
             <div className="flex min-w-0 items-center gap-2.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[rgba(232,182,32,.2)] bg-[#FBF3DA] text-[#8A6B12]" aria-hidden="true">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[rgba(200,237,94,.2)] bg-[#F3FADD] text-[#2A1A22]" aria-hidden="true">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                   <polyline points="22,6 12,13 2,6"/>
