@@ -27,7 +27,7 @@ import {
   X,
 } from 'lucide-react';
 import { fmzCn } from '../../../lib/fmz-classnames';
-import { FmzPasswordField } from '../../../components/design-system';
+import { FmzPasswordField, FmzSelect } from '../../../components/design-system';
 import { FmzAdminListSkeleton } from '../../../components/layout';
 import { formatBirthdateInput } from '../../../lib/fmz-phone-country-format';
 import { FmzFormAlert } from '../../api-errors/components';
@@ -182,6 +182,20 @@ const formatDateTime = (value: string | null | undefined): string => {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? value : dateTimeFormatter.format(date);
 };
+const formatDateOnly = (value: string | null | undefined): string => {
+  if (!value) return '—';
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('pt-BR').format(date);
+};
+const calculateAge = (birthdate: string | null | undefined): number | null => {
+  if (!birthdate) return null;
+  const dob = new Date(`${birthdate}T00:00:00`);
+  if (Number.isNaN(dob.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) age--;
+  return age;
+};
 
 const formFromUser = (user: FmzAdminUser): UserFormState => ({
   id: user.id,
@@ -228,6 +242,8 @@ export function FmzAdminUsersManagement() {
   const [view, setView] = useState<ViewMode>('list');
   const [step, setStep] = useState<Step>(1);
   const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
   const [form, setForm] = useState<UserFormState>(EMPTY_FORM);
   const [selectedUser, setSelectedUser] = useState<FmzAdminUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -282,7 +298,10 @@ export function FmzAdminUsersManagement() {
     setLoading(true);
     setError(null);
     try {
-      const nextUsers = await getAdminUsers(pagination.request);
+      const nextUsers = await getAdminUsers({
+        ...pagination.request,
+        filters: { status: statusFilter || undefined, role: roleFilter || undefined },
+      });
       setUsers(nextUsers.items);
       pagination.applyMeta(nextUsers);
     } catch (err) {
@@ -290,7 +309,12 @@ export function FmzAdminUsersManagement() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.request, pagination.applyMeta]);
+  }, [pagination.request, pagination.applyMeta, statusFilter, roleFilter]);
+
+  // useFmzAdminPagination only resets to page 1 on search changes (setSearch) — status/role
+  // aren't filters it knows about, so resetting page here on their change is on us.
+  const handleStatusFilterChange = (value: string) => { setStatusFilter(value); pagination.setPage(1); };
+  const handleRoleFilterChange = (value: string) => { setRoleFilter(value); pagination.setPage(1); };
 
   useEffect(() => { void loadData(); }, [loadData]);
 
@@ -451,7 +475,21 @@ export function FmzAdminUsersManagement() {
         {view === 'list' ? (
           <>
             <UserKpiStrip kpis={kpis} />
-            <UserList users={filteredUsers} roles={roleByKey} query={query} onQuery={setQuery} onCreate={openCreate} onOpen={(user) => void openDrawer(user)} pagination={pagination} loading={loading} />
+            <UserList
+              users={filteredUsers}
+              roles={roleByKey}
+              roleOptions={roles}
+              query={query}
+              onQuery={setQuery}
+              statusFilter={statusFilter}
+              onStatusFilter={handleStatusFilterChange}
+              roleFilter={roleFilter}
+              onRoleFilter={handleRoleFilterChange}
+              onCreate={openCreate}
+              onOpen={(user) => void openDrawer(user)}
+              pagination={pagination}
+              loading={loading}
+            />
           </>
         ) : (
           <div className="animate-[fmzFadeIn_.25s_ease]">
@@ -519,7 +557,21 @@ function UserKpiStrip({ kpis }: { kpis: UserKpis | null }) {
   );
 }
 
-function UserList({ users, roles, query, onQuery, onCreate, onOpen, pagination, loading }: { users: FmzAdminUser[]; roles: Map<string, FmzAccessControlRole>; query: string; onQuery: (query: string) => void; onCreate: () => void; onOpen: (user: FmzAdminUser) => void; pagination: FmzAdminPaginationMeta & { setPage: (page: number) => void; setLimit: (limit: number) => void }; loading: boolean }) {
+function UserList({ users, roles, roleOptions, query, onQuery, statusFilter, onStatusFilter, roleFilter, onRoleFilter, onCreate, onOpen, pagination, loading }: {
+  users: FmzAdminUser[];
+  roles: Map<string, FmzAccessControlRole>;
+  roleOptions: FmzAccessControlRole[];
+  query: string;
+  onQuery: (query: string) => void;
+  statusFilter: string;
+  onStatusFilter: (value: string) => void;
+  roleFilter: string;
+  onRoleFilter: (value: string) => void;
+  onCreate: () => void;
+  onOpen: (user: FmzAdminUser) => void;
+  pagination: FmzAdminPaginationMeta & { setPage: (page: number) => void; setLimit: (limit: number) => void };
+  loading: boolean;
+}) {
   const isInitialLoading = loading && users.length === 0;
 
   return (
@@ -536,15 +588,27 @@ function UserList({ users, roles, query, onQuery, onCreate, onOpen, pagination, 
           </button>
         </div>
 
-        <label className="relative mb-3 block">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9AA3B0]" />
-          <input
-            value={query}
-            onChange={(event) => onQuery(event.target.value)}
-            placeholder="Buscar por nome, e-mail, telefone, wallet, imóvel ou role..."
-            className="w-full rounded-[9px] border border-[#E8EAF0] bg-white py-3 pl-10 pr-4 text-[13.5px] outline-none transition focus:border-[#F5C842] focus:shadow-[0_0_0_3px_rgba(245,200,66,.12)]"
-          />
-        </label>
+        <div className="mb-3 flex flex-col gap-2.5 sm:flex-row">
+          <label className="relative block flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9AA3B0]" />
+            <input
+              value={query}
+              onChange={(event) => onQuery(event.target.value)}
+              placeholder="Buscar por nome, e-mail, telefone, wallet, imóvel ou role..."
+              className="w-full rounded-[9px] border border-[#E8EAF0] bg-white py-3 pl-10 pr-4 text-[13.5px] outline-none transition focus:border-[#F5C842] focus:shadow-[0_0_0_3px_rgba(245,200,66,.12)]"
+            />
+          </label>
+          <FmzSelect value={statusFilter} onChange={(event) => onStatusFilter(event.target.value)} wrapperClassName="sm:w-[180px]">
+            <option value="">Todos os status</option>
+            <option value="active">Ativos</option>
+            <option value="inactive">Inativos</option>
+          </FmzSelect>
+          <FmzSelect value={roleFilter} onChange={(event) => onRoleFilter(event.target.value)} wrapperClassName="sm:w-[200px]">
+            <option value="">Todos os perfis</option>
+            {roleOptions.map((role) => <option key={roleKey(role)} value={roleKey(role)}>{roleLabel(role)}</option>)}
+            <option value="overdue">Aluguel atrasado</option>
+          </FmzSelect>
+        </div>
 
         <FmzAdminPagination {...pagination} disabled={loading} onPageChange={pagination.setPage} onLimitChange={pagination.setLimit} />
       </div>
@@ -617,6 +681,7 @@ function UserDrawer({ user, loading, statusToggling, resetLinkLoading, resetLink
             <div className="flex-1 overflow-y-auto px-[22px] py-[18px]">
               {loading && <p className="mb-4 flex items-center gap-2 text-[12.5px] text-[#5A6478]"><Loader2 className="h-3.5 w-3.5 animate-spin" />Atualizando detalhes...</p>}
               <div className="flex flex-col gap-3.5">
+                <PersonalDataCard user={user} />
                 <AddressCard user={user} />
                 <WalletsCard wallets={user.wallets} />
                 <PropertiesCard user={user} />
@@ -652,7 +717,7 @@ function DrawerHeader({ user, onClose }: { user: FmzAdminUser; onClose: () => vo
         <span className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-full border-2 border-white/20 text-[16px] font-bold" style={{ background: bg, color: fg }}>{initials(user.name)}</span>
         <div className="min-w-0">
           <p className="truncate text-[18px] font-bold tracking-[-.02em]">{user.name || 'Usuário sem nome'}</p>
-          <p className="text-[12px] text-white/60">Cadastrado em {user.createdAt ? formatDateTime(user.createdAt) : '—'}</p>
+          <p className="truncate text-[12px] text-white/60">Cadastrado em {user.createdAt ? formatDateTime(user.createdAt) : '—'}{user.id && ` · ID #${user.id.slice(0, 8)}`}</p>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
@@ -774,6 +839,23 @@ function DetailCard({ icon, title, subtitle, children }: { icon: ReactNode; titl
   return <section className="rounded-2xl border border-[#E8EAF0] bg-white p-5 shadow-sm"><div className="mb-4 flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F7F8FA] text-[#0D1321]">{icon}</span><span><h2 className="text-[15px] font-bold">{title}</h2><p className="mt-0.5 text-[12px] text-[#9AA3B0]">{subtitle}</p></span></div>{children}</section>;
 }
 
+function FieldRow({ label, value }: { label: string; value: ReactNode }) {
+  return <div className="flex items-baseline justify-between gap-3.5 border-b border-dashed border-[#F0F1F5] py-2 text-[13px] last:border-0"><span className="shrink-0 text-[12px] text-[#5A6478]">{label}</span><span className="text-right font-semibold text-[#0D1321]">{value}</span></div>;
+}
+
+function PersonalDataCard({ user }: { user: FmzAdminUser }) {
+  const age = calculateAge(user.birthdate);
+  return (
+    <DetailCard icon={<Users className="h-4 w-4" />} title="Dados pessoais" subtitle="Identificação e contato do usuário">
+      <FieldRow label="Nome completo" value={user.name || '—'} />
+      <FieldRow label="E-mail" value={user.email || '—'} />
+      <FieldRow label="Telefone" value={user.phone || '—'} />
+      <FieldRow label="Nascimento" value={user.birthdate ? `${formatDateOnly(user.birthdate)}${age !== null ? ` · ${age} anos` : ''}` : '—'} />
+      <FieldRow label="CPF" value={<span className="italic text-[#9AA3B0]">Não disponível via API</span>} />
+    </DetailCard>
+  );
+}
+
 function AddressCard({ user }: { user: FmzAdminUser }) {
   const lines = [user.addressLine1, user.addressLine2, user.district, [user.city, user.state].filter(Boolean).join(' / '), user.postalCode, user.country].filter(Boolean);
   return <DetailCard icon={<MapPin className="h-4 w-4" />} title="Endereço do usuário" subtitle="Informação editável do cadastro"><div className="grid gap-2 text-[13px] text-[#5A6478]">{lines.length ? lines.map((line) => <p key={line}>{line}</p>) : <p className="italic text-[#9AA3B0]">Endereço não informado.</p>}{user.address && <p className="rounded-lg bg-[#F7F8FA] px-3 py-2 text-[#0D1321]">{user.address}</p>}</div></DetailCard>;
@@ -784,7 +866,22 @@ function WalletsCard({ wallets }: { wallets: FmzAdminUserWallet[] }) {
 }
 
 function PropertiesCard({ user }: { user: FmzAdminUser }) {
-  return <DetailCard icon={<Building2 className="h-4 w-4" />} title="Imóveis e tokens" subtitle="Relações tenant/co-owner e percentuais são somente leitura"><div className="flex flex-col gap-3">{user.coOwnerProperties.length ? user.coOwnerProperties.map((item) => <OwnershipView key={item.id || item.propertyId} item={item} />) : null}{user.propertyRelations.length ? user.propertyRelations.map((relation) => <RelationView key={relation.id || `${relation.propertyId}-${relation.relationType}`} relation={relation} />) : null}{!user.coOwnerProperties.length && !user.propertyRelations.length ? <p className="text-[13px] italic text-[#9AA3B0]">Nenhuma propriedade vinculada.</p> : null}</div></DetailCard>;
+  const totalTokens = user.coOwnerProperties.reduce((sum, item) => sum + valueAsNumber(item.tokenBalance), 0);
+  return (
+    <DetailCard icon={<Building2 className="h-4 w-4" />} title="Imóveis e tokens" subtitle="Relações tenant/co-owner e percentuais são somente leitura">
+      {user.coOwnerProperties.length > 0 && (
+        <div className="mb-3 flex items-center justify-between rounded-lg bg-[#FFFBEB] px-3.5 py-3">
+          <span className="text-[11px] font-bold uppercase tracking-[.06em] text-[#9A7D0A]">Saldo total</span>
+          <span className="font-mono text-[16px] font-bold text-[#0D1321]">{formatTokenAmount(totalTokens)} <span className="text-[12px] font-semibold text-[#9A7D0A]">FRMZ</span></span>
+        </div>
+      )}
+      <div className="flex flex-col gap-3">
+        {user.coOwnerProperties.length ? user.coOwnerProperties.map((item) => <OwnershipView key={item.id || item.propertyId} item={item} />) : null}
+        {user.propertyRelations.length ? user.propertyRelations.map((relation) => <RelationView key={relation.id || `${relation.propertyId}-${relation.relationType}`} relation={relation} />) : null}
+        {!user.coOwnerProperties.length && !user.propertyRelations.length ? <p className="text-[13px] italic text-[#9AA3B0]">Nenhuma propriedade vinculada.</p> : null}
+      </div>
+    </DetailCard>
+  );
 }
 
 function OwnershipView({ item }: { item: FmzAdminCoOwnerProperty }) {
