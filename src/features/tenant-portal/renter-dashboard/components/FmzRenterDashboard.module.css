@@ -101,7 +101,7 @@
   /* Reference's box has no fixed width — it grows to fit its (long) caption
      text. Our real captions can be short or empty, so we pin a width instead
      of leaving it content-driven, keeping the box the same size either way. */
-  flex-shrink: 0; width: 280px;
+  flex-shrink: 0; width: 580px;
   background: var(--page); border: 1px solid var(--line);
   border-radius: 16px; padding: 18px 20px;
 }
