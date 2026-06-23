@@ -105,7 +105,7 @@
 .k { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
 .amt { font-family: var(--font-inter), sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -.03em; color: var(--navy); line-height: 1; }
 .cur { font-size: .55em; font-weight: 500; color: var(--muted); margin-right: 4px; }
-.cap { font-size: 12.5px; color: var(--muted); margin-top: 6px; line-height: 1.45; }
+.cap { font-size: 12.5px; color: var(--muted); margin-top: 6px; line-height: 1.45; min-height: calc(1.45em * 2); }
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
