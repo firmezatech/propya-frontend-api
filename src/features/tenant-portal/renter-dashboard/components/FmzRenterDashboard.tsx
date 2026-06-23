@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, CreditCard, Plus, Target, TrendingUp } from 'lucide-react';
+import { CreditCard, Plus, TrendingUp } from 'lucide-react';
 import type { FmzTenantDashboard } from '../../domain/fmz-tenant-portal.types';
 import type { TenantOwnershipGoal } from '../../domain/fmz-tenant-portal.types';
 import type { FmzTenantPaymentHistoryItem } from '../../domain';
@@ -179,25 +179,19 @@ export function FmzRenterDashboard({
     buyTokensQuery ? `${BUY_TOKENS_PATH}?${buyTokensQuery}` : BUY_TOKENS_PATH,
   );
   const [hasAnimated, setHasAnimated] = useState(false);
-  const [currentGoalIndex, setCurrentGoalIndex] = useState(0);
 
-  const ownershipGoalSlides = useMemo(
-    () => buildOwnershipGoalSlidesFromBackend(dashboard),
+  // Reference mockup (Dashboard.html) shows a single "next goal" box — when the
+  // backend returns more than one available goal, only the closest one renders here.
+  const currentGoal = useMemo(
+    () => buildOwnershipGoalSlidesFromBackend(dashboard)[0] ?? null,
     [dashboard],
   );
-
-  const hasGoals = ownershipGoalSlides.length > 0;
-  const currentGoal = ownershipGoalSlides[currentGoalIndex] ?? null;
 
   useEffect(() => {
     setHasAnimated(false);
     const t = window.setTimeout(() => setHasAnimated(true), 180);
     return () => window.clearTimeout(t);
   }, [viewModel.ownershipPercentage]);
-
-  useEffect(() => {
-    setCurrentGoalIndex(0);
-  }, [dashboard.ownershipGoals]);
 
   const timelineStyle = buildLeftStyle(hasAnimated ? viewModel.ownershipVisualPosition : 0);
 
@@ -209,14 +203,6 @@ export function FmzRenterDashboard({
   const billSplit = splitBillAmount(viewModel.invoice.totalLabel);
   const goalAmountInteger = currentGoal ? splitGoalAmountInteger(currentGoal.amountLabel) : null;
   const groupedInvoiceLines = useMemo(() => groupInvoiceLines(viewModel.invoice.lines), [viewModel.invoice.lines]);
-
-  const showPreviousGoal = () => {
-    setCurrentGoalIndex((current) => (current - 1 + ownershipGoalSlides.length) % ownershipGoalSlides.length);
-  };
-
-  const showNextGoal = () => {
-    setCurrentGoalIndex((current) => (current + 1) % ownershipGoalSlides.length);
-  };
 
   return (
     <main className={styles.dashboard}>
@@ -241,113 +227,59 @@ export function FmzRenterDashboard({
       <section className={styles.hero}>
         <div className={styles.heroTop}>
 
-          {/* Journey text */}
-          <div className={styles.journeyText}>
-            <span className={styles.jEyebrow}>
-              <span className={styles.eIco}><TrendingUp size={11} /></span>
+          <div>
+            <span className={styles.eyebrow}>
+              <span className={styles.ico}><TrendingUp size={11} /></span>
               Sua jornada de compra
             </span>
-            <h2 className={styles.jTitle}>
+            <h2 className={styles.heroH}>
               Você já conquistou <span className={styles.pctBig}>{viewModel.ownershipPercentageLabel}</span> do seu imóvel
             </h2>
-            <p className={styles.jDesc}>
+            <p className={styles.heroP}>
               No seu ritmo atual, você atinge a próxima meta de {viewModel.nextMilestoneLabel} em breve, continue avançando!
             </p>
           </div>
 
-          {/* Ownership goals carousel — powered by backend data */}
-          <div className={styles.heroGoal}>
-            {hasGoals && currentGoal ? (
-              <>
-                <div className={styles.goalCarouselHead}>
-                  <span className={styles.nextEyebrow}>
-                    <span className={styles.nbadge}><Target size={10} /></span>
-                    {currentGoal.label}
-                  </span>
-                  {ownershipGoalSlides.length > 1 ? (
-                    <div className={styles.goalCarouselControls}>
-                      <button type="button" className={styles.goalNavButton} onClick={showPreviousGoal} aria-label="Meta anterior">
-                        <ChevronLeft size={13} />
-                      </button>
-                      <span className={styles.goalCounter}>{currentGoalIndex + 1}/{ownershipGoalSlides.length}</span>
-                      <button type="button" className={styles.goalNavButton} onClick={showNextGoal} aria-label="Próxima meta">
-                        <ChevronRight size={13} />
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-
-                <div key={currentGoal.id} className={styles.goalCarouselBody}>
-                  <h3 className={styles.nextTitle}>Faltam apenas</h3>
-                  <div className={styles.nextAmount}>
-                    <span className={styles.currency}>R$</span>{goalAmountInteger}
-                  </div>
-                  <p className={styles.nextDesc}>{currentGoal.description}</p>
-
-                  {currentGoal.rewardDescription ? (
-                    <p className={styles.nextDesc} style={{ marginTop: 8, fontStyle: 'italic', opacity: 0.8 }}>
-                      🎁 {currentGoal.rewardDescription}
-                    </p>
-                  ) : null}
-                </div>
-
-                {ownershipGoalSlides.length > 1 ? (
-                  <div className={styles.goalDots} aria-label="Metas disponíveis">
-                    {ownershipGoalSlides.map((goal, index) => (
-                      <button
-                        key={goal.id}
-                        type="button"
-                        aria-label={`Ir para meta ${index + 1}`}
-                        aria-current={index === currentGoalIndex ? 'true' : undefined}
-                        className={`${styles.goalDot} ${index === currentGoalIndex ? styles.goalDotActive : ''}`}
-                        onClick={() => setCurrentGoalIndex(index)}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              /* Empty state — all goals achieved */
-              <div className={styles.goalCarouselBody}>
-                <span className={styles.nextEyebrow}>
-                  <span className={styles.nbadge}><Target size={10} /></span>
-                  Metas de posse
-                </span>
-                <p className={styles.nextDesc} style={{ marginTop: 12 }}>
-                  🎉 Você já concluiu todas as metas disponíveis no momento.
-                </p>
-              </div>
-            )}
-
-            <Link href={buyTokensHref} className={`${styles.btnCta} ${styles.btnCtaLime}`}>
-              <Plus size={14} /> Comprar mais tokens
-            </Link>
-          </div>
+          {currentGoal ? (
+            <div className={styles.heroGoal}>
+              <div className={styles.k}>{currentGoal.label}</div>
+              <div className={styles.amt}><span className={styles.cur}>R$</span>{goalAmountInteger}</div>
+              <div className={styles.cap}>{currentGoal.description}</div>
+              <Link href={buyTokensHref} className={`${styles.btn} ${styles.btnLime}`}>
+                <Plus size={14} /> Comprar tokens
+              </Link>
+            </div>
+          ) : (
+            <div className={styles.heroGoal}>
+              <div className={styles.k}>Metas de posse</div>
+              <div className={styles.cap}>🎉 Você já concluiu todas as metas disponíveis no momento.</div>
+              <Link href={buyTokensHref} className={`${styles.btn} ${styles.btnLime}`}>
+                <Plus size={14} /> Comprar tokens
+              </Link>
+            </div>
+          )}
 
         </div>
 
-        <div className={styles.jTl}>
-          <div className={styles.jTlWrap}>
-            <div className={styles.jTlBubble} style={timelineStyle}>
-              <span>{viewModel.ownershipPercentageLabel}</span>
-              <span className={styles.jTlBubbleAmt}>{viewModel.acquiredTokensLabel}</span>
-            </div>
-            <div className={styles.jTlHouse} style={timelineStyle}>🏡</div>
-            <div className={styles.jTlTrack}>
-              <div className={styles.jTlFill} style={{ width: hasAnimated ? `${viewModel.ownershipVisualPosition}%` : '0%' }} />
-            </div>
-            <div className={styles.jTlPoints}>
-              {viewModel.journeyMilestones.map((m) => (
-                <div
-                  key={m.percentage}
-                  className={`${styles.jpt} ${m.status === 'done' ? styles.jptDone : ''} ${m.status === 'next' ? styles.jptNext : ''}`}
-                  style={buildLeftStyle(m.visualPosition)}
-                >
-                  <div className={styles.jptTick} />
-                  <div className={styles.jptLabel}>{m.label}</div>
-                  <div className={styles.jptCap}>{m.amountLabel}</div>
-                </div>
-              ))}
+        <div className={styles.trail}>
+          <div className={styles.trailTrack}>
+            <div className={styles.trailFill} style={{ width: hasAnimated ? `${viewModel.ownershipVisualPosition}%` : '0%' }} />
+            <div className={styles.trailMarker} style={timelineStyle} />
+          </div>
+          <div className={styles.trailMarks}>
+            {viewModel.journeyMilestones.map((m) => (
+              <div
+                key={m.percentage}
+                className={`${styles.tm} ${m.status === 'done' ? styles.tmDone : ''} ${m.status === 'next' ? styles.tmNext : ''}`}
+                style={buildLeftStyle(m.visualPosition)}
+              >
+                <div className={styles.tick} />
+                <div className={styles.pct}>{m.label}</div>
+                <div className={styles.val}>{m.amountLabel}</div>
+              </div>
+            ))}
+            <div className={styles.tmBadge} style={timelineStyle}>
+              {viewModel.ownershipPercentageLabel} · {viewModel.acquiredTokensLabel}
             </div>
           </div>
         </div>

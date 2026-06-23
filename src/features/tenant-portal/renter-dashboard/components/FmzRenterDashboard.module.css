@@ -60,257 +60,102 @@
 }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
-/* ── HERO ────────────────────────────────── */
+/* ── HERO (mirrors Dashboard.html .hero) ──── */
 .hero {
-  display: grid;
-  grid-template-columns: 1.55fr 1fr;
-  gap: 18px; margin-bottom: 28px;
-}
-
-/* Journey card */
-.journeyCard {
-  position: relative;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  padding: 32px 36px 28px;
-  color: var(--navy);
-  overflow: hidden;
+  padding: 34px 38px 30px;
   box-shadow: var(--shadow-md);
-  min-height: 300px;
-  display: flex; flex-direction: column;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
 }
-.journeyCard::before {
-  content: '';
-  position: absolute; inset: 0;
-  background-image:
-    radial-gradient(circle at 95% 5%, rgba(200,237,94,.22) 0%, transparent 45%),
-    radial-gradient(circle at 5% 100%, rgba(200,237,94,.08) 0%, transparent 40%);
-  pointer-events: none;
+.heroTop {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 32px; flex-wrap: wrap; margin-bottom: 34px;
 }
-.journeyCard::after {
-  content: '';
-  position: absolute; inset: 0;
-  background-image:
-    linear-gradient(to right, rgba(42,26,34,.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(42,26,34,.025) 1px, transparent 1px);
-  background-size: 32px 32px;
-  pointer-events: none;
-  mask-image: radial-gradient(circle at 50% 50%, black 0%, transparent 75%);
-  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 0%, transparent 75%);
-}
-.journeyCard > * { position: relative; z-index: 1; }
-
-.jEyebrow {
-  font-size: 10.5px; font-weight: 700; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--gold-deep);
-  display: inline-flex; align-items: center; gap: 6px;
-  margin-bottom: 14px;
+.eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted);
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 14px;
 }
 .eIco {
   display: inline-grid; place-items: center;
   width: 18px; height: 18px; border-radius: 5px;
-  background: var(--gold-tint);
+  background: var(--gold); color: var(--navy);
 }
 .eIco svg { width: 11px; height: 11px; }
-
-.jTitle {
+.heroH {
   font-family: var(--font-inter), sans-serif; font-weight: 700;
-  font-size: clamp(22px,2.6vw,30px); line-height: 1.18; letter-spacing: -.02em;
-  color: var(--navy); margin-bottom: 8px; max-width: 560px;
+  font-size: clamp(22px,2.6vw,30px); letter-spacing: -.028em; line-height: 1.12;
+  color: var(--navy); max-width: 560px;
 }
 .pctBig {
   font-style: normal; color: var(--navy);
   background: linear-gradient(transparent 62%, var(--gold) 62%, var(--gold) 92%, transparent 92%);
   padding: 0 2px; border-radius: 2px;
 }
-.jDesc {
-  font-size: 13.5px; color: var(--muted); line-height: 1.55;
-  max-width: 520px; margin-bottom: auto;
-}
+.heroP { margin-top: 12px; font-size: 14px; color: var(--muted); max-width: 480px; line-height: 1.55; }
 
-/* Journey timeline */
-.jTl { margin-top: 30px; padding: 0 6px; }
-.jTlWrap { position: relative; padding-top: 58px; }
-.jTlTrack {
-  position: relative; height: 10px;
-  background: var(--page); border-radius: 999px; overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(42,26,34,.06);
+.heroGoal {
+  flex-shrink: 0; min-width: 236px;
+  background: var(--page); border: 1px solid var(--line);
+  border-radius: 16px; padding: 18px 20px;
 }
-.jTlTrack::after {
-  content: ''; position: absolute; inset: 0; border-radius: 999px;
-  background: repeating-linear-gradient(90deg, transparent 0, transparent calc(10% - 1px), rgba(42,26,34,.05) calc(10% - 1px), rgba(42,26,34,.05) 10%);
-  pointer-events: none;
+.k { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.amt { font-family: var(--font-inter), sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -.03em; color: var(--navy); line-height: 1; }
+.cur { font-size: .55em; font-weight: 500; color: var(--muted); margin-right: 4px; }
+.cap { font-size: 12.5px; color: var(--muted); margin-top: 6px; line-height: 1.45; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 11px 16px; border-radius: 11px;
+  background: var(--navy); color: #fff; border: none;
+  font-size: 13.5px; font-weight: 600; font-family: inherit;
+  margin-top: 14px; cursor: pointer; text-decoration: none;
+  transition: transform .12s, background .15s;
 }
-.jTlFill {
-  height: 100%; border-radius: 999px;
-  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-soft) 100%);
-  width: 0%; transition: width 1.8s cubic-bezier(.4,0,.2,1);
-  box-shadow: 0 2px 8px rgba(200,237,94,.35); position: relative; z-index: 1;
+.btn:hover { background: var(--navy-2); transform: translateY(-1px); }
+.btn svg { width: 14px; height: 14px; }
+.btnLime { background: var(--gold); color: var(--navy); }
+.btnLime:hover { background: var(--gold-soft); }
+
+/* sober trail */
+.trail { margin-top: 8px; }
+.trailTrack { position: relative; height: 8px; border-radius: 999px; background: var(--line-2); }
+.trailFill {
+  position: absolute; left: 0; top: 0; height: 100%; border-radius: 999px;
+  background: var(--gold); transition: width 1.8s cubic-bezier(.4,0,.2,1);
 }
-.jTlHouse {
-  position: absolute; top: 36px; left: 0%;
-  font-size: 26px; transform: translateX(-50%);
+.trailMarker {
+  position: absolute; top: 50%; width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; border: 3px solid var(--navy);
+  transform: translate(-50%,-50%); z-index: 3;
+  box-shadow: 0 2px 6px rgba(42,26,34,.2);
   transition: left 1.8s cubic-bezier(.4,0,.2,1);
-  animation: houseFloat 3s ease-in-out infinite;
-  z-index: 4; filter: drop-shadow(0 4px 6px rgba(42,26,34,.18)); line-height: 1;
 }
-@keyframes houseFloat {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-3px); }
-}
-.jTlBubble {
-  position: absolute; top: 0; left: 0%;
+.trailMarks { position: relative; height: 46px; margin-top: 14px; }
+.tm { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.tick { width: 1.5px; height: 7px; background: var(--line); border-radius: 1px; }
+.tmDone .tick { background: var(--gold); }
+.tmNext .tick { height: 9px; width: 2px; background: var(--navy); }
+.pct { font-size: 11.5px; font-weight: 700; color: var(--hint); letter-spacing: .01em; }
+.tmDone .pct { color: var(--navy); }
+.tmNext .pct { color: var(--navy); }
+.val { font-size: 10.5px; color: var(--hint); white-space: nowrap; }
+.tmNext .val { color: var(--muted); font-weight: 600; }
+.tmBadge {
+  position: absolute; top: -2px; transform: translateX(-50%);
   background: var(--navy); color: #fff;
-  padding: 4px 8px; border-radius: 6px;
-  font-family: var(--font-inter), sans-serif; font-weight: 600; font-size: 11px;
-  white-space: nowrap; transform: translateX(-50%);
-  transition: left 1.8s cubic-bezier(.4,0,.2,1);
-  z-index: 5;
-  box-shadow: 0 4px 12px rgba(42,26,34,.18);
-  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  white-space: nowrap; transition: left 1.8s cubic-bezier(.4,0,.2,1);
 }
-.jTlBubbleAmt { font-size: 9px; font-weight: 400; opacity: 0.82; }
-.jTlBubble::after {
-  content: ''; position: absolute; left: 50%; bottom: -4px;
-  transform: translateX(-50%);
+.tmBadge::after {
+  content: ''; position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%);
   border-left: 4px solid transparent; border-right: 4px solid transparent;
   border-top: 4px solid var(--navy);
 }
-.jTlPoints { position: relative; height: 50px; margin-top: 16px; }
-.jpt {
-  position: absolute; top: 0; transform: translateX(-50%);
-  display: flex; flex-direction: column; align-items: center; gap: 5px;
-}
-.jptTick { width: 1.5px; height: 7px; background: var(--line); border-radius: 1px; }
-.jptDone .jptTick { background: var(--gold); }
-.jptNext .jptTick { background: var(--gold); height: 10px; width: 2px; box-shadow: 0 0 0 3px rgba(200,237,94,.18); }
-.jptLabel { font-family: var(--font-inter), sans-serif; font-size: 10px; color: var(--hint); font-weight: 500; letter-spacing: .02em; }
-.jptDone .jptLabel { color: var(--ink); font-weight: 600; }
-.jptNext .jptLabel { color: var(--gold-deep); font-weight: 700; }
-.jptCap { font-size: 9.5px; color: var(--hint); font-weight: 500; white-space: nowrap; }
-.jptNext .jptCap { color: var(--gold-deep); font-weight: 600; }
-
-/* Next milestone card */
-.nextCard {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: 18px 20px;
-  box-shadow: var(--shadow-md);
-  display: flex; flex-direction: column;
-  min-height: 0;
-  align-self: start;
-  position: relative; overflow: hidden;
-}
-.nextCard::after {
-  content: ''; position: absolute;
-  width: 200px; height: 200px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(200,237,94,.12) 0%, transparent 70%);
-  right: -60px; bottom: -60px; pointer-events: none;
-}
-.nextCard > * { position: relative; z-index: 1; }
-.goalCarouselHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-.nextEyebrow {
-  font-size: 11px; font-weight: 700; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--gold-deep);
-  display: inline-flex; align-items: center; gap: 6px;
-  margin-bottom: 0;
-}
-.goalCarouselControls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--muted);
-  flex-shrink: 0;
-}
-.goalNavButton {
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: background .15s, border-color .15s, transform .15s;
-}
-.goalNavButton:hover {
-  background: var(--gold-tint);
-  border-color: var(--gold);
-  transform: translateY(-1px);
-}
-.goalCounter {
-  min-width: 32px;
-  text-align: center;
-  font-size: 12px;
-  color: var(--gold-deep);
-  font-weight: 600;
-}
-.goalCarouselBody {
-  min-height: 0;
-  animation: goalFadeIn .24s ease both;
-}
-@keyframes goalFadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.goalDots {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin: 0 0 18px;
-}
-.goalDot {
-  width: 6px;
-  height: 6px;
-  border: none;
-  border-radius: 999px;
-  background: var(--line);
-  cursor: pointer;
-  padding: 0;
-  transition: width .25s, background .25s;
-}
-.goalDotActive {
-  width: 18px;
-  background: var(--gold);
-}
-.nbadge {
-  display: inline-grid; place-items: center;
-  width: 18px; height: 18px; border-radius: 5px;
-  background: var(--gold-tint);
-}
-.nbadge svg { width: 10px; height: 10px; }
-.nextTitle {
-  font-family: var(--font-inter), sans-serif; font-weight: 700;
-  font-size: clamp(13px,1.4vw,16px); line-height: 1.2; letter-spacing: -.018em;
-  color: var(--navy); margin-bottom: 4px;
-}
-.nextAmount {
-  font-family: var(--font-inter), sans-serif; font-weight: 800;
-  font-size: 28px; color: var(--navy); letter-spacing: -.03em; line-height: 1; margin-bottom: 4px;
-}
-.currency { font-size: .55em; font-weight: 500; color: var(--muted); margin-right: 4px; }
-.nextDesc { font-size: 12px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
-.nextProgress { margin-bottom: 18px; display: flex; flex-direction: column; gap: 6px; }
-.nextProgressBar { height: 6px; background: var(--page); border-radius: 999px; overflow: hidden; }
-.nextProgressFill {
-  height: 100%; border-radius: 999px;
-  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-soft) 100%);
-  width: 0%; transition: width 1.6s cubic-bezier(.4,0,.2,1);
-}
-.nextProgressText {
-  display: flex; justify-content: space-between;
-  font-size: 11px; color: var(--muted);
-}
-.nextProgressText .mono { font-size: 11px; color: var(--navy); font-weight: 600; }
 
 /* CTA button (shared by journey + bill) */
 .btnCta {
@@ -322,8 +167,6 @@
 }
 .btnCta:hover { background: var(--navy-2); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(42,26,34,.18); }
 .btnCta svg { width: 14px; height: 14px; }
-.btnCtaLime { background: var(--gold); color: var(--navy); }
-.btnCtaLime:hover { background: var(--gold-soft); box-shadow: 0 6px 20px rgba(200,237,94,.40); }
 
 /* ── CONTENT GRID ────────────────────────── */
 .contentGrid {
@@ -567,13 +410,12 @@
 
 /* ── RESPONSIVE ──────────────────────────── */
 @media (max-width: 1080px) {
-  .hero { grid-template-columns: 1fr; }
   .contentGrid { grid-template-columns: 1fr; }
   .simCard { grid-template-columns: 1fr; }
   .simL { border-right: none; padding-right: 0; border-bottom: 1px solid var(--line-2); padding-bottom: 18px; }
 }
 @media (max-width: 720px) {
-  .jTlPoints .jptCap { display: none; }
+  .trailMarks .val { display: none; }
   .quickGrid { grid-template-columns: 1fr; }
   .histDate { display: none; }
 }
@@ -582,5 +424,5 @@
   .simPills { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .jTlFill, .nextProgressFill, .jTlHouse, .jTlBubble, .houseFloat { animation: none !important; transition: none !important; }
+  .trailFill, .trailMarker, .tmBadge { animation: none !important; transition: none !important; }
 }
