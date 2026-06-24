@@ -13,10 +13,7 @@ import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
 import { getCurrentAccessControlPrincipal } from '../../features/access-control/services';
 import { FMZ_AUTH_SESSION_CHANGED_EVENT } from '../../services/auth/auth-storage';
 import { performFirmezaLogout } from '../../services/auth/fmz-logout';
-import {
-  buildFmzConnectedUserInitials,
-  buildFmzConnectedUserSummary,
-} from './connected-user/fmz-connected-user-storage';
+import { buildFmzConnectedUserInitials } from './connected-user/fmz-connected-user-storage';
 import type {
   FmzAccessControlPage,
   FmzAccessControlPrincipal,
@@ -134,11 +131,6 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
   const [currentPrincipal, setCurrentPrincipal] =
     useState<FmzAccessControlPrincipal | null>(initialPrincipal);
 
-  const syncUserSummary = useCallback(
-    () => setCurrentUser(buildFmzConnectedUserSummary()),
-    [],
-  );
-
   // Sync user summary from initialPrincipal when it arrives.
   useEffect(() => {
     if (!initialPrincipal) return;
@@ -146,37 +138,37 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
     applyPrincipalToUserState(initialPrincipal, setCurrentUser);
   }, [initialPrincipal]);
 
-  // Sync user summary from storage events (wallet change, session change).
-  useEffect(() => {
-    syncUserSummary();
-    window.addEventListener('storage', syncUserSummary);
-    window.addEventListener('walletChanged', syncUserSummary);
-    window.addEventListener(FMZ_AUTH_SESSION_CHANGED_EVENT, syncUserSummary);
-    return () => {
-      window.removeEventListener('storage', syncUserSummary);
-      window.removeEventListener('walletChanged', syncUserSummary);
-      window.removeEventListener(FMZ_AUTH_SESSION_CHANGED_EVENT, syncUserSummary);
-    };
-  }, [syncUserSummary]);
+  // Re-fetches the backend principal — the single source of truth for the
+  // header's name/email/role. Used both as the initial load (when no
+  // initialPrincipal prop was provided) and to re-sync after a session change
+  // (wallet switch, re-login) signaled by FMZ_AUTH_SESSION_CHANGED_EVENT.
+  const loadCurrentAccess = useCallback(async (isMountedRef: { current: boolean }) => {
+    try {
+      const principal = await getCurrentAccessControlPrincipal();
+      if (!isMountedRef.current) return;
+      setCurrentPrincipal(principal);
+      applyPrincipalToUserState(principal, setCurrentUser);
+    } catch {
+      if (isMountedRef.current) setCurrentPrincipal(null);
+    }
+  }, []);
 
-  // Fallback principal load when no initialPrincipal is provided.
   useEffect(() => {
     if (initialPrincipal) return undefined;
+    const isMountedRef = { current: true };
+    void loadCurrentAccess(isMountedRef);
+    return () => { isMountedRef.current = false; };
+  }, [initialPrincipal, loadCurrentAccess]);
 
-    let isMounted = true;
-    const loadCurrentAccess = async () => {
-      try {
-        const principal = await getCurrentAccessControlPrincipal();
-        if (!isMounted) return;
-        setCurrentPrincipal(principal);
-        applyPrincipalToUserState(principal, setCurrentUser);
-      } catch {
-        if (isMounted) setCurrentPrincipal(null);
-      }
+  useEffect(() => {
+    const isMountedRef = { current: true };
+    const handleSessionChanged = () => void loadCurrentAccess(isMountedRef);
+    window.addEventListener(FMZ_AUTH_SESSION_CHANGED_EVENT, handleSessionChanged);
+    return () => {
+      isMountedRef.current = false;
+      window.removeEventListener(FMZ_AUTH_SESSION_CHANGED_EVENT, handleSessionChanged);
     };
-    void loadCurrentAccess();
-    return () => { isMounted = false; };
-  }, [initialPrincipal]);
+  }, [loadCurrentAccess]);
 
   const handleLogout = useCallback(() => {
     performFirmezaLogout({ router, locale: params?.locale });
@@ -195,6 +187,15 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
     [currentPrincipal?.permissionKeys],
   );
 
+  // "Admin" takes precedence as the badge label since it's the broadest role;
+  // otherwise show the first assigned role key, capitalized.
+  const roleLabel = useMemo(() => {
+    if (!currentPrincipal) return null;
+    if (currentPrincipal.isAdmin) return 'Admin';
+    const [firstRole] = currentPrincipal.roleKeys;
+    return firstRole ? firstRole.charAt(0).toUpperCase() + firstRole.slice(1) : null;
+  }, [currentPrincipal]);
+
   const {
     unreadCount: notificationUnreadCount,
     notificationsState,
@@ -211,6 +212,8 @@ export function FmzAdminLayout({ children, initialPrincipal = null }: FmzAdminLa
       {/* Admin header — notification bell lives here, not in the sidebar */}
       <FmzAdminHeader
         locale={params?.locale}
+        currentUser={currentUser}
+        roleLabel={roleLabel}
         unreadCount={notificationUnreadCount}
         notificationsState={notificationsState}
         onFetchNotifications={fetchNotifications}

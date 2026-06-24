@@ -15,7 +15,9 @@ export const fmzAdminShellLayoutConfig = {
 
 export const fmzAdminSidebarLayoutConfig = {
   sidebar: 'z-30 hidden h-full min-h-0 w-[clamp(280px,18vw,320px)] shrink-0 flex-col self-stretch overflow-hidden border-r border-fmz-border-light bg-white lg:flex',
-  navigationArea: 'flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden px-5 py-5',
+  navigationArea: 'flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden px-5 py-5',
+  group: 'flex flex-col gap-1',
+  groupLabel: 'px-3 pb-1 text-[10.5px] font-bold uppercase tracking-[.08em] text-fmz-text-hint',
   link: 'flex min-w-0 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] no-underline transition',
   linkActive: 'bg-[#F0F1F5] font-medium text-fmz-navy',
   linkInactive: 'text-fmz-text-muted hover:bg-fmz-page hover:text-fmz-text-primary',

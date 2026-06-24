@@ -2,11 +2,38 @@
 
 import Link from 'next/link';
 import { LogOut } from 'lucide-react';
-import type { FmzAdminNavigationItem } from '../../config/fmz-admin-navigation-config';
+import {
+  fmzAdminPageGroupByKey,
+  fmzAdminPageGroupOrder,
+  type FmzAdminNavigationItem,
+} from '../../config/fmz-admin-navigation-config';
 import { fmzPublicLayoutConfig } from '../../config/fmz-public-layout-config';
 import { fmzAdminSidebarLayoutConfig } from '../../config/fmz-admin-sidebar-layout-config';
 import { buildFmzLocalizedHref } from '../../lib/fmz-localize-href';
 import { fmzCn } from '../../lib/fmz-classnames';
+
+const FALLBACK_GROUP = 'Outros';
+
+/**
+ * Buckets items by their configured sidebar group, preserving each item's
+ * existing order within its bucket. Items without a configured group fall
+ * back to the last entry in fmzAdminPageGroupOrder ('Outros').
+ */
+const buildAdminSidebarGroups = (
+  items: readonly FmzAdminNavigationItem[],
+): { group: string; items: FmzAdminNavigationItem[] }[] => {
+  const itemsByGroup = new Map<string, FmzAdminNavigationItem[]>();
+  items.forEach((item) => {
+    const group = fmzAdminPageGroupByKey[item.pageKey] ?? FALLBACK_GROUP;
+    const bucket = itemsByGroup.get(group);
+    if (bucket) bucket.push(item);
+    else itemsByGroup.set(group, [item]);
+  });
+
+  return fmzAdminPageGroupOrder
+    .map((group) => ({ group, items: itemsByGroup.get(group) ?? [] }))
+    .filter((section) => section.items.length > 0);
+};
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -44,18 +71,24 @@ export function FmzAdminSidebar({
       !item.requiredPermissionKey ||
       effectivePermissionKeys.has(item.requiredPermissionKey.toLowerCase()),
   );
+  const groupedSections = buildAdminSidebarGroups(visibleItems);
 
   return (
     <aside className={fmzAdminSidebarLayoutConfig.sidebar}>
       <div className={fmzAdminSidebarLayoutConfig.navigationArea}>
-        {visibleItems.length ? (
-          visibleItems.map((item) => (
-            <FmzAdminSidebarLink
-              key={item.id}
-              item={item}
-              locale={locale}
-              pathname={pathname}
-            />
+        {groupedSections.length ? (
+          groupedSections.map((section) => (
+            <div key={section.group} className={fmzAdminSidebarLayoutConfig.group}>
+              <p className={fmzAdminSidebarLayoutConfig.groupLabel}>{section.group}</p>
+              {section.items.map((item) => (
+                <FmzAdminSidebarLink
+                  key={item.id}
+                  item={item}
+                  locale={locale}
+                  pathname={pathname}
+                />
+              ))}
+            </div>
           ))
         ) : (
           <div className={fmzAdminSidebarLayoutConfig.emptyState}>

@@ -1,4 +1,4 @@
-import { Activity, Building2, Coins, FileText, Home, LucideIcon, Mail, ReceiptText, Receipt, ScanFace, ShieldCheck, SlidersHorizontal, UserRound, Wrench } from 'lucide-react';
+import { Activity, Bell, Building2, Calculator, Coins, FileText, HandCoins, Home, LucideIcon, Mail, ReceiptText, Receipt, ScanFace, ShieldCheck, SlidersHorizontal, UserRound, Wrench } from 'lucide-react';
 import { fmzPublicLayoutConfig } from './fmz-public-layout-config';
 import { getPublicEnvValue } from '../lib/fmz-env';
 
@@ -28,10 +28,38 @@ export const fmzAdminPageIconByKey: Record<string, LucideIcon> = {
   'admin.rent_charges': Receipt,
   'admin.kyc': ScanFace,
   'admin.token_orders': Coins,
+  'admin.co_owner_payouts': HandCoins,
+  'admin.tokenomics.calculator': Calculator,
+  'admin.notifications': Bell,
   'admin.email_sending': Mail,
   'admin.email_logs': Mail,
   'admin.invites': Mail,
 };
+
+// Visual grouping for the sidebar section labels (e.g. "PRINCIPAL", "FINANCEIRO").
+// Pages without an entry fall back to the last group ('Outros') in
+// fmzAdminPageGroupOrder — see buildAdminSidebarGroups in FmzAdminSidebar.tsx.
+export const fmzAdminPageGroupByKey: Record<string, string> = {
+  'admin.dashboard': 'Principal',
+  'admin.users': 'Principal',
+  'admin.roles': 'Principal',
+  'admin.tenant_settings': 'Principal',
+  'admin.properties': 'Conformidade',
+  'admin.kyc': 'Conformidade',
+  'admin.contract.upload': 'Conformidade',
+  'admin.tokenomics.calculator': 'Tokens',
+  'admin.token_orders': 'Tokens',
+  'admin.rent_charges': 'Financeiro',
+  'admin.co_owner_payouts': 'Financeiro',
+  'admin.notifications': 'Comunicação',
+  'admin.email_sending': 'Comunicação',
+  'admin.email_logs': 'Comunicação',
+  'admin.invites': 'Comunicação',
+};
+
+// Render order of the groups above. Any pageKey missing from
+// fmzAdminPageGroupByKey is rendered last, under this label.
+export const fmzAdminPageGroupOrder: string[] = ['Principal', 'Conformidade', 'Tokens', 'Financeiro', 'Comunicação', 'Outros'];
 
 export const fmzAdminNavigationConfig = {
   currentUserAccessPath: getPublicEnvValue('NEXT_PUBLIC_FMZ_CURRENT_ACCESS_PATH', '/me/access'),
