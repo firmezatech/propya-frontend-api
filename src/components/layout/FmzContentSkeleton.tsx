@@ -169,11 +169,10 @@ export function FmzWalletSkeleton() {
 
 // ── Contract skeleton ───────────────────────────────────────────────────────────
 
-// Mirrors the real FmzTenantContractPage layout: page head (title + status pill
-// + actions), hero (property card + ownership card), a 3-up metrics strip, and a
-// two-column content grid (documents + economy/timeline). Breakpoints match the
-// page CSS exactly — hero/content collapse below 981px, metrics step 3→2→1 at
-// 900px / 600px — so the skeleton never disagrees with the loaded layout.
+// Mirrors the real FmzTenantContractPage layout (references/Meu Imóvel v2.html):
+// page head (title + status pill + actions), a gallery hero, an address + specs
+// card, and the documents grid. No ownership/metrics/timeline placeholders here —
+// the real page doesn't render those sections.
 
 export function FmzContractSkeleton() {
   return (
@@ -185,50 +184,31 @@ export function FmzContractSkeleton() {
           <SkBox height="h-3" width="w-40" className="rounded-full" />
         </div>
         <div className="flex gap-2">
-          <SkBox height="h-9" width="w-28" className="rounded-xl" />
-          <SkBox height="h-9" width="w-32" className="rounded-xl" />
+          <SkBox height="h-9" width="w-36" className="rounded-xl" />
+          <SkBox height="h-9" width="w-36" className="rounded-xl" />
         </div>
       </div>
 
-      {/* Hero: property card + ownership card */}
-      <div className="grid grid-cols-1 gap-[18px] min-[981px]:grid-cols-[1.4fr_1fr]">
-        <div className={`${SKELETON_CARD} p-6 space-y-4`}>
-          <SkBox height="h-3" width="w-20" />
-          <SkBox height="h-6" width="w-3/4" />
-          <SkBox height="h-3" width="w-40" />
-          <div className="grid grid-cols-3 gap-3 pt-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <SkBox key={i} height="h-10" width="w-full" className="rounded-lg" />
-            ))}
-          </div>
-        </div>
-        <div className={`${SKELETON_CARD} flex flex-col items-center gap-4 p-6`}>
-          <SkBox height="h-3" width="w-24" className="self-start" />
-          <SkBox height="h-28" width="w-28" className="rounded-full" />
-          <SkBox height="h-3" width="w-32" />
-          <SkBox height="h-3" width="w-24" />
+      {/* Gallery hero */}
+      <SkBox height="h-80" width="w-full" className="rounded-2xl" />
+
+      {/* Address + specs card */}
+      <div className={`${SKELETON_CARD} space-y-4 p-6`}>
+        <SkBox height="h-3" width="w-20" />
+        <SkBox height="h-5" width="w-2/3" />
+        <SkBox height="h-3" width="w-1/3" />
+        <div className="grid grid-cols-2 gap-3 pt-2 min-[981px]:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <SkBox key={i} height="h-10" width="w-full" className="rounded-lg" />
+          ))}
         </div>
       </div>
 
-      {/* Metrics strip */}
-      <div className="grid grid-cols-1 gap-[14px] min-[601px]:grid-cols-2 min-[901px]:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className={`${SKELETON_CARD} p-5 space-y-2`}>
-            <SkBox height="h-3" width="w-24" />
-            <SkBox height="h-7" width="w-28" />
-            <SkBox height="h-3" width="w-20" />
-          </div>
-        ))}
-      </div>
-
-      {/* Content grid: documents + economy/timeline */}
-      <div className="grid grid-cols-1 items-start gap-[18px] min-[981px]:grid-cols-[1.1fr_1.4fr]">
-        <div className={`${SKELETON_CARD} p-6 space-y-4`}>
-          <div className="flex items-center justify-between">
-            <SkBox height="h-4" width="w-32" />
-            <SkBox height="h-3" width="w-20" />
-          </div>
-          {Array.from({ length: 3 }).map((_, i) => (
+      {/* Documents card */}
+      <div className={`${SKELETON_CARD} p-6 space-y-4`}>
+        <SkBox height="h-4" width="w-32" />
+        <div className="grid grid-cols-1 gap-3 min-[981px]:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 rounded-xl border border-fmz-border-light p-3">
               <SkBox height="h-9" width="w-9" className="rounded-lg shrink-0" />
               <div className="flex-1 space-y-2">
@@ -237,19 +217,6 @@ export function FmzContractSkeleton() {
               </div>
             </div>
           ))}
-        </div>
-        <div className={`${SKELETON_CARD} p-6 space-y-4`}>
-          <SkBox height="h-4" width="w-36" />
-          <SkBox height="h-8" width="w-44" />
-          <SkBox height="h-12" width="w-full" className="rounded-xl" />
-          <div className="space-y-3 pt-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <SkBox height="h-3" width="w-32" />
-                <SkBox height="h-3" width="w-16" />
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

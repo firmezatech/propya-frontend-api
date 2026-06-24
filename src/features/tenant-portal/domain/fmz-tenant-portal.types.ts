@@ -103,6 +103,10 @@ export type FmzTenantProperty = {
   registryNumber?: string | null;
   appraisedValue?: number | null;
   currency?: string | null;
+  totalAreaM2?: number | null;
+  bedroomsCount?: number | null;
+  monthlyCondoFeeAmount?: number | null;
+  annualPropertyTaxAmount?: number | null;
 };
 
 export type FmzTenantAnnualAdjustment = {
