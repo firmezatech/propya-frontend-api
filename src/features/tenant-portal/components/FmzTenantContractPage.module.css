@@ -3,7 +3,6 @@
   --gold: #C8ED5E;
   --gold-deep: #2A1A22;
   --navy: #2A1A22;
-  --navy-2: #3D2A33;
   --muted: #6F6168;
   --hint: #9B9097;
   --line: #EAE7E5;
@@ -29,13 +28,6 @@
 .pageHeadSub { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pageHeadPill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: .02em; padding: 4px 10px; border-radius: 999px; background: var(--green-tint); color: var(--green); }
 .pageHeadPillDot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-.pageHeadRight { display: flex; gap: 8px; flex-shrink: 0; }
-
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-size: 13px; font-weight: 600; color: var(--navy); cursor: pointer; transition: all .15s; font-family: inherit; text-decoration: none; }
-.btn:hover { border-color: #D0D4DE; background: #FAFBFC; }
-.btn svg { width: 15px; height: 15px; }
-.btnPrimary { background: var(--navy); color: #fff; border-color: var(--navy); }
-.btnPrimary:hover { background: var(--navy-2); border-color: var(--navy-2); }
 
 /* ── GALLERY ──────────────────────────────────── */
 .gallery { margin-bottom: 30px; }

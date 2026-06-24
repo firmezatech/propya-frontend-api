@@ -170,23 +170,17 @@ export function FmzWalletSkeleton() {
 // ── Contract skeleton ───────────────────────────────────────────────────────────
 
 // Mirrors the real FmzTenantContractPage layout (references/Meu Imóvel v2.html):
-// page head (title + status pill + actions), a gallery hero, an address + specs
-// card, and the documents grid. No ownership/metrics/timeline placeholders here —
-// the real page doesn't render those sections.
+// page head (title + status pill), a gallery hero, an address + specs card, and
+// the documents grid. No ownership/metrics/timeline/action-button placeholders
+// here — the real page doesn't render those.
 
 export function FmzContractSkeleton() {
   return (
     <div className="space-y-7 py-4" aria-label="Carregando contrato" aria-busy="true">
       {/* Page head */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="space-y-2">
-          <SkBox height="h-8" width="w-56" />
-          <SkBox height="h-3" width="w-40" className="rounded-full" />
-        </div>
-        <div className="flex gap-2">
-          <SkBox height="h-9" width="w-36" className="rounded-xl" />
-          <SkBox height="h-9" width="w-36" className="rounded-xl" />
-        </div>
+      <div className="space-y-2">
+        <SkBox height="h-8" width="w-56" />
+        <SkBox height="h-3" width="w-40" className="rounded-full" />
       </div>
 
       {/* Gallery hero */}

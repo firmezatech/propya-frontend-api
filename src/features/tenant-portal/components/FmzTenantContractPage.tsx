@@ -6,7 +6,6 @@ import {
   ClipboardList,
   FileText,
   Home,
-  MessageCircle,
   Search,
   ShieldCheck,
   type LucideIcon,
@@ -256,20 +255,12 @@ export function FmzTenantContractPage({ contractPage, contractDocumentUrl }: Fmz
             {contract?.startDate && <span>Locação iniciada em {formatDate(contract.startDate)}</span>}
           </div>
         </div>
-        <div className={styles.pageHeadRight}>
-          <a href="/connected/coming-soon" className={styles.btn}>
-            <MessageCircle /> Falar com a gestora
-          </a>
-          <a href="#documentos-do-imovel" className={`${styles.btn} ${styles.btnPrimary}`}>
-            <FileText /> Baixar documentos
-          </a>
-        </div>
       </div>
 
       <PropertyGallery address={address} />
       <PropertyAbout address={address} registryCode={registryCode} specs={specs} />
 
-      <div className={styles.sectionLabel} id="documentos-do-imovel">
+      <div className={styles.sectionLabel}>
         <span className={styles.sectionLabelTitle}>Documentos do imóvel</span>
       </div>
       <TenantDocumentList documents={documents} />
