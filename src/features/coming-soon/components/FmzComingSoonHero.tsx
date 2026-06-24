@@ -7,19 +7,20 @@ type FmzComingSoonHeroProps = {
   description: React.ReactNode;
   homeHref: string;
   homeLabel: string;
+  showReloadButton?: boolean;
 };
 
 /**
  * Layout-agnostic "coming soon" hero — ring animation, badge, tag, copy and the
- * two actions (go home / reload). Has no header or footer of its own, so it
- * renders correctly both standalone on a public page (see
- * FmzPropertiesComingSoonPage, wrapped in FmzAuthHeader/FmzPublicFooter) and
- * inside the connected app shell (see /connected/coming-soon, which already
- * gets its chrome from FmzConnectedLayoutFrame).
+ * "go home" action (plus an optional "reload" action, on by default). Has no
+ * header or footer of its own, so it renders correctly both standalone on a
+ * public page (see FmzPropertiesComingSoonPage, wrapped in
+ * FmzAuthHeader/FmzPublicFooter) and inside the connected app shell (see
+ * /connected/coming-soon, which already gets its chrome from FmzConnectedLayoutFrame).
  *
  * Visual reference: references/Em Breve.html.
  */
-export function FmzComingSoonHero({ title, description, homeHref, homeLabel }: FmzComingSoonHeroProps) {
+export function FmzComingSoonHero({ title, description, homeHref, homeLabel, showReloadButton = true }: FmzComingSoonHeroProps) {
   return (
     <div className={styles.shell}>
       <div className={styles.soon}>
@@ -44,14 +45,16 @@ export function FmzComingSoonHero({ title, description, homeHref, homeLabel }: F
             <ArrowLeft size={15} aria-hidden="true" />
             {homeLabel}
           </Link>
-          <button
-            type="button"
-            className={`${styles.btn} ${styles.btnOutline}`}
-            onClick={() => window.location.reload()}
-          >
-            <RotateCw size={15} aria-hidden="true" />
-            Atualizar
-          </button>
+          {showReloadButton && (
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.btnOutline}`}
+              onClick={() => window.location.reload()}
+            >
+              <RotateCw size={15} aria-hidden="true" />
+              Atualizar
+            </button>
+          )}
         </div>
 
         <span className={styles.foot}>Estamos trabalhando nisso · Equipe Propya 💚</span>
