@@ -5,6 +5,33 @@
   "badge": "transacional",
   "subject": "Redefinir sua senha na Propya",
   "fields": [
-    { "id": "name", "label": "Nome da pessoa", "type": "text", "placeholder": "Diana Aguilar", "required": true }
+    {
+      "id": "name",
+      "label": "Nome da pessoa",
+      "type": "text",
+      "placeholder": "Diana Aguilar",
+      "required": true
+    },
+    {
+      "id": "ctaUrl",
+      "label": "Link para redefinir senha",
+      "type": "url",
+      "placeholder": "Gerado automaticamente ao selecionar a destinatária",
+      "required": true
+    },
+    {
+      "id": "heroTitle",
+      "label": "Título principal",
+      "type": "text",
+      "placeholder": "Vamos redefinir sua senha.",
+      "required": true
+    },
+    {
+      "id": "heroBody",
+      "label": "Parágrafo de apoio",
+      "type": "textarea",
+      "placeholder": "Clique no botão abaixo para criar uma nova senha. O link é válido pelos próximos 30 minutos.",
+      "required": true
+    }
   ]
 }

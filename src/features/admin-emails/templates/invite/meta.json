@@ -5,8 +5,47 @@
   "badge": "transacional",
   "subject": "Você foi convidada para {{property}} — Propya",
   "fields": [
-    { "id": "name",       "label": "Nome da inquilina",   "type": "text",     "placeholder": "Diana Aguilar",                  "required": true },
-    { "id": "propertyId", "label": "Imóvel",              "type": "property", "placeholder": "Selecione um imóvel registrado", "required": true },
-    { "id": "expiry",     "label": "Validade do convite", "type": "date",     "placeholder": "30 de junho de 2026",            "required": true }
+    {
+      "id": "name",
+      "label": "Nome da inquilina",
+      "type": "text",
+      "placeholder": "Diana Aguilar",
+      "required": true
+    },
+    {
+      "id": "propertyId",
+      "label": "Imóvel",
+      "type": "property",
+      "placeholder": "Selecione um imóvel registrado",
+      "required": true
+    },
+    {
+      "id": "expiry",
+      "label": "Validade do convite",
+      "type": "date",
+      "placeholder": "30 de junho de 2026",
+      "required": true
+    },
+    {
+      "id": "ctaUrl",
+      "label": "Link do convite",
+      "type": "url",
+      "placeholder": "Gerado automaticamente",
+      "required": true
+    },
+    {
+      "id": "heroTitle",
+      "label": "Título principal",
+      "type": "text",
+      "placeholder": "Você foi convidada para o seu novo lar.",
+      "required": true
+    },
+    {
+      "id": "heroBody",
+      "label": "Parágrafo de apoio",
+      "type": "textarea",
+      "placeholder": "A Propya tem um convite especial para você. Alugue o imóvel e, ao mesmo tempo, comece a comprá-lo token a token — cada pagamento vira posse real.",
+      "required": true
+    }
   ]
 }

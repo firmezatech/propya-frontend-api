@@ -168,12 +168,15 @@ export function FmzAdminEmailComposerPage() {
                   vars={hook.vars}
                   previewLoading={hook.previewLoading}
                   onVarChange={hook.setVar}
+                  onFieldBlur={hook.commitFieldOverride}
                 />
               </AccordionSection>
             )}
           </div>
 
-          {/* Subject bar */}
+          {/* Subject bar — editable + saved as the new default on blur (D-15), same
+              mechanism as the fields above, just not routed through FmzFieldsCustomizer
+              since `subject` isn't part of `template.fields`/`vars`. */}
           <div className="shrink-0 border-t border-fmz-border-light px-4 py-3">
             <div className="flex items-center gap-2 rounded-lg border border-fmz-border-light bg-fmz-page px-3 py-2">
               <span className="shrink-0 text-xs font-medium text-fmz-text-hint">Assunto:</span>
@@ -181,6 +184,7 @@ export function FmzAdminEmailComposerPage() {
                 type="text"
                 value={hook.subject}
                 onChange={(e) => hook.setSubject(e.target.value)}
+                onBlur={(e) => hook.commitFieldOverride('subject', e.target.value)}
                 placeholder="Assunto do e-mail…"
                 className="min-w-0 flex-1 bg-transparent text-sm text-fmz-text-primary placeholder-fmz-text-hint outline-none"
               />

@@ -11,6 +11,12 @@ type Props = {
   vars: Record<string, string>;
   previewLoading: boolean;
   onVarChange: (fieldId: string, value: string) => void;
+  // Fired on blur of a 'url'/'text'/'textarea' field, after onVarChange — lets the
+  // caller persist the edit as a new default (D-15) without writing on every
+  // keystroke. Optional, and fired unconditionally for those types: the hook decides
+  // per-field whether the edit is actually savable (e.g. "name" isn't, "heroTitle"
+  // is), this component doesn't need to know about that rule.
+  onFieldBlur?: (fieldId: string, value: string) => void;
 };
 
 // focus-within (além de focus) porque também é usada como wrapperClassName de FmzSelect/
@@ -70,7 +76,7 @@ function FmzPropertySelectField({
   );
 }
 
-export function FmzFieldsCustomizer({ template, vars, previewLoading, onVarChange }: Props) {
+export function FmzFieldsCustomizer({ template, vars, previewLoading, onVarChange, onFieldBlur }: Props) {
   if (!template.fields.length) {
     return (
       <p className="py-4 text-center text-sm text-fmz-text-hint">
@@ -103,11 +109,21 @@ export function FmzFieldsCustomizer({ template, vars, previewLoading, onVarChang
               onChange={(e) => onVarChange(field.id, e.target.value)}
               wrapperClassName={inputCls}
             />
+          ) : field.type === 'textarea' ? (
+            <textarea
+              value={vars[field.id] ?? ''}
+              onChange={(e) => onVarChange(field.id, e.target.value)}
+              onBlur={(e) => onFieldBlur?.(field.id, e.target.value)}
+              placeholder={field.placeholder || field.label}
+              rows={3}
+              className={`${inputCls} resize-y`}
+            />
           ) : (
             <input
               type={field.type === 'url' ? 'url' : 'text'}
               value={vars[field.id] ?? ''}
               onChange={(e) => onVarChange(field.id, e.target.value)}
+              onBlur={(e) => onFieldBlur?.(field.id, e.target.value)}
               placeholder={field.placeholder || field.label}
               className={inputCls}
             />

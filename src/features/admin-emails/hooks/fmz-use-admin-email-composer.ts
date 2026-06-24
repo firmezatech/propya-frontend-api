@@ -3,17 +3,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   createInvite,
+  fetchEmailTemplateFieldOverrides,
   fetchEmailTemplates,
   fetchPasswordResetLink,
   fetchTemplatePreview,
+  saveEmailTemplateFieldOverride,
   sendAdminEmail,
 } from '../services/fmz-admin-email-api';
 import { getPlatformInfo } from '../../tenant-portal/services/fmz-platform-info-api';
-import type {
-  FmzAdminEmailComposerHook,
-  FmzAdminEmailComposerSection,
-  FmzAdminEmailRecipient,
-  FmzEmailTemplateMeta,
+import {
+  getSavableEmailFieldKind,
+  type FmzAdminEmailComposerHook,
+  type FmzAdminEmailComposerSection,
+  type FmzAdminEmailRecipient,
+  type FmzEmailTemplateMeta,
 } from '../domain/fmz-admin-emails.types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -80,6 +83,11 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
   const resetLinkGenerationRef = useRef(0);
   const inviteCreationDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Admin-edited default field values (D-15) — keyed by `${templateId}.${fieldId}`.
+  // State (not a ref): the seeding effect below must re-run if a template gets
+  // selected before this finishes loading, which only happens if it's reactive.
+  const [fieldOverrides, setFieldOverrides] = useState<Record<string, string>>({});
+
   // ── Load templates on mount ─────────────────────────────────────────────────
 
   useEffect(() => {
@@ -95,6 +103,43 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
   // ── Load platform identity vars once per composer session (D-12) ───────────
   // Cached in a ref (not state) — these vars never trigger a re-render on their own;
   // they're merged into `vars` only at the moment of preview/send.
+
+  // ── Load admin-edited default field values once per composer session (D-15) ─
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchEmailTemplateFieldOverrides()
+      .then((overrides) => {
+        if (cancelled) return;
+        setFieldOverrides(Object.fromEntries(overrides.map((o) => [`${o.templateId}.${o.fieldId}`, o.value])));
+      })
+      .catch(() => { /* no saved overrides yet, or fetch failed — templates fall back to their hard-coded default */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  // ── Seed savable fields from the saved default the moment a template is
+  // selected (or the moment overrides finish loading, if that happens after).
+  // 'text' fields (hero title/body) fall back to the template's original copy
+  // (its `placeholder`) when there's no override yet — they're required, so they
+  // can't start out blank. 'url' fields have no such fallback here: either a saved
+  // override fills them, or the admin types one, or a dedicated effect below
+  // computes one (verificar-identidade, convite-investidor). ─────────────────────
+
+  useEffect(() => {
+    if (!selectedTemplate) return;
+
+    const seeded: Record<string, string> = {};
+    for (const field of selectedTemplate.fields) {
+      const kind = getSavableEmailFieldKind(selectedTemplate.id, field.id);
+      if (!kind) continue;
+      const saved = fieldOverrides[`${selectedTemplate.id}.${field.id}`];
+      const value = saved ?? (kind === 'text' ? field.placeholder : undefined);
+      if (value) seeded[field.id] = value;
+    }
+    if (Object.keys(seeded).length === 0) return;
+
+    setVarsState((prev) => ({ ...seeded, ...prev }));
+  }, [selectedTemplate, fieldOverrides]);
 
   useEffect(() => {
     let cancelled = false;
@@ -137,25 +182,28 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
   // ── Auto-fill ctaUrl for verificar-identidade — URL is constant per environment ──
   // No API call needed: the KYC page is always at origin/connected/identity-verification.
   // Mirrors the reset-senha / invite pattern: auto-fill without admin typing anything.
+  // The saved override (D-15), if any, wins over the computed default — checked here
+  // (not just in the seeding effect above) because this effect runs after it and would
+  // otherwise clobber the seeded value back to the hard-coded default on every render.
 
   useEffect(() => {
     if (selectedTemplate?.id !== 'verificar-identidade') return;
-    const kycUrl = `${window.location.origin}/connected/identity-verification`;
+    const kycUrl = fieldOverrides['verificar-identidade.ctaUrl'] ?? `${window.location.origin}/connected/identity-verification`;
     setVarsState((prev) => ({ ...prev, ctaUrl: kycUrl }));
-  }, [selectedTemplate]);
+  }, [selectedTemplate, fieldOverrides]);
 
   // ── Auto-fill URLs for convite-investidor — both links are fixed platform URLs ──
   // The registration and property-listing pages live at a known public domain;
-  // the admin never needs to type them.
+  // the admin never needs to type them. Saved overrides (D-15) win — see comment above.
 
   useEffect(() => {
     if (selectedTemplate?.id !== 'convite-investidor') return;
     setVarsState((prev) => ({
       ...prev,
-      ctaUrl:        'https://app.propya.ai/pt/register',
-      propertiesUrl: 'https://app.propya.ai/imoveis',
+      ctaUrl:        fieldOverrides['convite-investidor.ctaUrl'] ?? 'https://app.propya.ai/pt/register',
+      propertiesUrl: fieldOverrides['convite-investidor.propertiesUrl'] ?? 'https://app.propya.ai/imoveis',
     }));
-  }, [selectedTemplate]);
+  }, [selectedTemplate, fieldOverrides]);
 
   // ── Auto-generate tenant invite link for invite (D-14), 280 ms debounced ───
   // Single recipient + invite template → create the invite (any email is valid here,
@@ -236,11 +284,11 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
     ++resetLinkGenerationRef.current;
     setSelectedTemplate(template);
     setVarsState({});
-    setSubjectState(template.subject);
+    setSubjectState(fieldOverrides[`${template.id}.subject`] ?? template.subject);
     setPreviewHtml('');
     setPreviewLoading(false);
     setOpenSectionState('recipients');
-  }, []);
+  }, [fieldOverrides]);
 
   const setRecipients = useCallback((list: FmzAdminEmailRecipient[]) => {
     setRecipientsState(list);
@@ -249,6 +297,27 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
   const setVar = useCallback((fieldId: string, value: string) => {
     setVarsState((prev) => ({ ...prev, [fieldId]: value }));
   }, []);
+
+  // Persists the admin's edit as the new default for this template+field (D-15).
+  // Called on blur, not on every keystroke — a savable field is edited rarely, so
+  // there's no reason to debounce a write request the way the preview/invite
+  // effects do. Best-effort: a failed save must not block sending the current email,
+  // it only means the NEXT composer session won't see the new default. Used both for
+  // template.fields entries (ctaUrl, heroTitle, heroBody, via FmzFieldsCustomizer) and
+  // for `subject` (a separate top-level field, committed directly from the composer page).
+  const commitFieldOverride = useCallback((fieldId: string, value: string) => {
+    const templateId = selectedTemplate?.id;
+    if (!templateId || !getSavableEmailFieldKind(templateId, fieldId)) return;
+
+    const trimmed = value.trim();
+    if (!trimmed || fieldOverrides[`${templateId}.${fieldId}`] === trimmed) return;
+
+    setFieldOverrides((prev) => ({ ...prev, [`${templateId}.${fieldId}`]: trimmed }));
+    saveEmailTemplateFieldOverride(templateId, fieldId, trimmed).catch(() => {
+      // Best-effort — see comment above. Nothing to roll back: the in-memory map
+      // only affects this session's defaults, and is re-fetched fresh next time.
+    });
+  }, [selectedTemplate, fieldOverrides]);
 
   const setSubject = useCallback((value: string) => {
     setSubjectState(value);
@@ -328,6 +397,7 @@ export function useFmzAdminEmailComposer(): FmzAdminEmailComposerHook {
     selectTemplate,
     setRecipients,
     setVar,
+    commitFieldOverride,
     setSubject,
     setOpenSection,
     openSendModal,

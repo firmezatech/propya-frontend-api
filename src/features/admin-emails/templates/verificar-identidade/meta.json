@@ -4,5 +4,27 @@
   "category": "KYC",
   "badge": "ação obrigatória",
   "subject": "Verificação de identidade pendente — Propya",
-  "fields": []
+  "fields": [
+    {
+      "id": "ctaUrl",
+      "label": "Link de verificação de identidade",
+      "type": "url",
+      "placeholder": "Gerado automaticamente",
+      "required": true
+    },
+    {
+      "id": "heroTitle",
+      "label": "Título principal",
+      "type": "text",
+      "placeholder": "Só falta verificar sua identidade.",
+      "required": true
+    },
+    {
+      "id": "heroBody",
+      "label": "Parágrafo de apoio",
+      "type": "textarea",
+      "placeholder": "Para garantir a segurança de todos os participantes da plataforma e cumprir as exigências regulatórias, precisamos confirmar quem você é antes de liberar compras de tokens e assinatura de contratos.",
+      "required": true
+    }
+  ]
 }

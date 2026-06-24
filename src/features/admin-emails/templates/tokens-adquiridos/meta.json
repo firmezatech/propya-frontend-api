@@ -5,10 +5,54 @@
   "badge": "transacional",
   "subject": "Compra confirmada — +{{quantity}} tokens do {{property}}",
   "fields": [
-    { "id": "name", "label": "Nome da pessoa", "type": "text", "placeholder": "Diana Aguilar", "required": true },
-    { "id": "quantity", "label": "Tokens adquiridos", "type": "text", "placeholder": "12", "required": true },
-    { "id": "amount", "label": "Total pago (R$)", "type": "text", "placeholder": "1.000,00", "required": true },
-    { "id": "property", "label": "Nome do imóvel", "type": "text", "placeholder": "Residencial Jardim Aurora · 502", "required": true },
-    { "id": "ctaUrl", "label": "Link da carteira", "type": "url", "placeholder": "https://app.firmezatoken.com.br/carteira", "required": true }
+    {
+      "id": "name",
+      "label": "Nome da pessoa",
+      "type": "text",
+      "placeholder": "Diana Aguilar",
+      "required": true
+    },
+    {
+      "id": "quantity",
+      "label": "Tokens adquiridos",
+      "type": "text",
+      "placeholder": "12",
+      "required": true
+    },
+    {
+      "id": "amount",
+      "label": "Total pago (R$)",
+      "type": "text",
+      "placeholder": "1.000,00",
+      "required": true
+    },
+    {
+      "id": "property",
+      "label": "Nome do imóvel",
+      "type": "text",
+      "placeholder": "Residencial Jardim Aurora · 502",
+      "required": true
+    },
+    {
+      "id": "ctaUrl",
+      "label": "Link da carteira",
+      "type": "url",
+      "placeholder": "https://app.firmezatoken.com.br/carteira",
+      "required": true
+    },
+    {
+      "id": "heroTitle",
+      "label": "Título principal",
+      "type": "text",
+      "placeholder": "Você agora possui mais {{quantity}} tokens do seu imóvel.",
+      "required": true
+    },
+    {
+      "id": "heroBody",
+      "label": "Parágrafo de apoio",
+      "type": "textarea",
+      "placeholder": "A compra foi liquidada e os tokens já estão registrados na sua carteira.",
+      "required": true
+    }
   ]
 }

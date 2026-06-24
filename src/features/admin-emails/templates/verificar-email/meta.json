@@ -5,7 +5,33 @@
   "badge": "transacional",
   "subject": "Confirme seu e-mail na Propya",
   "fields": [
-    { "id": "name", "label": "Nome da pessoa", "type": "text", "placeholder": "Diana Aguilar", "required": true },
-    { "id": "ctaUrl", "label": "Link de verificação", "type": "url", "placeholder": "https://app.firmezatoken.com.br/verify?t=...", "required": true }
+    {
+      "id": "name",
+      "label": "Nome da pessoa",
+      "type": "text",
+      "placeholder": "Diana Aguilar",
+      "required": true
+    },
+    {
+      "id": "ctaUrl",
+      "label": "Link de verificação",
+      "type": "url",
+      "placeholder": "https://app.firmezatoken.com.br/verify?t=...",
+      "required": true
+    },
+    {
+      "id": "heroTitle",
+      "label": "Título principal",
+      "type": "text",
+      "placeholder": "Confirme seu e-mail para continuar.",
+      "required": true
+    },
+    {
+      "id": "heroBody",
+      "label": "Parágrafo de apoio",
+      "type": "textarea",
+      "placeholder": "Falta só um clique para ativar sua conta. O link abaixo é único e válido pelas próximas 24 horas.",
+      "required": true
+    }
   ]
 }

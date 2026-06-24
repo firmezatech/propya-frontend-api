@@ -5,7 +5,33 @@
   "badge": "transacional",
   "subject": "Bem-vinda à Propya, {{name}}! 🎉",
   "fields": [
-    { "id": "name", "label": "Nome da pessoa", "type": "text", "placeholder": "Diana Aguilar", "required": true },
-    { "id": "ctaUrl", "label": "Link do botão", "type": "url", "placeholder": "https://app.firmezatoken.com.br", "required": true }
+    {
+      "id": "name",
+      "label": "Nome da pessoa",
+      "type": "text",
+      "placeholder": "Diana Aguilar",
+      "required": true
+    },
+    {
+      "id": "ctaUrl",
+      "label": "Link do botão",
+      "type": "url",
+      "placeholder": "https://app.firmezatoken.com.br",
+      "required": true
+    },
+    {
+      "id": "heroTitle",
+      "label": "Título principal",
+      "type": "text",
+      "placeholder": "Que bom ter você com a gente, {{name}}.",
+      "required": true
+    },
+    {
+      "id": "heroBody",
+      "label": "Parágrafo de apoio",
+      "type": "textarea",
+      "placeholder": "Na Propya o imóvel deixa de ser um sonho distante. Você pode alugar enquanto compra a sua casa, token a token — ou investir em imóveis de outras pessoas e receber aluguel todo mês.",
+      "required": true
+    }
   ]
 }

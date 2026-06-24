@@ -5,10 +5,54 @@
   "badge": "transacional",
   "subject": "Repasse confirmado — você recebeu R$ {{amount}} pela venda",
   "fields": [
-    { "id": "name", "label": "Nome da pessoa", "type": "text", "placeholder": "Diana Aguilar", "required": true },
-    { "id": "quantity", "label": "Tokens vendidos", "type": "text", "placeholder": "8", "required": true },
-    { "id": "amount", "label": "Valor líquido (R$)", "type": "text", "placeholder": "717,80", "required": true },
-    { "id": "property", "label": "Nome do imóvel", "type": "text", "placeholder": "Residencial Jardim Aurora · 502", "required": true },
-    { "id": "ctaUrl", "label": "Link da carteira", "type": "url", "placeholder": "https://app.firmezatoken.com.br/carteira", "required": true }
+    {
+      "id": "name",
+      "label": "Nome da pessoa",
+      "type": "text",
+      "placeholder": "Diana Aguilar",
+      "required": true
+    },
+    {
+      "id": "quantity",
+      "label": "Tokens vendidos",
+      "type": "text",
+      "placeholder": "8",
+      "required": true
+    },
+    {
+      "id": "amount",
+      "label": "Valor líquido (R$)",
+      "type": "text",
+      "placeholder": "717,80",
+      "required": true
+    },
+    {
+      "id": "property",
+      "label": "Nome do imóvel",
+      "type": "text",
+      "placeholder": "Residencial Jardim Aurora · 502",
+      "required": true
+    },
+    {
+      "id": "ctaUrl",
+      "label": "Link da carteira",
+      "type": "url",
+      "placeholder": "https://app.firmezatoken.com.br/carteira",
+      "required": true
+    },
+    {
+      "id": "heroTitle",
+      "label": "Título principal",
+      "type": "text",
+      "placeholder": "Seus tokens foram vendidos, {{name}}.",
+      "required": true
+    },
+    {
+      "id": "heroBody",
+      "label": "Parágrafo de apoio",
+      "type": "textarea",
+      "placeholder": "Vendemos <strong>{{quantity}} tokens</strong> do {{property}} que estavam na sua carteira. O valor líquido já está a caminho da sua conta.",
+      "required": true
+    }
   ]
 }

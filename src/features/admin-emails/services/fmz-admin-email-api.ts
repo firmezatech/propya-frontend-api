@@ -13,9 +13,9 @@ const recordOf = (v: unknown): Record<string, unknown> =>
 
 // ─── Template list (Next.js API route) ───────────────────────────────────────
 
-const normalizeFieldType = (raw: unknown): 'text' | 'url' | 'date' | 'property' => {
+const normalizeFieldType = (raw: unknown): 'text' | 'url' | 'date' | 'property' | 'textarea' => {
   const t = str(raw);
-  return t === 'url' || t === 'date' || t === 'property' ? t : 'text';
+  return t === 'url' || t === 'date' || t === 'property' || t === 'textarea' ? t : 'text';
 };
 
 const normalizeTemplateField = (raw: unknown) => {
@@ -98,6 +98,33 @@ export const fetchPasswordResetLink = async (userId: string): Promise<FmzPasswor
     resetUrl:  str(body.resetUrl),
     expiresAt: str(body.expiresAt),
   };
+};
+
+// ─── Saved default template content (D-15, backend API) ──────────────────────
+// Admin-edited defaults for the savable fields — CTA links, hero title/body, and
+// subject (see FMZ_SAVABLE_EMAIL_TEMPLATE_FIELDS in ../domain/fmz-admin-emails.types).
+// Link fields are never saved for reset-senha/invite/boleto/verificar-email — those
+// carry a one-time token or a per-invoice URL; their text fields are still savable.
+
+export type FmzEmailTemplateFieldOverride = {
+  templateId: string;
+  fieldId: string;
+  value: string;
+};
+
+export const fetchEmailTemplateFieldOverrides = async (): Promise<FmzEmailTemplateFieldOverride[]> => {
+  const { data } = await firmezaApiClient.get('/admin/email-template-field-overrides');
+  const body = recordOf(data);
+  return arr<unknown>(body.overrides)
+    .map((raw) => {
+      const r = recordOf(raw);
+      return { templateId: str(r.template_id), fieldId: str(r.field_id), value: str(r.value) };
+    })
+    .filter((o) => o.templateId && o.fieldId);
+};
+
+export const saveEmailTemplateFieldOverride = async (templateId: string, fieldId: string, value: string): Promise<void> => {
+  await firmezaApiClient.put('/admin/email-template-field-overrides', { templateId, fieldId, value });
 };
 
 // ─── Tenant invites (D-14 / AE-13, backend API) ──────────────────────────────

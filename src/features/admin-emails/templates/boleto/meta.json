@@ -5,10 +5,54 @@
   "badge": "transacional",
   "subject": "Seu boleto de {{month}} está disponível — R$ {{amount}}",
   "fields": [
-    { "id": "name", "label": "Nome da pessoa", "type": "text", "placeholder": "Diana Aguilar", "required": true },
-    { "id": "month", "label": "Mês de referência", "type": "text", "placeholder": "dezembro", "required": true },
-    { "id": "amount", "label": "Valor a pagar (R$)", "type": "text", "placeholder": "2.353,76", "required": true },
-    { "id": "dueDate", "label": "Data de vencimento", "type": "text", "placeholder": "15 de dezembro de 2026", "required": true },
-    { "id": "ctaUrl", "label": "Link do boleto", "type": "url", "placeholder": "https://app.firmezatoken.com.br/boleto", "required": true }
+    {
+      "id": "name",
+      "label": "Nome da pessoa",
+      "type": "text",
+      "placeholder": "Diana Aguilar",
+      "required": true
+    },
+    {
+      "id": "month",
+      "label": "Mês de referência",
+      "type": "text",
+      "placeholder": "dezembro",
+      "required": true
+    },
+    {
+      "id": "amount",
+      "label": "Valor a pagar (R$)",
+      "type": "text",
+      "placeholder": "2.353,76",
+      "required": true
+    },
+    {
+      "id": "dueDate",
+      "label": "Data de vencimento",
+      "type": "text",
+      "placeholder": "15 de dezembro de 2026",
+      "required": true
+    },
+    {
+      "id": "ctaUrl",
+      "label": "Link do boleto",
+      "type": "url",
+      "placeholder": "https://app.firmezatoken.com.br/boleto",
+      "required": true
+    },
+    {
+      "id": "heroTitle",
+      "label": "Título principal",
+      "type": "text",
+      "placeholder": "Seu boleto de {{month}} chegou.",
+      "required": true
+    },
+    {
+      "id": "heroBody",
+      "label": "Parágrafo de apoio",
+      "type": "textarea",
+      "placeholder": "Como você acumulou <strong>7,2% de posse</strong> do imóvel, seu aluguel deste mês foi reduzido em R$ 178,80.",
+      "required": true
+    }
   ]
 }

@@ -46,14 +46,15 @@
   border: 1px solid var(--line);
   box-shadow: var(--shadow-md);
   height: 320px;
-  background:
-    radial-gradient(circle at 95% 5%, rgba(200,237,94,.22) 0%, transparent 45%),
-    radial-gradient(circle at 5% 100%, rgba(200,237,94,.1) 0%, transparent 40%),
-    var(--page-bg);
-  display: grid;
-  place-items: center;
+  background: var(--page-bg);
 }
-.galleryPlaceholderIcon { color: var(--line); }
+.galleryImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .galleryCap {
   position: absolute; left: 0; right: 0; bottom: 0;
   padding: 22px 24px;

@@ -6,7 +6,6 @@ import {
   ClipboardList,
   FileText,
   Home,
-  ImageOff,
   MessageCircle,
   Search,
   ShieldCheck,
@@ -164,7 +163,8 @@ function PropertyGallery({ address }: { address: { line: string; city: string } 
   return (
     <section className={styles.gallery}>
       <div className={styles.galleryMain}>
-        <ImageOff className={styles.galleryPlaceholderIcon} size={40} aria-hidden="true" />
+        {/* Fixed property photo — set by the platform, not editable by the tenant. */}
+        <img className={styles.galleryImage} src="/property-placeholder.png" alt={address.line} />
         <div className={styles.galleryCap}>
           <div className={styles.galleryCapAddr}>{address.line}</div>
           <div className={styles.galleryCapCity}>{address.city}</div>

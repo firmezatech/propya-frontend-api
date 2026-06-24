@@ -5,7 +5,47 @@
   "badge": "transacional",
   "subject": "Você foi convidado para investir em imóveis — Propya",
   "fields": [
-    { "id": "min_investment", "label": "Investimento mínimo", "type": "text", "placeholder": "R$ 1.000",           "required": true },
-    { "id": "expiry",         "label": "Validade do convite", "type": "date", "placeholder": "30 de junho de 2026", "required": true }
+    {
+      "id": "min_investment",
+      "label": "Investimento mínimo",
+      "type": "text",
+      "placeholder": "R$ 1.000",
+      "required": true
+    },
+    {
+      "id": "expiry",
+      "label": "Validade do convite",
+      "type": "date",
+      "placeholder": "30 de junho de 2026",
+      "required": true
+    },
+    {
+      "id": "ctaUrl",
+      "label": "Link de cadastro",
+      "type": "url",
+      "placeholder": "Gerado automaticamente",
+      "required": true
+    },
+    {
+      "id": "propertiesUrl",
+      "label": "Link da vitrine de imóveis",
+      "type": "url",
+      "placeholder": "Gerado automaticamente",
+      "required": true
+    },
+    {
+      "id": "heroTitle",
+      "label": "Título principal",
+      "type": "text",
+      "placeholder": "Seja dono de um imóvel a partir de {{min_investment}}.",
+      "required": true
+    },
+    {
+      "id": "heroBody",
+      "label": "Parágrafo de apoio",
+      "type": "textarea",
+      "placeholder": "Você foi convidado para a <strong>Propya</strong> — a plataforma onde você investe em imóveis reais, vira coproprietário token a token e recebe uma fração do aluguel todo mês, direto na sua carteira.",
+      "required": true
+    }
   ]
 }
