@@ -6,6 +6,7 @@ import { useParams, usePathname, useRouter } from 'next/navigation';
 import type { FmzAccessControlPrincipal } from '../domain';
 import { buildFmzLocalizedHref, canAccessFmzPath, normalizeFmzPath, resolveFirstAccessibleFmzPath } from '../domain/fmz-route-access';
 import { clearFirmezaSession } from '../../../services/auth/auth-storage';
+import { FmzPermissionDeniedCard } from './FmzPermissionDeniedCard';
 
 export type FmzRouteAccessGuardProps = {
   children: ReactNode;
@@ -27,13 +28,7 @@ function FmzAccessLoadingState() {
 function FmzAccessDeniedState() {
   return (
     <main className="flex min-h-[60vh] items-center justify-center px-6">
-      <div className="max-w-md rounded-2xl border border-fmz-border-light bg-white p-8 text-center shadow-sm">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-fmz-text-hint">Acesso restrito</p>
-        <h1 className="mb-3 font-sans text-2xl font-extrabold text-fmz-navy">Esta página não está liberada para sua role.</h1>
-        <p className="text-sm leading-6 text-fmz-text-muted">
-          O backend não retornou esta rota dentro das páginas permitidas para o seu usuário. Entre em contato com o administrador caso precise desse acesso.
-        </p>
-      </div>
+      <FmzPermissionDeniedCard />
     </main>
   );
 }

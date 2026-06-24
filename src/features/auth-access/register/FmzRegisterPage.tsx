@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from 'react';
 import {
+  Calendar,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -24,6 +25,7 @@ import { registerUser } from './fmz-register-api';
 import {
   computePasswordStrength,
   hasErrors,
+  maskBirthdate,
   validateStep1,
   validateStep2,
 } from './fmz-register-validation';
@@ -36,6 +38,7 @@ const INITIAL_FORM_DATA: RegisterFormData = {
   phone: '',
   phoneCountry: 'BR',
   fullName: '',
+  birthdate: '',
   registrationIntent: 'coOwner',
   acceptedTerms: false,
   acceptedPrivacyPolicy: false,
@@ -285,6 +288,24 @@ export function FmzRegisterPage() {
                 </div>
 
                 <div className="f">
+                  <label htmlFor="nascimento">Data de nascimento <span className="req">*</span></label>
+                  <div className="iw">
+                    <Calendar className="il" aria-hidden="true" />
+                    <input
+                      id="nascimento"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={10}
+                      placeholder="dd/mm/aaaa"
+                      autoComplete="bday"
+                      value={formData.birthdate}
+                      onChange={(event) => updateField('birthdate', maskBirthdate(event.target.value))}
+                    />
+                  </div>
+                  {errors.birthdate ? <FieldError>{errors.birthdate}</FieldError> : <span className="hint"><Info aria-hidden="true" /> Você precisa ter 18 anos ou mais para investir.</span>}
+                </div>
+
+                <div className="f">
                   <label htmlFor="phone">Telefone <span className="req">*</span></label>
                   <div className="phone-row">
                     <FmzCountryPhoneSelect value={activePhoneCountry.iso2} onChange={(country) => updatePhone(formData.phone, country)} ariaLabel="Código do país" />
@@ -320,8 +341,14 @@ export function FmzRegisterPage() {
 
               <div className="review">
                 <ReviewItem icon={<Mail />} title="E-mail" value={formData.email} onEdit={() => goToStep(1)} />
-                <ReviewItem icon={<User />} title="Nome completo" value={formData.fullName} onEdit={() => goToStep(2)} />
                 <ReviewItem icon={<Phone />} title="Telefone" value={formData.phone ? `${activePhoneCountry.dialCode} ${formData.phone}` : ''} onEdit={() => goToStep(2)} />
+                <ReviewItem icon={<User />} title="Nome completo" value={formData.fullName} onEdit={() => goToStep(2)} />
+                <ReviewItem icon={<Calendar />} title="Data de nascimento" value={formData.birthdate} onEdit={() => goToStep(2)} />
+              </div>
+
+              <div className="note">
+                <Info aria-hidden="true" />
+                <span>Após criar sua conta, enviaremos um link de confirmação por e-mail. Você só precisa abrir e clicar para ativar.</span>
               </div>
 
               {errors.general ? <div className="error-box"><Info aria-hidden="true" /> {errors.general}</div> : null}

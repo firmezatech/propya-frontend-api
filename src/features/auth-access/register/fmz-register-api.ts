@@ -1,6 +1,7 @@
 import { firmezaApiClient } from '../../../services/firmeza-api-client';
 import { setFirmezaAuthenticatedUserSession } from '../../../services/auth/auth-storage';
 import { normalizeFmzApiError } from '../../api-errors/domain';
+import { birthdateBRToISO } from './fmz-register-validation';
 import type {
   RegisterApiAccess,
   RegisterApiPayload,
@@ -15,6 +16,7 @@ const buildRegisterPayload = (data: RegisterFormData): RegisterApiPayload => ({
   email: data.email.trim(),
   phone: data.phone.trim(),
   phoneCountry: data.phoneCountry || 'BR',
+  birthdate: birthdateBRToISO(data.birthdate),
   password: data.password,
   passwordConfirmation: data.passwordConfirmation,
   registrationIntent: data.registrationIntent || 'coOwner',

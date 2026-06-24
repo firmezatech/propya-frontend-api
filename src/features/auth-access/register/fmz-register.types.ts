@@ -14,6 +14,7 @@ export type RegisterFormData = {
   acceptedTerms: boolean;
   acceptedPrivacyPolicy: boolean;
   fullName: string;
+  birthdate: string;
   registrationIntent?: RegistrationIntent;
   /** D-14 / AE-13: read from the `?invite=` query param on the register page, if present. */
   inviteId?: string;
@@ -28,6 +29,7 @@ export type RegisterApiPayload = {
   email: string;
   phone: string;
   phoneCountry?: string;
+  birthdate: string;
   password: string;
   passwordConfirmation: string;
   registrationIntent?: RegistrationIntent;
@@ -82,6 +84,7 @@ export type RegisterStep1Errors = {
 
 export type RegisterStep2Errors = {
   fullName?: string;
+  birthdate?: string;
   phone?: string;
 };
 

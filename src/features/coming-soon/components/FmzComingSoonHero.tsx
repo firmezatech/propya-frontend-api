@@ -1,4 +1,4 @@
-import { Clock, LogIn, RotateCw } from 'lucide-react';
+import { ArrowLeft, Clock, RotateCw } from 'lucide-react';
 import { Link } from '../../../i18n/navigation';
 import styles from './FmzComingSoonHero.module.css';
 
@@ -41,7 +41,7 @@ export function FmzComingSoonHero({ title, description, homeHref, homeLabel }: F
 
         <div className={styles.actions}>
           <Link href={homeHref} className={`${styles.btn} ${styles.btnPrimary}`}>
-            <LogIn size={15} aria-hidden="true" />
+            <ArrowLeft size={15} aria-hidden="true" />
             {homeLabel}
           </Link>
           <button
@@ -54,7 +54,7 @@ export function FmzComingSoonHero({ title, description, homeHref, homeLabel }: F
           </button>
         </div>
 
-        <span className={styles.foot}>Estamos trabalhando nisso · Equipe Propya</span>
+        <span className={styles.foot}>Estamos trabalhando nisso · Equipe Propya 💚</span>
       </div>
     </div>
   );

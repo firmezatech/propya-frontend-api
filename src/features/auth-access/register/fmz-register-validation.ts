@@ -253,13 +253,21 @@ const hasNationalMask = (countryCode: string): countryCode is FmzPhoneCountryCod
  * Validates all Step 2 fields and returns a map of field → error message.
  * An empty object means the step is valid.
  */
-export function validateStep2(data: Pick<RegisterFormData, 'fullName' | 'phone' | 'phoneCountry'>): RegisterStep2Errors {
+export function validateStep2(data: Pick<RegisterFormData, 'fullName' | 'birthdate' | 'phone' | 'phoneCountry'>): RegisterStep2Errors {
   const errors: RegisterStep2Errors = {};
 
   if (!data.fullName.trim()) {
     errors.fullName = 'O nome completo é obrigatório.';
   } else if (!isValidFullName(data.fullName)) {
     errors.fullName = 'Informe o nome e o sobrenome.';
+  }
+
+  if (!data.birthdate.trim()) {
+    errors.birthdate = 'A data de nascimento é obrigatória.';
+  } else if (!parseBirthdateBR(data.birthdate)) {
+    errors.birthdate = 'Data de nascimento inválida.';
+  } else if (!isAdultBirthdate(data.birthdate)) {
+    errors.birthdate = 'Você precisa ter 18 anos ou mais para se cadastrar.';
   }
 
   const countryCode = data.phoneCountry ?? '';

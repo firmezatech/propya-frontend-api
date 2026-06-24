@@ -370,7 +370,6 @@ describe('validateStep1', () => {
 const validStep2: Parameters<typeof validateStep2>[0] = {
   fullName: 'João Silva',
   birthdate: '15/03/1990',
-  cpf: '529.982.247-25',
   phone: '(11) 91234-5678',
   phoneCountry: 'BR',
 };
@@ -409,16 +408,6 @@ describe('validateStep2', () => {
     const year = date.getFullYear();
     const result = validateStep2({ ...validStep2, birthdate: `${day}/${month}/${year}` });
     expect(result.birthdate).toBeTruthy();
-  });
-
-  it('requires cpf', () => {
-    const result = validateStep2({ ...validStep2, cpf: '' });
-    expect(result.cpf).toBeTruthy();
-  });
-
-  it('rejects invalid CPF', () => {
-    const result = validateStep2({ ...validStep2, cpf: '000.000.000-00' });
-    expect(result.cpf).toBeTruthy();
   });
 
   it('requires phone', () => {
@@ -478,7 +467,6 @@ describe('RegisterFormData type guard', () => {
       acceptedPrivacyPolicy: true,
       fullName: 'Test User',
       birthdate: '01/01/1990',
-      cpf: '529.982.247-25',
     };
 
     expect(data.accountType).toBe('investor');
