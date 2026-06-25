@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   Check,
   Eye,
@@ -12,7 +12,8 @@ import {
 } from 'lucide-react';
 import { z } from 'zod';
 import { Link, useRouter } from '../../../i18n/navigation';
-import { consumeFirmezaPostAuthRedirect, isFirmezaRedirectablePath } from '../../../services/auth/auth-storage';
+import { consumeFirmezaPostAuthRedirect, hasFirmezaSession, isFirmezaRedirectablePath } from '../../../services/auth/auth-storage';
+import { probeActiveSession } from '../../../services/auth/fmz-session-presence';
 import { login, type LoginType } from '../services/fmz-login-api';
 import { FmzAuthHeader, FmzFullPageLoading, FmzPublicFooter } from '../../../components/layout';
 import { FMZ_API_ERROR_CODES, type FmzFieldErrorMap, type FmzNormalizedApiError } from '../../api-errors/domain';
@@ -26,6 +27,10 @@ const ZOD_PATH_TO_FIELD: Record<string, keyof FmzFieldErrorMap> = Object.freeze(
   email: 'email',
   password: 'password',
 });
+
+// Where an already-authenticated visitor is sent instead of the login form. The route
+// guard re-routes from here to the first page the account can access, if needed.
+const ALREADY_AUTHENTICATED_REDIRECT = '/connected/dashboard';
 
 const getFormStringValue = (formData: Record<string, FormDataEntryValue>, fieldName: string): string =>
   String(formData[fieldName] ?? '');
@@ -132,8 +137,47 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
     setFieldErrors,
   } = useLoginFormState();
 
+  const [isCheckingExistingSession, setIsCheckingExistingSession] = useState(true);
+  const routerRef = useRef(router);
+  routerRef.current = router;
+
+  useEffect(() => {
+    // One account per browser: never show the login form while a session already exists —
+    // in this tab's storage, in localStorage shared by every tab, or held ephemerally by
+    // another tab (detected via a cross-tab presence probe). To sign into a different
+    // account the user must log out first. Checked once on mount; the router is read via a
+    // ref so the probe never re-runs on unrelated re-renders (e.g. while typing).
+    const redirectToExistingSession = () => routerRef.current.replace(ALREADY_AUTHENTICATED_REDIRECT);
+
+    if (hasFirmezaSession()) {
+      redirectToExistingSession();
+      return;
+    }
+
+    let isActive = true;
+    probeActiveSession().then((sessionExistsElsewhere) => {
+      if (!isActive) return;
+      if (sessionExistsElsewhere) {
+        redirectToExistingSession();
+        return;
+      }
+      setIsCheckingExistingSession(false);
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const handleLogin = async (formData: Record<string, FormDataEntryValue>) => {
     buildFmzLoginSchema().parse(formData);
+
+    // A session may have appeared in another tab between mount and submit; honour the
+    // one-account-per-browser rule rather than overwriting it with a different account.
+    if (hasFirmezaSession()) {
+      await router.replace(ALREADY_AUTHENTICATED_REDIRECT);
+      return;
+    }
 
     const loginData: LoginType = {
       email: getFormStringValue(formData, 'email'),
@@ -194,6 +238,16 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
       setIsSubmitting(false);
     }
   };
+
+  if (isCheckingExistingSession) {
+    return (
+      <FmzFullPageLoading
+        label="Verificando sessão..."
+        description="Conferindo se já existe uma conta conectada neste navegador."
+        className="min-h-screen bg-white"
+      />
+    );
+  }
 
   if (isRedirectingAfterLogin) {
     return (

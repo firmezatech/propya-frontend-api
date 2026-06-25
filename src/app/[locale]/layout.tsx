@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { routing } from '../../i18n/routing';
 import { fmzFontVariablesClassName } from '../../config/fmz-font-config';
 import { ProfileProvider } from '../context/ProfileContext';
+import { FmzSessionPresenceResponder } from '../../components/layout';
 import '../globals.css';
 
 type LocaleLayoutProps = {
@@ -23,6 +24,7 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
     <html lang={locale} className={fmzFontVariablesClassName} suppressHydrationWarning>
       <body>
         <NextIntlClientProvider>
+          <FmzSessionPresenceResponder />
           <ProfileProvider>{children}</ProfileProvider>
         </NextIntlClientProvider>
       </body>

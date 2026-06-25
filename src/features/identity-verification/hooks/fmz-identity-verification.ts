@@ -29,6 +29,11 @@ export type UseFmzIdentityVerificationReturn = {
   sessionState: SessionState;
   justVerified: boolean;
   justFailed: boolean;
+  // True the moment the Didit flow completes, before the backend webhook confirms the outcome.
+  // Drives an interim "confirming…" view so the page never silently stays unchanged.
+  justSubmitted: boolean;
+  // True once the post-submission poll window expired without a terminal decision (still pending).
+  pollExhausted: boolean;
   userName: string | null;
   startVerification: () => Promise<void>;
   closeSession: () => void;
@@ -47,6 +52,8 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
   const [sessionState, setSessionState] = useState<SessionState>({ status: 'idle' });
   const [justVerified, setJustVerified] = useState(false);
   const [justFailed, setJustFailed] = useState(false);
+  const [justSubmitted, setJustSubmitted] = useState(false);
+  const [pollExhausted, setPollExhausted] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
 
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -66,22 +73,39 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
     }
   }, []);
 
+  // Maps a freshly fetched KYC status onto the terminal-outcome flags. Returns true when the
+  // status is terminal (verified or a failure) so callers can stop polling. Kept free of
+  // dependencies (only setState calls) so its identity stays stable across renders.
+  const applyKycStatus = useCallback((kycStatus: TenantKycStatus): boolean => {
+    if (kycStatus === 'verified') {
+      setJustVerified(true);
+      return true;
+    }
+    if (kycStatus === 'rejected' || kycStatus === 'needs_resubmission') {
+      setJustFailed(true);
+      return true;
+    }
+    return false;
+  }, []);
+
   const refetchKyc = useCallback(async () => {
     setKycState({ status: 'loading' });
     try {
       const response = await getTenantProfile();
-      setKycState({ status: 'ready', kycStatus: response.profile.kyc.status });
+      const kycStatus = response.profile.kyc.status;
+      setKycState({ status: 'ready', kycStatus });
       if (!userNameSetRef.current) {
         userNameSetRef.current = true;
         setUserName(response.profile.user.fullName ?? response.profile.user.firstName ?? null);
       }
+      applyKycStatus(kycStatus);
     } catch (error) {
       const message = error instanceof Error
         ? error.message
         : 'Não foi possível carregar o status de verificação.';
       setKycState({ status: 'error', message });
     }
-  }, []);
+  }, [applyKycStatus]);
 
   // Polls every POLL_INTERVAL_MS. Starts once the Didit SDK reports the verification flow
   // completed (so the page updates as soon as the webhook lands — Didit's own onComplete only
@@ -92,11 +116,15 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
   const schedulePoll = useCallback(() => {
     clearPollTimer();
     pollAttemptsRef.current = 0;
+    setPollExhausted(false);
 
     const runPoll = () => {
       if (pollAttemptsRef.current >= POLL_MAX_ATTEMPTS) {
+        // Window elapsed without a terminal decision: the webhook may still be in flight.
+        // Surface a reassuring "under review" state (with manual refresh) instead of letting
+        // the page silently revert to its pre-submission look.
         clearPollTimer();
-        void refetchKyc();
+        setPollExhausted(true);
         return;
       }
 
@@ -112,12 +140,8 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
             setUserName(response.profile.user.fullName ?? response.profile.user.firstName ?? null);
           }
 
-          if (kycStatus === 'verified') {
+          if (applyKycStatus(kycStatus)) {
             clearPollTimer();
-            setJustVerified(true);
-          } else if (kycStatus === 'rejected' || kycStatus === 'needs_resubmission') {
-            clearPollTimer();
-            setJustFailed(true);
           } else if (sessionOpenRef.current || kycStatus === 'pending' || kycStatus === 'under_review') {
             // Keep polling while a session just completed (status may still be a stale
             // terminal value from a prior attempt) or while status is genuinely transient.
@@ -136,11 +160,13 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
     };
 
     runPoll();
-  }, [clearPollTimer, refetchKyc]);
+  }, [clearPollTimer, applyKycStatus]);
 
   const startVerification = useCallback(async () => {
     setSessionState({ status: 'starting' });
     setJustFailed(false);
+    setJustSubmitted(false);
+    setPollExhausted(false);
     try {
       const session = await startDiditSession();
 
@@ -148,6 +174,16 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
       // callbacks always close over the current schedulePoll/setSessionState identities.
       DiditSdk.shared.onComplete = (result) => {
         if (result.type === 'completed') {
+          // The SDK's session.status is the hosted-flow outcome; the FINAL Approved/Declined
+          // decision arrives asynchronously via webhook, so 'Pending' (the common case) means
+          // "submitted — confirming". Show the interim view immediately so the page reacts the
+          // instant the user finishes, regardless of webhook timing. A client-side 'Declined'
+          // short-circuits straight to the failure view.
+          if (result.session?.status === 'Declined') {
+            setJustFailed(true);
+            return;
+          }
+          setJustSubmitted(true);
           sessionOpenRef.current = true;
           schedulePoll();
         } else if (result.type === 'failed') {
@@ -185,5 +221,5 @@ export function useFmzIdentityVerification(): UseFmzIdentityVerificationReturn {
     };
   }, [clearPollTimer]);
 
-  return { kycState, sessionState, justVerified, justFailed, userName, startVerification, closeSession, refetchKyc };
+  return { kycState, sessionState, justVerified, justFailed, justSubmitted, pollExhausted, userName, startVerification, closeSession, refetchKyc };
 }
