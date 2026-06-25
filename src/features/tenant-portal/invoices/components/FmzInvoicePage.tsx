@@ -3,7 +3,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import QRCode from 'qrcode';
-import { ArrowLeft, Check, ChevronRight, Copy, Download, FileText, List, MessageCircle, QrCode, ReceiptText, Zap } from 'lucide-react';
+import {
+  ArrowLeft,
+  Check,
+  ChevronDown,
+  Copy,
+  Download,
+  FileText,
+  MessageCircle,
+  QrCode,
+  Receipt,
+  ScanLine,
+  Shield,
+  Zap,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { FmzConnectedPageShell, FmzInvoiceSkeleton } from '../../../../components/layout';
@@ -28,9 +41,18 @@ function splitMoneyDisplay(v?: number | null): { whole: string; cents: string } 
   return { whole: stripped.slice(0, commaIndex), cents: stripped.slice(commaIndex) };
 }
 
-type CopyButtonProps = { text: string; label?: string };
+function buildDuePillLabel(dueDate: string | null | undefined, daysUntilDue: number | null): string | null {
+  if (!dueDate) return null;
+  const date = formatDate(dueDate);
+  if (daysUntilDue === null) return `Vence ${date}`;
+  if (daysUntilDue > 0) return `Vence ${date} · em ${daysUntilDue} ${daysUntilDue === 1 ? 'dia' : 'dias'}`;
+  if (daysUntilDue === 0) return `Vence hoje · ${date}`;
+  return `Venceu em ${date}`;
+}
 
-function CopyButton({ text, label = 'Copiar' }: CopyButtonProps) {
+type CopyButtonProps = { text: string; label?: string; tone?: 'default' | 'onPix' };
+
+function CopyButton({ text, label = 'Copiar', tone = 'default' }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -43,7 +65,7 @@ function CopyButton({ text, label = 'Copiar' }: CopyButtonProps) {
     <button
       type="button"
       onClick={handleCopy}
-      className={`${styles.copyBtn} ${copied ? styles.copyBtnCopied : ''}`}
+      className={`${styles.copyBtn} ${tone === 'onPix' ? styles.copyBtnOnPix : ''} ${copied ? styles.copyBtnCopied : ''}`}
     >
       {copied ? <Check /> : <Copy />}
       {copied ? 'Copiado!' : label}
@@ -79,6 +101,17 @@ function buildInvoiceLines(summary: FmzTenantDashboard['monthlySummary']): Invoi
   return lines;
 }
 
+// Splits the flat line list into the two groups shown in the reference
+// (Boleto.html): "Moradia" (rent/condo) and "Sua compra do imóvel" (tokens).
+function groupInvoiceLines(lines: InvoiceLine[]): { housing: InvoiceLine[]; investment: InvoiceLine[] } {
+  const housing: InvoiceLine[] = [];
+  const investment: InvoiceLine[] = [];
+  for (const line of lines) {
+    (line.key?.toLowerCase().includes('token') ? investment : housing).push(line);
+  }
+  return { housing, investment };
+}
+
 // ─── PIX QR Code ─────────────────────────────────────────────────────────────
 
 function PixQrImage({ qrCode }: { qrCode: string | null | undefined }) {
@@ -86,13 +119,22 @@ function PixQrImage({ qrCode }: { qrCode: string | null | undefined }) {
 
   useEffect(() => {
     if (!qrCode) { setDataUrl(null); return; }
-    void QRCode.toDataURL(qrCode, { width: 200, margin: 1, color: { dark: '#0D1321', light: '#FFFFFF' } })
+    // 'H' (~30% error correction) is required here, not just a quality nicety: the
+    // brand badge rendered on top of the image (below) physically covers the center
+    // ~16% of the code. Anything below 'H' risks a scan failure once that area is
+    // occluded — this is what makes the badge safe to add without breaking the PIX read.
+    void QRCode.toDataURL(qrCode, { width: 200, margin: 1, errorCorrectionLevel: 'H', color: { dark: '#2A1A22', light: '#FFFFFF' } })
       .then(setDataUrl)
       .catch(() => setDataUrl(null));
   }, [qrCode]);
 
   if (dataUrl) {
-    return <img src={dataUrl} alt="QR Code PIX" width={200} height={200} style={{ display: 'block', margin: '0 auto' }} />;
+    return (
+      <div className={styles.qrBadgeWrap}>
+        <img src={dataUrl} alt="QR Code PIX" width={196} height={196} className={styles.qrImg} />
+        <span className={styles.qrBadge} aria-hidden="true">P</span>
+      </div>
+    );
   }
 
   return <QrCode size={160} strokeWidth={1.2} color="var(--fmz-navy)" />;
@@ -122,7 +164,7 @@ function BarcodeDisplay({ barcode }: { barcode: string | null | undefined }) {
         height={60}
         displayValue={false}
         background="transparent"
-        lineColor="var(--fmz-navy, #0D1321)"
+        lineColor="var(--fmz-navy, #2A1A22)"
       />
     </div>
   );
@@ -134,7 +176,8 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
   const boleto  = dashboard.boleto;
   const pix     = dashboard.pix;
   const summary = dashboard.monthlySummary;
-  const competence = dashboard.competence;
+
+  const [boletoOpen, setBoletoOpen] = useState(false);
 
   const daysUntilDue = useMemo(() => {
     if (!summary?.dueDate) return null;
@@ -147,134 +190,113 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
   const barcodeValue  = boleto?.barcode ?? null;
   const pixCode       = pix?.qrCode ?? null;
   const lines = buildInvoiceLines(summary);
+  const { housing, investment } = groupInvoiceLines(lines);
   const totalDisplay = splitMoneyDisplay(summary?.totalDueAmount);
+  const duePillLabel = buildDuePillLabel(summary?.dueDate, daysUntilDue);
 
   return (
     <>
       {/* Page head */}
       <div className={styles.pageHead}>
-        <div className={styles.pageHeadLeft}>
-          <p className={styles.eyebrow}>Pagamento · Competência {competence?.label ?? competence?.month ?? 'atual'}</p>
-          <h1 className={styles.pageTitle}>Boleto do mês</h1>
-          {summary?.dueDate && (
-            <p className={styles.pageSub}>
-              Vencimento em <span style={{ fontWeight: 600, color: 'var(--fmz-navy)' }}>{formatDate(summary.dueDate)}</span>
-            </p>
-          )}
-        </div>
+        <h1 className={styles.pageTitle}>Pague seu boleto do mês</h1>
+        {duePillLabel && (
+          <p className={styles.pageSub}>
+            <span className={styles.duePill}><span className={styles.dot} />{duePillLabel}</span>
+          </p>
+        )}
       </div>
 
-      {/* Hero card */}
-      <section className={styles.heroCard}>
-        <div className={styles.heroGrid}>
-          <div className={styles.heroLeft}>
-            <span className={styles.heroEyebrow}>Valor total</span>
-            <div className={styles.heroTotal}>
-              <span className={styles.heroCurrency}>R$</span>
-              {totalDisplay.whole}
-              <span className={styles.heroCents}>{totalDisplay.cents}</span>
-            </div>
-            <div className={styles.heroDue}>
-              {daysUntilDue !== null && daysUntilDue > 0 && (
-                <span className={styles.pillWarn}>
-                  <span className={styles.dot} />
-                  Vence em {daysUntilDue} {daysUntilDue === 1 ? 'dia' : 'dias'}
-                </span>
-              )}
-              {summary?.dueDate && (
-                <span>Vencimento <span className={styles.heroDate}>{formatDate(summary.dueDate)}</span></span>
-              )}
-            </div>
+      {/* PIX HERO — primary payment method */}
+      <section className={styles.pixHero}>
+        <div className={styles.pixQrSide}>
+          <div className={styles.qrWrap}>
+            <PixQrImage qrCode={pixCode} />
           </div>
-          <div className={styles.heroActions}>
-            <button type="button" className={`${styles.btn} ${styles.btnPix}`}>
-              <Zap /> Pagar via PIX
-            </button>
-            {boleto?.downloadUrl ? (
-              <a
-                href={boleto.downloadUrl}
-                target="_blank"
-                rel="noreferrer"
-                className={styles.btn}
-                style={{ textDecoration: 'none' }}
-              >
-                <Download /> Baixar PDF
-              </a>
-            ) : (
-              <button type="button" className={styles.btn} disabled>
-                <Download /> Boleto indisponível
-              </button>
-            )}
+          <div className={styles.pixScanHint}>
+            <ScanLine size={13} /> Aponte a câmera do seu banco
+          </div>
+        </div>
+        <div className={styles.pixMain}>
+          <span className={styles.pixRecommendedTag}>Recomendado · compensação imediata</span>
+          <div className={styles.pixHeading}>Pagamento instantâneo</div>
+          <div className={styles.pixAmount}>
+            <span className={styles.pixCurrency}>R$</span>
+            {totalDisplay.whole}
+            <span className={styles.pixCents}>{totalDisplay.cents}</span>
+          </div>
+          {summary?.dueDate && (
+            <p className={styles.pixMeta}>Vencimento <span className={styles.pixMetaDate}>{formatDate(summary.dueDate)}</span></p>
+          )}
+
+          {pixCode ? (
+            <>
+              <p className={styles.lineLabel}>PIX copia e cola</p>
+              <div className={styles.pixCopyRow}>
+                <span className={styles.pixCode}>{pixCode}</span>
+                <CopyButton text={pixCode} tone="onPix" />
+              </div>
+            </>
+          ) : (
+            <div className={styles.pixCopyRow}>
+              <span className={styles.pixCodeUnavailable}>PIX indisponível no momento</span>
+            </div>
+          )}
+
+          <div className={styles.pixPerks}>
+            <span className={styles.perk}><Zap size={14} /> Cai na hora, <strong>sem espera</strong></span>
+            <span className={styles.perk}><Shield size={14} /> Pagamento <strong>seguro</strong></span>
           </div>
         </div>
       </section>
 
-      {/* 2-col: barcode + pix */}
-      <section className={styles.cols}>
-        {/* Barcode card */}
-        <div className={styles.card}>
-          <div className={styles.cardHead}>
-            <div className={styles.cardTitle}>
-              <span className={styles.cardTitleIco}><ReceiptText /></span>
-              Boleto bancário
+      {/* BOLETO — secondary, collapsible */}
+      <section className={`${styles.altCard} ${boletoOpen ? styles.altCardOpen : ''}`}>
+        <button
+          type="button"
+          className={styles.altHead}
+          onClick={() => setBoletoOpen((open) => !open)}
+          aria-expanded={boletoOpen}
+        >
+          <span className={styles.altLeft}>
+            <span className={styles.altIco}><Receipt size={17} /></span>
+            <span>
+              <span className={styles.altTitle}>Prefere boleto bancário?</span>
+              <span className={styles.altSub}>Compensa em até 2 dias úteis</span>
+            </span>
+          </span>
+          <ChevronDown className={styles.altChevron} size={18} />
+        </button>
+
+        {boletoOpen && (
+          <div className={styles.altBody}>
+            <p className={styles.lineLabel} style={{ marginTop: 14 }}>Linha digitável</p>
+            <div className={styles.lineWrap}>
+              <span className={styles.lineText}>{digitableLine || 'Não disponível'}</span>
+              {digitableLine && <CopyButton text={digitableLine} />}
             </div>
-            {boleto?.paymentProvider && (
-              <span className={styles.cardMono}>{boleto.paymentProvider.toUpperCase()}</span>
-            )}
-          </div>
 
-          <p className={styles.lineLabel}>Linha digitável</p>
-          <div className={styles.lineWrap}>
-            <span className={styles.lineText}>{digitableLine || 'Não disponível'}</span>
-            {digitableLine && <CopyButton text={digitableLine} />}
-          </div>
+            <BarcodeDisplay barcode={barcodeValue} />
+            {digitableLine && <p className={styles.barcodeFoot}>{digitableLine}</p>}
 
-          <p className={styles.lineLabel}>Código de barras</p>
-          <BarcodeDisplay barcode={barcodeValue} />
-          {digitableLine && <p className={styles.barcodeFoot}>{digitableLine}</p>}
-
-          <div className={styles.rowActions}>
-            <Link href="/connected/coming-soon" className={styles.btnSm}>
-              <FileText /> Enviar por e-mail
-            </Link>
-            <Link href="/connected/coming-soon" className={styles.btnSm}>
-              <MessageCircle /> WhatsApp
-            </Link>
-          </div>
-        </div>
-
-        {/* PIX card */}
-        <div className={styles.pixCard}>
-          <div className={styles.pixHead}>
-            <div className={styles.pixTitle}>
-              <span className={styles.pixIco}><Zap /></span>
-              PIX
+            <div className={styles.rowActions}>
+              {boleto?.downloadUrl ? (
+                <a href={boleto.downloadUrl} target="_blank" rel="noreferrer" className={styles.btnSm}>
+                  <Download /> Baixar PDF
+                </a>
+              ) : (
+                <button type="button" className={styles.btnSm} disabled>
+                  <Download /> Baixar PDF
+                </button>
+              )}
+              <Link href="/connected/coming-soon" className={styles.btnSm}>
+                <FileText /> E-mail
+              </Link>
+              <Link href="/connected/coming-soon" className={styles.btnSm}>
+                <MessageCircle /> WhatsApp
+              </Link>
             </div>
-            <span className={styles.pixBadge}>Mais rápido</span>
           </div>
-
-          <div className={styles.qrWrap}>
-            <PixQrImage qrCode={pixCode} />
-          </div>
-
-          {pixCode ? (
-            <div className={styles.pixCopy}>
-              <span className={styles.pixCode}>{pixCode}</span>
-              <CopyButton text={pixCode} />
-            </div>
-          ) : (
-            <div className={styles.pixCopy}>
-              <span className={styles.pixCode} style={{ color: 'var(--fmz-gray, #9AA3B0)', fontStyle: 'italic' }}>
-                PIX indisponível no momento
-              </span>
-            </div>
-          )}
-
-          <div className={styles.pixInfo}>
-            <FileText size={13} />
-            <span>Compensação <strong>imediata</strong> · Identificador único do mês</span>
-          </div>
-        </div>
+        )}
       </section>
 
       {/* Composition */}
@@ -282,55 +304,41 @@ function InvoiceContent({ dashboard }: { dashboard: FmzTenantDashboard }) {
         <section className={styles.compCard}>
           <div className={styles.cardHead}>
             <div className={styles.cardTitle}>
-              <span className={styles.cardTitleIco}><List /></span>
-              Composição do boleto
+              <span className={styles.cardTitleIco}><Receipt size={13} /></span>
+              O que está incluído
             </div>
           </div>
-          <div className={styles.lines}>
-            {lines.map((line) => {
-              const isToken = line.key?.toLowerCase().includes('token');
-              const isRent  = line.key?.toLowerCase().includes('rent') && !line.key?.toLowerCase().includes('fee');
-              return (
-                <div key={line.key} className={styles.lineItem}>
-                  <span className={`${styles.lineLeft} ${isToken ? styles.lineLeftHighlight : ''}`}>
-                    <span className={`${styles.lineIcon} ${isToken ? styles.lineIconHighlight : ''}`}>
-                      <ReceiptText />
-                    </span>
-                    {line.label}
-                  </span>
-                  <span className={`${styles.lineValue} ${isRent ? styles.lineValueGreen : ''} ${isToken ? styles.lineValueGold : ''}`}>
-                    {formatMoney(line.amount)}
-                  </span>
+
+          {housing.length > 0 && (
+            <div className={styles.grp}>
+              <div className={styles.grpHead}><span className={styles.grpDot} />Moradia</div>
+              {housing.map((line) => (
+                <div key={line.key} className={styles.row}>
+                  <span className={styles.rowLabel}>{line.label}</span>
+                  <span className={styles.rowValue}>{formatMoney(line.amount)}</span>
                 </div>
-              );
-            })}
-            <div className={styles.lineTotal}>
-              <span className={styles.lineTotalKey}>Total a pagar</span>
-              <span className={styles.lineTotalValue}>{formatMoney(summary?.totalDueAmount)}</span>
+              ))}
             </div>
+          )}
+
+          {investment.length > 0 && (
+            <div className={`${styles.grp} ${styles.grpInvest}`}>
+              <div className={styles.grpHead}><span className={styles.grpDot} />Sua compra do imóvel</div>
+              {investment.map((line) => (
+                <div key={line.key} className={`${styles.row} ${styles.rowAccent}`}>
+                  <span className={styles.rowLabel}>{line.label}</span>
+                  <span className={styles.rowValue}>{formatMoney(line.amount)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className={styles.billTotal}>
+            <span className={styles.billTotalKey}>Total a pagar</span>
+            <span className={styles.billTotalValue}>{formatMoney(summary?.totalDueAmount)}</span>
           </div>
         </section>
       )}
-
-      {/* Help strip */}
-      <div className={styles.help}>
-        <Link href="/connected/coming-soon" className={styles.helpCard}>
-          <div className={styles.helpIco}><Check /></div>
-          <div className={styles.helpBody}>
-            <p className={styles.helpTitle}>Já pagou?</p>
-            <p className={styles.helpSub}>Envie o comprovante para confirmação manual</p>
-          </div>
-          <ChevronRight className={styles.helpArrow} size={14} />
-        </Link>
-        <Link href="/connected/coming-soon" className={styles.helpCard}>
-          <div className={styles.helpIco}><MessageCircle /></div>
-          <div className={styles.helpBody}>
-            <p className={styles.helpTitle}>Tem dúvidas?</p>
-            <p className={styles.helpSub}>Fale com a gestora pelo chat</p>
-          </div>
-          <ChevronRight className={styles.helpArrow} size={14} />
-        </Link>
-      </div>
     </>
   );
 }
@@ -375,14 +383,14 @@ export function FmzInvoicePage() {
         ) : errorMessage ? (
           <>
             <div className={styles.pageHead}>
-              <h1 className={styles.pageTitle}>Boleto do mês</h1>
+              <h1 className={styles.pageTitle}>Pague seu boleto do mês</h1>
             </div>
             <EmptyState title="Erro ao carregar" description={errorMessage} />
           </>
         ) : !dashboard ? (
           <>
             <div className={styles.pageHead}>
-              <h1 className={styles.pageTitle}>Boleto do mês</h1>
+              <h1 className={styles.pageTitle}>Pague seu boleto do mês</h1>
             </div>
             <EmptyState title="Boleto não encontrado" description="Não há dados de boleto disponíveis para esta competência." />
           </>
