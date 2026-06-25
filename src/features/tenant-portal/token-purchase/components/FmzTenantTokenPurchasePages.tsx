@@ -6,10 +6,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
   ArrowRight,
+  Barcode,
   Building2,
   Check,
   Copy,
   Home,
+  Info,
   Landmark,
   Loader2,
   Minus,
@@ -65,6 +67,7 @@ const fmt = {
   noSym:     (v: number | null | undefined) => moneyNoSymFmt.format(Number(v ?? 0)),
   int:       (v: number | null | undefined) => intFmt.format(Number(v ?? 0)),
   pct:       (v: number | null | undefined) => `${pctFmt.format(Number(v ?? 0))}%`,
+  pp:        (v: number | null | undefined) => pctFmt.format(Number(v ?? 0)),
 };
 
 // ── Navigation helpers ─────────────────────────────────────────────────────────
@@ -522,138 +525,199 @@ function useRequiredCart(): FmzTokenPurchaseCart | null {
 export function FmzTenantTokenPurchaseConfirmPage() {
   const router = useRouter();
   const cart   = useRequiredCart();
-  const [accepted, setAccepted] = useState(false);
+  const [method, setMethod]         = useState<FmzTokenPurchasePaymentMethod>('pix');
+  const [methodOpen, setMethodOpen] = useState(false);
+
+  // Seed the local method from the persisted cart once it loads.
+  useEffect(() => {
+    if (cart) setMethod(cart.method);
+  }, [cart]);
+
+  // Persist a method change so the payment page (which reads sessionStorage) honors it.
+  const chooseMethod = useCallback((next: FmzTokenPurchasePaymentMethod) => {
+    setMethod(next);
+    setMethodOpen(false);
+    const stored = readTokenPurchaseCart();
+    if (stored) writeTokenPurchaseCart({ ...stored, method: next });
+  }, []);
 
   const proceed = useCallback(() => {
-    if (!cart || !accepted) return;
+    if (!cart) return;
     // Cart already in sessionStorage; navigate to payment page for both PIX and boleto.
     router.push(localizedHref('/connected/tokens-to-purchase-pix/pix'));
-  }, [accepted, cart, router]);
+  }, [cart, router]);
 
   if (!cart) return null;
 
-  const { quote, method } = cart;
+  const { quote } = cart;
+  const isPix = method === 'pix';
+  const propertyName = quote.tokenName ?? 'seu imóvel';
 
   return (
-    <main className={styles.page}>
-      <BackButton fallback="/connected/tokens-to-purchase-pix" />
-      <Stepper active={2} />
-      <div className={styles.hero}>
-        <div>
-          <p className={styles.eyebrow}>Confirmar compra</p>
-          <h1 className={styles.title}>Revise os dados antes de gerar a cobrança</h1>
-          <p className={styles.subtitle}>
-            Ao confirmar, o backend cria a cobrança no Asaas com os valores
-            calculados pelo servidor.
-          </p>
-        </div>
+    <main className={styles.cfPage}>
+      <button
+        type="button"
+        className={styles.cfBackLink}
+        onClick={() => router.push(localizedHref('/connected/tokens-to-purchase-pix'))}
+      >
+        <ArrowLeft size={13} /> Voltar para a compra
+      </button>
+
+      {/* STEPS */}
+      <div className={styles.cfSteps} aria-label="Etapas da compra">
+        <span className={`${styles.cfStep} ${styles.cfStepDone}`}>
+          <span className={styles.cfStepDot}><Check size={11} /></span> Selecionar tokens
+        </span>
+        <span className={`${styles.cfStepBar} ${styles.cfStepBarDone}`} />
+        <span className={`${styles.cfStep} ${styles.cfStepActive}`}>
+          <span className={styles.cfStepDot}>2</span> Revisar e confirmar
+        </span>
+        <span className={styles.cfStepBar} />
+        <span className={styles.cfStep}>
+          <span className={styles.cfStepDot}>3</span> Pagar
+        </span>
       </div>
 
-      <div className={styles.confirmGrid}>
-        <section>
-          <div className={styles.card}>
-            <span className={styles.cardLabel}>Pedido</span>
-            <div className={styles.orderItem}>
-              <span className={styles.cover}><Landmark size={22} /></span>
-              <span>
-                <strong className={styles.itemName}>
-                  {fmt.int(cart.quantity)} tokens{quote.tokenSymbol ? ` ${quote.tokenSymbol}` : ''}
-                </strong>
-                <span className={styles.itemSub}>
-                  Acréscimo de {fmt.pct(cart.deltaPercentage)} pp na participação estimada
+      <div className={styles.cfHead}>
+        <h1 className={styles.cfTitle}>Confirmar compra</h1>
+        <p className={styles.cfSub}>Revise os detalhes da sua aquisição.</p>
+      </div>
+
+      <div className={styles.cfCols}>
+        {/* LEFT — order + impact */}
+        <div>
+          <div className={styles.cfCard}>
+            <span className={styles.cfEyebrow}>Resumo do pedido</span>
+            <div className={styles.cfOrderItem}>
+              <span className={styles.cfCover}><Home size={22} /></span>
+              <span className={styles.cfItemMeta}>
+                <span className={styles.cfItemName}>{fmt.int(cart.quantity)} tokens · {propertyName}</span>
+              </span>
+              <strong className={styles.cfItemPrice}>{fmt.money(quote.subtotal)}</strong>
+            </div>
+            <div className={styles.cfBreakdown}>
+              <div className={styles.cfBdRow}>
+                <span className={styles.cfK}>Subtotal</span>
+                <span className={styles.cfV}>{fmt.money(quote.subtotal)}</span>
+              </div>
+              <div className={styles.cfBdRow}>
+                <span className={styles.cfK}>
+                  Taxa de processamento <span className={styles.cfBdTag}>{fmt.pct(quote.processingFeePercent)}</span>
+                </span>
+                <span className={styles.cfV}>{fmt.money(quote.processingFeeAmount)}</span>
+              </div>
+              <div className={`${styles.cfBdRow} ${styles.cfBdTotal}`}>
+                <span className={styles.cfK}>Total a pagar</span>
+                <span className={styles.cfV}><span className={styles.cfCurrency}>R$</span>{fmt.noSym(quote.total)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.cfCard}>
+            <span className={styles.cfEyebrow}>Após esta compra</span>
+            <div className={styles.cfImpactRow}>
+              <span className={styles.cfImpactIco}><Home size={18} /></span>
+              <span className={styles.cfImpactLbl}>Sua posse do imóvel</span>
+              <span className={styles.cfImpactFrom}>{fmt.pct(cart.currentPercentage)}</span>
+              <span className={styles.cfImpactArrow}><ArrowRight size={14} /></span>
+              <span className={styles.cfImpactTo}>
+                {fmt.pct(cart.newPercentage)}
+                <span className={styles.cfDelta}>+{fmt.pp(cart.deltaPercentage)} pp</span>
+              </span>
+            </div>
+            <div className={styles.cfImpactRow}>
+              <span className={`${styles.cfImpactIco} ${styles.cfImpactIcoGreen}`}><ReceiptText size={18} /></span>
+              <span className={styles.cfImpactLbl}>Aluguel mensal</span>
+              <span className={styles.cfImpactFrom}>{fmt.money(cart.currentRent)}</span>
+              <span className={styles.cfImpactArrow}><ArrowRight size={14} /></span>
+              <span className={styles.cfImpactTo}>
+                {fmt.money(cart.newRent)}
+                {cart.rentSaving > 0 && (
+                  <span className={`${styles.cfDelta} ${styles.cfDeltaNeg}`}>−{fmt.money(cart.rentSaving)}</span>
+                )}
+              </span>
+            </div>
+            <div className={styles.cfImpactRow}>
+              <span className={styles.cfImpactIco}><Building2 size={18} /></span>
+              <span className={styles.cfImpactLbl}>Patrimônio imobiliário</span>
+              <span className={styles.cfImpactFrom}>{fmt.money(cart.currentOwnedValue)}</span>
+              <span className={styles.cfImpactArrow}><ArrowRight size={14} /></span>
+              <span className={styles.cfImpactTo}>{fmt.money(cart.newOwnedValue)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT — payment method */}
+        <div>
+          <div className={styles.cfCard}>
+            <span className={styles.cfEyebrow}>Forma de pagamento</span>
+
+            <div className={styles.cfPmChip}>
+              <span className={`${styles.cfPmIcon} ${isPix ? styles.cfPmIconPix : styles.cfPmIconBoleto}`}>
+                {isPix ? <Zap size={20} /> : <Barcode size={20} />}
+              </span>
+              <span className={styles.cfPmBody}>
+                <span className={styles.cfPmName}>{isPix ? 'PIX' : 'Boleto bancário'}</span>
+                <span className={styles.cfPmDesc}>
+                  {isPix ? 'Confirmação imediata · tokens creditados em segundos' : 'Compensação em até 2 dias úteis'}
                 </span>
               </span>
-              <strong className={styles.itemPrice}>{fmt.money(quote.subtotal)}</strong>
+              <button type="button" className={styles.cfPmChange} onClick={() => setMethodOpen((open) => !open)}>
+                {methodOpen ? 'Fechar' : 'Alterar'}
+              </button>
             </div>
-            {/* Breakdown rendered directly from backend response */}
-            <div className={styles.breakdown}>
-              {quote.breakdown.map((line) => (
-                <div
-                  key={line.label}
-                  className={`${styles.bdRow} ${line.label === 'Total' ? styles.bdTotal : ''}`}
+
+            {methodOpen && (
+              <div className={styles.cfPmOptions}>
+                <button
+                  type="button"
+                  className={`${styles.cfPmOpt} ${isPix ? styles.cfPmOptActive : ''}`}
+                  onClick={() => chooseMethod('pix')}
                 >
-                  <span>{line.label}</span>
-                  <strong>{fmt.money(line.amount)}</strong>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className={styles.card}>
-            <span className={styles.cardLabel}>Impacto esperado</span>
-            <div className={styles.impactRow}>
-              <span className={`${styles.ico} ${styles.icoGold}`}><Home size={17} /></span>
-              <span className={styles.impactLabel}>Participação</span>
-              <span className={styles.before}>{fmt.pct(cart.currentPercentage)}</span>
-              <ArrowRight size={14} />
-              <strong className={styles.after}>{fmt.pct(cart.newPercentage)}</strong>
-            </div>
-            <div className={styles.impactRow}>
-              <span className={`${styles.ico} ${styles.icoGreen}`}><ReceiptText size={17} /></span>
-              <span className={styles.impactLabel}>Aluguel estimado</span>
-              <span className={styles.before}>{fmt.money(cart.currentRent)}</span>
-              <ArrowRight size={14} />
-              <strong className={styles.after}>{fmt.money(cart.newRent)}</strong>
-            </div>
-            <div className={styles.impactRow}>
-              <span className={styles.ico}><Building2 size={17} /></span>
-              <span className={styles.impactLabel}>Patrimônio conquistado</span>
-              <span className={styles.before}>{fmt.money(cart.currentOwnedValue)}</span>
-              <ArrowRight size={14} />
-              <strong className={styles.after}>{fmt.money(cart.newOwnedValue)}</strong>
-            </div>
-          </div>
-        </section>
-
-        <aside>
-          <div className={styles.card}>
-            <span className={styles.cardLabel}>Pagamento</span>
-            {method === 'pix' ? (
-              <div className={styles.pmChip}>
-                <span className={styles.pmIcon}><Zap size={20} /></span>
-                <span>
-                  <strong className={styles.pmName}>PIX</strong>
-                  <span className={styles.pmDesc}>QR Code dinâmico gerado pelo Asaas após confirmação.</span>
-                </span>
-              </div>
-            ) : (
-              <div className={styles.pmChip}>
-                <span className={styles.pmIcon}><Landmark size={20} /></span>
-                <span>
-                  <strong className={styles.pmName}>Boleto bancário</strong>
-                  <span className={styles.pmDesc}>Linha digitável gerada pelo Asaas. Vence em até 3 dias úteis.</span>
-                </span>
+                  <span className={`${styles.cfPmOptIco} ${styles.cfPmOptIcoPix}`}><Zap size={17} /></span>
+                  <span className={styles.cfPmOptB}>
+                    <span className={styles.cfPmOptN}>PIX</span>
+                    <span className={styles.cfPmOptD}>Confirmação imediata · tokens em segundos</span>
+                  </span>
+                  <span className={styles.cfPmOptRadio} />
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.cfPmOpt} ${!isPix ? styles.cfPmOptActive : ''}`}
+                  onClick={() => chooseMethod('boleto')}
+                >
+                  <span className={`${styles.cfPmOptIco} ${styles.cfPmOptIcoBoleto}`}><Barcode size={17} /></span>
+                  <span className={styles.cfPmOptB}>
+                    <span className={styles.cfPmOptN}>Boleto bancário</span>
+                    <span className={styles.cfPmOptD}>Compensa em até 2 dias úteis</span>
+                  </span>
+                  <span className={styles.cfPmOptRadio} />
+                </button>
               </div>
             )}
-          </div>
 
-          <div className={`${styles.card} mt-4`}>
-            <label className={`${styles.terms} ${accepted ? styles.termsChecked : ''}`}>
-              <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} />
-              <span className={styles.checkmark}>{accepted ? <Check size={13} /> : null}</span>
+            <div className={styles.cfPmDetail}>
+              <Info size={16} />
               <span>
-                Li e aceito o contrato de aquisição fracionada, a política de lock-up e os termos de
-                uso da plataforma.
+                {isPix ? (
+                  <>Ao confirmar, geramos um <b>QR Pix</b> com validade de 15 minutos. Após o pagamento, os tokens são creditados automaticamente.</>
+                ) : (
+                  <>Ao confirmar, geramos um <b>boleto bancário</b> com vencimento em até 3 dias úteis.</>
+                )}
               </span>
-            </label>
-            <ul className={styles.finePrint}>
-              <li>Os tokens ficam pendentes até confirmação do pagamento pelo provedor.</li>
-              <li>A efetivação on-chain é feita pelo serviço autorizado do contrato.</li>
-            </ul>
+            </div>
           </div>
-        </aside>
+        </div>
       </div>
 
-      <div className={styles.ctaBar}>
-        <div className={styles.ctaSummary}>
-          <span className={styles.ctaK}>Total</span>
-          <strong className={styles.ctaTotal}>{fmt.money(quote.total)}</strong>
-          <span className={styles.ctaMeta}>
-            {fmt.int(cart.quantity)} tokens · {method === 'pix' ? 'PIX' : 'Boleto'}
-          </span>
+      {/* CTA */}
+      <div className={styles.cfCtaBar}>
+        <div className={styles.cfCtaSummary}>
+          <span className={styles.cfCtaK}>Total</span>
+          <strong className={styles.cfCtaTotal}><span className={styles.cfCtaCurrency}>R$</span>{fmt.noSym(quote.total)}</strong>
         </div>
-        <button type="button" className={styles.primary} disabled={!accepted} onClick={proceed}>
-          {method === 'pix' ? 'Gerar QR PIX' : 'Gerar boleto'} <ArrowRight size={16} />
+        <button type="button" className={styles.cfBtn} onClick={proceed}>
+          {isPix ? 'Gerar QR Pix' : 'Gerar boleto'} <ArrowRight size={16} />
         </button>
       </div>
     </main>

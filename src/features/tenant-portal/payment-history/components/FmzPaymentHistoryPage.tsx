@@ -87,7 +87,7 @@ function resolveStatusLabel(status?: string | null): string {
   return STATUS_LABEL[k] ?? status ?? 'Não informado';
 }
 
-function PaymentRowDetail({ item, isOpenCharge }: { item: FmzTenantPaymentHistoryItem; isOpenCharge: boolean }) {
+function PaymentRowDetail({ item, isOpenCharge, isPaid }: { item: FmzTenantPaymentHistoryItem; isOpenCharge: boolean; isPaid: boolean }) {
   const hasTokenPurchase = Number(item.totalPurchasedTokens ?? 0) > 0;
   const hasCondominium = Number(item.condominiumFeeAmount ?? 0) > 0;
 
@@ -129,15 +129,15 @@ function PaymentRowDetail({ item, isOpenCharge }: { item: FmzTenantPaymentHistor
             <FileText /> Ver boleto
           </a>
         )}
-        {item.downloadUrl ? (
+        {isPaid && (item.downloadUrl ? (
           <a href={item.downloadUrl} target="_blank" rel="noreferrer" className={styles.btnSm}>
             <Download /> Baixar comprovante
           </a>
         ) : (
           <button type="button" className={styles.btnSm} disabled>
-            <Download /> PDF indisponível
+            <Download /> Comprovante indisponível
           </button>
-        )}
+        ))}
       </div>
     </div>
   );
@@ -150,6 +150,7 @@ function PaymentRow({ item }: { item: FmzTenantPaymentHistoryItem }) {
   const { abbr, name, year } = parseMonthBadge(item.reference);
   const pillKey = resolvePillKey(item.status);
   const isOpenCharge = pillKey === 'aberto' || pillKey === 'vencido';
+  const isPaid = pillKey === 'pago';
   const rowActionLabel = isOpenCharge ? 'Ver boleto' : 'Comprovante';
 
   return (
@@ -185,7 +186,7 @@ function PaymentRow({ item }: { item: FmzTenantPaymentHistoryItem }) {
           </span>
         </div>
         <div className={styles.rowAct}>
-          {item.downloadUrl && (
+          {(isOpenCharge || isPaid) && item.downloadUrl && (
             <a
               href={item.downloadUrl}
               target="_blank"
@@ -204,7 +205,7 @@ function PaymentRow({ item }: { item: FmzTenantPaymentHistoryItem }) {
       </div>
 
       <div className={`${styles.rowDetail} ${open ? styles.rowDetailOpen : ''}`}>
-        <PaymentRowDetail item={item} isOpenCharge={isOpenCharge} />
+        <PaymentRowDetail item={item} isOpenCharge={isOpenCharge} isPaid={isPaid} />
       </div>
     </>
   );
