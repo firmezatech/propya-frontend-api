@@ -13,7 +13,7 @@ import styles from './FmzVerifyEmailCard.module.css';
 
 type VerifyState = 'loading' | 'success' | 'error';
 
-const REDIRECT_TOTAL_MS = 5000;
+const REDIRECT_TOTAL_MS = 30000;
 const TICK_MS = 100;
 const REDIRECT_DELAY_START_MS = 1200;
 
@@ -37,14 +37,19 @@ export function FmzVerifyEmailCard() {
   const [countdown, setCountdown] = useState(Math.round(REDIRECT_TOTAL_MS / 1000));
   const calledRef = useRef(false);
 
-  // Token verification — calledRef guards against StrictMode double-invocation
+  // Token verification — calledRef guards against StrictMode double-invocation. It must
+  // be the ONLY guard: a token is single-use, so re-running this effect must never refetch.
+  // (A `cancelled` flag set in the cleanup would seem like the React-idiomatic addition
+  // here, but it isn't — StrictMode's synthetic mount→cleanup→mount happens synchronously,
+  // long before the fetch resolves, so that flag would already be `true` by the time the
+  // real response arrives and the result would be silently dropped — the bug this comment
+  // replaces. calledRef alone is sufficient: it guarantees at most one fetch ever happens,
+  // so applying whatever result that one fetch returns is always correct.)
   useEffect(() => {
     if (calledRef.current) return;
     calledRef.current = true;
-    let cancelled = false;
 
     verifyEmailToken(token).then((result) => {
-      if (cancelled) return;
       if (result.success) {
         const email = sessionStorage.getItem('ft_pending_email') ?? '';
         if (email) sessionStorage.removeItem('ft_pending_email');
@@ -60,8 +65,6 @@ export function FmzVerifyEmailCard() {
         setState('error');
       }
     });
-
-    return () => { cancelled = true; };
   }, [token]);
 
   // Auto-redirect countdown — starts after animations complete (1.2 s delay)

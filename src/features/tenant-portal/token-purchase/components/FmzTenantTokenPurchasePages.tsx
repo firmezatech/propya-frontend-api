@@ -12,6 +12,8 @@ import {
   Home,
   Landmark,
   Loader2,
+  Minus,
+  Plus,
   ReceiptText,
   RefreshCw,
   ShieldCheck,
@@ -31,6 +33,7 @@ import {
 } from '../domain/fmz-token-purchase-cart';
 import type {
   FmzTokenPurchaseCart,
+  FmzTokenPurchaseContext,
   FmzTokenPurchasePayment,
   FmzTokenPurchasePaymentMethod,
   FmzTokenPurchaseQuote,
@@ -47,20 +50,21 @@ import {
   mergePixIntoPayment,
   statusIsPaid,
 } from '../services/fmz-token-purchase-api';
-import type { FmzTokenPurchaseContext } from '../domain/fmz-token-purchase.types';
 
 // ── Formatters ─────────────────────────────────────────────────────────────────
 
 const moneyFmt     = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const moneyRoundFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const moneyNoSymFmt = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const intFmt       = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
 const pctFmt       = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 const fmt = {
-  money:    (v: number | null | undefined) => moneyFmt.format(Number(v ?? 0)),
-  noSym:    (v: number | null | undefined) => moneyNoSymFmt.format(Number(v ?? 0)),
-  int:      (v: number | null | undefined) => intFmt.format(Number(v ?? 0)),
-  pct:      (v: number | null | undefined) => `${pctFmt.format(Number(v ?? 0))}%`,
+  money:     (v: number | null | undefined) => moneyFmt.format(Number(v ?? 0)),
+  moneyRound:(v: number | null | undefined) => moneyRoundFmt.format(Number(v ?? 0)),
+  noSym:     (v: number | null | undefined) => moneyNoSymFmt.format(Number(v ?? 0)),
+  int:       (v: number | null | undefined) => intFmt.format(Number(v ?? 0)),
+  pct:       (v: number | null | undefined) => `${pctFmt.format(Number(v ?? 0))}%`,
 };
 
 // ── Navigation helpers ─────────────────────────────────────────────────────────
@@ -250,7 +254,7 @@ export function FmzTenantTokenPurchasePage() {
 
   const { context, loading: contextLoading } = useQuoteContext(propertyTokenizationId);
 
-  // Derive seed values from context (used to require a full dashboard fetch)
+  // Derive seed values from context (replaces the old full-dashboard fetch).
   const currentTokens  = context?.rentProjectionInputs?.currentTokenBalance ?? 0;
   const totalTokens    = context?.totalSupply ?? 0;
   const currentRent    = context?.rentProjectionInputs?.currentRentAmount ?? 0;
@@ -259,30 +263,24 @@ export function FmzTenantTokenPurchasePage() {
   const propertyLabel  = propertyLabelParam ?? context?.tokenName ?? 'Apto 54 Vila Madalena';
   const tokenSymbol    = tokenSymbolParam ?? context?.tokenSymbol ?? 'FT-0412';
 
-  // Goals from context — find next unreached goal for the user
-  const goals = context?.goals ?? [];
-  const nextGoal = goals
-    .filter((g) => g.targetTokenAmount > currentTokens)
-    .sort((a, b) => a.targetTokenAmount - b.targetTokenAmount)[0] ?? null;
-  const nextGoalTokens = nextGoal?.targetTokenAmount ?? 10000;
-  const nextGoalPct    = nextGoal?.targetPercentage ?? 10;
-  const tokensToNextGoal = Math.max(0, nextGoalTokens - currentTokens);
+  // Slider range: floor = tokens the user already holds, ceiling = tokens still
+  // available to buy (total supply minus what's already in circulation).
+  const availableToBuy = Math.max(totalTokens - currentTokens, 0);
+  const minQty = currentTokens > 0 ? currentTokens : (context?.minQuantity ?? 1000);
+  const maxQty = availableToBuy > 0 ? availableToBuy : (context?.maxQuantity ?? 92800);
 
-  const minQty = context?.minQuantity ?? 1000;
-  const maxQty = context?.maxQuantity ?? (totalTokens - currentTokens > 0 ? totalTokens - currentTokens : 92800);
-
-  // Slider starts at user's current token balance, clamped to [minQty, maxQty].
-  // Initialized once context loads — null until then to avoid rendering stale 5000.
+  // Slider starts at the floor (the user's current balance), clamped to [minQty, maxQty].
+  // Initialized once context loads — null until then to avoid rendering a stale default.
   const [quantity, setQuantity] = useState<number | null>(null);
-  const effectiveQuantity = quantity ?? 5000;
+  const effectiveQuantity = quantity ?? minQty;
 
   useEffect(() => {
     if (quantity !== null || contextLoading || !context) return;
-    const initial = Math.max(minQty, Math.min(maxQty, currentTokens > 0 ? currentTokens : minQty));
-    setQuantity(initial);
-  }, [context, contextLoading, quantity, minQty, maxQty, currentTokens]);
+    setQuantity(Math.max(minQty, Math.min(maxQty, minQty)));
+  }, [context, contextLoading, quantity, minQty, maxQty]);
 
-  const [method, setMethod] = useState<FmzTokenPurchasePaymentMethod>('pix');
+  // Payment method is chosen on a later step — PIX is the default carried into the cart.
+  const method: FmzTokenPurchasePaymentMethod = 'pix';
 
   const quoteState = useTokenPurchaseQuote({
     propertyTokenizationId,
@@ -296,10 +294,6 @@ export function FmzTenantTokenPurchasePage() {
   const sliderStep  = 100;
   const currentPct  = totalTokens > 0 ? (currentTokens / totalTokens) * 100 : 0;
   const deltaPct    = totalTokens > 0 ? (effectiveQuantity / totalTokens) * 100 : 0;
-  const availableTokens         = Math.max(totalTokens - currentTokens, 0);
-  const remainingAfterSelection = Math.max(availableTokens - effectiveQuantity, 0);
-  const ownedWidth    = totalTokens > 0 ? Math.min(100, (currentTokens / totalTokens) * 100) : 0;
-  const selectedWidth = totalTokens > 0 ? Math.min(100 - ownedWidth, (effectiveQuantity / totalTokens) * 100) : 0;
 
   const impact = quote
     ? calculateImpactProjection({
@@ -320,8 +314,6 @@ export function FmzTenantTokenPurchasePage() {
   const displayCurrentRent = rentImpact ? rentImpact.currentRentAmount            : currentRent;
   const displayNewRent     = rentImpact ? rentImpact.projectedRentAmount          : impact ? impact.newRent        : currentRent;
   const displayRentSaving  = rentImpact ? rentImpact.monthlySavingsAmount         : impact ? impact.rentSaving     : 0;
-
-  const milestoneProgress = Math.min(100, ((currentTokens + effectiveQuantity) / nextGoalTokens) * 100);
 
   const adjustQuantity = useCallback((next: number) => {
     const snapped = Math.round(next / sliderStep) * sliderStep;
@@ -356,28 +348,18 @@ export function FmzTenantTokenPurchasePage() {
     router.push(localizedHref('/connected/tokens-to-purchase-pix/confirm'));
   }, [quote, method, propertyId, currentTokens, totalTokens, currentRent, fullRent, propertyValue, router]);
 
-  const presetOptions = [
-    { tokens: minQty, label: 'mínimo' },
-    ...(nextGoal && tokensToNextGoal > minQty && tokensToNextGoal <= maxQty
-      ? [{ tokens: tokensToNextGoal, label: nextGoal.title }]
-      : []),
-    { tokens: Math.min(5000, maxQty), label: 'recomendado' },
-    { tokens: Math.min(10000, maxQty), label: '+1 pp' },
-  ].filter((p, i, arr) => p.tokens >= minQty && arr.findIndex((x) => x.tokens === p.tokens) === i);
+  // Plain numeric presets (reference layout) — clamped to the slider range, deduped.
+  const presetValues = Array.from(
+    new Set([minQty, 5000, 10000, 25000].map((value) => Math.min(value, maxQty))),
+  )
+    .filter((value) => value >= minQty)
+    .sort((a, b) => a - b);
 
-  const processingFeeRate = quote?.processingFeePercent ?? (context?.processingFeePercent ?? 7.5);
-  const processingFee  = quote?.processingFeeAmount ?? 0;
-  const purchaseTotal  = quote?.total ?? 0;
+  // Prefer the authoritative quote; fall back to context-derived values until it lands.
+  const displayFeeRate = quote?.processingFeePercent ?? (context?.processingFeePercent ?? 7.5);
   const unitPrice      = quote?.unitPrice ?? (context?.unitPrice ?? 1);
-  const inlineCost     = quote ? quote.total : effectiveQuantity * unitPrice * (1 + processingFeeRate / 100);
-  const futureTokens   = currentTokens + effectiveQuantity;
+  const displayTotal   = quote ? quote.total : effectiveQuantity * unitPrice * (1 + displayFeeRate / 100);
   const formatPercentagePoints = (value: number) => pctFmt.format(Number(value ?? 0));
-
-  const goalLabel = tokensToNextGoal > 0
-    ? `Faltam ${fmt.int(tokensToNextGoal)} tokens para a meta de ${fmt.int(nextGoalPct)}%`
-    : nextGoal
-      ? `Meta ${fmt.int(nextGoalPct)}% atingida!`
-      : 'Continue comprando tokens';
 
   if (!propertyTokenizationId && !contextLoading) {
     return (
@@ -393,224 +375,112 @@ export function FmzTenantTokenPurchasePage() {
   return (
     <main className={styles.buyPage}>
       <button type="button" className={styles.buyBackLink} onClick={() => router.push(localizedHref('/connected/dashboard'))}>
-        <ArrowLeft size={14} />
+        <ArrowLeft size={13} />
         Voltar ao dashboard
       </button>
 
-      <div className={styles.buyHeader}>
-        <div>
-          <p className={styles.buySup}>Tokens · {propertyLabel}</p>
-          <h1 className={styles.buyTitle}>Comprar tokens</h1>
-          <p className={styles.buySub}>
-            <span>
-              Você é dona de <strong>{fmt.pct(displayCurrentPct)}</strong> · próxima meta {fmt.int(nextGoalPct)}%
-            </span>
-            <span className={styles.buyPill}><span />{goalLabel}</span>
-          </p>
+      <div className={styles.buyHead}>
+        <h1 className={styles.buyTitle}>Comprar tokens</h1>
+        <p className={styles.buySub}>{propertyLabel}</p>
+      </div>
+
+      {/* SELECTOR */}
+      <section className={styles.buySelector}>
+        <div className={styles.buySelQ}>Quantos tokens você quer comprar?</div>
+
+        <div className={styles.buySelDisplay}>
+          <button
+            type="button"
+            className={styles.buyStep}
+            disabled={effectiveQuantity <= minQty}
+            onClick={() => adjustQuantity(effectiveQuantity - stepperSize)}
+            aria-label="Diminuir"
+          ><Minus size={18} /></button>
+          <div className={styles.buySelNum}>
+            <div className={styles.buySelN}>{fmt.int(effectiveQuantity)}</div>
+            <div className={styles.buySelU}>{effectiveQuantity === 1 ? 'token' : 'tokens'} · <strong>{tokenSymbol}</strong></div>
+          </div>
+          <button
+            type="button"
+            className={styles.buyStep}
+            disabled={effectiveQuantity >= maxQty}
+            onClick={() => adjustQuantity(effectiveQuantity + stepperSize)}
+            aria-label="Aumentar"
+          ><Plus size={18} /></button>
+        </div>
+
+        <div className={styles.buySliderWrap}>
+          <input
+            className={styles.buySlider}
+            type="range"
+            min={minQty}
+            max={maxQty}
+            step={sliderStep}
+            value={Math.min(maxQty, effectiveQuantity)}
+            onChange={(e) => adjustQuantity(Number(e.target.value))}
+          />
+          <div className={styles.buySliderLabels}>
+            <span>{fmt.int(minQty)}</span>
+            <span>{fmt.int(maxQty)}</span>
+          </div>
+        </div>
+
+        <div className={styles.buyPresets}>
+          {presetValues.map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={`${styles.buyPreset} ${effectiveQuantity === value ? styles.buyPresetActive : ''}`}
+              onClick={() => adjustQuantity(value)}
+            >{fmt.int(value)}</button>
+          ))}
+        </div>
+
+        <div className={styles.buySelCost}>
+          {quoteState.status === 'loading' && (
+            <><Loader2 size={14} className={styles.buySpinner} /> Calculando…</>
+          )}
+          {quoteState.status === 'error' && <span className={styles.buyQuoteError}>{quoteState.message}</span>}
+          {(quoteState.status === 'ok' || quoteState.status === 'idle') && (
+            <>
+              Você paga <b>{fmt.money(displayTotal)}</b>
+              <span className={styles.buySelFee}>inclui taxa de processamento de {formatPercentagePoints(displayFeeRate)}%</span>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* IMPACT */}
+      <div className={styles.buyImpactHead}>O que muda para você</div>
+      <div className={styles.buyImpactGrid}>
+        <div className={styles.buyImpCard}>
+          <div className={styles.buyImpTop}><span className={styles.buyImpIco}><Sparkles size={15} /></span>Sua posse no imóvel</div>
+          <div className={styles.buyImpFlow}>
+            <span className={styles.buyImpFrom}>{fmt.pct(displayCurrentPct)}</span>
+            <span className={styles.buyImpArr}><ArrowRight size={13} /></span>
+            <span className={styles.buyImpTo}>{fmt.pct(displayNewPct)}</span>
+          </div>
+          <span className={`${styles.buyImpTag} ${styles.buyImpTagUp}`}>+{formatPercentagePoints(displayDeltaPct)} pp</span>
+        </div>
+
+        <div className={`${styles.buyImpCard} ${styles.buyImpRent}`}>
+          <div className={styles.buyImpTop}><span className={`${styles.buyImpIco} ${styles.buyImpIcoRent}`}><Landmark size={15} /></span>Seu aluguel mensal</div>
+          <div className={styles.buyImpFlow}>
+            <span className={styles.buyImpFrom}>{fmt.moneyRound(displayCurrentRent)}</span>
+            <span className={styles.buyImpArr}><ArrowRight size={13} /></span>
+            <span className={styles.buyImpTo}>{fmt.moneyRound(displayNewRent)}</span>
+          </div>
+          {displayRentSaving > 0 && (
+            <span className={`${styles.buyImpTag} ${styles.buyImpTagDown}`}>−{fmt.money(displayRentSaving)}/mês</span>
+          )}
         </div>
       </div>
 
-      <section className={styles.buyCols}>
-        <section className={`${styles.buyCard} ${styles.buyInputCard}`}>
-          <span className={styles.buyCardEyebrow}>Quantos tokens quer comprar?</span>
-
-          <div className={styles.buyAvail}>
-            <div className={styles.buyAvailTop}>
-              <span className={styles.buyAvailLabel}><span />Disponíveis para compra</span>
-              <span className={styles.buyAvailNum}>
-                <strong>{fmt.int(availableTokens || maxQty)}</strong> de {fmt.int(totalTokens)} <span>{tokenSymbol}</span>
-              </span>
-            </div>
-            <div className={styles.buyAvailBar}>
-              <div className={styles.buyAvailOwned} style={{ width: `${ownedWidth}%` }} title="Já em circulação" />
-              <div className={styles.buyAvailSelected} style={{ width: `${selectedWidth}%` }} title="Sua seleção" />
-            </div>
-            <div className={styles.buyAvailLegend}>
-              <span><i className={styles.buyLegendOwned} />Em circulação <strong>{fmt.int(currentTokens)}</strong></span>
-              <span><i className={styles.buyLegendSelected} />Sua seleção <strong>{fmt.int(effectiveQuantity)}</strong></span>
-              <span><i className={styles.buyLegendFree} />Restante <strong>{fmt.int(remainingAfterSelection)}</strong></span>
-            </div>
-          </div>
-
-          <div className={styles.buyTokenInput}>
-            <button
-              type="button"
-              className={styles.buyTokenStep}
-              disabled={effectiveQuantity <= minQty}
-              onClick={() => adjustQuantity(effectiveQuantity - stepperSize)}
-              aria-label="Diminuir 1.000"
-            >−</button>
-            <div className={styles.buyTokenDisplay}>
-              <strong>{fmt.int(effectiveQuantity)}</strong>
-              <span>{effectiveQuantity === 1 ? 'token' : 'tokens'} · <b>{tokenSymbol}</b></span>
-            </div>
-            <button
-              type="button"
-              className={styles.buyTokenStep}
-              disabled={effectiveQuantity >= maxQty}
-              onClick={() => adjustQuantity(effectiveQuantity + stepperSize)}
-              aria-label="Aumentar 1.000"
-            >+</button>
-          </div>
-
-          <div className={styles.buyCostLine}>
-            {quoteState.status === 'loading' && (
-              <><Loader2 size={14} className={styles.spinnerInline} /> Calculando…</>
-            )}
-            {quoteState.status === 'ok' && quote && (
-              <>
-                <span>Valor a pagar</span>
-                <strong>{fmt.money(quote.total)}</strong>
-                <small>· inclui taxa de {quote.processingFeePercent}%</small>
-              </>
-            )}
-            {quoteState.status === 'idle' && (
-              <>
-                <span>Valor a pagar</span>
-                <strong>{fmt.money(inlineCost)}</strong>
-                <small>· inclui taxa de {processingFeeRate}%</small>
-              </>
-            )}
-            {quoteState.status === 'error' && <span className={styles.quoteError}>{quoteState.message}</span>}
-          </div>
-
-          <div className={styles.buyPresets}>
-            {presetOptions.map((preset) => (
-              <button
-                key={`${preset.tokens}-${preset.label}`}
-                type="button"
-                className={`${styles.buyPreset} ${effectiveQuantity === preset.tokens ? styles.buyPresetActive : ''}`}
-                onClick={() => adjustQuantity(preset.tokens)}
-                disabled={preset.tokens > maxQty}
-              >
-                <strong>{fmt.int(preset.tokens)}</strong>
-                {nextGoal && preset.label === nextGoal.title
-                  ? <span className={styles.buyGoldTag}>{preset.label}</span>
-                  : <span>{preset.label}</span>}
-              </button>
-            ))}
-          </div>
-
-          <div className={styles.buySliderWrap}>
-            <input
-              className={styles.buySlider}
-              type="range"
-              min={minQty}
-              max={maxQty}
-              step={sliderStep}
-              value={Math.min(maxQty, effectiveQuantity)}
-              onChange={(e) => adjustQuantity(Number(e.target.value))}
-            />
-            <div className={styles.buySliderLabels}>
-              <span>{fmt.int(minQty)}</span>
-              <span>{fmt.int(Math.round((minQty + maxQty) / 2))}</span>
-              <span>{fmt.int(maxQty)}</span>
-            </div>
-          </div>
-        </section>
-
-        <section className={styles.buyCard}>
-          <span className={styles.buyCardEyebrow}>Veja o impacto da sua compra</span>
-
-          <div className={styles.buyImpactRow}>
-            <span className={`${styles.buyImpactIcon} ${styles.buyImpactGold}`}><Sparkles size={16} /></span>
-            <span className={styles.buyImpactLabel}>Sua posse no imóvel<small>Tokens {tokenSymbol} / {fmt.int(totalTokens)} total</small></span>
-            <span className={styles.buyBefore}>{fmt.pct(displayCurrentPct)}</span>
-            <ArrowRight size={13} className={styles.buyImpactArrow} />
-            <strong className={`${styles.buyAfter} ${styles.buyAfterGold}`}>
-              {fmt.pct(displayNewPct)}
-              <span>+{formatPercentagePoints(displayDeltaPct)} pp</span>
-            </strong>
-          </div>
-
-          <div className={styles.buyImpactRow}>
-            <span className={`${styles.buyImpactIcon} ${styles.buyImpactGreen}`}><Landmark size={16} /></span>
-            <span className={styles.buyImpactLabel}>Aluguel mensal<small>Após desconto por tokens</small></span>
-            <span className={styles.buyBefore}>{fmt.money(displayCurrentRent)}</span>
-            <ArrowRight size={13} className={styles.buyImpactArrow} />
-            <strong className={`${styles.buyAfter} ${styles.buyAfterGreen}`}>
-              {fmt.money(displayNewRent)}
-              {displayRentSaving > 0 && <span>−{fmt.money(displayRentSaving)}</span>}
-            </strong>
-          </div>
-
-          <div className={styles.buyImpactRow}>
-            <span className={styles.buyImpactIcon}><WalletCards size={16} /></span>
-            <span className={styles.buyImpactLabel}>Sua fatia em R$<small>Valor de mercado da sua participação</small></span>
-            <span className={styles.buyBefore}>{impact ? fmt.money(impact.currentOwnedValue) : fmt.money(0)}</span>
-            <ArrowRight size={13} className={styles.buyImpactArrow} />
-            <strong className={styles.buyAfter}>{impact ? fmt.money(impact.newOwnedValue) : fmt.money(0)}</strong>
-          </div>
-
-          <div className={styles.buyMilestone}>
-            <div className={styles.buyMilestoneHead}>
-              <span>
-                {nextGoal ? `Progresso até a meta: ${nextGoal.title}` : 'Progresso de aquisição'}
-              </span>
-              <strong>{fmt.int(futureTokens)}/{fmt.int(nextGoalTokens)} tokens</strong>
-            </div>
-            <div className={styles.buyMilestoneTrack}><div style={{ width: `${milestoneProgress}%` }} /></div>
-            <p>
-              {futureTokens >= nextGoalTokens
-                ? <><strong>Meta atingida!</strong> {nextGoal?.rewardDescription ?? 'Continue comprando para o próximo marco.'}</>
-                : <>Faltam <strong>{fmt.int(nextGoalTokens - futureTokens)} tokens</strong> para alcançar {fmt.int(nextGoalPct)}%.</>}
-            </p>
-          </div>
-        </section>
-      </section>
-
-      <section className={`${styles.buyCard} ${styles.buyPaymentCard}`}>
-        <span className={styles.buyCardEyebrow}>Forma de pagamento</span>
-        <div className={styles.buyPaymentOptions}>
-          <button
-            type="button"
-            className={`${styles.buyPaymentOpt} ${method === 'pix' ? styles.buyPaymentActive : ''}`}
-            onClick={() => setMethod('pix')}
-          >
-            <span className={styles.buyRadio} />
-            <span className={`${styles.buyPaymentIcon} ${styles.buyPixIcon}`}><Zap size={16} /></span>
-            <span className={styles.buyPaymentBody}>
-              <span>PIX <b>Recomendado</b></span>
-              <small>Confirmação imediata · tokens creditados em segundos</small>
-            </span>
-          </button>
-
-          <button
-            type="button"
-            className={`${styles.buyPaymentOpt} ${method === 'boleto' ? styles.buyPaymentActive : ''}`}
-            onClick={() => setMethod('boleto')}
-          >
-            <span className={styles.buyRadio} />
-            <span className={styles.buyPaymentIcon}><ReceiptText size={16} /></span>
-            <span className={styles.buyPaymentBody}>
-              <span>Boleto bancário</span>
-              <small>Geramos um boleto agora · compensação em até 2 dias úteis</small>
-            </span>
-          </button>
-        </div>
-      </section>
-
+      {/* CTA */}
       <div className={styles.buyCtaBar}>
         <div className={styles.buyCtaSummary}>
           <span>Total</span>
-          <div>
-            {quoteState.status === 'ok' && quote ? (
-              <>
-                <strong><small>R$</small>{fmt.noSym(purchaseTotal)}</strong>
-                <em>
-                  <b>{fmt.int(effectiveQuantity)} tokens</b>
-                  {processingFee > 0 && ` · taxa ${fmt.money(processingFee)}`}
-                  {' · paga via '}
-                  <b>{method.toUpperCase()}</b>
-                </em>
-              </>
-            ) : (
-              <>
-                <strong><small>R$</small>{fmt.noSym(inlineCost)}</strong>
-                <em><b>{fmt.int(effectiveQuantity)} tokens</b> · paga via <b>{method.toUpperCase()}</b></em>
-              </>
-            )}
-          </div>
+          <strong><small>R$</small>{fmt.noSym(displayTotal)}</strong>
         </div>
         <button
           type="button"
@@ -618,8 +488,7 @@ export function FmzTenantTokenPurchasePage() {
           disabled={quoteState.status !== 'ok'}
           onClick={proceed}
         >
-          <Check size={16} />
-          Confirmar compra
+          Continuar <ArrowRight size={16} />
         </button>
       </div>
     </main>
