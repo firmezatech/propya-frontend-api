@@ -375,78 +375,10 @@ function FailureView({ userName, kycStatus, isRetrying, onRetry }: FailureViewPr
   );
 }
 
-// ─── Processing view ──────────────────────────────────────────────────────────
-// Shown the instant the Didit flow completes, decoupling user feedback from the
-// asynchronous webhook. While the backend confirmation is pending we keep polling;
-// if the poll window expires before a terminal decision, we hold a reassuring
-// "under review" message plus a manual refresh instead of reverting the page.
-
-type ProcessingViewProps = {
-  pollExhausted: boolean;
-  isRefreshing: boolean;
-  onRefresh: () => void;
-};
-
-function ProcessingView({ pollExhausted, isRefreshing, onRefresh }: ProcessingViewProps) {
-  return (
-    <FmzConnectedPageShell width="tenant">
-      <div className={styles.successPage}>
-        <div className={styles.successCard}>
-          <div className={styles.scAccent} />
-          <div className={styles.scBody}>
-
-            <Loader2
-              style={{ width: 44, height: 44, animation: 'spin 1s linear infinite' }}
-              aria-hidden="true"
-            />
-
-            <span className={styles.scBadge}>{pollExhausted ? 'Em análise' : 'Confirmando'}</span>
-
-            <h1 className={styles.scTitle}>
-              {pollExhausted ? 'Verificação recebida' : 'Confirmando sua verificação'}
-            </h1>
-            <p className={styles.scSub}>
-              {pollExhausted ? (
-                <>
-                  Recebemos sua verificação com sucesso. A confirmação final pode levar alguns
-                  instantes — assim que sua conta na <strong>Propya</strong> for liberada, você
-                  será avisado por e-mail.
-                </>
-              ) : (
-                <>
-                  Tudo certo por aqui! Estamos confirmando o resultado da sua verificação com a{' '}
-                  <strong>Didit</strong>. Isso leva apenas alguns segundos.
-                </>
-              )}
-            </p>
-
-            {pollExhausted ? (
-              <button
-                type="button"
-                className={styles.sBtnGold}
-                disabled={isRefreshing}
-                onClick={onRefresh}
-              >
-                {isRefreshing ? (
-                  <Loader2 style={{ width: 17, height: 17, animation: 'spin 1s linear infinite' }} aria-hidden="true" />
-                ) : (
-                  <RefreshCw style={{ width: 17, height: 17 }} aria-hidden="true" />
-                )}
-                {isRefreshing ? 'Verificando...' : 'Atualizar status'}
-              </button>
-            ) : null}
-
-          </div>
-        </div>
-      </div>
-    </FmzConnectedPageShell>
-  );
-}
-
 // ─── Main page component ──────────────────────────────────────────────────────
 
 export function FmzIdentityVerificationPage() {
-  const { kycState, sessionState, justVerified, justFailed, justSubmitted, pollExhausted, userName, startVerification, refetchKyc } =
+  const { kycState, sessionState, justVerified, justFailed, userName, startVerification, refetchKyc } =
     useFmzIdentityVerification();
 
   const isStarting = sessionState.status === 'starting';
@@ -454,19 +386,6 @@ export function FmzIdentityVerificationPage() {
 
   if (justVerified) {
     return <SuccessView userName={userName} />;
-  }
-
-  // Interim state: the Didit flow finished but the backend decision (webhook) hasn't landed yet.
-  // Checked before the status panel so the user always sees an acknowledgement of their submission,
-  // never the unchanged pre-verification page. Terminal flags above take precedence.
-  if (justSubmitted) {
-    return (
-      <ProcessingView
-        pollExhausted={pollExhausted}
-        isRefreshing={kycState.status === 'loading'}
-        onRefresh={() => void refetchKyc()}
-      />
-    );
   }
 
   if (justFailed) {
