@@ -266,13 +266,13 @@ export function FmzTenantTokenPurchasePage() {
   const propertyLabel  = propertyLabelParam ?? context?.tokenName ?? 'Apto 54 Vila Madalena';
   const tokenSymbol    = tokenSymbolParam ?? context?.tokenSymbol ?? 'FT-0412';
 
-  // Slider range: floor = tokens the user already holds, ceiling = tokens still
-  // available to buy (total supply minus what's already in circulation).
+  // Slider range: [purchase minimum, tokens still available to buy].
+  // currentTokens is display-only (impact cards) — it does not set the slider floor.
   const availableToBuy = Math.max(totalTokens - currentTokens, 0);
-  const minQty = currentTokens > 0 ? currentTokens : (context?.minQuantity ?? 1000);
+  const minQty = context?.minQuantity ?? 500;
   const maxQty = availableToBuy > 0 ? availableToBuy : (context?.maxQuantity ?? 92800);
 
-  // Slider starts at the floor (the user's current balance), clamped to [minQty, maxQty].
+  // Slider starts at the purchase minimum, clamped to [minQty, maxQty].
   // Initialized once context loads — null until then to avoid rendering a stale default.
   const [quantity, setQuantity] = useState<number | null>(null);
   const effectiveQuantity = quantity ?? minQty;
@@ -293,8 +293,8 @@ export function FmzTenantTokenPurchasePage() {
 
   const quote = quoteState.status === 'ok' ? quoteState.quote : null;
 
-  const stepperSize = 1000;
-  const sliderStep  = 100;
+  const stepperSize = 500;
+  const sliderStep  = 500;
   const currentPct  = totalTokens > 0 ? (currentTokens / totalTokens) * 100 : 0;
   const deltaPct    = totalTokens > 0 ? (effectiveQuantity / totalTokens) * 100 : 0;
 
