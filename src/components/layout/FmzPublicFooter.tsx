@@ -23,7 +23,10 @@ export function FmzPublicFooter() {
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[13px] text-fmz-text-hint no-underline transition hover:text-fmz-text-primary"
+              // `!` survives the login/register shells' legacy `a{color:inherit}` rule
+              // (class+type selector, higher specificity than a single Tailwind class —
+              // same root cause documented above for the spacing utilities).
+              className="!text-fmz-text-hint text-[13px] no-underline transition hover:!text-fmz-text-primary"
             >
               {link.label}
             </a>
