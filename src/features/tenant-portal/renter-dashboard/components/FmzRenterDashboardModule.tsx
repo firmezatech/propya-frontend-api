@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { FmzConnectedEmptyHome } from "../../components/FmzConnectedEmptyHome";
+import { FmzRenterAwaitingPropertyEmptyState } from "./FmzRenterAwaitingPropertyEmptyState";
 import { FmzDashboardErrorState } from "../../components/FmzDashboardFeedback";
 import { FmzRenterDashboardSkeleton } from "../../../../components/layout";
 import { getDashboardErrorMessage, isMetadataNotAvailableError } from "../../domain/fmz-dashboard-module-errors";
@@ -66,11 +66,11 @@ export function FmzRenterDashboardModule({ propertyId }: { propertyId: string | 
   }, [propertyId]);
 
   if (isLoading) return <FmzRenterDashboardSkeleton />;
-  if (showEmptyHome) return <FmzConnectedEmptyHome />;
+  if (showEmptyHome) return <FmzRenterAwaitingPropertyEmptyState />;
   if (error) return <FmzDashboardErrorState message={error} />;
 
   if (!hasRenterDashboardData(state.dashboard)) {
-    return <FmzConnectedEmptyHome />;
+    return <FmzRenterAwaitingPropertyEmptyState />;
   }
 
   return (

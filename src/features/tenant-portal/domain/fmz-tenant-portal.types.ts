@@ -294,6 +294,16 @@ export type FmzTenantPaymentHistoryItem = {
   paidAt?: string | null;
   status?: string | null;
   amount: number;
+  baseRentAmount?: number | null;
+  adjustmentAmount?: number | null;
+  discountAmount?: number | null;
+  discountedRentAmount?: number | null;
+  rentalAdminFeeAmount?: number | null;
+  condominiumFeeAmount?: number | null;
+  totalPurchasedTokens?: number | null;
+  tokenFeeAmount?: number | null;
+  tokensAccumulated?: number | null;
+  ownershipPercentageAccumulated?: number | null;
   paymentProvider?: string | null;
   paymentMethod?: string | null;
   downloadUrl?: string | null;

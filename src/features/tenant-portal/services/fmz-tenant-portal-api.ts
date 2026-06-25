@@ -43,6 +43,13 @@ const resolvePaymentItemAmount = (row: Record<string, unknown>): number =>
     Number.NaN,
   );
 
+const toSnakeCase = (camelKey: string): string => camelKey.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+
+// Composition fields arrive camelCase from the backend; snake_case is kept as a defensive
+// fallback for any caller that hasn't gone through the JS API layer.
+const numericFieldOrNull = (row: Record<string, unknown>, camelKey: string): number | null =>
+  num(row[camelKey] ?? row[toSnakeCase(camelKey)], 0) || null;
+
 const normalizePaymentHistoryItem = (value: unknown, fallbackReference?: string | null): FmzTenantPaymentHistoryItem | null => {
   const row = toRecord(value);
   const id = resolvePaymentItemId(row);
@@ -58,6 +65,16 @@ const normalizePaymentHistoryItem = (value: unknown, fallbackReference?: string 
     paidAt: str(row.paidAt ?? row.paid_at ?? row.paymentDate ?? row.payment_date),
     status: str(row.status ?? row.statusDescription ?? row.status_description),
     amount: Number.isFinite(amount) ? amount : 0,
+    baseRentAmount: numericFieldOrNull(row, 'baseRentAmount'),
+    adjustmentAmount: numericFieldOrNull(row, 'adjustmentAmount'),
+    discountAmount: numericFieldOrNull(row, 'discountAmount'),
+    discountedRentAmount: numericFieldOrNull(row, 'discountedRentAmount'),
+    rentalAdminFeeAmount: numericFieldOrNull(row, 'rentalAdminFeeAmount'),
+    condominiumFeeAmount: numericFieldOrNull(row, 'condominiumFeeAmount'),
+    totalPurchasedTokens: numericFieldOrNull(row, 'totalPurchasedTokens'),
+    tokenFeeAmount: numericFieldOrNull(row, 'tokenFeeAmount'),
+    tokensAccumulated: numericFieldOrNull(row, 'tokensAccumulated'),
+    ownershipPercentageAccumulated: numericFieldOrNull(row, 'ownershipPercentageAccumulated'),
     paymentProvider: str(row.paymentProvider ?? row.payment_provider ?? row.provider),
     paymentMethod: str(row.paymentMethod ?? row.payment_method) ?? 'boleto',
     downloadUrl: str(row.downloadUrl ?? row.download_url ?? row.boletoUrl ?? row.boleto_url),
