@@ -157,7 +157,13 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
     let isActive = true;
     probeActiveSession().then((sessionExistsElsewhere) => {
       if (!isActive) return;
-      if (sessionExistsElsewhere) {
+      // Re-check hasFirmezaSession() before redirecting: the probe takes ~150 ms
+      // and the token may have appeared in this tab's storage in that window.
+      // Without the re-check, a session that lives only in another tab's
+      // sessionStorage would redirect here even though this tab has no token —
+      // FmzAuthenticatedRoute would bounce the user straight back to login,
+      // creating an infinite loop between the login page and the connected area.
+      if (sessionExistsElsewhere && hasFirmezaSession()) {
         redirectToExistingSession();
         return;
       }

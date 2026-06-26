@@ -11,7 +11,7 @@ import { FmzAdminLayout } from './FmzAdminLayout';
 import { FmzFullPageLoading } from './FmzFullPageLoading';
 import { getCurrentAccessControlPrincipal } from '../../features/access-control/services';
 import type { FmzAccessControlPrincipal } from '../../features/access-control/domain';
-import { FMZ_AUTH_SESSION_CHANGED_EVENT } from '../../services/auth/auth-storage';
+import { FMZ_AUTH_SESSION_CHANGED_EVENT, hasFirmezaSession } from '../../services/auth/auth-storage';
 import { hasAdminAccessiblePage } from '../../features/access-control/domain';
 import { FmzRouteAccessGuard } from '../../features/access-control/components/FmzRouteAccessGuard';
 import { FmzCelebrationRedirectGate } from './FmzCelebrationRedirectGate';
@@ -61,6 +61,16 @@ export function FmzConnectedLayoutFrame({ children }: FmzConnectedLayoutFramePro
   const isLogoutPage = isConnectedLogoutPath(pathname);
 
   const loadCurrentPrincipal = useCallback(async () => {
+    // Guard: if the session is already gone, skip the loading-state cycle.
+    // Toggling isAccessLoading(true) would re-mount FmzAuthenticatedRoute inside
+    // the loading branch, which fires its own router.replace to login — creating a
+    // duplicate navigation that races with FmzRouteAccessGuard's redirect.
+    // FmzAuthenticatedRoute's own `storage` listener already handles the redirect.
+    if (!hasFirmezaSession()) {
+      setCurrentPrincipal(null);
+      setIsAccessLoading(false);
+      return;
+    }
     setIsAccessLoading(true);
     try {
       const principal = await getCurrentAccessControlPrincipal();
