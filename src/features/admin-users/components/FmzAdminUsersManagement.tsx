@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -58,7 +58,7 @@ import type {
   FmzAdminUserWallet,
 } from '../domain';
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
 type ViewMode = 'list' | 'edit';
 type Toast = { message: string; ok: boolean } | null;
 type UserKpis = { total: number; active: number; owners: number; tenants: number };
@@ -391,7 +391,7 @@ export function FmzAdminUsersManagement() {
   const backToList = () => { setView('list'); setForm(EMPTY_FORM); setSelectedUser(null); setStep(1); setError(null); };
   const setField = <K extends keyof UserFormState>(field: K, value: UserFormState[K]) => setForm((current) => ({ ...current, [field]: value }));
 
-  const validateBasicData = () => {
+  const validatePersonalData = () => {
     if (!form.name.trim()) { notify('Informe o nome completo.', false); return false; }
     if (!isValidEmail(form.email)) { notify('Informe um e-mail válido.', false); return false; }
     if (!isEditing && form.password.trim().length < 8) { notify('A senha precisa ter pelo menos 8 caracteres.', false); return false; }
@@ -400,7 +400,7 @@ export function FmzAdminUsersManagement() {
   };
 
   const goStep = (nextStep: Step) => {
-    if (nextStep > 1 && !validateBasicData()) return;
+    if (nextStep > step && step === 1 && !validatePersonalData()) return;
     setStep(nextStep);
   };
 
@@ -414,8 +414,8 @@ export function FmzAdminUsersManagement() {
   };
 
   const saveUser = async () => {
-    if (!validateBasicData()) { setStep(1); return; }
-    if (!form.roleKeys.length) { notify('Selecione pelo menos um tipo de acesso.', false); setStep(2); return; }
+    if (!validatePersonalData()) { setStep(1); return; }
+    if (!form.roleKeys.length) { notify('Selecione pelo menos um tipo de acesso.', false); setStep(3); return; }
     setSaving(true); setError(null);
     try {
       if (isEditing) await updateAdminUser(draftFromForm(form));
@@ -513,37 +513,41 @@ export function FmzAdminUsersManagement() {
     <section className="min-h-[calc(100vh-124px)] text-[#0D1321]">
       <div className="w-full">
         <FmzFormAlert error={error} />
-        {view === 'list' ? (
-          <>
-            <UserKpiStrip kpis={kpis} />
-            <UserList
-              users={filteredUsers}
-              roles={roleByKey}
-              roleOptions={roles}
-              query={query}
-              onQuery={setQuery}
-              statusFilter={statusFilter}
-              onStatusFilter={handleStatusFilterChange}
-              roleFilter={roleFilter}
-              onRoleFilter={handleRoleFilterChange}
-              onCreate={openCreate}
-              onOpen={(user) => void openDrawer(user)}
-              pagination={pagination}
-              loading={loading}
-            />
-          </>
-        ) : (
-          <div className="animate-[fmzFadeIn_.25s_ease]">
-            <EditHeader isEditing={isEditing} userName={form.name} onBack={backToList} />
-            {detailsLoading && <div className="mb-4 rounded-xl border border-[#E8EAF0] bg-white px-4 py-3 text-[13px] text-[#5A6478]"><Loader2 className="mr-2 inline h-4 w-4 animate-spin" />Carregando detalhes do usuário...</div>}
-            {selectedUser && <ReadOnlyUserDetails user={selectedUser} />}
-            <Steps step={step} />
-            {step === 1 && <BasicStep form={form} isEditing={isEditing} onField={setField} onNext={() => goStep(2)} />}
-            {step === 2 && <RolesStep roles={roles} selectedRoleKeys={form.roleKeys} onToggleRole={toggleRole} onBack={() => goStep(1)} onNext={() => goStep(3)} />}
-            {step === 3 && <SummaryStep form={form} roles={roleByKey} isEditing={isEditing} saving={saving} onBack={() => goStep(2)} onSave={saveUser} onDelete={removeUser} />}
-          </div>
-        )}
+        <UserKpiStrip kpis={kpis} />
+        <UserList
+          users={filteredUsers}
+          roles={roleByKey}
+          roleOptions={roles}
+          query={query}
+          onQuery={setQuery}
+          statusFilter={statusFilter}
+          onStatusFilter={handleStatusFilterChange}
+          roleFilter={roleFilter}
+          onRoleFilter={handleRoleFilterChange}
+          onCreate={openCreate}
+          onOpen={(user) => void openDrawer(user)}
+          pagination={pagination}
+          loading={loading}
+        />
       </div>
+      <WizardModal
+        open={view === 'edit'}
+        isEditing={isEditing}
+        step={step}
+        form={form}
+        roles={roles}
+        roleByKey={roleByKey}
+        saving={saving}
+        detailsLoading={detailsLoading}
+        selectedUser={selectedUser}
+        error={error}
+        onClose={backToList}
+        onStep={goStep}
+        onField={setField}
+        onToggleRole={toggleRole}
+        onSave={saveUser}
+        onDelete={removeUser}
+      />
       <UserDrawer
         user={drawerUser}
         loading={drawerLoading}
@@ -569,20 +573,160 @@ export function FmzAdminUsersManagement() {
 }
 
 
-function EditHeader({ isEditing, userName, onBack }: { isEditing: boolean; userName: string; onBack: () => void }) {
+
+// ─── Wizard modal ─────────────────────────────────────────────────────────────
+
+const WZ_STEP_LABELS = ['Dados pessoais', 'Endereço', 'Tipos de acesso', 'Revisão'] as const;
+
+type WizardModalProps = {
+  open: boolean;
+  isEditing: boolean;
+  step: Step;
+  form: UserFormState;
+  roles: FmzAccessControlRole[];
+  roleByKey: Map<string, FmzAccessControlRole>;
+  saving: boolean;
+  detailsLoading: boolean;
+  selectedUser: FmzAdminUser | null;
+  error: FmzNormalizedApiError | null;
+  onClose: () => void;
+  onStep: (step: Step) => void;
+  onField: <K extends keyof UserFormState>(field: K, value: UserFormState[K]) => void;
+  onToggleRole: (roleKey: string) => void;
+  onSave: () => void;
+  onDelete: () => void;
+};
+
+function WizardModal({ open, isEditing, step, form, roles, roleByKey, saving, detailsLoading, selectedUser, error, onClose, onStep, onField, onToggleRole, onSave, onDelete }: WizardModalProps) {
+  const isLast = step === 4;
   return (
-    <div className="mb-6 rounded-2xl border border-[#E8EAF0] bg-white p-4 shadow-sm sm:flex sm:items-center sm:justify-between sm:p-5">
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[#9AA3B0]">Gestão de usuários</p>
-        <h1 className="mt-1 text-xl font-extrabold tracking-[-.02em] text-[#0D1321]">{isEditing ? `Editar ${userName || 'usuário'}` : 'Novo usuário'}</h1>
-        <p className="mt-1 text-[12.5px] text-[#5A6478]">Campos de wallet, contratos e percentuais são somente leitura e vêm do backend.</p>
+    <>
+      <div className={fmzCn('fixed inset-0 z-[350] bg-[#0D1321]/40 transition-opacity duration-300', open ? 'opacity-100' : 'pointer-events-none opacity-0')} aria-hidden="true" />
+      <div className={fmzCn('fixed inset-0 z-[360] flex items-center justify-center p-4 transition-opacity duration-300', open ? 'opacity-100' : 'pointer-events-none opacity-0')}>
+        <div className={fmzCn('flex w-full max-w-[560px] flex-col overflow-hidden rounded-2xl shadow-[0_32px_80px_rgba(13,19,33,.4)] transition-transform duration-300', open ? 'translate-y-0' : 'translate-y-3')}>
+          <div className="relative flex-shrink-0 bg-[#0D1321] px-6 pb-5 pt-5 text-white">
+            <button onClick={onClose} aria-label="Fechar" className="absolute right-4 top-4 flex h-[30px] w-[30px] items-center justify-center rounded-lg border border-white/20 bg-white/10 transition hover:bg-white/20">
+              <X className="h-3.5 w-3.5" />
+            </button>
+            <p className="text-[18px] font-bold tracking-[-.02em]">{isEditing ? 'Editar usuário' : 'Novo usuário'}</p>
+            <p className="mt-0.5 text-[12px] text-white/60">Etapa {step} de {WZ_STEP_LABELS.length} · {WZ_STEP_LABELS[step - 1]}</p>
+            <WizardStepper step={step} />
+          </div>
+          <div className="flex-1 overflow-y-auto bg-white px-6 py-5" style={{ maxHeight: 'calc(100dvh - 280px)' }}>
+            <FmzFormAlert error={error} />
+            {detailsLoading && (
+              <p className="mb-4 flex items-center gap-2 text-[12.5px] text-[#5A6478]">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />Carregando detalhes do usuário...
+              </p>
+            )}
+            {isEditing && selectedUser && <ReadOnlyUserDetails user={selectedUser} />}
+            {step === 1 && <PersonalStep form={form} isEditing={isEditing} onField={onField} />}
+            {step === 2 && <AddressStep form={form} onField={onField} />}
+            {step === 3 && <RolesStep roles={roles} selectedRoleKeys={form.roleKeys} onToggleRole={onToggleRole} />}
+            {step === 4 && <SummaryStep form={form} roles={roleByKey} isEditing={isEditing} saving={saving} onDelete={onDelete} />}
+          </div>
+          <div className="flex flex-shrink-0 items-center justify-between border-t border-[#E8EAF0] bg-white px-6 py-4">
+            {step > 1 ? (
+              <button onClick={() => onStep((step - 1) as Step)} className="inline-flex items-center gap-2 rounded-[9px] border border-[#E8EAF0] bg-white px-5 py-2.5 text-[12px] font-semibold text-[#5A6478] transition hover:border-[#0D1321]">
+                <ArrowLeft className="h-3.5 w-3.5" />Voltar
+              </button>
+            ) : (
+              <button onClick={onClose} className="inline-flex items-center gap-2 rounded-[9px] border border-[#E8EAF0] bg-white px-5 py-2.5 text-[12px] font-semibold text-[#5A6478] transition hover:border-[#0D1321]">
+                Cancelar
+              </button>
+            )}
+            {isLast ? (
+              <button onClick={onSave} disabled={saving} className="inline-flex items-center gap-2 rounded-[9px] bg-[#F5C842] px-6 py-2.5 text-[12px] font-bold text-[#0D1321] shadow-[0_4px_16px_rgba(245,200,66,.3)] transition hover:-translate-y-0.5 disabled:opacity-50">
+                {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                {isEditing ? 'Salvar alterações' : 'Criar usuário'}
+              </button>
+            ) : (
+              <button onClick={() => onStep((step + 1) as Step)} className="inline-flex items-center gap-2 rounded-[9px] bg-[#0D1321] px-6 py-2.5 text-[12px] font-bold text-white transition hover:-translate-y-0.5">
+                Continuar<ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
-      <button onClick={onBack} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[9px] border border-[#E8EAF0] bg-[#F7F8FA] px-4 py-3 text-[12px] font-bold uppercase tracking-[.04em] text-[#0D1321] transition hover:-translate-y-0.5 hover:border-[#0D1321] sm:mt-0 sm:w-auto">
-        <ArrowLeft className="h-4 w-4" />Voltar para a listagem de usuários
-      </button>
+    </>
+  );
+}
+
+function WizardStepper({ step }: { step: Step }) {
+  return (
+    <div className="mt-4 flex items-start">
+      {WZ_STEP_LABELS.map((label, index) => {
+        const num = index + 1;
+        const done = num < step;
+        const active = num === step;
+        return (
+          <Fragment key={label}>
+            <div className="flex flex-col items-center gap-1.5">
+              <div className={fmzCn(
+                'flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-bold',
+                done ? 'border-[#F5C842] bg-[#F5C842] text-[#0D1321]' :
+                active ? 'border-white bg-white text-[#0D1321]' :
+                'border-white/25 bg-transparent text-white/40',
+              )}>
+                {done ? <Check className="h-3 w-3" /> : num}
+              </div>
+              <span className={fmzCn(
+                'whitespace-nowrap text-[9px] font-semibold leading-none',
+                done ? 'text-[#F5C842]' : active ? 'text-white' : 'text-white/35',
+              )}>{label}</span>
+            </div>
+            {index < WZ_STEP_LABELS.length - 1 && (
+              <div className={fmzCn('mx-2 mt-3 h-px flex-1', done ? 'bg-[#F5C842]/50' : 'bg-white/20')} />
+            )}
+          </Fragment>
+        );
+      })}
     </div>
   );
 }
+
+function PersonalStep({ form, isEditing, onField }: { form: UserFormState; isEditing: boolean; onField: <K extends keyof UserFormState>(field: K, value: UserFormState[K]) => void }) {
+  return (
+    <div>
+      <p className="mb-1 text-[16px] font-bold text-[#0D1321]">Dados pessoais</p>
+      <p className="mb-5 text-[12.5px] leading-[1.5] text-[#5A6478]">Informações de identificação e contato do novo usuário.</p>
+      <div className="grid gap-x-5 sm:grid-cols-2">
+        <Field className="sm:col-span-2" label="Nome completo *" value={form.name} placeholder="Ex.: Ana Beatriz Souza" onChange={(v) => onField('name', v)} />
+        <Field className="sm:col-span-2" label="E-mail *" type="email" value={form.email} placeholder="nome@email.com" onChange={(v) => onField('email', v)} />
+        <Field label="Telefone / WhatsApp" value={form.phone} placeholder="+55 11 9 0000-0000" onChange={(v) => onField('phone', v)} />
+        <Field label="Nascimento" value={form.birthdate} placeholder="DD/MM/AAAA" onChange={(v) => onField('birthdate', formatBirthdateInput(v))} />
+        {!isEditing && <Field className="sm:col-span-2" label="Senha *" type="password" value={form.password} placeholder="Mínimo 8 caracteres" onChange={(v) => onField('password', v)} />}
+      </div>
+      <div className="mb-5">
+        <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[.07em] text-[#5A6478]">Status da conta</span>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => onField('status', 'active')} className={fmzCn('flex-1 rounded-lg border px-3 py-2.5 text-[13px] font-medium transition', form.status === 'active' ? 'border-[#1A8C5B] bg-[#F0FAF5] text-[#1A8C5B]' : 'border-[#E8EAF0] bg-white text-[#5A6478] hover:border-[#0D1321]')}>✓ Ativo</button>
+          <button type="button" onClick={() => onField('status', 'inactive')} className={fmzCn('flex-1 rounded-lg border px-3 py-2.5 text-[13px] font-medium transition', form.status === 'inactive' ? 'border-[#9AA3B0] bg-[#F0F1F5] text-[#5A6478]' : 'border-[#E8EAF0] bg-white text-[#5A6478] hover:border-[#0D1321]')}>○ Inativo</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AddressStep({ form, onField }: { form: UserFormState; onField: <K extends keyof UserFormState>(field: K, value: UserFormState[K]) => void }) {
+  return (
+    <div>
+      <p className="mb-1 text-[16px] font-bold text-[#0D1321]">Endereço</p>
+      <p className="mb-5 text-[12.5px] leading-[1.5] text-[#5A6478]">Endereço de cadastro. Usado para correspondência e contratos.</p>
+      <div className="grid gap-x-5 sm:grid-cols-2">
+        <Field className="sm:col-span-2" label="Logradouro e número" value={form.addressLine1} placeholder="Rua das Flores, 142" onChange={(v) => onField('addressLine1', v)} />
+        <Field label="Complemento" value={form.addressLine2} placeholder="Apto 31" onChange={(v) => onField('addressLine2', v)} />
+        <Field label="Bairro" value={form.district} placeholder="Pinheiros" onChange={(v) => onField('district', v)} />
+        <Field label="Cidade" value={form.city} placeholder="São Paulo" onChange={(v) => onField('city', v)} />
+        <Field label="Estado" value={form.state} placeholder="SP" onChange={(v) => onField('state', v)} />
+        <Field label="CEP" value={form.postalCode} placeholder="00000-000" onChange={(v) => onField('postalCode', v)} />
+        <Field label="País" value={form.country} placeholder="BR" onChange={(v) => onField('country', v)} />
+      </div>
+    </div>
+  );
+}
+
+// ─── KPI strip ────────────────────────────────────────────────────────────────
 
 function UserKpiStrip({ kpis }: { kpis: UserKpis | null }) {
   // "Total de usuários" has no sub-caption: the reference's "+38 este mês" needs a
@@ -1125,14 +1269,6 @@ function Badge({ children }: { children: ReactNode }) {
   return <span className="rounded-full border border-[#E8EAF0] bg-white px-2.5 py-1 text-[10.5px] font-semibold text-[#5A6478]">{children}</span>;
 }
 
-function Steps({ step }: { step: Step }) {
-  const labels = ['Dados do usuário', 'Tipos de acesso', 'Confirmar e salvar'];
-  return <div className="mb-8 overflow-hidden rounded-xl border border-[#E8EAF0] bg-white md:flex">{labels.map((label, index) => { const currentStep = (index + 1) as Step; const done = currentStep < step; const active = currentStep === step; return <div key={label} className={fmzCn('flex flex-1 items-center gap-3 border-b border-[#E8EAF0] px-4 py-3 md:border-b-0 md:border-r last:border-0', active && 'bg-[#FFFDF0]')}><span className={fmzCn('flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-bold', done ? 'border-[#1A8C5B] bg-[#1A8C5B] text-white' : active ? 'border-[#0D1321] bg-[#0D1321] text-white' : 'border-[#E8EAF0] bg-[#F7F8FA] text-[#9AA3B0]')}>{done ? <Check className="h-3 w-3" /> : currentStep}</span><span className={fmzCn('text-[12.5px] font-medium', done ? 'text-[#1A8C5B]' : active ? 'font-semibold text-[#0D1321]' : 'text-[#9AA3B0]')}>{label}</span></div>; })}</div>;
-}
-
-function BasicStep({ form, isEditing, onField, onNext }: { form: UserFormState; isEditing: boolean; onField: <K extends keyof UserFormState>(field: K, value: UserFormState[K]) => void; onNext: () => void }) {
-  return <div><div className="rounded-2xl border border-[#E8EAF0] bg-white p-5 shadow-sm sm:p-7"><h2 className="text-base font-bold">Quem é esse usuário?</h2><p className="mt-1 text-[13px] leading-6 text-[#5A6478]">Preencha os dados editáveis. Wallets, contratos e percentuais são somente leitura.</p><div className="mt-6 grid gap-x-5 sm:grid-cols-2"><Field className="sm:col-span-2" label="Nome completo *" value={form.name} placeholder="Ex: Mirella Souza" onChange={(value) => onField('name', value)} /><Field label="E-mail *" type="email" value={form.email} placeholder="email@exemplo.com" onChange={(value) => onField('email', value)} /><Field label="Telefone / WhatsApp" value={form.phone} placeholder="+55 11 9 0000-0000" onChange={(value) => onField('phone', value)} /><Field label={isEditing ? 'Nova senha (deixe em branco para manter)' : 'Senha *'} type="password" value={form.password} placeholder="Mínimo 8 caracteres" onChange={(value) => onField('password', value)} /><Field label="Nascimento" value={form.birthdate} placeholder="DD/MM/AAAA" onChange={(value) => onField('birthdate', formatBirthdateInput(value))} /><div className="mb-5"><span className="mb-2 block text-[11px] font-semibold uppercase tracking-[.07em] text-[#5A6478]">Status da conta</span><div className="flex gap-2"><button type="button" onClick={() => onField('status', 'active')} className={fmzCn('flex-1 rounded-lg border px-3 py-2.5 text-[13px] font-medium transition', form.status === 'active' ? 'border-[#1A8C5B] bg-[#F0FAF5] text-[#1A8C5B]' : 'border-[#E8EAF0] bg-white text-[#5A6478] hover:border-[#0D1321]')}>✓ Ativo</button><button type="button" onClick={() => onField('status', 'inactive')} className={fmzCn('flex-1 rounded-lg border px-3 py-2.5 text-[13px] font-medium transition', form.status === 'inactive' ? 'border-[#9AA3B0] bg-[#F0F1F5] text-[#5A6478]' : 'border-[#E8EAF0] bg-white text-[#5A6478] hover:border-[#0D1321]')}>○ Inativo</button></div></div></div><div className="mt-2 rounded-2xl border border-[#E8EAF0] bg-[#F7F8FA] p-4"><div className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.08em] text-[#5A6478]"><MapPin className="h-3.5 w-3.5" />Endereço</div><div className="grid gap-x-5 sm:grid-cols-2"><Field className="sm:col-span-2" label="Endereço completo" value={form.address} placeholder="Rua, número, complemento" onChange={(value) => onField('address', value)} /><Field label="Logradouro" value={form.addressLine1} placeholder="Rua X, 123" onChange={(value) => onField('addressLine1', value)} /><Field label="Complemento" value={form.addressLine2} placeholder="Apto 12" onChange={(value) => onField('addressLine2', value)} /><Field label="Bairro" value={form.district} placeholder="Centro" onChange={(value) => onField('district', value)} /><Field label="Cidade" value={form.city} placeholder="São Paulo" onChange={(value) => onField('city', value)} /><Field label="Estado" value={form.state} placeholder="SP" onChange={(value) => onField('state', value)} /><Field label="CEP" value={form.postalCode} placeholder="01000-000" onChange={(value) => onField('postalCode', value)} /><Field label="País" value={form.country} placeholder="BR" onChange={(value) => onField('country', value)} /></div></div></div><div className="mt-6 flex justify-end"><button onClick={onNext} className="inline-flex w-full items-center justify-center gap-2 rounded-[9px] bg-[#0D1321] px-7 py-3 text-[13px] font-bold uppercase tracking-[.04em] text-white transition hover:-translate-y-0.5 sm:w-auto">Próximo: definir acessos<ChevronRight className="h-3.5 w-3.5" /></button></div></div>;
-}
 
 const FIELD_FOCUS_CLASSNAME = 'h-auto rounded-[9px] border border-[#E8EAF0] bg-white px-3.5 py-3 focus-within:border-[#F5C842] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(245,200,66,.13)]';
 
@@ -1161,14 +1297,14 @@ function Field({ label, value, onChange, placeholder, type = 'text', className }
   );
 }
 
-function RolesStep({ roles, selectedRoleKeys, onToggleRole, onBack, onNext }: { roles: FmzAccessControlRole[]; selectedRoleKeys: string[]; onToggleRole: (roleKey: string) => void; onBack: () => void; onNext: () => void }) {
+function RolesStep({ roles, selectedRoleKeys, onToggleRole }: { roles: FmzAccessControlRole[]; selectedRoleKeys: string[]; onToggleRole: (roleKey: string) => void }) {
   const selected = new Set(selectedRoleKeys.map(normalizeKey));
-  return <div><div className="rounded-2xl border border-[#E8EAF0] bg-white p-5 shadow-sm sm:p-7"><h2 className="text-base font-bold">O que esse usuário pode acessar?</h2><p className="mt-1 text-[13px] leading-6 text-[#5A6478]">As permissões e páginas vêm das roles retornadas pelo backend.</p><div className="mt-5 flex gap-2.5 rounded-xl border border-[#F0D870] bg-[#FFF9E6] px-4 py-3 text-[12.5px] text-[#7D5A00]"><ShieldCheck className="h-4 w-4 shrink-0" />O frontend envia apenas roles. Wallets, propriedades e ownership não são enviados no salvamento.</div><div className="mt-5 flex flex-col gap-2.5">{roles.map((role, index) => { const key = roleKey(role); const isOn = selected.has(key); const color = role.color || ROLE_COLORS[index % ROLE_COLORS.length]; return <button key={key} onClick={() => onToggleRole(key)} className={fmzCn('overflow-hidden rounded-xl border text-left transition', isOn ? 'border-[#F5C842]' : 'border-[#E8EAF0]')}><span className={fmzCn('flex items-center gap-3 px-4 py-3.5 transition hover:bg-[#F7F8FA]', isOn && 'bg-[#FFFDF0] hover:bg-[#FFFDF0]')}><span className={fmzCn('relative h-5 w-9 shrink-0 rounded-full transition', isOn ? 'bg-[#0D1321]' : 'bg-[#E8EAF0]')}><span className={fmzCn('absolute top-[3px] h-3.5 w-3.5 rounded-full bg-white shadow transition-transform', isOn ? 'translate-x-[19px]' : 'translate-x-[3px]')} /></span><span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color }} /><span className="min-w-0 flex-1"><span className="block text-[13.5px] font-medium text-[#0D1321]">{roleLabel(role)}</span><span className="mt-0.5 block text-[11px] text-[#9AA3B0]">{roleDescription(role)}</span></span><span className="hidden whitespace-nowrap text-[11px] text-[#9AA3B0] sm:block">{role.permissionKeys.length} permissão{role.permissionKeys.length === 1 ? '' : 'ões'}</span></span></button>; })}</div></div><div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between"><button onClick={onBack} className="inline-flex items-center justify-center gap-2 rounded-[9px] border border-[#E8EAF0] bg-white px-5 py-3 text-[13px] text-[#5A6478]"><ArrowLeft className="h-3.5 w-3.5" />Voltar</button><button onClick={onNext} className="inline-flex items-center justify-center gap-2 rounded-[9px] bg-[#0D1321] px-7 py-3 text-[13px] font-bold uppercase text-white">Revisar e salvar<ChevronRight className="h-3.5 w-3.5" /></button></div></div>;
+  return <div><div className="rounded-2xl border border-[#E8EAF0] bg-white p-5 shadow-sm sm:p-7"><h2 className="text-base font-bold">O que esse usuário pode acessar?</h2><p className="mt-1 text-[13px] leading-6 text-[#5A6478]">As permissões e páginas vêm das roles retornadas pelo backend.</p><div className="mt-5 flex gap-2.5 rounded-xl border border-[#F0D870] bg-[#FFF9E6] px-4 py-3 text-[12.5px] text-[#7D5A00]"><ShieldCheck className="h-4 w-4 shrink-0" />O frontend envia apenas roles. Wallets, propriedades e ownership não são enviados no salvamento.</div><div className="mt-5 flex flex-col gap-2.5">{roles.map((role, index) => { const key = roleKey(role); const isOn = selected.has(key); const color = role.color || ROLE_COLORS[index % ROLE_COLORS.length]; return <button key={key} onClick={() => onToggleRole(key)} className={fmzCn('overflow-hidden rounded-xl border text-left transition', isOn ? 'border-[#F5C842]' : 'border-[#E8EAF0]')}><span className={fmzCn('flex items-center gap-3 px-4 py-3.5 transition hover:bg-[#F7F8FA]', isOn && 'bg-[#FFFDF0] hover:bg-[#FFFDF0]')}><span className={fmzCn('relative h-5 w-9 shrink-0 rounded-full transition', isOn ? 'bg-[#0D1321]' : 'bg-[#E8EAF0]')}><span className={fmzCn('absolute top-[3px] h-3.5 w-3.5 rounded-full bg-white shadow transition-transform', isOn ? 'translate-x-[19px]' : 'translate-x-[3px]')} /></span><span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color }} /><span className="min-w-0 flex-1"><span className="block text-[13.5px] font-medium text-[#0D1321]">{roleLabel(role)}</span><span className="mt-0.5 block text-[11px] text-[#9AA3B0]">{roleDescription(role)}</span></span><span className="hidden whitespace-nowrap text-[11px] text-[#9AA3B0] sm:block">{role.permissionKeys.length} permissão{role.permissionKeys.length === 1 ? '' : 'ões'}</span></span></button>; })}</div></div></div>;
 }
 
-function SummaryStep({ form, roles, isEditing, saving, onBack, onSave, onDelete }: { form: UserFormState; roles: Map<string, FmzAccessControlRole>; isEditing: boolean; saving: boolean; onBack: () => void; onSave: () => void; onDelete: () => void }) {
+function SummaryStep({ form, roles, isEditing, saving, onDelete }: { form: UserFormState; roles: Map<string, FmzAccessControlRole>; isEditing: boolean; saving: boolean; onDelete: () => void }) {
   const [bg, fg] = avatarColor(form.id || form.email);
-  return <div><div className="overflow-hidden rounded-2xl border border-[#E8EAF0] bg-white shadow-sm"><div className="flex flex-col gap-3 border-b border-[#E8EAF0] px-5 py-4 sm:flex-row sm:items-center sm:px-6"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[15px] font-bold" style={{ background: bg, color: fg }}>{initials(form.name)}</span><span className="min-w-0 flex-1"><h2 className="truncate text-lg font-extrabold">{form.name || '—'}</h2><p className="mt-0.5 truncate text-[12.5px] text-[#5A6478]">{[form.email, form.phone, form.city].filter(Boolean).join(' · ') || '—'}</p></span><span className={fmzCn('inline-flex w-fit items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-semibold', form.status === 'active' ? 'border-[#A8DFC4] bg-[#F0FAF5] text-[#1A8C5B]' : 'border-[#E8EAF0] bg-[#F0F1F5] text-[#9AA3B0]')}>{form.status === 'active' ? '● Ativo' : '○ Inativo'}</span></div><div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-2"><div><div className="mb-3 text-[10.5px] font-bold uppercase tracking-[.08em] text-[#9AA3B0]">Tipos de acesso atribuídos</div><div className="flex flex-col gap-3">{form.roleKeys.length ? form.roleKeys.map((key) => { const role = roles.get(normalizeKey(key)); const color = role?.color || '#7F8C8D'; return <div key={key} className="flex items-center gap-3 rounded-lg border border-[#E8EAF0] bg-[#F7F8FA] px-3 py-3"><span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} /><span className="text-[13px] font-medium">{role ? roleLabel(role) : key}</span><span className="ml-auto hidden text-[11.5px] text-[#9AA3B0] sm:block">{role ? roleDescription(role) : 'Role retornada pelo backend'}</span></div>; }) : <div className="py-2 text-[13px] italic text-[#9AA3B0]">Nenhum tipo de acesso selecionado.</div>}</div></div><div><div className="mb-3 text-[10.5px] font-bold uppercase tracking-[.08em] text-[#9AA3B0]">Campos editáveis enviados</div><div className="rounded-lg border border-[#E8EAF0] bg-[#F7F8FA] p-3 text-[12.5px] leading-6 text-[#5A6478]"><p>Nome, e-mail, telefone, status, roles, nascimento e endereço.</p><p className="mt-2 flex gap-2 text-[#7D5A00]"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />Wallets, contratos e percentuais de posse não são enviados no POST/PATCH.</p></div></div></div></div><div className="mt-6 flex flex-col-reverse gap-3 lg:flex-row lg:items-center lg:justify-between"><div className="flex flex-col-reverse gap-3 sm:flex-row"><button onClick={onBack} className="inline-flex items-center justify-center gap-2 rounded-[9px] border border-[#E8EAF0] bg-white px-5 py-3 text-[13px] text-[#5A6478]"><ArrowLeft className="h-3.5 w-3.5" />Voltar</button>{isEditing && <button disabled={saving} onClick={onDelete} className="inline-flex items-center justify-center gap-2 rounded-[9px] border border-[#F5C4BF] bg-[#FEF5F4] px-5 py-3 text-[13px] text-[#D94F3D] disabled:opacity-50"><Trash2 className="h-3.5 w-3.5" />Excluir usuário</button>}</div><button disabled={saving} onClick={onSave} className="inline-flex items-center justify-center gap-2 rounded-[9px] bg-[#F5C842] px-7 py-3 text-[13px] font-bold uppercase text-[#0D1321] shadow-[0_4px_16px_rgba(245,200,66,.3)] transition hover:-translate-y-0.5 disabled:opacity-50">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}Salvar agora</button></div></div>;
+  return <div><div className="overflow-hidden rounded-2xl border border-[#E8EAF0] bg-white shadow-sm"><div className="flex flex-col gap-3 border-b border-[#E8EAF0] px-5 py-4 sm:flex-row sm:items-center sm:px-6"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[15px] font-bold" style={{ background: bg, color: fg }}>{initials(form.name)}</span><span className="min-w-0 flex-1"><h2 className="truncate text-lg font-extrabold">{form.name || '—'}</h2><p className="mt-0.5 truncate text-[12.5px] text-[#5A6478]">{[form.email, form.phone, form.city].filter(Boolean).join(' · ') || '—'}</p></span><span className={fmzCn('inline-flex w-fit items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-semibold', form.status === 'active' ? 'border-[#A8DFC4] bg-[#F0FAF5] text-[#1A8C5B]' : 'border-[#E8EAF0] bg-[#F0F1F5] text-[#9AA3B0]')}>{form.status === 'active' ? '● Ativo' : '○ Inativo'}</span></div><div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-2"><div><div className="mb-3 text-[10.5px] font-bold uppercase tracking-[.08em] text-[#9AA3B0]">Tipos de acesso atribuídos</div><div className="flex flex-col gap-3">{form.roleKeys.length ? form.roleKeys.map((key) => { const role = roles.get(normalizeKey(key)); const color = role?.color || '#7F8C8D'; return <div key={key} className="flex items-center gap-3 rounded-lg border border-[#E8EAF0] bg-[#F7F8FA] px-3 py-3"><span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} /><span className="text-[13px] font-medium">{role ? roleLabel(role) : key}</span><span className="ml-auto hidden text-[11.5px] text-[#9AA3B0] sm:block">{role ? roleDescription(role) : 'Role retornada pelo backend'}</span></div>; }) : <div className="py-2 text-[13px] italic text-[#9AA3B0]">Nenhum tipo de acesso selecionado.</div>}</div></div><div><div className="mb-3 text-[10.5px] font-bold uppercase tracking-[.08em] text-[#9AA3B0]">Campos editáveis enviados</div><div className="rounded-lg border border-[#E8EAF0] bg-[#F7F8FA] p-3 text-[12.5px] leading-6 text-[#5A6478]"><p>Nome, e-mail, telefone, status, roles, nascimento e endereço.</p><p className="mt-2 flex gap-2 text-[#7D5A00]"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />Wallets, contratos e percentuais de posse não são enviados no POST/PATCH.</p></div></div></div></div>{isEditing && <div className="mt-6"><button disabled={saving} onClick={onDelete} className="inline-flex items-center justify-center gap-2 rounded-[9px] border border-[#F5C4BF] bg-[#FEF5F4] px-5 py-3 text-[13px] text-[#D94F3D] disabled:opacity-50"><Trash2 className="h-3.5 w-3.5" />Excluir usuário</button></div>}</div>;
 }
 
 function ToastView({ toast }: { toast: Toast }) {
