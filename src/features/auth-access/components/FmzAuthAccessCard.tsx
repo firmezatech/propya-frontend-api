@@ -12,8 +12,8 @@ import {
 } from 'lucide-react';
 import { z } from 'zod';
 import { Link, useRouter } from '../../../i18n/navigation';
-import { consumeFirmezaPostAuthRedirect, hasFirmezaSession, isFirmezaRedirectablePath } from '../../../services/auth/auth-storage';
-import { probeActiveSession } from '../../../services/auth/fmz-session-presence';
+import { consumeFirmezaPostAuthRedirect, hasFirmezaSession, isFirmezaRedirectablePath, setFirmezaAccessToken } from '../../../services/auth/auth-storage';
+import { probeActiveSession, requestSessionToken } from '../../../services/auth/fmz-session-presence';
 import { login, type LoginType } from '../services/fmz-login-api';
 import { FmzAuthHeader, FmzFullPageLoading, FmzPublicFooter } from '../../../components/layout';
 import { FMZ_API_ERROR_CODES, type FmzFieldErrorMap, type FmzNormalizedApiError } from '../../api-errors/domain';
@@ -155,17 +155,27 @@ export function FmzAuthAccessCard({ className = '' }: FmzAuthAccessCardProps) {
     }
 
     let isActive = true;
-    probeActiveSession().then((sessionExistsElsewhere) => {
+    probeActiveSession().then(async (sessionExistsElsewhere) => {
       if (!isActive) return;
-      // Re-check hasFirmezaSession() before redirecting: the probe takes ~150 ms
-      // and the token may have appeared in this tab's storage in that window.
-      // Without the re-check, a session that lives only in another tab's
-      // sessionStorage would redirect here even though this tab has no token —
-      // FmzAuthenticatedRoute would bounce the user straight back to login,
-      // creating an infinite loop between the login page and the connected area.
-      if (sessionExistsElsewhere && hasFirmezaSession()) {
-        redirectToExistingSession();
-        return;
+      if (sessionExistsElsewhere) {
+        if (hasFirmezaSession()) {
+          // Common path: localStorage session is already accessible in this tab.
+          redirectToExistingSession();
+          return;
+        }
+        // Session lives only in another tab's sessionStorage (not shared across tabs).
+        // Request the token via BroadcastChannel so this tab can join the existing
+        // session without showing the login form (one-account-per-browser rule) and
+        // without causing a redirect loop (FmzAuthenticatedRoute requires a local token).
+        const token = await requestSessionToken();
+        if (!isActive) return;
+        if (token) {
+          setFirmezaAccessToken(token);
+          redirectToExistingSession();
+          return;
+        }
+        // Token request timed out — the other tab closed between probe and request.
+        // Session is gone; fall through to show the login form.
       }
       setIsCheckingExistingSession(false);
     });
