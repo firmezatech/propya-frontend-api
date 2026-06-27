@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { FmzConnectedPageShell, FmzPaymentHistorySkeleton } from '../../../../components/layout';
 import { getCurrentTenantPaymentHistory } from '../../services';
+import { authenticatedFirmezaFetch } from '../../../../services/firmeza-api-client';
 import type { FmzTenantPaymentHistoryItem } from '../../domain';
 import styles from './FmzPaymentHistoryPage.module.css';
 import { formatDateBR } from '../../../../lib/fmz-date';
@@ -87,6 +88,46 @@ function resolveStatusLabel(status?: string | null): string {
   return STATUS_LABEL[k] ?? status ?? 'Não informado';
 }
 
+async function downloadReceiptPdf(tokenOrderId: string, filename: string): Promise<void> {
+  const response = await authenticatedFirmezaFetch(`/tenant/orders/${tokenOrderId}/receipt.pdf`);
+  if (!response.ok) throw new Error(`receipt download failed: ${response.status}`);
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+
+function TokenReceiptButton({ tokenOrderId, reference, label = 'Recibo de tokens' }: {
+  tokenOrderId: string;
+  reference: string;
+  label?: string;
+}) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleClick = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      await downloadReceiptPdf(tokenOrderId, `recibo-tokens-${reference}.pdf`);
+    } catch (err) {
+      console.error('TokenReceiptButton: download failed', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <button type="button" className={styles.btnSm} onClick={handleClick} disabled={isLoading}>
+      <ReceiptText /> {isLoading ? 'Baixando…' : label}
+    </button>
+  );
+}
+
 function PaymentRowDetail({ item, isOpenCharge, isPaid }: { item: FmzTenantPaymentHistoryItem; isOpenCharge: boolean; isPaid: boolean }) {
   const hasTokenPurchase = Number(item.totalPurchasedTokens ?? 0) > 0;
   const hasCondominium = Number(item.condominiumFeeAmount ?? 0) > 0;
@@ -138,6 +179,9 @@ function PaymentRowDetail({ item, isOpenCharge, isPaid }: { item: FmzTenantPayme
             <Download /> Comprovante indisponível
           </button>
         ))}
+        {hasTokenPurchase && item.tokenOrderId && (
+          <TokenReceiptButton tokenOrderId={item.tokenOrderId} reference={item.reference} />
+        )}
       </div>
     </div>
   );
@@ -326,7 +370,7 @@ function TokensView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
       <div className={styles.vtableWrap}>
         <table className={styles.vtable}>
           <thead>
-            <tr><th>Competência</th><th>Valor pago</th><th>Total acumulado</th><th>Posse acum.</th></tr>
+            <tr><th>Competência</th><th>Valor pago</th><th>Total acumulado</th><th>Posse acum.</th><th /></tr>
           </thead>
           <tbody>
             {purchases.map((r) => {
@@ -342,6 +386,11 @@ function TokensView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
                   <td className={styles.vtPos}>{formatMoney(r.totalPurchasedTokens)}</td>
                   <td className={styles.vtStrong}>{formatMoney(r.tokensAccumulated)}</td>
                   <td>{formatPercent(r.ownershipPercentageAccumulated)}</td>
+                  <td>
+                    {r.tokenOrderId
+                      ? <TokenReceiptButton tokenOrderId={r.tokenOrderId} reference={r.reference} label="Recibo" />
+                      : <span className={styles.dash}>—</span>}
+                  </td>
                 </tr>
               );
             })}
@@ -352,6 +401,7 @@ function TokensView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
               <td className={styles.vtPos}>{formatMoney(totalPaid)}</td>
               <td className={styles.vtStrong}>{formatMoney(latest?.tokensAccumulated)}</td>
               <td>{formatPercent(latest?.ownershipPercentageAccumulated)}</td>
+              <td />
             </tr>
           </tfoot>
         </table>

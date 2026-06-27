@@ -79,6 +79,7 @@ const normalizePaymentHistoryItem = (value: unknown, fallbackReference?: string 
     paymentMethod: str(row.paymentMethod ?? row.payment_method) ?? 'boleto',
     downloadUrl: str(row.downloadUrl ?? row.download_url ?? row.boletoUrl ?? row.boleto_url),
     digitableLine: str(row.digitableLine ?? row.digitable_line),
+    tokenOrderId: str(row.tokenOrderId ?? row.token_order_id),
   };
 };
 

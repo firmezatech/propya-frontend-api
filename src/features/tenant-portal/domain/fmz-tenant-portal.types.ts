@@ -308,4 +308,5 @@ export type FmzTenantPaymentHistoryItem = {
   paymentMethod?: string | null;
   downloadUrl?: string | null;
   digitableLine?: string | null;
+  tokenOrderId?: string | null;
 };
