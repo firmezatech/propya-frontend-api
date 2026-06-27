@@ -27,6 +27,7 @@ type OwnershipGoalSlide = {
   id: string;
   label: string;
   amountLabel: string;
+  targetLabel: string;
   description: string;
   progressLabel: string;
   progressPercentage: number;
@@ -103,12 +104,6 @@ function formatGoalPercent(value: number): string {
   return `${goalPercentFormatter.format(Math.min(Math.max(value, 0), 100))}%`;
 }
 
-function splitGoalAmountInteger(label: string): string {
-  const withoutPrefix = label.replace(/^R\$\s*/, '');
-  const commaIdx = withoutPrefix.lastIndexOf(',');
-  return commaIdx !== -1 ? withoutPrefix.slice(0, commaIdx) : withoutPrefix;
-}
-
 // ─── Backend goal → presentational slide ─────────────────────────────────────
 // Pure mapping — no business logic, no calculations.
 // Every value comes from the backend's TenantOwnershipGoal.
@@ -119,6 +114,7 @@ function mapGoalToSlide(goal: TenantOwnershipGoal): OwnershipGoalSlide {
     id: goal.id,
     label: goal.title,
     amountLabel,
+    targetLabel: `${formatGoalPercent(goal.targetPercentage)} do seu imóvel`,
     description: goal.description,
     progressLabel: `Progresso até ${formatGoalPercent(goal.targetPercentage)}`,
     progressPercentage: Math.min(Math.max(goal.progressPercentage, 0), 100),
@@ -201,7 +197,6 @@ export function FmzRenterDashboard({
   };
 
   const billSplit = splitBillAmount(viewModel.invoice.totalLabel);
-  const goalAmountInteger = currentGoal ? splitGoalAmountInteger(currentGoal.amountLabel) : null;
   const groupedInvoiceLines = useMemo(() => groupInvoiceLines(viewModel.invoice.lines), [viewModel.invoice.lines]);
 
   return (
@@ -242,9 +237,9 @@ export function FmzRenterDashboard({
 
           {currentGoal ? (
             <div className={styles.heroGoal}>
-              <div className={styles.k}>{currentGoal.label}</div>
-              <div className={styles.amt}><span className={styles.cur}>R$</span>{goalAmountInteger}</div>
-              <div className={styles.cap}>{currentGoal.description}</div>
+              <div className={styles.k}>Próxima conquista</div>
+              <div className={styles.amt}>{currentGoal.targetLabel}</div>
+              <div className={styles.cap}>Compre mais {currentGoal.amountLabel} para avançar</div>
               <Link href={buyTokensHref} className={`${styles.btn} ${styles.btnLime}`}>
                 <Plus size={14} /> Comprar tokens
               </Link>
