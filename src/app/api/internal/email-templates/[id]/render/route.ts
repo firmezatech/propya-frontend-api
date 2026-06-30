@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getValidTemplateIds,
   loadAndRender,
-} from '@/features/admin-emails/lib/renderTemplate';
+} from '../../../../../../features/admin-emails/lib/renderTemplate';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getValidTemplateIds,
   loadAndRender,
-} from '@/features/doc-templates/lib/renderDocTemplate';
+} from '../../../../../../features/doc-templates/lib/renderDocTemplate';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
