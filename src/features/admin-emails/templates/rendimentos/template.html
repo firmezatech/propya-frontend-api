@@ -33,14 +33,14 @@
     <!-- Container -->
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="width:600px;max-width:600px;background:#FFFFFF;border:1px solid #E6E8EE;border-radius:16px;overflow:hidden;">
 
-      {{partial:brand-header:Compra confirmada}}
+      {{partial:brand-header:Rendimentos}}
 
       <!-- Hero -->
       <tr>
         <td class="px-pad" style="padding:32px 32px 8px 32px;">
           <p style="margin:0 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A6B12;">
             <span style="display:inline-block;width:18px;height:2px;background:#E8B620;vertical-align:middle;margin-right:8px;border-radius:1px;"></span>
-            Compra confirmada
+            Rendimentos
           </p>
           <h1 class="hero-h1" style="margin:0 0 14px 0;font-family:'Inter',Arial,sans-serif;font-weight:700;font-size:30px;line-height:1.1;letter-spacing:-.03em;color:#0E1626;">{{heroTitle}}</h1>
           <p style="margin:0;font-family:'Inter',Arial,sans-serif;font-size:15.5px;line-height:1.6;color:#5A6478;">{{heroBody}}</p>
@@ -52,53 +52,27 @@
         <td class="px-pad" style="padding:24px 32px 0 32px;">
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:linear-gradient(180deg,#FFFFFF 0%,#FBFCFD 100%);border:1px solid #E6E8EE;border-radius:14px;margin-bottom:18px;">
     <tr><td style="padding:18px 20px;">
-      <p style="margin:0 0 4px 0;font-family:'Inter',Arial,sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#8893A6;">Posse no imóvel</p>
-      <p style="margin:0;font-family:'Inter',Arial,sans-serif;font-weight:700;font-size:34px;line-height:1;letter-spacing:-.03em;color:#0E1626;">{{ownershipPercent}}<span style="color:#5A6478;font-weight:600;font-size:20px;">%</span></p>
-      <p style="margin:6px 0 0 0;font-family:'Inter',Arial,sans-serif;font-size:12.5px;line-height:1.5;color:#5A6478;">{{quantity}} tokens · {{property}}</p>
+      <p style="margin:0 0 4px 0;font-family:'Inter',Arial,sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#8893A6;">Valor creditado · {{month}}</p>
+      <p style="margin:0;font-family:'Inter',Arial,sans-serif;font-weight:700;font-size:34px;line-height:1;letter-spacing:-.03em;color:#0E1626;">R$ {{amount}}</p>
+      <p style="margin:6px 0 0 0;font-family:'Inter',Arial,sans-serif;font-size:12.5px;line-height:1.5;color:#5A6478;">{{ownershipPercent}}% de posse · {{property}}</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;margin-top:10px;"><tr>
+    <td style="background:#E8F5EE;border-radius:99px;padding:5px 11px;font-family:'Inter',Arial,sans-serif;font-size:11.5px;font-weight:700;color:#127A4F;letter-spacing:-.005em;">
+      Distribuição concluída
+    </td>
+  </tr></table>
     </td></tr>
-  </table>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F4F5F8;border-radius:12px;padding:4px 16px;margin-bottom:18px;">
-
-    <tr>
-      <td style="padding:14px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Tokens adquiridos</td>
-      <td align="right" style="padding:14px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">{{quantity}} FRMZ</td>
-    </tr>
-    <tr>
-      <td style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Preço por token</td>
-      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">R$ {{tokenUnitPrice}}</td>
-    </tr>
-    <tr>
-      <td style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Subtotal</td>
-      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">R$ {{subtotal}}</td>
-    </tr>
-    <tr>
-      <td style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Taxa de custódia</td>
-      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">R$ {{custodyFee}}</td>
-    </tr>
-    <tr>
-      <td style="padding:10px 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;">Total cobrado</td>
-      <td align="right" style="padding:10px 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;"><span style="color:#0E1626;font-weight:700;">R$ {{amount}}</span></td>
-    </tr>
   </table>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" class="btn-row" style="margin:8px 0 4px 0;">
     <tr>
       <td style="padding-right:10px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;">
     <tr><td style="border-radius:10px;background:#E8B620;">
       <a class="btn" href="{{ctaUrl}}" target="_blank" style="display:inline-block;padding:14px 26px;font-family:'Inter',Arial,sans-serif;font-size:14px;font-weight:700;color:#0E1626;text-decoration:none;border-radius:10px;letter-spacing:.005em;">
-        Ver carteira →
-      </a>
-    </td></tr>
-  </table></td>
-      <td><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;">
-    <tr><td style="border-radius:10px;background:#FFFFFF;border:1.5px solid #E6E8EE;">
-      <a class="btn" href="{{ctaUrl}}" target="_blank" style="display:inline-block;padding:13px 22px;font-family:'Inter',Arial,sans-serif;font-size:14px;font-weight:600;color:#0E1626;text-decoration:none;border-radius:10px;letter-spacing:.005em;">
-        Baixar nota (PDF)
+        Ver minha carteira →
       </a>
     </td></tr>
   </table></td>
     </tr>
   </table>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;"><tr><td style="border-top:1px solid #EDEFF4;line-height:1px;font-size:1px;">&nbsp;</td></tr></table>
         </td>
       </tr>
 
@@ -106,8 +80,14 @@
 
       <tr>
         <td class="px-pad" style="padding:18px 32px 28px 32px;">
-          <p style="margin:0;font-family:'Inter',Arial,sans-serif;font-size:12.5px;line-height:1.55;color:#8893A6;">{{footerNote}}</p>
+          <p style="margin:0;font-family:'Inter',Arial,sans-serif;font-size:12.5px;line-height:1.55;color:#8893A6;">Os rendimentos são calculados proporcionalmente à sua posse no mês de referência. Em caso de dúvida, responda este e-mail.</p>
         </td>
       </tr>
 
       {{partial:brand-footer}}
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

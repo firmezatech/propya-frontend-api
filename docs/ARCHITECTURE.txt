@@ -1,0 +1,433 @@
+================================================================================
+  PROPYA / FIRMEZATOKEN — ARQUITETURA END-TO-END
+  Data: 2026-06-12
+  Foco: apenas o que está implementado e em produção (ou staging ativo).
+================================================================================
+
+
+────────────────────────────────────────────────────────────────────────────────
+1. VISÃO GERAL
+────────────────────────────────────────────────────────────────────────────────
+
+Sistema de tokenização imobiliária. Cada imóvel cadastrado recebe uma oferta
+de tokens: 1 token = R$ 1,00. Tenants (inquilinos) compram frações do imóvel
+via PIX ou boleto. Co-owners recebem distribuição de aluguel proporcional à
+sua participação no token.
+
+Regra de negócio central:
+  - Imóvel de R$ 160.000 → total_supply = 160.000 tokens
+  - Dois mercados:
+      Primário:   co-owner compra da plataforma (1 → 1, transfer_property_tokens)
+      Secundário: tenant compra dos co-owners   (N → 1, settle_token_redistribution)
+  - KYC obrigatório (status = 'verified') antes de qualquer transação de token
+  - Arredondamento monetário sempre floor (para baixo) — floorMoney / floorOwnershipPercent
+  - Taxas pagas pelos dois lados: taxa_plataforma + taxa_token por transação
+  - CPF / documento nunca armazenado em texto puro:
+      cifrado AES-256-GCM (DOCUMENT_ENCRYPTION_KEY via Infisical) + hash SHA-256 + last4
+  - LEDGER_MODE=db → blockchain desabilitado (kill switch por env var, nunca por remoção de código)
+
+
+────────────────────────────────────────────────────────────────────────────────
+2. CAMADA DE APRESENTAÇÃO — NEXT.JS (Vercel)
+────────────────────────────────────────────────────────────────────────────────
+
+Framework   : Next.js (App Router)
+Deploy      : Vercel
+i18n        : next-intl [pt] — proxy.ts cuida apenas de i18n, sem guarda de auth server-side
+Fonts       : JetBrains Mono (extraído do pacote npm @fontsource)
+
+AUTENTICAÇÃO (100% client-side):
+  - JWT customizado (não é o Supabase Auth)
+  - Armazenado em localStorage, chave: fmz_access_token
+  - Componente FmzAuthenticatedRoute → guarda rotas via localStorage
+  - FmzRouteAccessGuard → verifica accessiblePages retornado por GET /me/access
+  - FmzConnectedLayoutFrame → branch admin vs. tenant via GET /me/access
+
+CLIENTE HTTP:
+  - Arquivo único: firmeza-api-client.ts (Axios)
+  - Base URL: env var NEXT_PUBLIC_API_URL
+  - Interceptor: injeta header "Authorization: Bearer <token>" em toda requisição
+  - 401 → chama clearFirmezaSession() → redireciona para /login
+
+MÓDULOS FRONTEND (~17 módulos, ~29 rotas):
+  Auth          /login   /register   /recover-password
+  Portal Tenant /connected/wallet          (resumo + saldo + histórico)
+                /connected/wallet/statement (extrato PDF via window.print())
+                /connected/token-purchase   (compra PIX / boleto)
+                /connected/contracts
+                /connected/profile
+  Painel Admin  /connected/admin/kyc
+                /connected/admin/users
+                /connected/admin/roles
+                /connected/admin/properties
+                /connected/admin/rent-charges
+                /connected/admin/contracts
+                /connected/admin/parameters
+                /connected/admin/notifications
+  Pública       / (landing)   /coming-soon
+  Route Handler /api/instagram/posts → Instagram Graph API (server-side, Next.js)
+
+CONTROLE DE ACESSO (frontend):
+  - canAccessFmzPath: qualquer sub-rota de /connected/wallet/* é auto-permitida
+  - Páginas admin exigem permissão específica em accessiblePages
+
+PDF DE EXTRATO:
+  - FmzWalletStatementPage.tsx + FmzWalletStatementPage.module.css
+  - Renderiza documento A4 (210 mm) com CSS print
+  - @media print { .toolbar { display: none } } → botão some ao imprimir
+  - window.print() — sem servidor, sem Puppeteer, sem jsPDF
+  - Dados: getUserWallet() + getTenantProfile() em paralelo
+  - Doc ID: EXT-YYYY-MM-DD-{iniciais}
+  - CPF nunca exibido → usa e-mail no lugar
+
+ESTADO:
+  - Sem Zustand / Redux / React Query
+  - Plain React hooks + window events para comunicação entre componentes
+  - ProfileContext para dados do usuário logado
+
+
+────────────────────────────────────────────────────────────────────────────────
+3. CAMADA DE LÓGICA DE NEGÓCIO — EXPRESS API (Railway)
+────────────────────────────────────────────────────────────────────────────────
+
+Runtime     : Node.js (ESModules)
+Framework   : Express
+Deploy      : Railway
+Logging     : pino
+
+MIDDLEWARE GLOBAL:
+  express.json({ verify: (req, _, buf) => { req.rawBody = buf } })
+    → req.rawBody disponível para validação HMAC nos webhooks
+  fmzCorsMiddleware
+  GET /health → liveness probe
+
+AUTENTICAÇÃO / AUTORIZAÇÃO:
+  - jsonwebtoken.verify(token, JWT_SECRET)
+  - Matriz de permissões: config/routePermissions.js
+      publicRoute           → sem token (ex.: /webhooks/didit, /webhooks/asaas)
+      authenticatedRoute    → qualquer JWT válido
+      permission("admin.*") → JWT + permissão específica no payload
+
+MÓDULOS DE ROTA (7 módulos, ~40+ endpoints):
+
+  Auth
+    POST /auth/login
+    POST /auth/register
+    POST /auth/verify-email
+    POST /auth/forgot-password
+    POST /auth/reset-password
+    GET  /me/access              → retorna accessiblePages + branch admin/tenant
+
+  Tenant
+    GET  /me/dashboard
+    GET  /me/profile
+    PUT  /me/profile
+    GET  /me/wallet              → saldo + histórico de movimentações
+    GET  /me/wallet/movements
+
+  Tokens
+    POST /token-orders/purchase           → inicia compra (PIX ou boleto)
+    GET  /token-orders/:id/pix-qr-code
+    GET  /token-orders/:id/boleto-barcode
+    GET  /me/token-orders
+    GET  /me/property-balances
+
+  Payments (webhooks + admin)
+    POST /webhooks/asaas/payments          → publicRoute, HMAC validado via req.rawBody
+    GET  /admin/payment-transactions
+    GET  /admin/rent-charges
+    POST /admin/rent-charges/:id/validate
+    POST /admin/rent-charges/:id/open
+    POST /admin/rent-charges/:id/cancel
+
+  KYC
+    POST /kyc/didit/start                  → cria sessão Didit, retorna URL
+    GET  /tenant/kyc/documents             → lista docs do tenant
+    GET  /admin/kyc                        → fila de revisão admin
+    POST /admin/kyc/:userId/approve
+    POST /admin/kyc/:userId/reject
+    POST /webhooks/didit                   → publicRoute, HMAC X-Signature-V2
+
+  Admin
+    GET/POST/PUT /admin/users
+    GET/POST/PUT /admin/roles
+    GET/POST/PUT /admin/permissions
+    GET/POST/PUT /admin/properties
+    GET/POST/PUT /admin/contracts
+    GET/POST/PUT /admin/parameters         → platform_parameters (taxa, min_payout, etc.)
+
+  Notificações
+    GET  /notifications
+    GET  /notifications/unread-count
+    POST /notifications/:id/read
+
+PADRÃO ARQUITETURAL (DI por closure):
+  <feature>.service.js   → use-case puro, sem imports de I/O, testável com stubs
+  <feature>.wiring.js    → composition root (injeta deps reais)
+  <feature>.controller.js → thin HTTP: valida input → chama wiring → responde
+  <domínio>Repository.js → todo I/O com Supabase (PostgREST)
+
+IDEMPOTÊNCIA:
+  - Webhooks checam last_event_id antes de processar
+  - ON CONFLICT DO NOTHING + idempotency_key UNIQUE em tabelas de ledger
+  - claim/release para transições de estado críticas:
+      pending_validation → (claim) → validated → (Asaas ok) → open
+      em falha: release validated → pending_validation + re-throw
+
+BULLMQ — PRODUTORES (no Express API):
+  - Redis via IORedis (REDIS_URL) com inline fallback se Redis ausente
+  - Queues criadas/publicadas pelo API ao processar eventos:
+      propya.email.delivery
+      propya.payments.reconcile
+      propya.tokens.settlement  ← jobs publicados mas worker NUNCA inicia (LEDGER_MODE=db)
+
+
+────────────────────────────────────────────────────────────────────────────────
+4. CAMADA DE WORKERS E JOBS
+────────────────────────────────────────────────────────────────────────────────
+
+4A. BULLMQ WORKERS (processo separado, mesmo Railway ou sidecar)
+
+  Email Worker — propya.email.delivery
+    Consumer da fila. Chama Resend API.
+    Configuração: 3 tentativas / backoff 5 s
+    Tipos de e-mail: passwordReset, emailVerification, welcome, tokenPurchase,
+                     tokenPurchaseReceipt, rentDistribution, refundOpened,
+                     refundCompleted, tokenSaleNotice
+
+  Payment Reconciler — propya.payments.reconcile
+    Consumer da fila. Concilia status de pagamentos com Asaas.
+    Configuração: 8 tentativas / concurrency = 5
+    Acionado: webhook Asaas confirma pagamento → push na fila → worker processa
+    Resultado: atualiza payment_transactions + ledger off-chain + status da ordem
+
+  Token Settlement Worker — propya.tokens.settlement  [DESABILITADO]
+    Worker NUNCA inicializa quando LEDGER_MODE=db.
+    isOffChainLedger() = true → código de inicialização do worker é pulado.
+    Jobs publicados na fila ficam em espera indefinidamente (sem consumidor).
+
+4B. CRON JOBS (GitHub Actions → scripts Node.js standalone, saída exit 0/1)
+
+  generate-rent-charges              → mensal
+    Gera cobranças de aluguel para todos os contratos ativos.
+
+  finalize-token-settlements         → recorrente
+    LEDGER_MODE=db → chama reconcileOffChainSettlements() (sem blockchain).
+    LEDGER_MODE=chain → executa blockchain saga (desabilitado em produção).
+
+  generate-boleto-notifications      → diário 03h UTC
+    Notifica tenants sobre boletos próximos do vencimento.
+
+  deliver-scheduled-notifications    → diário 09h UTC
+    Entrega notificações agendadas (in-app + e-mail).
+
+  pay-owner-payouts                  → periódico
+    Calcula accruals de co-owners e dispara PIX via Asaas.
+
+  reconcile-rent-charge-validations  → crash recovery
+    Reconcilia cobranças que ficaram em estado intermediário (crash recovery).
+
+  refund-failed-orders               → periódico
+    Reembolsa ordens de token que falharam após confirmação de pagamento.
+
+
+────────────────────────────────────────────────────────────────────────────────
+5. PERSISTÊNCIA — SUPABASE (PostgreSQL + Storage)
+────────────────────────────────────────────────────────────────────────────────
+
+Client      : @supabase/supabase-js (service role key — nunca exposto ao frontend)
+Acesso      : PostgREST (REST sobre PostgreSQL)
+Storage     : bucket de documentos KYC (imagens de identidade)
+
+SCHEMA: admin_panel
+  users                     → cadastro de usuários (senha bcrypt, sem CPF plaintext)
+  roles                     → papéis (admin, tenant, co-owner, …)
+  permissions               → permissões granulares (admin.kyc.approve, …)
+  pages                     → páginas registradas no sistema de acesso
+  user_roles                → M:N usuário ↔ papel
+  role_permissions          → M:N papel ↔ permissão
+  permission_pages          → M:N permissão ↔ página
+  notifications             → notificações in-app
+  email_delivery_logs       → log de cada e-mail enviado (Resend message_id)
+  notification_job_runs     → controle de execução dos jobs de notificação
+
+SCHEMA: property_mgmt
+  properties                → imóveis cadastrados
+  property_users            → M:N imóvel ↔ usuário (co-owner / tenant)
+  rental_contracts          → contratos de aluguel
+  rent_charges              → cobranças mensais de aluguel
+  rent_adjustments          → ajustes contratuais de aluguel
+  parameter_sets            → parâmetros por imóvel (taxa_plataforma, min_payout…)
+  kyc_requirements          → requisitos de KYC por imóvel
+  user_kyc_profiles         → perfil KYC do tenant (status: pending/verified/rejected)
+  kyc_document_reviews      → revisão admin de documentos
+  didit_kyc_sessions        → sessões criadas no Didit (session_id, URL, status)
+  user_identity_profiles    → dados biométricos extraídos pelo Didit (nome, nascimento…)
+  user_platform_bans        → banimentos de plataforma (resultado do banClassifier Didit)
+
+SCHEMA: token_system
+  wallets                       → carteira por usuário (balance em tokens)
+  property_tokenizations        → oferta de tokens por imóvel (total_supply, price…)
+  token_orders                  → ordens de compra de token
+  payment_transactions          → transações de pagamento (Asaas payment_id, status…)
+  token_transactions            → movimentações de token (mint, transfer, burn…)
+  wallet_token_balances         → saldo por carteira + token (snapshot)
+  user_property_token_balances  → saldo por usuário + imóvel (usado no extrato PDF)
+  transfer_whitelist            → whitelist de endereços blockchain (desabilitado)
+  blockchain_events             → eventos on-chain registrados (desabilitado)
+
+SCHEMA: tokenomics
+  distribution_runs                → execuções do job de distribuição de aluguel
+  owner_distribution_snapshots     → snapshot da participação de cada co-owner
+  distribution_ledger              → ledger de distribuição (idempotency_key UNIQUE)
+  owner_payout_accruals            → acumulado de payout por co-owner
+  owner_payout_accrual_entries     → entradas individuais de accrual
+
+PADRÕES TRANSVERSAIS:
+  - SCD2: tabelas *_history registram versões anteriores de registros mutáveis
+  - audit_logs: presente em todos os schemas (quem alterou, quando, o quê)
+  - Idempotência via idempotency_key UNIQUE nas tabelas de ledger
+  - 1 token = R$ 1,00 (invariante de negócio, não configurável)
+
+MIGRATIONS (convenção de nome: YYYYMMDDNNNN_descricao.sql):
+  Aplicadas sequencialmente via psql com DATABASE_URL.
+  13 migrations escritas aguardando aplicação no banco de staging/produção.
+
+
+────────────────────────────────────────────────────────────────────────────────
+6. SERVIÇOS EXTERNOS
+────────────────────────────────────────────────────────────────────────────────
+
+ASAAS — PSP (Payment Service Provider)
+  Ambiente  : sandbox.asaas.com/api/v3 (produção: www.asaas.com/api/v3)
+  Auth      : header "access_token: <ASAAS_API_KEY>"
+  Endpoints usados:
+    POST /customers                       → cadastra cliente (CPF ou foreignCustomer)
+    POST /payments                        → cria cobrança PIX ou boleto
+    GET  /payments/:id                    → consulta status
+    GET  /payments/:id/pixQrCode          → QR Code + copia-e-cola
+    GET  /payments/:id/identificationField → linha digitável do boleto
+    POST /payments/:id/refund             → estorna pagamento
+    POST /transfers                       → PIX para co-owners (pay-owner-payouts)
+  Webhook:
+    POST /webhooks/asaas/payments (publicRoute)
+    Payloads tratados: PAYMENT_CONFIRMED, PAYMENT_OVERDUE, PAYMENT_REFUNDED, …
+    req.rawBody disponível para validação HMAC
+    Confirmado → push na propya.payments.reconcile → Payment Reconciler
+
+DIDIT — KYC Automatizado
+  Ambiente  : verification.didit.me
+  Auth      : Bearer DIDIT_API_KEY
+  Endpoints usados:
+    POST /v3/session/    → cria sessão KYC, retorna URL enviada ao browser do tenant
+  Webhook:
+    POST /webhooks/didit (publicRoute)
+    Validação: HMAC-SHA256 no header X-Signature-V2 (usando DIDIT_WEBHOOK_SECRET)
+    Processamento:
+      1. banClassifier → 12 categorias de risco → banimento ou aprovação
+      2. Atualiza user_kyc_profiles (status = verified / rejected)
+      3. Popula user_identity_profiles (dados biométricos extraídos)
+      4. Notifica admins com permissão admin.kyc.review
+      5. Provisiona wallet se status = verified (stub: ensureAsaasCustomerStub ⏳)
+
+RESEND — E-mail Transacional
+  Endpoint  : api.resend.com/emails
+  Auth      : Bearer RESEND_API_KEY
+  Consumidor: BullMQ Email Worker (propya.email.delivery)
+  Tipos enviados: ver seção 4A
+
+INSTAGRAM GRAPH API — Posts públicos
+  Acesso    : server-side via Next.js Route Handler (/api/instagram/posts)
+  Não passa pelo Express backend
+
+BLOCKCHAIN SERVICE — [DESABILITADO]
+  LEDGER_MODE=db → isOffChainLedger() = true
+  Token Settlement Worker nunca inicializa
+  finalize-token-settlements chama reconcileOffChainSettlements() (off-chain puro)
+  Variáveis BLOCKCHAIN_SERVICE_URL e BLOCKCHAIN_SERVICE_INTERNAL_API_KEY existem
+  mas nunca são lidas em produção
+
+
+────────────────────────────────────────────────────────────────────────────────
+7. FLUXOS PRINCIPAIS (fim a fim)
+────────────────────────────────────────────────────────────────────────────────
+
+COMPRA DE TOKEN (PIX):
+  Browser → POST /token-orders/purchase (JWT)
+  → Express cria token_orders (status=pending) + payment_transactions
+  → Asaas POST /payments → retorna payment_id + qrCode
+  → Resposta ao frontend com qrCode + valor + expiresAt
+  → Tenant paga no app bancário
+  → Asaas webhook POST /webhooks/asaas/payments (PAYMENT_CONFIRMED)
+  → Push na propya.payments.reconcile
+  → Payment Reconciler: atualiza payment_transactions (status=confirmed)
+  → settle_token_redistribution (RPC off-chain) → wallet_token_balances atualizado
+  → token_orders (status=completed)
+  → Push na propya.email.delivery → Email Worker → Resend → e-mail ao tenant
+
+KYC (DIDIT):
+  Browser → POST /kyc/didit/start (JWT)
+  → Express: POST /v3/session/ no Didit → retorna sessionUrl
+  → Frontend abre sessionUrl em iframe/redirect
+  → Tenant completa biometria
+  → Didit webhook POST /webhooks/didit
+  → HMAC validado via req.rawBody + DIDIT_WEBHOOK_SECRET
+  → banClassifier(result) → decisão: approved / rejected / banned
+  → user_kyc_profiles atualizado
+  → user_identity_profiles populado
+  → Notificação in-app para admins com permissão admin.kyc.review
+  → (stub) ensureAsaasCustomer → cria cliente no Asaas para cobranças futuras
+
+EXTRATO PDF:
+  Browser → GET /me/wallet + GET /me/profile (paralelo, JWT)
+  → FmzWalletStatementPage.tsx monta documento A4 em memória (React)
+  → Botão "Imprimir / Salvar PDF" → window.print()
+  → @media print oculta toolbar → browser gera PDF sem servidor
+
+DISTRIBUIÇÃO DE ALUGUEL (cron mensal):
+  GH Actions → generate-rent-charges.js
+  → rent_charges criados para todos os contratos ativos
+  → Asaas cria cobranças (boleto ou PIX)
+  → Tenant paga → webhook confirma → Payment Reconciler
+  → pay-owner-payouts.js (cron periódico)
+  → owner_payout_accruals calculados (TWAO — time-weighted average ownership)
+  → Asaas POST /transfers → PIX para cada co-owner
+
+
+────────────────────────────────────────────────────────────────────────────────
+8. SEGURANÇA
+────────────────────────────────────────────────────────────────────────────────
+
+  JWT_SECRET               → assina/verifica todos os tokens de sessão
+  DOCUMENT_ENCRYPTION_KEY  → AES-256-GCM para CPF/documentos (via Infisical, nunca no repo)
+  SUPABASE_SERVICE_ROLE_KEY → nunca exposto ao frontend
+  ASAAS_API_KEY            → apenas no backend
+  DIDIT_WEBHOOK_SECRET     → HMAC-SHA256 de todos os webhooks Didit
+  req.rawBody              → garante integridade da assinatura HMAC (sem reparse do JSON)
+  Webhooks Asaas / Didit   → publicRoute (sem JWT) mas validados por HMAC
+  CPF / documentos         → nunca plaintext, nunca logados, nunca no extrato PDF
+  Estrangeiros             → Asaas foreignCustomer=true, sem PSP adicional necessário
+
+
+────────────────────────────────────────────────────────────────────────────────
+9. VARIÁVEIS DE AMBIENTE (resumo)
+────────────────────────────────────────────────────────────────────────────────
+
+  Backend (Railway):
+    SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+    JWT_SECRET
+    ASAAS_API_KEY, ASAAS_ENVIRONMENT (sandbox | production)
+    DIDIT_API_KEY, DIDIT_WEBHOOK_SECRET, DIDIT_WORKFLOW_ID
+    DOCUMENT_ENCRYPTION_KEY           (Infisical — nunca no repo)
+    REDIS_URL
+    LEDGER_MODE                       (db | chain)
+    BLOCKCHAIN_SERVICE_URL            (ignorado quando LEDGER_MODE=db)
+    BLOCKCHAIN_SERVICE_INTERNAL_API_KEY (idem)
+    RESEND_API_KEY
+
+  Frontend (Vercel):
+    NEXT_PUBLIC_API_URL               (URL do Express backend)
+
+================================================================================
+  FIM DO DOCUMENTO
+================================================================================

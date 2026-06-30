@@ -25,7 +25,7 @@
 </head>
 <body style="margin:0;padding:0;background:#F4F5F8;font-family:'Inter',-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#2A344A;-webkit-font-smoothing:antialiased;">
 <!-- preheader (hidden) -->
-<div style="display:none !important;visibility:hidden;opacity:0;height:0;width:0;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#F4F5F8;">O pagamento foi recusado. Nenhum token foi emitido e o estorno de R$ {{amount}} já está aberto.</div>
+<div style="display:none !important;visibility:hidden;opacity:0;height:0;width:0;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#F4F5F8;">{{preheader}}</div>
 
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F4F5F8;padding:32px 16px;">
   <tr><td align="center">
@@ -75,36 +75,15 @@
 
     <tr>
       <td style="padding:14px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Pedido</td>
-      <td align="right" style="padding:14px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">#CMP-2026-12-06-77F</td>
+      <td align="right" style="padding:14px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">{{orderId}}</td>
     </tr>
     <tr>
       <td style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Imóvel</td>
-      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">Residencial Jardim Aurora · 502</td>
+      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">{{propertyName}}</td>
     </tr>
     <tr>
-      <td style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Tokens pretendidos</td>
-      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">12 FRMZ</td>
-    </tr>
-    <tr>
-      <td style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Forma de pagamento</td>
-      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">Cartão de crédito · final 4821</td>
-    </tr>
-    <tr>
-      <td style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Valor a reembolsar</td>
-      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;"><span style="color:#0E1626;font-weight:700;">R$ {{amount}}</span></td>
-    </tr>
-    <tr>
-      <td style="padding:10px 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;">Previsão de crédito</td>
-      <td align="right" style="padding:10px 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;"><span style="color:#0E1626;font-weight:700;">até 10/12/2026</span></td>
-    </tr>
-  </table>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#E8EFFC;border-radius:12px;margin-bottom:18px;">
-    <tr>
-      <td width="4" style="background:#1F5BD6;font-size:1px;line-height:1px;">&nbsp;</td>
-      <td style="padding:16px 18px;">
-        <p style="margin:0 0 5px 0;font-family:'Inter',Arial,sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#1F5BD6;">Quando você recebe</p>
-        <p style="margin:0;font-family:'Inter',Arial,sans-serif;font-size:14px;line-height:1.55;color:#2A344A;">O estorno aparece na fatura do seu cartão em <strong>até 4 dias úteis</strong> — ou seja, até <strong>10 de dezembro de 2026</strong>. O prazo pode variar conforme o fechamento da fatura do seu banco.</p>
-      </td>
+      <td style="padding:10px 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;">Valor a reembolsar</td>
+      <td align="right" style="padding:10px 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;"><span style="color:#0E1626;font-weight:700;">R$ {{amount}}</span></td>
     </tr>
   </table>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" class="btn-row" style="margin:8px 0 4px 0;">
@@ -112,21 +91,12 @@
       <td style="padding-right:10px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;">
     <tr><td style="border-radius:10px;background:#E8B620;">
       <a class="btn" href="{{ctaUrl}}" target="_blank" style="display:inline-block;padding:14px 26px;font-family:'Inter',Arial,sans-serif;font-size:14px;font-weight:700;color:#0E1626;text-decoration:none;border-radius:10px;letter-spacing:.005em;">
-        Tentar a compra novamente →
-      </a>
-    </td></tr>
-  </table></td>
-      <td><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;">
-    <tr><td style="border-radius:10px;background:#FFFFFF;border:1.5px solid #E6E8EE;">
-      <a class="btn" href="#" target="_blank" style="display:inline-block;padding:13px 22px;font-family:'Inter',Arial,sans-serif;font-size:14px;font-weight:600;color:#0E1626;text-decoration:none;border-radius:10px;letter-spacing:.005em;">
-        Falar com o suporte
+        Ver minha conta →
       </a>
     </td></tr>
   </table></td>
     </tr>
   </table>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;"><tr><td style="border-top:1px solid #EDEFF4;line-height:1px;font-size:1px;">&nbsp;</td></tr></table>
-<p style="margin:0 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:15px;line-height:1.65;color:#2A344A;">Quer usar outra forma de pagamento? Você pode finalizar via <a href="#" style="color:#0E1626;font-weight:600;border-bottom:1px solid #E6E8EE;">PIX</a> e garantir os tokens com compensação imediata.</p>
         </td>
       </tr>
 

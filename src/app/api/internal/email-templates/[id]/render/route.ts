@@ -7,10 +7,16 @@ import {
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const INTERNAL_KEY = process.env.INTERNAL_TEMPLATE_KEY;
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  if (!INTERNAL_KEY || req.headers.get('x-internal-key') !== INTERNAL_KEY) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { id } = await params;
 
   const validIds = getValidTemplateIds();
@@ -26,7 +32,7 @@ export async function POST(
     }
     vars = body as Record<string, string>;
   } catch (error) {
-    console.error('[email-templates] Failed to parse request body:', error);
+    console.error('[internal/email-templates] Failed to parse request body:', error);
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
@@ -34,7 +40,7 @@ export async function POST(
     const html = loadAndRender(id, vars);
     return NextResponse.json({ html });
   } catch (error) {
-    console.error('[email-templates] Failed to render template:', { id, error });
+    console.error('[internal/email-templates] Failed to render template:', { id, error });
     return NextResponse.json({ error: 'Failed to render template' }, { status: 500 });
   }
 }

@@ -25,7 +25,7 @@
 </head>
 <body style="margin:0;padding:0;background:#F4F5F8;font-family:'Inter',-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#2A344A;-webkit-font-smoothing:antialiased;">
 <!-- preheader (hidden) -->
-<div style="display:none !important;visibility:hidden;opacity:0;height:0;width:0;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#F4F5F8;">8 tokens do Jardim Aurora 502 foram vendidos. Veja o detalhamento, taxas e sua nova posse.</div>
+<div style="display:none !important;visibility:hidden;opacity:0;height:0;width:0;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#F4F5F8;">{{preheader}}</div>
 
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F4F5F8;padding:32px 16px;">
   <tr><td align="center">
@@ -54,12 +54,7 @@
     <tr><td style="padding:18px 20px;">
       <p style="margin:0 0 4px 0;font-family:'Inter',Arial,sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#8893A6;">Valor líquido a receber</p>
       <p style="margin:0;font-family:'Inter',Arial,sans-serif;font-weight:700;font-size:34px;line-height:1;letter-spacing:-.03em;color:#0E1626;">R$ {{amount}}</p>
-      <p style="margin:6px 0 0 0;font-family:'Inter',Arial,sans-serif;font-size:12.5px;line-height:1.5;color:#5A6478;">Cai na sua carteira em até 1 dia útil · 06 de dezembro de 2026</p>
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;margin-top:10px;"><tr>
-    <td style="background:#E8F5EE;border-radius:99px;padding:5px 11px;font-family:'Inter',Arial,sans-serif;font-size:11.5px;font-weight:700;color:#127A4F;letter-spacing:-.005em;">
-      + R$ 73,36 de valorização vs. compra
-    </td>
-  </tr></table>
+      <p style="margin:6px 0 0 0;font-family:'Inter',Arial,sans-serif;font-size:12.5px;line-height:1.5;color:#5A6478;">Cai na sua carteira em até 1 dia útil</p>
     </td></tr>
   </table>
 <p style="margin:0 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:15px;line-height:1.65;color:#2A344A;"><strong style="color:#0E1626;font-weight:600;">Detalhamento do repasse</strong></p>
@@ -70,20 +65,16 @@
       <td align="right" style="padding:14px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">{{quantity}} FRMZ</td>
     </tr>
     <tr>
-      <td style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Preço de venda (unitário)</td>
-      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">R$ 92,50</td>
-    </tr>
-    <tr>
       <td style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Valor bruto da venda</td>
-      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">R$ 740,00</td>
+      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">R$ {{grossAmount}}</td>
     </tr>
     <tr>
-      <td style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Taxa de corretagem (2,5%)</td>
-      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;"><span style="color:#B23B2D;">− R$ 18,50</span></td>
+      <td style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Taxa de corretagem</td>
+      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;"><span style="color:#B23B2D;">− R$ {{platformFeeAmount}}</span></td>
     </tr>
     <tr>
-      <td style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Taxa de transação (0,5%)</td>
-      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;"><span style="color:#B23B2D;">− R$ 3,70</span></td>
+      <td style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Taxa de transação</td>
+      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;"><span style="color:#B23B2D;">− R$ {{tokenFeeAmount}}</span></td>
     </tr>
     <tr>
       <td style="padding:10px 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;">Valor líquido a receber</td>
@@ -92,18 +83,13 @@
   </table>
 <p style="margin:0 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:15px;line-height:1.65;color:#2A344A;"><strong style="color:#0E1626;font-weight:600;">Sua nova posse no imóvel</strong></p>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F4F5F8;border-radius:12px;padding:4px 16px;margin-bottom:18px;">
-
     <tr>
-      <td style="padding:14px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Posse anterior</td>
-      <td align="right" style="padding:14px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">7,2% · 52 tokens</td>
+      <td style="padding:14px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Tokens vendidos</td>
+      <td align="right" style="padding:14px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">− {{quantity}} tokens</td>
     </tr>
     <tr>
-      <td style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;border-bottom:1px solid #EDEFF4;">Tokens vendidos</td>
-      <td align="right" style="padding:10px 0 10px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;border-bottom:1px solid #EDEFF4;">− 8 tokens</td>
-    </tr>
-    <tr>
-      <td style="padding:10px 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;">Posse atual</td>
-      <td align="right" style="padding:10px 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;"><span style="color:#0E1626;font-weight:700;">6,1% · 44 tokens</span></td>
+      <td style="padding:10px 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5A6478;">Nova posse</td>
+      <td align="right" style="padding:10px 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:600;color:#0E1626;letter-spacing:-.005em;"><span style="color:#0E1626;font-weight:700;">{{newOwnershipPercent}}</span></td>
     </tr>
   </table>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" class="btn-row" style="margin:8px 0 4px 0;">
@@ -124,30 +110,6 @@
   </table></td>
     </tr>
   </table>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;"><tr><td style="border-top:1px solid #EDEFF4;line-height:1px;font-size:1px;">&nbsp;</td></tr></table>
-<p style="margin:0 0 14px 0;font-family:'Inter',Arial,sans-serif;font-size:15px;line-height:1.65;color:#2A344A;">Que tal colocar esse valor pra render de novo? Veja uma oportunidade aberta agora:</p>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#0E1626;border-radius:14px;margin-bottom:18px;">
-    <tr><td style="padding:22px 22px 24px 22px;">
-      <p style="margin:0 0 9px 0;font-family:'Inter',Arial,sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#E8B620;">
-        <span style="display:inline-block;width:16px;height:2px;background:#E8B620;vertical-align:middle;margin-right:7px;border-radius:1px;"></span>Oportunidade para reinvestir
-      </p>
-      <p style="margin:0 0 8px 0;font-family:'Inter',Arial,sans-serif;font-weight:700;font-size:20px;line-height:1.2;letter-spacing:-.02em;color:#FFFFFF;">Edifício Mirante Park · 1204</p>
-      <p style="margin:0 0 16px 0;font-family:'Inter',Arial,sans-serif;font-size:13.5px;line-height:1.55;color:#AEB8CE;">Imóvel recém-tokenizado em região valorizada. Compre tokens e receba uma fração do aluguel todo mês — diversifique sem sair da plataforma.</p>
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-        <td valign="bottom" style="vertical-align:bottom;">
-          <p style="margin:0;font-family:'Inter',Arial,sans-serif;font-weight:700;font-size:26px;line-height:1;letter-spacing:-.02em;color:#E8B620;">0,72%/mês</p>
-          <p style="margin:5px 0 0 0;font-family:'Inter',Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8A96B2;">Aluguel projetado</p>
-        </td>
-        <td align="right" valign="bottom" style="vertical-align:bottom;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;">
-            <tr><td style="border-radius:10px;background:#E8B620;">
-              <a class="btn" href="#" target="_blank" style="display:inline-block;padding:13px 22px;font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:700;color:#0E1626;text-decoration:none;border-radius:10px;letter-spacing:.005em;">Ver imóvel e comprar tokens →</a>
-            </td></tr>
-          </table>
-        </td>
-      </tr></table>
-    </td></tr>
-  </table>
         </td>
       </tr>
 
@@ -155,7 +117,7 @@
 
       <tr>
         <td class="px-pad" style="padding:18px 32px 28px 32px;">
-          <p style="margin:0;font-family:'Inter',Arial,sans-serif;font-size:12.5px;line-height:1.55;color:#8893A6;">ID da transação: TRX-2026-12-06-C47B9. Guarde este e-mail para seus registros. Em caso de dúvida, responda esta mensagem.</p>
+          <p style="margin:0;font-family:'Inter',Arial,sans-serif;font-size:12.5px;line-height:1.55;color:#8893A6;">{{footerNote}}</p>
         </td>
       </tr>
 

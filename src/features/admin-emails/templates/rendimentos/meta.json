@@ -1,0 +1,15 @@
+{
+  "name": "Rendimentos distribuídos",
+  "description": "Notificação de distribuição de aluguel para co-owner (investidor).",
+  "variables": [
+    { "key": "preheader", "label": "Preheader (texto oculto no preview do e-mail)", "type": "text" },
+    { "key": "heroTitle", "label": "Título", "type": "text" },
+    { "key": "heroBody", "label": "Corpo", "type": "text" },
+    { "key": "name", "label": "Nome do investidor", "type": "text" },
+    { "key": "amount", "label": "Valor distribuído (ex: 127,40)", "type": "text" },
+    { "key": "property", "label": "Nome do imóvel", "type": "text" },
+    { "key": "month", "label": "Mês de referência (ex: junho de 2026)", "type": "text" },
+    { "key": "ownershipPercent", "label": "Posse (ex: 7,2)", "type": "text" },
+    { "key": "ctaUrl", "label": "URL do botão", "type": "url" }
+  ]
+}
