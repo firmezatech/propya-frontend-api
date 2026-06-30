@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recibo de compra — Propya</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+:root{
+  --gold:#C8ED5E; --gold-soft:#BCE54A; --gold-tint:#F3FADD; --gold-deep:#2A1A22;
+  --navy:#2A1A22; --navy-2:#3D2A33; --ink:#2A1A22;
+  --muted:#6F6168; --hint:#9B9097;
+  --line:#EAE7E5; --line-2:#F1EEEC; --page:#F6F5F2; --white:#FFFFFF;
+  --green:#3E8E5A; --green-tint:#E8F2EB;
+}
+
+html,body{background:#E8EAF0}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  color:var(--ink);font-size:11pt;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  padding:24px 0 60px;
+}
+
+/* ── Toolbar (hidden in print) ── */
+.toolbar{
+  position:sticky;top:0;z-index:50;
+  max-width:600px;margin:0 auto 16px;
+  background:var(--white);border:1px solid var(--line);
+  border-radius:12px;padding:10px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  box-shadow:0 4px 14px rgba(42,26,34,.08);
+}
+.tb-l{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted)}
+.tb-l svg{width:14px;height:14px;color:var(--gold-deep);flex-shrink:0}
+.tb-l strong{color:var(--navy);font-weight:600}
+.tb-r{display:flex;gap:8px}
+.tb-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;
+  background:var(--white);color:var(--navy);
+  border:1.5px solid var(--line);cursor:pointer;font-family:inherit;
+  transition:all .15s;text-decoration:none;white-space:nowrap;
+}
+.tb-btn:hover{border-color:#D0D4DE;background:#FAFBFC}
+.tb-btn svg{width:13px;height:13px}
+.tb-btn.primary{background:var(--navy);color:var(--white);border-color:var(--navy)}
+.tb-btn.primary:hover{background:var(--navy-2);border-color:var(--navy-2)}
+
+/* ── Document ── */
+.doc{
+  width:600px;max-width:100%;margin:0 auto;
+  background:var(--white);
+  padding:34px 40px 30px;
+  box-shadow:0 18px 48px -16px rgba(42,26,34,.18), 0 6px 16px rgba(42,26,34,.06);
+  border-radius:6px;position:relative;
+}
+@media (max-width:640px){.doc{padding:26px 22px;border-radius:0;box-shadow:none}}
+
+/* HEADER */
+.head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:18px;
+  padding-bottom:18px;border-bottom:2px solid var(--navy);
+}
+.brand{display:flex;align-items:center;gap:11px}
+.brand-mark{
+  width:40px;height:40px;border-radius:10px;background:var(--gold);
+  display:grid;place-items:center;flex-shrink:0;
+  box-shadow:inset 0 -2px 0 rgba(42,26,34,.08);
+}
+.brand-text{display:flex;flex-direction:column;gap:2px;line-height:1.1}
+.brand-text .nm{font-weight:800;font-size:15pt;color:var(--navy);letter-spacing:-.015em}
+.brand-text .tg{font-size:8.5pt;color:var(--muted);letter-spacing:.01em}
+.head-r{text-align:right}
+.doc-type{
+  font-size:8pt;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold-deep);margin-bottom:3px;
+}
+.doc-no{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:11pt;color:var(--navy)}
+.doc-date{font-size:8.5pt;color:var(--muted);margin-top:4px}
+
+/* CONFIRM LINE */
+.confirm{
+  display:flex;align-items:center;gap:11px;
+  margin-top:18px;padding:10px 14px;
+  background:var(--green-tint);border:1px solid rgba(62,142,90,.25);border-radius:10px;
+}
+.confirm .ic{
+  width:28px;height:28px;border-radius:8px;flex-shrink:0;
+  background:var(--green);color:#fff;display:grid;place-items:center;
+}
+.confirm .ic svg{width:15px;height:15px}
+.confirm .t{font-weight:700;font-size:11pt;color:var(--green);letter-spacing:-.01em}
+.confirm .s{font-size:9pt;color:var(--ink)}
+
+/* HERO */
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
+.hero-card{border-radius:14px;padding:16px 18px;position:relative;overflow:hidden}
+.hero-card.tokens{background:var(--navy);color:#fff}
+.hero-card.tokens::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(360px 180px at 100% -20%, rgba(200,237,94,.20), transparent 60%),
+    repeating-linear-gradient(135deg, rgba(200,237,94,.05) 0 12px, transparent 12px 24px);
+}
+.hero-card.total{background:var(--gold-tint);border:1px solid #E4EFC0}
+.hero-card .k{
+  font-size:7.5pt;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:8px;position:relative;
+}
+.hero-card.tokens .k{color:var(--gold-soft)}
+.hero-card.total .k{color:var(--gold-deep)}
+.hero-card .v{font-weight:800;letter-spacing:-.025em;line-height:1;position:relative;font-size:26pt}
+.hero-card.tokens .v{color:#fff}
+.hero-card.total .v{color:var(--navy)}
+.hero-card .v .unit{font-size:.4em;font-weight:600;margin-left:5px}
+.hero-card.tokens .v .unit{color:var(--gold-soft)}
+.hero-card .v .currency{font-size:.42em;font-weight:600;margin-right:3px;color:var(--muted)}
+.hero-card .v .cents{font-size:.42em;font-weight:700;color:var(--muted)}
+.hero-card .sub{font-size:8.5pt;margin-top:8px;position:relative}
+.hero-card.tokens .sub{color:#B6BCC6}
+.hero-card.total .sub{color:var(--muted)}
+
+/* SECTION LABEL */
+.sec-h{
+  font-weight:700;font-size:10pt;color:var(--navy);letter-spacing:-.01em;
+  margin:0 0 9px;display:flex;align-items:center;gap:8px;
+}
+.sec-h::after{content:'';flex:1;height:1px;background:var(--line)}
+
+/* DETAILS */
+.details{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px 28px;
+  padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line);
+}
+.d-row{display:flex;flex-direction:column;gap:2px}
+.d-row .k{font-size:7.5pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hint)}
+.d-row .v{font-size:10.5pt;color:var(--navy);font-weight:500;letter-spacing:-.005em}
+.d-row .v.mono{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:9.5pt}
+
+/* BREAKDOWN */
+.breakdown{margin-bottom:18px;display:flex;flex-direction:column;gap:0}
+.bd-row{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding:9px 0;border-bottom:1px solid var(--line-2);font-size:10pt;
+}
+.bd-row .k{color:var(--ink)}
+.bd-row .k .sub{display:block;color:var(--muted);font-size:8.5pt;margin-top:1px}
+.bd-row .v{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--navy);font-feature-settings:"tnum"}
+.bd-row.total{
+  margin-top:6px;padding:13px 16px;border-bottom:none;border-radius:10px;
+  background:var(--navy);align-items:center;
+}
+.bd-row.total .k{font-weight:700;color:#fff;font-size:11pt;letter-spacing:-.01em}
+.bd-row.total .v{font-family:'Inter',sans-serif;font-weight:800;font-size:16pt;color:#fff;letter-spacing:-.02em}
+.bd-row.total .v .cur{font-size:.55em;font-weight:600;color:var(--gold-soft);margin-right:3px}
+
+/* REGISTRO */
+.registro{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:18px}
+.reg-top{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line-2)}
+.reg-cell{padding:10px 16px}
+.reg-cell:first-child{border-right:1px solid var(--line-2)}
+.reg-cell.full{padding:10px 16px;background:#FBFCFA}
+.reg-cell .k{font-size:7.5pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.reg-cell .k svg{width:11px;height:11px;color:var(--gold-deep)}
+.reg-cell .v{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:9.5pt;color:var(--navy);word-break:break-all}
+.reg-cell .v.plain{font-family:'Inter',sans-serif;font-weight:500}
+
+/* FOOTER */
+.foot{
+  padding-top:16px;border-top:1px dashed var(--line);
+  font-size:8.5pt;color:var(--muted);line-height:1.55;
+}
+.foot strong{color:var(--navy);font-weight:600}
+
+/* PRINT */
+@page{size:A4;margin:14mm}
+@media print{
+  html,body{background:#fff}
+  body{padding:0}
+  .toolbar{display:none !important}
+  .doc{box-shadow:none;border-radius:0;width:auto;max-width:none;padding:0}
+  .hero-card,.confirm,.bd-row.total,.registro{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="tb-l">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span>Use <strong>Imprimir</strong> e escolha "Salvar como PDF".</span>
+  </div>
+  <div class="tb-r">
+    <a href="{{ctaUrl}}" class="tb-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Ver carteira
+    </a>
+    <button class="tb-btn primary" onclick="window.print()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Imprimir / PDF
+    </button>
+  </div>
+</div>
+
+<!-- DOCUMENT -->
+<article class="doc">
+
+  <header class="head">
+    <div class="brand">
+      <div class="brand-mark">
+        <img src="data:image/png;base64,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" width="36" height="36" alt="Propya" style="display:block;object-fit:contain;" />
+      </div>
+      <div class="brand-text">
+        <span class="nm">Propya</span>
+        <span class="tg">Recibo de compra de tokens</span>
+      </div>
+    </div>
+    <div class="head-r">
+      <div class="doc-type">Recibo nº</div>
+      <div class="doc-no">{{receiptNo}}</div>
+      <div class="doc-date">Emitido em {{issuedAt}}</div>
+    </div>
+  </header>
+
+  <!-- CONFIRM -->
+  <section class="confirm">
+    <div class="ic">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div>
+      <div class="t">Pagamento confirmado</div>
+      <div class="s">Os tokens foram creditados na carteira do titular.</div>
+    </div>
+  </section>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-card tokens">
+      <div class="k">Tokens adquiridos</div>
+      <div class="v">{{tokenQuantity}}<span class="unit">{{tokenTicker}}</span></div>
+      <div class="sub">{{propertyDesc}}</div>
+    </div>
+    <div class="hero-card total">
+      <div class="k">Valor total pago</div>
+      <div class="v"><span class="currency">R$</span>{{totalInt}}<span class="cents">{{totalCents}}</span></div>
+      <div class="sub">{{paymentMethod}}</div>
+    </div>
+  </section>
+
+  <!-- DETAILS -->
+  <h2 class="sec-h">Dados da compra</h2>
+  <section class="details">
+    <div class="d-row">
+      <span class="k">Titular</span>
+      <span class="v">{{buyerName}}</span>
+    </div>
+    <div class="d-row">
+      <span class="k">CPF</span>
+      <span class="v mono">{{buyerCpfMasked}}</span>
+    </div>
+    <div class="d-row">
+      <span class="k">Referência do pedido</span>
+      <span class="v mono">{{orderRef}}</span>
+    </div>
+    <div class="d-row">
+      <span class="k">Data da compra</span>
+      <span class="v">{{purchaseDateTime}}</span>
+    </div>
+    <div class="d-row" style="grid-column:1 / -1">
+      <span class="k">ID da transação</span>
+      <span class="v mono">{{transactionId}}</span>
+    </div>
+  </section>
+
+  <!-- BREAKDOWN -->
+  <h2 class="sec-h">Detalhamento</h2>
+  <section class="breakdown">
+    <div class="bd-row">
+      <span class="k">{{tokenName}}<span class="sub">{{quantityXPrice}}</span></span>
+      <span class="v">{{tokenSubtotal}}</span>
+    </div>
+    <div class="bd-row">
+      <span class="k">Taxa de custódia</span>
+      <span class="v">{{custodyFee}}</span>
+    </div>
+    <div class="bd-row total">
+      <span class="k">Total pago</span>
+      <span class="v"><span class="cur">R$</span>{{totalAmountNumeric}}</span>
+    </div>
+  </section>
+
+  <!-- REGISTRO DA LIQUIDAÇÃO -->
+  <h2 class="sec-h">Registro da liquidação</h2>
+  <section class="registro">
+    <div class="reg-top">
+      <div class="reg-cell">
+        <div class="k">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Modo
+        </div>
+        <div class="v plain">{{settlementMode}}</div>
+      </div>
+      <div class="reg-cell">
+        <div class="k">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Liquidado em
+        </div>
+        <div class="v plain">{{settlementTimestamp}}</div>
+      </div>
+    </div>
+    <div class="reg-cell full">
+      <div class="k">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        Referência de liquidação
+      </div>
+      <div class="v">{{settlementRef}}</div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <strong>Documento informativo.</strong> Confirma a aquisição de tokens registrada no ledger da Propya. Não constitui nota fiscal. Propya Custódia SA · CNPJ 52.847.193/0001-04.
+  </footer>
+
+</article>
+
+</body>
+</html>
