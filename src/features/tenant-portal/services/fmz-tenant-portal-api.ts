@@ -72,6 +72,7 @@ const normalizePaymentHistoryItem = (value: unknown, fallbackReference?: string 
     rentalAdminFeeAmount: numericFieldOrNull(row, 'rentalAdminFeeAmount'),
     condominiumFeeAmount: numericFieldOrNull(row, 'condominiumFeeAmount'),
     totalPurchasedTokens: numericFieldOrNull(row, 'totalPurchasedTokens'),
+    tokenPurchaseAmount: numericFieldOrNull(row, 'tokenPurchaseAmount'),
     tokenFeeAmount: numericFieldOrNull(row, 'tokenFeeAmount'),
     tokensAccumulated: numericFieldOrNull(row, 'tokensAccumulated'),
     ownershipPercentageAccumulated: numericFieldOrNull(row, 'ownershipPercentageAccumulated'),

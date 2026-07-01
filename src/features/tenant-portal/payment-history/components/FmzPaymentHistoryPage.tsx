@@ -154,7 +154,7 @@ function PaymentRowDetail({ item, isOpenCharge, isPaid }: { item: FmzTenantPayme
             {hasTokenPurchase && <span className={styles.detailQty}>{formatTokenQty(item.totalPurchasedTokens)}</span>}
           </span>
           <span className={`${styles.detailV} ${hasTokenPurchase ? styles.detailVGold : ''}`}>
-            {hasTokenPurchase ? formatMoney(item.totalPurchasedTokens) : '—'}
+            {hasTokenPurchase ? formatMoney(item.tokenPurchaseAmount) : '—'}
           </span>
         </div>
         {hasTokenPurchase && (

@@ -301,6 +301,7 @@ export type FmzTenantPaymentHistoryItem = {
   rentalAdminFeeAmount?: number | null;
   condominiumFeeAmount?: number | null;
   totalPurchasedTokens?: number | null;
+  tokenPurchaseAmount?: number | null;
   tokenFeeAmount?: number | null;
   tokensAccumulated?: number | null;
   ownershipPercentageAccumulated?: number | null;
