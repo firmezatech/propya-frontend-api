@@ -107,6 +107,9 @@ const normalizeTenantSettings = (data: unknown): FmzAdminTenantSettings => {
   return {
     parameters: parameters.map(normalizeFeeParameter),
     goals: goals.map(normalizeOwnershipGoal),
+    propertyTokenizationId: optionalStr(
+      nested.propertyTokenizationId ?? r.propertyTokenizationId ?? r.property_tokenization_id,
+    ),
   };
 };
 
@@ -135,8 +138,15 @@ export async function listEligibleTenants(): Promise<FmzAdminEligibleTenant[]> {
   return arr(r.items ?? r.data).map(normalizeEligibleTenant);
 }
 
-export async function getAdminTenantSettings(): Promise<FmzAdminTenantSettings> {
-  const { data } = await firmezaApiClient.get(TENANT_SETTINGS_PATH);
+// Passing propertyId scopes parameters+goals to one property; the backend (B3) resolves the
+// property_tokenization_id and echoes it back so the caller can create goals for that property.
+export async function getAdminTenantSettings(
+  params: { propertyId?: string } = {},
+): Promise<FmzAdminTenantSettings> {
+  const query = params.propertyId
+    ? `?${new URLSearchParams({ propertyId: params.propertyId }).toString()}`
+    : '';
+  const { data } = await firmezaApiClient.get(`${TENANT_SETTINGS_PATH}${query}`);
   return normalizeTenantSettings(data);
 }
 

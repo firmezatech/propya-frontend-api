@@ -81,6 +81,8 @@ export type FmzAdminEligibleTenant = {
 export type FmzAdminTenantSettings = {
   parameters: FmzAdminFeeParameter[];
   goals: FmzAdminOwnershipGoal[];
+  // Resolved by the backend from propertyId (B3) — reused by the "Por imóvel" tab to create goals.
+  propertyTokenizationId?: string | null;
 };
 
 export type FmzAdminGoalAchievement = {
