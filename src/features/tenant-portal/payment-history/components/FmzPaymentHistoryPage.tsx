@@ -331,12 +331,21 @@ function AluguelView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
   );
 }
 
+// 1 token = R$0.01 (TOKEN_UNIT_VALUE). Used as fallback when the backend hasn't yet
+// returned the dedicated `tokenPurchaseAmount` column (old Railway deploy without our code change).
+const TOKEN_UNIT_VALUE_BRL = 0.01;
+
+function resolveTokenPurchaseAmountBrl(item: FmzTenantPaymentHistoryItem): number {
+  if (item.tokenPurchaseAmount != null && item.tokenPurchaseAmount > 0) return item.tokenPurchaseAmount;
+  return Number(item.totalPurchasedTokens ?? 0) * TOKEN_UNIT_VALUE_BRL;
+}
+
 function TokensView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
   const purchases = useMemo(
     () => [...history].filter((r) => Number(r.totalPurchasedTokens ?? 0) > 0).sort((a, b) => b.reference.localeCompare(a.reference)),
     [history],
   );
-  const totalPaid = useMemo(() => purchases.reduce((s, r) => s + Number(r.totalPurchasedTokens ?? 0), 0), [purchases]);
+  const totalPaid = useMemo(() => purchases.reduce((s, r) => s + resolveTokenPurchaseAmountBrl(r), 0), [purchases]);
   const latest = history[0] ?? null;
 
   if (purchases.length === 0) {
@@ -364,7 +373,7 @@ function TokensView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
           Compras de tokens
         </h2>
         <span className={styles.vsSub}>
-          {purchases.length} compras · {formatMoney(latest?.tokensAccumulated)} em tokens · {formatPercent(latest?.ownershipPercentageAccumulated)} de posse
+          {purchases.length} compras · {formatTokenQty(latest?.tokensAccumulated)} acumulados · {formatPercent(latest?.ownershipPercentageAccumulated)} de posse
         </span>
       </div>
       <div className={styles.vtableWrap}>
@@ -383,8 +392,8 @@ function TokensView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
                       <span>{name} <span className={styles.vtYear}>{year}</span></span>
                     </span>
                   </td>
-                  <td className={styles.vtPos}>{formatMoney(r.totalPurchasedTokens)}</td>
-                  <td className={styles.vtStrong}>{formatMoney(r.tokensAccumulated)}</td>
+                  <td className={styles.vtPos}>{formatMoney(resolveTokenPurchaseAmountBrl(r))}</td>
+                  <td className={styles.vtStrong}>{formatTokenQty(r.tokensAccumulated)}</td>
                   <td>{formatPercent(r.ownershipPercentageAccumulated)}</td>
                   <td>
                     {r.tokenOrderId
@@ -399,7 +408,7 @@ function TokensView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
             <tr>
               <td>Total</td>
               <td className={styles.vtPos}>{formatMoney(totalPaid)}</td>
-              <td className={styles.vtStrong}>{formatMoney(latest?.tokensAccumulated)}</td>
+              <td className={styles.vtStrong}>{formatTokenQty(latest?.tokensAccumulated)}</td>
               <td>{formatPercent(latest?.ownershipPercentageAccumulated)}</td>
               <td />
             </tr>
