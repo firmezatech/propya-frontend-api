@@ -48,6 +48,7 @@
 .modesegBtn svg { width: 14px; height: 14px; }
 .modesegBtn:hover { color: var(--navy); }
 .modesegBtnActive { background: var(--navy); color: #fff; }
+.modesegBtnActive:hover { color: #fff; }
 .modesegBtnActive svg { color: var(--gold); }
 
 /* ── TOOLBAR ──────────────────────────────────── */

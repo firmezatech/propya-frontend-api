@@ -286,7 +286,7 @@ function AluguelView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
     <section className={styles.vsection}>
       <div className={styles.vsectionHead}>
         <h2 className={styles.vsectionTitle}>
-          <span className={`${styles.vsIco} ${styles.vsIcoGreen}`}><Home /></span>
+          <span className={`${styles.vsIco} ${styles.vsIcoGold}`}><Coins /></span>
           Pagamentos de aluguel
         </h2>
         <span className={styles.vsSub}>{rows.length} meses · {formatMoney(savings)} economizados no aluguel</span>
@@ -353,7 +353,7 @@ function TokensView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
       <section className={styles.vsection}>
         <div className={styles.vsectionHead}>
           <h2 className={styles.vsectionTitle}>
-            <span className={`${styles.vsIco} ${styles.vsIcoGold}`}><Coins /></span>
+            <span className={`${styles.vsIco} ${styles.vsIcoGreen}`}><Home /></span>
             Compras de tokens
           </h2>
         </div>
