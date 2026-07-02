@@ -369,7 +369,7 @@ function TokensView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
     <section className={styles.vsection}>
       <div className={styles.vsectionHead}>
         <h2 className={styles.vsectionTitle}>
-          <span className={`${styles.vsIco} ${styles.vsIcoGold}`}><Coins /></span>
+          <span className={`${styles.vsIco} ${styles.vsIcoGreen}`}><Home /></span>
           Compras de tokens
         </h2>
         <span className={styles.vsSub}>
@@ -552,9 +552,6 @@ export function FmzPaymentHistoryPage() {
                       onChange={(e) => setSearch(e.target.value)}
                     />
                   </div>
-                  <Link href="/connected/coming-soon" className={styles.btnExport}>
-                    <Download /> Exportar CSV
-                  </Link>
                 </div>
               </div>
 

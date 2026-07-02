@@ -64,9 +64,6 @@
 .search svg { color: var(--hint); flex-shrink: 0; width: 14px; height: 14px; }
 .searchInput { border: none; outline: none; background: transparent; font-size: 13px; color: var(--navy); width: 100%; font-family: inherit; }
 .searchInput::placeholder { color: var(--hint); }
-.btnExport { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-size: 13px; font-weight: 600; color: var(--navy); cursor: pointer; transition: all .15s; font-family: inherit; text-decoration: none; }
-.btnExport:hover { background: #FAFBFC; border-color: #D0D4DE; }
-.btnExport svg { width: 13px; height: 13px; }
 
 /* ── LIST ─────────────────────────────────────── */
 .list { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
