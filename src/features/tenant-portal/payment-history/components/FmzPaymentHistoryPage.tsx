@@ -266,8 +266,8 @@ type ViewMode = 'boletos' | 'aluguel' | 'tokens';
 
 const VIEW_MODES: { key: ViewMode; label: string; icon: typeof Ticket }[] = [
   { key: 'boletos', label: 'Boletos', icon: Ticket },
-  { key: 'aluguel', label: 'Aluguel', icon: Home },
-  { key: 'tokens', label: 'Compra de tokens', icon: Coins },
+  { key: 'aluguel', label: 'Aluguel', icon: Coins },
+  { key: 'tokens', label: 'Compra de tokens', icon: Home },
 ];
 
 function AluguelView({ history }: { history: FmzTenantPaymentHistoryItem[] }) {
