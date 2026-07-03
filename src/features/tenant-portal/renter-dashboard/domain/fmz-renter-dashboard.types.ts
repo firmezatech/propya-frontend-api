@@ -52,6 +52,7 @@ export type FmzRenterDashboardViewModel = {
     dueDateLabel: string;
     daysUntilDue: number | null;
     paymentUrl?: string | null;
+    canPay: boolean;
     lines: FmzDashboardMoneyLine[];
   };
 };

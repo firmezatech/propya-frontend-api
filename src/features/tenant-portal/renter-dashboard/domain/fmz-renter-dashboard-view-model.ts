@@ -273,6 +273,12 @@ export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): Fm
   const totalDueAmount = boleto?.amount ?? monthlySummary?.totalDueAmount ?? 0;
   const dueDate        = boleto?.dueDate ?? monthlySummary?.dueDate ?? null;
 
+  // The invoice is payable only when there is an OPEN boleto: it exists and hasn't been paid.
+  // A paid boleto (or none at all) means there's nothing to pay → the CTA is disabled.
+  const boletoStatus = (boleto?.status ?? '').trim().toLowerCase();
+  const isBoletoPaid = Boolean(boleto?.paidAt) || ['paid', 'pago', 'settled', 'confirmed', 'received', 'received_in_cash'].includes(boletoStatus);
+  const canPayInvoice = Boolean(boleto) && !isBoletoPaid;
+
   return {
     renterName:                   dashboard.tenant?.name || DEFAULT_RENTER_NAME,
     contractStatusLabel:          resolveContractStatusLabel(dashboard.contract?.status),
@@ -311,6 +317,7 @@ export function buildRenterDashboardViewModel(dashboard: FmzTenantDashboard): Fm
       dueDateLabel: formatDateBR(dueDate, '-'),
       daysUntilDue: computeDaysUntilDue(dueDate),
       paymentUrl:   boleto?.downloadUrl,
+      canPay:       canPayInvoice,
       lines:        buildInvoiceLinesFromSummary(monthlySummary),
     },
   };

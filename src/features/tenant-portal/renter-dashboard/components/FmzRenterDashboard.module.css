@@ -168,6 +168,8 @@
   cursor: pointer; transition: all .15s; text-decoration: none; margin-top: auto;
 }
 .btnCta:hover { background: var(--navy-2); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(42,26,34,.18); }
+.btnCta:disabled { opacity: .45; cursor: not-allowed; }
+.btnCta:disabled:hover { background: var(--navy); transform: none; box-shadow: none; }
 .btnCta svg { width: 14px; height: 14px; }
 
 /* ── CONTENT GRID ────────────────────────── */
