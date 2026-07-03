@@ -12,6 +12,7 @@ import {
   listEligibleTenants,
   updateFeeParameter,
   updateOwnershipGoal,
+  updateRentalContractFinancials,
 } from '../services';
 import type {
   FmzAdminEligibleTenant,
@@ -32,20 +33,24 @@ const initialsOf = (t: FmzAdminEligibleTenant): string => {
   return letters.toUpperCase() || '—';
 };
 
-// Per-property financial overrides (fee-parameter model: currency|percentage). Each reads its
-// "current effective value" from the contract when there is no explicit parameter_sets override.
+// Per-property financial overrides. Fields backed by the tenant's contract (`contractPatchField`)
+// are saved straight onto the contract — billing reads those, so they must change as the tenancy
+// evolves (condominium rises, a fee changes). Fields without a contract column fall back to a
+// per-property parameter_sets override. `contractField` is the eligible-tenant key used to
+// pre-fill the current effective value.
 const OVERRIDES: {
   key: string;
   label: string;
   description: string;
   valueType: FmzTenantSettingsValueType;
   contractField: keyof Pick<FmzAdminEligibleTenant, 'condominiumFeeAmount' | 'tokenUnitValue' | 'tokenFeePercent' | 'platformFeePercent'> | null;
+  contractPatchField: 'condominiumFeeAmount' | 'platformFeePercent' | 'tokenFeePercent' | null;
 }[] = [
-  { key: 'condominio_brl', label: 'Valor do condomínio', description: 'Cobrado junto ao aluguel deste imóvel.', valueType: 'currency', contractField: 'condominiumFeeAmount' },
-  { key: 'iptu_mensal_brl', label: 'IPTU mensal', description: 'Rateio mensal do IPTU, se houver.', valueType: 'currency', contractField: null },
-  { key: 'token_unit_value_brl', label: 'Valor do token', description: 'Preço unitário do token deste imóvel.', valueType: 'currency', contractField: 'tokenUnitValue' },
-  { key: 'token_purchase_fee_percent', label: 'Taxa de token', description: 'Taxa sobre compra de token neste imóvel.', valueType: 'percentage', contractField: 'tokenFeePercent' },
-  { key: 'platform_admin_fee_percent', label: 'Taxa da plataforma', description: 'Administração sobre o aluguel.', valueType: 'percentage', contractField: 'platformFeePercent' },
+  { key: 'condominio_brl', label: 'Valor do condomínio', description: 'Cobrado junto ao aluguel deste imóvel. Alterar aqui atualiza o contrato.', valueType: 'currency', contractField: 'condominiumFeeAmount', contractPatchField: 'condominiumFeeAmount' },
+  { key: 'iptu_mensal_brl', label: 'IPTU mensal', description: 'Rateio mensal do IPTU, se houver.', valueType: 'currency', contractField: null, contractPatchField: null },
+  { key: 'token_unit_value_brl', label: 'Valor do token', description: 'Preço unitário do token deste imóvel (derivado do valor do imóvel).', valueType: 'currency', contractField: 'tokenUnitValue', contractPatchField: null },
+  { key: 'token_purchase_fee_percent', label: 'Taxa de token', description: 'Taxa sobre compra de token neste imóvel. Alterar aqui atualiza o contrato.', valueType: 'percentage', contractField: 'tokenFeePercent', contractPatchField: 'tokenFeePercent' },
+  { key: 'platform_admin_fee_percent', label: 'Taxa da plataforma', description: 'Administração sobre o aluguel. Alterar aqui atualiza o contrato.', valueType: 'percentage', contractField: 'platformFeePercent', contractPatchField: 'platformFeePercent' },
 ];
 
 // ── Property card ─────────────────────────────────────────────────────────────
@@ -91,6 +96,7 @@ function MetaCard({
   goal,
   index,
   currentOwnership,
+  defaultOpen,
   onSave,
   onDelete,
   saving,
@@ -99,15 +105,17 @@ function MetaCard({
   goal: FmzAdminOwnershipGoal;
   index: number;
   currentOwnership: number;
+  defaultOpen: boolean;
   onSave: (goalId: string, patch: { title: string; targetPercentage: number; isActive: boolean }) => void;
   onDelete: (goal: FmzAdminOwnershipGoal) => void;
   saving: boolean;
   deleting: boolean;
 }) {
-  const [open, setOpen] = useState(index === 0);
+  const [open, setOpen] = useState(defaultOpen);
   const [title, setTitle] = useState(goal.title);
   const [target, setTarget] = useState(String(goal.targetPercentage ?? ''));
   const [active, setActive] = useState(goal.isActive);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const targetNum = Number(target.replace(',', '.')) || 0;
   const achieved = targetNum > 0 && currentOwnership >= targetNum;
@@ -200,10 +208,22 @@ function MetaCard({
               </select>
             </label>
             <div className="flex items-center gap-2">
-              <button type="button" disabled={deleting} onClick={() => onDelete(goal)} className="inline-flex items-center gap-1.5 rounded-[8px] border-[1.5px] border-fmz-error-border bg-fmz-error-bg px-3 py-1.5 text-[12px] font-semibold text-fmz-error transition hover:brightness-95 disabled:opacity-50">
-                {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                Excluir meta
-              </button>
+              {confirmingDelete ? (
+                <>
+                  <button type="button" disabled={deleting} onClick={() => onDelete(goal)} className="inline-flex items-center gap-1.5 rounded-[8px] bg-fmz-error px-3 py-1.5 text-[12px] font-bold text-white transition hover:brightness-95 disabled:opacity-50">
+                    {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                    Confirmar exclusão
+                  </button>
+                  <button type="button" onClick={() => setConfirmingDelete(false)} className="rounded-[8px] px-3 py-1.5 text-[12px] font-semibold text-fmz-text-muted transition hover:text-fmz-navy">
+                    Cancelar
+                  </button>
+                </>
+              ) : (
+                <button type="button" onClick={() => setConfirmingDelete(true)} className="inline-flex items-center gap-1.5 rounded-[8px] border-[1.5px] border-fmz-error-border bg-fmz-error-bg px-3 py-1.5 text-[12px] font-semibold text-fmz-error transition hover:brightness-95">
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Excluir meta
+                </button>
+              )}
               <button type="button" disabled={!dirty || !valid || saving} onClick={() => onSave(goal.id, { title: title.trim(), targetPercentage: targetNum, isActive: active })} className="inline-flex items-center gap-2 rounded-[9px] bg-fmz-gold px-4 py-2 text-[12.5px] font-bold text-fmz-navy transition hover:bg-fmz-gold-dark disabled:cursor-not-allowed disabled:opacity-45">
                 {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                 Salvar meta
@@ -285,6 +305,7 @@ export function FmzPlatformSettingsPropertyTab({ onToast }: { onToast: (message:
   const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
   const [savingOverrideKey, setSavingOverrideKey] = useState<string | null>(null);
   const [addingMeta, setAddingMeta] = useState(false);
+  const [newlyAddedGoalId, setNewlyAddedGoalId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const selected = useMemo(() => tenants.find((t) => t.propertyId === selectedId) ?? null, [tenants, selectedId]);
@@ -335,7 +356,6 @@ export function FmzPlatformSettingsPropertyTab({ onToast }: { onToast: (message:
   }, [onToast]);
 
   const handleDeleteGoal = useCallback(async (goal: FmzAdminOwnershipGoal) => {
-    if (!window.confirm(`Excluir a meta "${goal.title}"? Esta ação não pode ser desfeita.`)) return;
     setDeletingGoalId(goal.id);
     try {
       await deleteOwnershipGoal(goal.id);
@@ -363,6 +383,7 @@ export function FmzPlatformSettingsPropertyTab({ onToast }: { onToast: (message:
         isActive: false,
       });
       setGoals((prev) => [...prev, created]);
+      setNewlyAddedGoalId(created.id);
       onToast('Meta criada.');
     } catch (err) {
       onToast(normalizeFmzApiError(err).description, false);
@@ -375,7 +396,13 @@ export function FmzPlatformSettingsPropertyTab({ onToast }: { onToast: (message:
     if (!selected) return;
     setSavingOverrideKey(override.key);
     try {
-      if (existing) {
+      if (override.contractPatchField) {
+        // Contract-backed field: write it onto the contract (billing reads this) and reflect the
+        // new value locally so the pre-filled input stays in sync.
+        const field = override.contractPatchField;
+        await updateRentalContractFinancials(selected.rentalContractId, { [field]: value });
+        setTenants((prev) => prev.map((t) => (t.propertyId === selected.propertyId ? { ...t, [field]: value } : t)));
+      } else if (existing) {
         const updated = await updateFeeParameter(existing.id, { parameterValue: value });
         setParameters((prev) => prev.map((p) => (p.id === existing.id ? updated : p)));
       } else {
@@ -457,6 +484,7 @@ export function FmzPlatformSettingsPropertyTab({ onToast }: { onToast: (message:
                 goal={g}
                 index={i}
                 currentOwnership={selected?.currentOwnershipPercentage ?? 0}
+                defaultOpen={i === 0 || g.id === newlyAddedGoalId}
                 onSave={handleSaveGoal}
                 onDelete={handleDeleteGoal}
                 saving={savingGoalId === g.id}
@@ -485,7 +513,7 @@ export function FmzPlatformSettingsPropertyTab({ onToast }: { onToast: (message:
             <OverrideRow
               key={o.key}
               override={o}
-              existing={overrideFor(o.key)}
+              existing={o.contractPatchField ? undefined : overrideFor(o.key)}
               contractValue={contractValueFor(o.contractField)}
               onSave={handleSaveOverride}
               saving={savingOverrideKey === o.key}

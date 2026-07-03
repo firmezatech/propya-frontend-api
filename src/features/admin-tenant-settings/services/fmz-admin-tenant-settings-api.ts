@@ -206,6 +206,21 @@ export async function deleteOwnershipGoal(goalId: string): Promise<void> {
   await firmezaApiClient.delete(`${TENANT_SETTINGS_PATH}/goals/${encodeURIComponent(goalId)}`);
 }
 
+export type FmzContractFinancialsPatch = {
+  condominiumFeeAmount?: number;
+  platformFeePercent?: number;
+  tokenFeePercent?: number;
+};
+
+// Edits the tenant's contract financials directly (billing reads these) — e.g. the condominium
+// fee rises or a fee changes mid-journey. Used by the contract-backed override fields.
+export async function updateRentalContractFinancials(
+  contractId: string,
+  patch: FmzContractFinancialsPatch,
+): Promise<void> {
+  await firmezaApiClient.patch(`/admin/rental-contracts/${encodeURIComponent(contractId)}/financials`, patch);
+}
+
 export const normalizeGoalAchievement = (raw: unknown): FmzAdminGoalAchievement => {
   const r = recordOf(raw);
   return {

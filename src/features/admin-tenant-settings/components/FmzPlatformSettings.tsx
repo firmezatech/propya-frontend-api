@@ -57,7 +57,7 @@ export function FmzPlatformSettings() {
       )}
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-[11px] bg-fmz-navy px-4 py-3 text-[13px] font-semibold text-white shadow-lg">
+        <div className="pointer-events-none fixed bottom-6 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-[11px] bg-fmz-navy px-4 py-3 text-[13px] font-semibold text-white shadow-lg">
           <span className={fmzCn('grid h-5 w-5 place-items-center rounded-full', toast.ok ? 'bg-fmz-gold text-fmz-navy' : 'bg-fmz-error text-white')}>
             {toast.ok ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
           </span>
