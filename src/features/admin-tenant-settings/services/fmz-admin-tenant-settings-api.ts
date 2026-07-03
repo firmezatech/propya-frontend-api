@@ -122,11 +122,23 @@ export const normalizeEligibleTenant = (raw: unknown): FmzAdminEligibleTenant =>
     propertyId: str(r.propertyId ?? r.property_id),
     propertyName: str(r.propertyName ?? r.property_name),
     propertyCode: optionalStr(r.propertyCode ?? r.property_code),
+    addressLine1: optionalStr(r.addressLine1 ?? r.address_line_1),
+    addressLine2: optionalStr(r.addressLine2 ?? r.address_line_2),
+    district: optionalStr(r.district),
+    city: optionalStr(r.city),
+    state: optionalStr(r.state),
     rentalContractId: str(r.rentalContractId ?? r.rental_contract_id),
     propertyTokenizationId: str(r.propertyTokenizationId ?? r.property_tokenization_id),
     tokenSymbol: optionalStr(r.tokenSymbol ?? r.token_symbol),
     totalSupply: num(r.totalSupply ?? r.total_supply),
     tokenUnitValue: optionalNum(r.tokenUnitValue ?? r.token_unit_value),
+    currentOwnershipPercentage: num(r.currentOwnershipPercentage ?? r.current_ownership_percentage),
+    coOwnersCount: num(r.coOwnersCount ?? r.co_owners_count),
+    baseMonthlyRent: num(r.baseMonthlyRent ?? r.base_monthly_rent),
+    condominiumFeeAmount: num(r.condominiumFeeAmount ?? r.condominium_fee_amount),
+    platformFeePercent: num(r.platformFeePercent ?? r.platform_fee_percent),
+    tokenFeePercent: num(r.tokenFeePercent ?? r.token_fee_percent),
+    monthlyTokenAmount: num(r.monthlyTokenAmount ?? r.monthly_token_amount),
     contractStatus: str(r.contractStatus ?? r.contract_status, 'active'),
     propertyStatus: str(r.propertyStatus ?? r.property_status, 'active'),
   };
@@ -188,6 +200,10 @@ export async function updateOwnershipGoal(
   );
   const r = recordOf(data);
   return normalizeOwnershipGoal(r.goal ?? r.data ?? data);
+}
+
+export async function deleteOwnershipGoal(goalId: string): Promise<void> {
+  await firmezaApiClient.delete(`${TENANT_SETTINGS_PATH}/goals/${encodeURIComponent(goalId)}`);
 }
 
 export const normalizeGoalAchievement = (raw: unknown): FmzAdminGoalAchievement => {
